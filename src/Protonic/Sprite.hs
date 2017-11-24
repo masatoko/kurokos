@@ -26,7 +26,7 @@ import           SDL                  (($=), get)
 import qualified SDL.Font             as Font
 
 import           Protonic.Core
-import           Protonic.Data        (Font (..), Sprite (..))
+import           Protonic.Data        (Font, Sprite (..))
 
 -- TODO: Change color
 newSprite :: (MonadReader ProtoConfig m, MonadIO m) => Font -> V4 Word8 -> Text -> m Sprite

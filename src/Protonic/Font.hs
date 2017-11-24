@@ -15,8 +15,7 @@ import           Foreign.Ptr              (plusPtr)
 
 import qualified SDL.Font                 as Font
 
-import           Protonic.Data            (Font (..), Sprite (..))
--- import           Protonic.TTFHelper       (GlyphMetrics (..), rawGlyphMetrics, fontFromBytes)
+import           Protonic.Data            (Font, Sprite (..))
 
 newFont :: MonadIO m => FilePath -> Int -> m Font
 newFont path size = liftIO $ do
@@ -34,15 +33,3 @@ withFont bs size action =
   E.bracket (Font.decode bs size)
             Font.free
             action
-
--- ascent :: MonadIO m => Font -> m Int
--- ascent (Font font) =
---   liftIO $ TTF.getFontAscent font
---
--- descent :: MonadIO m => Font -> m Int
--- descent (Font font) =
---   liftIO $ TTF.getFontDescent font
-
--- glyphMetrics :: MonadIO m => Font -> Char -> m GlyphMetrics
--- glyphMetrics (Font font) c =
---   liftIO $ rawGlyphMetrics font c

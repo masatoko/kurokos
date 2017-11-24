@@ -1,5 +1,5 @@
 module Protonic.Data
-  ( Font (..)
+  ( Font
   , Sprite (..)
   ) where
 
