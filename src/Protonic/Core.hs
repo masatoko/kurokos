@@ -57,14 +57,12 @@ import           System.Directory        (doesFileExist)
 import           Text.Printf             (printf)
 
 import qualified SDL.Font                as Font
--- import qualified SDL.TTF                 as TTF
--- import           SDL.TTF.FFI             (TTFFont)
 import           SDL                     (($=))
 import qualified SDL
 
 import           Protonic.Metapad
-import           Protonic.Data           (Font (..))
-import           Protonic.Font_          (newFont, freeFont, withFont)
+import           Protonic.Data           (Font)
+import           Protonic.Font           (newFont, freeFont, withFont)
 
 data Config = Config
   { confWinSize :: V2 Int

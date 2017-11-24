@@ -1,4 +1,4 @@
-module Protonic.Font_
+module Protonic.Font
   ( newFont
   , freeFont
   , withFont
