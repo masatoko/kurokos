@@ -2,9 +2,6 @@ module Protonic.Font_
   ( newFont
   , freeFont
   , withFont
-  , ascent, descent
-  , GlyphMetrics (..)
-  , glyphMetrics
   ) where
 
 import           Control.Monad.IO.Class   (MonadIO, liftIO)
@@ -16,37 +13,36 @@ import           System.Directory         (doesFileExist)
 import           Foreign.ForeignPtr       (withForeignPtr)
 import           Foreign.Ptr              (plusPtr)
 
-import qualified SDL.TTF                  as TTF
+import qualified SDL.Font                 as Font
 
 import           Protonic.Data            (Font (..), Sprite (..))
-import           Protonic.TTFHelper       (GlyphMetrics (..), rawGlyphMetrics, fontFromBytes)
+-- import           Protonic.TTFHelper       (GlyphMetrics (..), rawGlyphMetrics, fontFromBytes)
 
 newFont :: MonadIO m => FilePath -> Int -> m Font
 newFont path size = liftIO $ do
   p <- doesFileExist path
   if p
-    then Font <$> TTF.openFont path size
+    then Font.load path size
     else E.throwIO $ userError $ "Missing font file: " ++ path
 
 freeFont :: MonadIO m => Font -> m ()
-freeFont (Font font) =
-  liftIO $ TTF.closeFont font
+freeFont font =
+  liftIO $ Font.free font
 
 withFont :: ByteString -> Int -> (Font -> IO a) -> IO a
-withFont (PS fptr off len) size action =
-  withForeignPtr fptr $ \ptr ->
-    E.bracket (fontFromBytes (ptr `plusPtr` off) len size)
-              TTF.closeFont
-              (action . Font)
+withFont bs size action =
+  E.bracket (Font.decode bs size)
+            Font.free
+            action
 
-ascent :: MonadIO m => Font -> m Int
-ascent (Font font) =
-  liftIO $ TTF.getFontAscent font
+-- ascent :: MonadIO m => Font -> m Int
+-- ascent (Font font) =
+--   liftIO $ TTF.getFontAscent font
+--
+-- descent :: MonadIO m => Font -> m Int
+-- descent (Font font) =
+--   liftIO $ TTF.getFontDescent font
 
-descent :: MonadIO m => Font -> m Int
-descent (Font font) =
-  liftIO $ TTF.getFontDescent font
-
-glyphMetrics :: MonadIO m => Font -> Char -> m GlyphMetrics
-glyphMetrics (Font font) c =
-  liftIO $ rawGlyphMetrics font c
+-- glyphMetrics :: MonadIO m => Font -> Char -> m GlyphMetrics
+-- glyphMetrics (Font font) c =
+--   liftIO $ rawGlyphMetrics font c

@@ -34,11 +34,9 @@ module Protonic
   , printTest
   -- Font
   , newFont, freeFont, withFont
-  , ascent, descent
   -- Sprite
   , newSprite, loadSprite, decodeSprite, freeSprite
   , setBlendMode, setAlphaMod, setColorMod
-  , GlyphMetrics (..), glyphMetrics
   -- Metapad
   , Metapad
   , newPad

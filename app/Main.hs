@@ -59,7 +59,6 @@ main = do
     mjs <- P.newJoystickAt 0
     let gamepad = mkGamepad mjs
     _ <- runProtoT proto $
-      -- testGlyphMetrics
       runScene $ titleScene mjs gamepad
     maybe (return ()) P.freeJoystick mjs
     return ()
@@ -82,25 +81,6 @@ main = do
     --       SDL.pumpEvents
     --       P.monitorJoystick js
     --       threadDelay 100000
-
-testGlyphMetrics :: ProtoT ()
-testGlyphMetrics = do
-  font <- P.newFont "data/font/system.ttf" 10
-  --
-  asc <- P.ascent font
-  dsc <- P.descent font
-  liftIO $ do
-    putStrLn $ "Ascent: " ++ show asc
-    putStrLn $ "Descent: " ++ show dsc
-  --
-  work font '_'
-  work font '|'
-  mapM_ (work font) ['a'..'z']
-  P.freeFont font
-  where
-    work font c = do
-      gm <- P.glyphMetrics font c
-      liftIO $ putStrLn $ c:" : " ++ show gm
 
 data Action
   = Go
@@ -158,6 +138,7 @@ titleScene mjs pad =
     render _ _ = do
       P.printTest (P (V2 10 100)) (V4 0 255 255 255) "Enter - start"
       P.printTest (P (V2 10 120)) (V4 0 255 255 255) "Escape - exit"
+      P.printTest (P (V2 10 160)) (V4 0 255 255 255) "日本語テスト"
 
     transit _ as _
       | Enter `elem` as = P.next $ mainScene mjs pad

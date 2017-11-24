@@ -39,7 +39,8 @@ module Protonic.Core
   ) where
 
 import           Control.Concurrent.MVar (MVar, newMVar, withMVar)
-import           Control.Exception.Safe  (MonadThrow, MonadCatch, MonadMask, bracket, bracket_, throwIO)
+import qualified Control.Exception.Safe  as E
+import           Control.Exception.Safe  (MonadThrow, MonadCatch, MonadMask)
 import           Control.Monad.Managed   (managed, runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
@@ -55,13 +56,13 @@ import           System.Exit             (exitSuccess)
 import           System.Directory        (doesFileExist)
 import           Text.Printf             (printf)
 
-import qualified SDL.TTF                 as TTF
-import           SDL.TTF.FFI             (TTFFont)
+import qualified SDL.Font                as Font
+-- import qualified SDL.TTF                 as TTF
+-- import           SDL.TTF.FFI             (TTFFont)
 import           SDL                     (($=))
 import qualified SDL
 
 import           Protonic.Metapad
-import           Protonic.TTFHelper      (renderBlended, sizeText, fontFromBytes)
 import           Protonic.Data           (Font (..))
 import           Protonic.Font_          (newFont, freeFont, withFont)
 
@@ -102,7 +103,7 @@ data ProtoConfig = ProtoConfig
   , window           :: SDL.Window
   -- Resource
   , renderer         :: MVar SDL.Renderer
-  , systemFont       :: TTFFont
+  , systemFont       :: Font
   -- Debug
   , debugPrintFPS    :: Bool
   , debugPrintSystem :: Bool
@@ -152,9 +153,9 @@ runProtoConfT conf k = runReaderT (runPCT k) conf
 
 withProtonic :: Config -> (Proto -> IO ()) -> IO ()
 withProtonic config go =
-  bracket_ SDL.initializeAll SDL.quit $ do
+  E.bracket_ SDL.initializeAll SDL.quit $ do
     specialInit
-    TTF.withInit $ withFont' $ \(Font font) ->
+    withFontInit $ withFont' $ \font ->
       withWinRenderer config $ \win r -> do
         SDL.rendererDrawBlendMode r $= SDL.BlendAlphaBlend
         conf <- mkConf font win r
@@ -164,13 +165,17 @@ withProtonic config go =
       _ <- SDL.setMouseLocationMode SDL.RelativeLocation
       return ()
 
-    withFont' act =
+    withFontInit action =
+      E.bracket_ Font.initialize
+                 Font.quit
+                 action
+
+    withFont' action =
       case confFont config of
-        Left bytes -> withFont bytes size act
-        Right path ->
-          bracket (newFont path size)
-                  freeFont
-                  act
+        Left bytes -> withFont bytes size action
+        Right path -> E.bracket (newFont path size)
+                                freeFont
+                                action
       where
         size = max 18 (h `div` 50)
         V2 _ h = confWinSize config
@@ -194,12 +199,12 @@ withProtonic config go =
       where
         title = T.pack $ confWinTitle conf
 
-        withW = bracket (SDL.createWindow title winConf)
-                        SDL.destroyWindow
+        withW = E.bracket (SDL.createWindow title winConf)
+                          SDL.destroyWindow
 
-        withR func win = bracket (SDL.createRenderer win (-1) SDL.defaultRenderer)
-                                 SDL.destroyRenderer
-                                 (\r -> setLogicalSize r >> func win r)
+        withR func win = E.bracket (SDL.createRenderer win (-1) SDL.defaultRenderer)
+                                   SDL.destroyRenderer
+                                   (\r -> setLogicalSize r >> func win r)
 
         winConf = SDL.defaultWindow
           { SDL.windowMode = confWindowMode conf
@@ -269,9 +274,9 @@ runScene scn0 = do
 
 goScene :: Scene g a -> ProtoT ()
 goScene scene_ =
-  bracket (sceneNew scene_)
-          (sceneDelete scene_)
-          (go (SceneState 0 []) scene_)
+  E.bracket (sceneNew scene_)
+            (sceneDelete scene_)
+            (go (SceneState 0 []) scene_)
   where
     go :: SceneState -> Scene g a -> g -> ProtoT ()
     go s0 scene0 g0 = do
@@ -381,10 +386,10 @@ sceneLoop iniG iniS scene =
         foldM_ (work r font) 8 ts
       where
         work r font y text = liftIO $ do
-          (w,h) <- sizeText font text
+          (w,h) <- Font.size font text
           runManaged $ do
-            surface <- managed $ bracket (renderBlended font (V4 0 255 0 255) text) SDL.freeSurface
-            texture <- managed $ bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
+            surface <- managed $ E.bracket (Font.blended font (V4 0 255 0 255) text) SDL.freeSurface
+            texture <- managed $ E.bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
             let rect = Just $ SDL.Rectangle (P (V2 8 y)) (fromIntegral <$> V2 w h)
             SDL.copy r texture Nothing rect
           return $ y + fromIntegral h
@@ -393,13 +398,6 @@ printsys :: Text -> ProtoT ()
 printsys text
   | T.null text = return ()
   | otherwise   = modify $ \s -> s {messages = text : messages s}
-
--- | Open font after check if font file exists
-openFont :: String -> Int -> IO TTFFont
-openFont str size = do
-  p <- doesFileExist str
-  unless p $ throwIO $ userError $ "Missing font file: " ++ str
-  TTF.openFont str size
 
 -- | Process events about system
 procEvents :: [SDL.Event] -> ProtoT ()

@@ -7,9 +7,9 @@ import           Foreign.C.Types (CInt)
 import           Linear.V2
 
 import qualified SDL
-import           SDL.TTF.FFI     (TTFFont)
+import qualified SDL.Font
 
-data Font = Font TTFFont
+type Font = SDL.Font.Font
 
 data Sprite = Sprite
   { sptex  :: SDL.Texture

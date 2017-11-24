@@ -23,17 +23,17 @@ import           Linear.V4
 import qualified SDL
 import qualified SDL.Image
 import           SDL                  (($=), get)
+import qualified SDL.Font             as Font
 
 import           Protonic.Core
 import           Protonic.Data        (Font (..), Sprite (..))
-import           Protonic.TTFHelper   (renderBlended, sizeText)
 
 -- TODO: Change color
 newSprite :: (MonadReader ProtoConfig m, MonadIO m) => Font -> V4 Word8 -> Text -> m Sprite
-newSprite (Font font) color text = do
-  (w,h) <- sizeText font text
+newSprite font color text = do
+  (w,h) <- Font.size font text
   withRenderer $ \rndr -> do
-    texture <- E.bracket (renderBlended font color text)
+    texture <- E.bracket (Font.blended font color text)
                          SDL.freeSurface
                          (SDL.createTextureFromSurface rndr)
     return $ Sprite texture (V2 (fromIntegral w) (fromIntegral h))

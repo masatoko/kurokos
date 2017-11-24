@@ -20,10 +20,10 @@ import           Linear.V4
 
 import           SDL                   (($=))
 import qualified SDL
+import qualified SDL.Font              as Font
 
 import           Protonic.Core
 import           Protonic.Data         (Sprite (..))
-import           Protonic.TTFHelper    (renderBlended, sizeText)
 
 setColor :: V4 Word8 -> ProtoT ()
 setColor color =
@@ -82,9 +82,9 @@ printTest :: Point V2 Int -> V4 Word8 -> Text -> ProtoT ()
 printTest pos color text = do
   font <- asks systemFont
   withRenderer $ \r -> do
-    (w,h) <- sizeText font text
+    (w,h) <- Font.size font text
     runManaged $ do
-      surface <- managed $ bracket (renderBlended font color text) SDL.freeSurface
+      surface <- managed $ bracket (Font.blended font color text) SDL.freeSurface
       texture <- managed $ bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
       let rect = Just $ SDL.Rectangle pos' (fromIntegral <$> V2 w h)
       SDL.copy r texture Nothing rect
