@@ -36,12 +36,12 @@ initGame = do
   liftIO $ P.runProtoConfT pconf $ do
     font <- P.newFont fontPath 50
     char <- P.newSprite font (V4 255 255 255 255) "@"
-    img <- P.loadSprite "data/img.png" (pure 48)
+    img <- P.loadSprite "_data/img.png" (pure 48)
     P.freeFont font
     liftIO . putStrLn $ "init Game"
     return $ Game char img 0 0 []
   where
-    fontPath = "data/font/system.ttf"
+    fontPath = "_data/system.ttf"
 
 freeGame :: MonadIO m => Game -> m ()
 freeGame g = liftIO $ do
@@ -51,7 +51,7 @@ freeGame g = liftIO $ do
 main :: IO ()
 main = do
   as <- getArgs
-  fontBytes <- B.readFile "data/font/system.ttf"
+  fontBytes <- B.readFile "_data/system.ttf"
   let opt = (`elem` as)
       conf = mkConf (opt "button") (opt "axis") (opt "hat")
       conf' = conf {P.confFont = Left fontBytes}
