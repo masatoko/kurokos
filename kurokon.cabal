@@ -18,7 +18,7 @@ library
   exposed-modules:     Protonic
   other-modules:       Protonic.Core
                      , Protonic.Data
-                     , Protonic.Font
+                     , Protonic.Font_
                      , Protonic.Metapad
                      , Protonic.Render
                      , Protonic.Sprite

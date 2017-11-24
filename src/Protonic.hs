@@ -69,7 +69,7 @@ module Protonic
 
 import           Protonic.Core
 import           Protonic.Data
-import           Protonic.Font
+import           Protonic.Font_
 import           Protonic.Metapad
 import           Protonic.Render
 import           Protonic.Sprite

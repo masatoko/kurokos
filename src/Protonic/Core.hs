@@ -59,13 +59,11 @@ import qualified SDL.TTF                 as TTF
 import           SDL.TTF.FFI             (TTFFont)
 import           SDL                     (($=))
 import qualified SDL
--- import qualified SDL.Raw.Mixer           as Mix
--- import qualified SDL.Mixer               as Mix
 
 import           Protonic.Metapad
 import           Protonic.TTFHelper      (renderBlended, sizeText, fontFromBytes)
 import           Protonic.Data           (Font (..))
-import           Protonic.Font           (newFont, freeFont, withFont)
+import           Protonic.Font_          (newFont, freeFont, withFont)
 
 data Config = Config
   { confWinSize :: V2 Int
