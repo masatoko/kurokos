@@ -15,16 +15,50 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
+  exposed-modules:     Protonic
+  other-modules:       Protonic.Core
+                     , Protonic.Data
+                     , Protonic.Font
+                     , Protonic.Metapad
+                     , Protonic.Render
+                     , Protonic.Sprite
+                     , Protonic.TTFHelper
+  pkgconfig-depends:   sdl2 >= 2
+                     , SDL2_ttf >= 2
   build-depends:       base >= 4.7 && < 5
+                     , sdl2 >= 2.2.0
+                     , sdl2-ttf >= 1.0.0
+                     , sdl2-image
+                     -- , sdl2-mixer
+                     , transformers
+                     , mtl
+                     , containers
+                     , bytestring
+                     , safe-exceptions
+                     , text
+                     , vector
+                     , managed
+                     , linear
+                     , directory
+                     , safe
+  c-sources:           csrc/ttf_helper.c
+  include-dirs:        csrc
+  includes:            csrc/ttf_helper.h
   default-language:    Haskell2010
 
-executable kurokon-exe
+executable demo
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , kurokon
+                     , sdl2 >= 2
+                     , text
+                     , lens
+                     , mtl
+                     , linear
+                     , vector
+                     , bytestring
   default-language:    Haskell2010
 
 test-suite kurokon-test
