@@ -34,7 +34,7 @@ initGame :: ProtoT Game
 initGame = do
   pconf <- P.getProtoConfig
   liftIO $ P.runProtoConfT pconf $ do
-    font <- P.newFont fontPath 50
+    font <- P.loadFont fontPath 50
     char <- P.newSprite font (V4 255 255 255 255) "@"
     img <- P.loadSprite "_data/img.png" (pure 48)
     P.freeFont font

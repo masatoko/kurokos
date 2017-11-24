@@ -1,5 +1,5 @@
 module Protonic.Font
-  ( newFont
+  ( loadFont
   , freeFont
   , withFont
   ) where
@@ -17,8 +17,8 @@ import qualified SDL.Font                 as Font
 
 import           Protonic.Data            (Font, Sprite (..))
 
-newFont :: MonadIO m => FilePath -> Int -> m Font
-newFont path size = liftIO $ do
+loadFont :: MonadIO m => FilePath -> Int -> m Font
+loadFont path size = liftIO $ do
   p <- doesFileExist path
   if p
     then Font.load path size

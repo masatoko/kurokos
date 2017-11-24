@@ -33,7 +33,7 @@ module Protonic
   , renderS, renderS'
   , printTest
   -- Font
-  , newFont, freeFont, withFont
+  , loadFont, freeFont, withFont
   -- Sprite
   , newSprite, loadSprite, decodeSprite, freeSprite
   , setBlendMode, setAlphaMod, setColorMod

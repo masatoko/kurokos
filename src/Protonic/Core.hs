@@ -62,7 +62,7 @@ import qualified SDL
 
 import           Protonic.Metapad
 import           Protonic.Data           (Font)
-import           Protonic.Font           (newFont, freeFont, withFont)
+import           Protonic.Font           (loadFont, freeFont, withFont)
 
 data Config = Config
   { confWinSize :: V2 Int
@@ -171,7 +171,7 @@ withProtonic config go =
     withFont' action =
       case confFont config of
         Left bytes -> withFont bytes size action
-        Right path -> E.bracket (newFont path size)
+        Right path -> E.bracket (loadFont path size)
                                 freeFont
                                 action
       where
