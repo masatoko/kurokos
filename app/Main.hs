@@ -130,9 +130,7 @@ titleScene mjs pad =
   Scene pad update render transit (return Title) (\_ -> return ())
   where
     update :: Update Title Action
-    update _ as t = do
-      -- liftIO . print $ as
-      return t
+    update _ as t = return t
 
     render :: Render Title
     render _ _ = do
