@@ -68,8 +68,8 @@ main = do
       P.defaultConfig
         { P.confWinSize = V2 640 480
         , P.confWinTitle = "protpnic-app"
-        , P.confWindowMode = SDL.Fullscreen
-        -- , P.confWindowMode = SDL.Windowed
+        -- , P.confWindowMode = SDL.Fullscreen
+        , P.confWindowMode = SDL.Windowed
         , P.confDebugPrintSystem = True
         , P.confDebugJoystick = P.DebugJoystick pBtn pAxis pHat
         }
@@ -151,7 +151,7 @@ titleScene mjs pad =
   where
     update :: Update Title Action
     update _ as t = do
-      liftIO . print $ as
+      -- liftIO . print $ as
       return t
 
     render :: Render Title
