@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
@@ -245,8 +246,8 @@ type Exec = KurokosT ()
 
 data Transition
   = End
-  | Next Exec
-  | Push Exec
+  | forall g a. Next (Scene g a)
+  | forall g a. Push (Scene g a)
 
 continue :: Monad m => m (Maybe Transition)
 continue = return Nothing
@@ -255,10 +256,10 @@ end :: Monad m => m (Maybe Transition)
 end = return $ Just End
 
 next :: Scene g a -> KurokosT (Maybe Transition)
-next s = return . Just . Next $ runScene s
+next s = return . Just . Next $ s
 
 push :: Scene g a -> KurokosT (Maybe Transition)
-push s = return . Just . Push $ goScene s
+push s = return . Just . Push $ s
 
 -- Start scene
 runScene :: Scene g a -> KurokosT ()
@@ -281,9 +282,9 @@ goScene scene_ =
       (g', s', trans) <- sceneLoop g0 s0 scene0
       case trans of
         End       -> return ()
-        Next exec -> modify' $ \pst -> pst {execScene = Just exec}
-        Push exec -> do
-          exec
+        Next s -> modify' $ \pst -> pst {execScene = Just (runScene s)}
+        Push s -> do
+          goScene s
           gets execScene >>= \case
             Just _  -> return ()
             Nothing -> go s' scene0 g'
