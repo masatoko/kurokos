@@ -38,40 +38,39 @@ import           Control.Monad          (forM_, join)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Bits              (testBit)
 import           Data.Int               (Int16, Int32)
-import           Data.Maybe             (catMaybes, mapMaybe, fromMaybe)
-import qualified Data.Vector            as V
-import           Data.Word              (Word8, Word32)
 import qualified Data.Map               as M
+import           Data.Maybe             (catMaybes, fromMaybe, mapMaybe)
+import qualified Data.Vector            as V
+import           Data.Word              (Word32, Word8)
 import           Foreign.C.Types        (CInt)
 import           Linear.Affine
 import           Linear.V2
 import           Safe                   (headMay)
 
 import qualified SDL
--- import qualified SDL.Haptic as HAP
-import qualified SDL.Raw.Haptic as HAP
-import SDL.Raw.Types (Haptic)
-import SDL.Internal.Types (joystickPtr)
+import           SDL.Internal.Types     (joystickPtr)
+import qualified SDL.Raw.Haptic         as HAP
+import           SDL.Raw.Types          (Haptic)
 
 data Metapad a = Metapad [Input -> IO (Maybe a)]
 
 data Input = Input
-  { keyboard     :: [SDL.KeyboardEventData]
-  , mouseMotion  :: [SDL.MouseMotionEventData]
-  , mouseButton  :: [SDL.MouseButtonEventData]
-  , mouseWheel   :: [SDL.MouseWheelEventData]
-  , joyButtons   :: [SDL.JoyButtonEventData]
-  , joyAxes      :: [SDL.JoyAxisEventData]
-  , touches      :: [SDL.TouchFingerEventData]
-  , touchMotions :: [SDL.TouchFingerMotionEventData]
+  { keyboard      :: [SDL.KeyboardEventData]
+  , mouseMotion   :: [SDL.MouseMotionEventData]
+  , mouseButton   :: [SDL.MouseButtonEventData]
+  , mouseWheel    :: [SDL.MouseWheelEventData]
+  , joyButtons    :: [SDL.JoyButtonEventData]
+  , joyAxes       :: [SDL.JoyAxisEventData]
+  , touches       :: [SDL.TouchFingerEventData]
+  , touchMotions  :: [SDL.TouchFingerMotionEventData]
   , joyAxesCurPos :: M.Map Word8 Int16
   , joyAxesPrePos :: M.Map Word8 Int16
-  , curHat       :: !SDL.JoyHatPosition -- TODO: Should identify joystick id and hat index
-  , preHat       :: !SDL.JoyHatPosition
-  , modState     :: !SDL.KeyModifier
-  , keyState     :: SDL.Scancode -> Bool
-  , mousePos     :: Point V2 CInt
-  , mouseButtons :: SDL.MouseButton -> Bool
+  , curHat        :: !SDL.JoyHatPosition -- TODO: Should identify joystick id and hat index
+  , preHat        :: !SDL.JoyHatPosition
+  , modState      :: !SDL.KeyModifier
+  , keyState      :: SDL.Scancode -> Bool
+  , mousePos      :: Point V2 CInt
+  , mouseButtons  :: SDL.MouseButton -> Bool
   }
 
 data MouseButton
@@ -107,24 +106,24 @@ snapshotInput mPreInput es =
     sel f = mapMaybe f es'
     -- Keyboard
     kb (SDL.KeyboardEvent d) = Just d
-    kb _ = Nothing
+    kb _                     = Nothing
     mm (SDL.MouseMotionEvent d) = Just d
-    mm _ = Nothing
+    mm _                        = Nothing
     mb (SDL.MouseButtonEvent d) = Just d
-    mb _ = Nothing
+    mb _                        = Nothing
     mw (SDL.MouseWheelEvent d) = Just d
-    mw _ = Nothing
+    mw _                       = Nothing
     -- Joystick
     jb (SDL.JoyButtonEvent d) = Just d
-    jb _ = Nothing
+    jb _                      = Nothing
     ja (SDL.JoyAxisEvent d) = Just d
-    ja _ = Nothing
+    ja _                    = Nothing
     jaes = sel ja
     -- Touch
     td (SDL.TouchFingerEvent d) = Just d
-    td _ = Nothing
+    td _                        = Nothing
     tm (SDL.TouchFingerMotionEvent d) = Just d
-    tm _ = Nothing
+    tm _                              = Nothing
     --
     preHat' = fromMaybe SDL.HatCentered $ curHat <$> mPreInput
     curHat' = fromMaybe preHat' $ headMay $ sel hat
@@ -228,8 +227,8 @@ touchMotionAct mk input =
 type JoystickID = Int32
 
 data Joystick = Joy
-  { js :: !SDL.Joystick
-  , jsId :: !JoystickID
+  { js    :: !SDL.Joystick
+  , jsId  :: !JoystickID
   , jsHap :: !(Maybe Haptic)
   } deriving (Eq, Show)
 
