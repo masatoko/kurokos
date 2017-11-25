@@ -165,11 +165,11 @@ instance MonadBaseControl base m => MonadBaseControl base (KurokosT m) where
   restoreM                = defaultRestoreM
 
 newtype KurokosEnvT a = KurokosEnvT {
-    runPCT :: ReaderT KurokosEnv IO a
+    runKET :: ReaderT KurokosEnv IO a
   } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadThrow, MonadCatch, MonadMask)
 
 runKurokosEnvT :: KurokosEnv -> KurokosEnvT a -> IO a
-runKurokosEnvT conf k = runReaderT (runPCT k) conf
+runKurokosEnvT conf k = runReaderT (runKET k) conf
 
 withKurokos :: Config -> (KurokosData -> IO ()) -> IO ()
 withKurokos config go =
