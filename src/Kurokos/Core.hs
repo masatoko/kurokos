@@ -52,6 +52,7 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Control
+import           Control.Monad.Trans.Resource
 import qualified Data.ByteString             as B
 import           Data.Text                   (Text)
 import qualified Data.Text                   as T
@@ -252,8 +253,7 @@ data Scene g m a = Scene
   , sceneUpdate  :: Update g m a
   , sceneRender  :: Render g m
   , sceneTransit :: Transit g m a
-  , sceneNew     :: KurokosT m g
-  , sceneDelete  :: g -> KurokosT m ()
+  , sceneAlloca  :: ResourceT (KurokosT m) g
   }
 
 data SceneState = SceneState
@@ -283,19 +283,19 @@ push :: Monad m => Scene g m a -> KurokosT m (Maybe (Transition m))
 push = return . Just . Push
 
 -- Start scene
-runScene :: (MonadMask m, MonadIO m) => Scene g m a -> KurokosT m ()
+runScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene g m a -> KurokosT m ()
 runScene scn0 =
   goScene scn0 >>= \case
     Nothing   -> return ()
     Just exec -> exec
 
-goScene :: (MonadMask m, MonadIO m) => Scene g m a -> KurokosT m (Maybe (Exec m))
+goScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene g m a -> KurokosT m (Maybe (Exec m))
 goScene scene_ =
-  E.bracket (sceneNew scene_)
-            (sceneDelete scene_)
-            (go (SceneState 0 []) scene_)
+  runResourceT $ do
+    g <- sceneAlloca scene_
+    lift $ go (SceneState 0 []) scene_ g
   where
-    go :: (MonadMask m, MonadIO m) => SceneState -> Scene g m a -> g -> KurokosT m (Maybe (Exec m))
+    go :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => SceneState -> Scene g m a -> g -> KurokosT m (Maybe (Exec m))
     go s0 scene0 g0 = do
       (g', s', trans) <- sceneLoop g0 s0 scene0
       case trans of

@@ -11,6 +11,7 @@ import           Linear.Affine
 import           Linear.V2
 import           Linear.V4
 import           System.Environment     (getArgs)
+import           Control.Monad.Trans.Resource (ResourceT, allocate)
 
 import qualified SDL
 
@@ -30,23 +31,19 @@ data Game = Game
   , gActions   :: [Action]
   }
 
-initGame :: MonadIO m => KurokosT m Game
-initGame = do
-  env <- P.getEnv
-  liftIO $ P.runKurokosEnvT env $ do
-    font <- P.loadFont fontPath 50
-    char <- P.newSprite font (V4 255 255 255 255) "@"
-    img <- P.loadSprite "_data/img.png" (pure 48)
-    P.freeFont font
-    liftIO . putStrLn $ "init Game"
-    return $ Game char img 0 0 []
+allocGame :: ResourceT (KurokosT IO) Game
+allocGame = do
+  liftIO . putStrLn $ "allocGame"
+  env <- lift P.getEnv
+  (_, font) <- allocate (P.loadFont fontPath 50)
+                        P.freeFont
+  (_, img) <- allocate (liftIO $ P.runKurokosEnvT env $ P.loadSprite "_data/img.png" (pure 48))
+                       (\a -> P.freeSprite a >> liftIO (putStrLn "free img.png"))
+  (_, char) <- allocate (liftIO $ P.runKurokosEnvT env $ P.newSprite font (V4 255 255 255 255) "@")
+                        (\a -> P.freeSprite a >> liftIO (putStrLn "free font sprite"))
+  return $ Game char img 0 0 []
   where
     fontPath = "_data/system.ttf"
-
-freeGame :: MonadIO m => Game -> m ()
-freeGame g = liftIO $ do
-  P.freeSprite . gSprite $ g
-  putStrLn "free Game"
 
 main :: IO ()
 main = do
@@ -127,7 +124,7 @@ mkGamepad mjs = flip execState newPad $ do
 
 titleScene :: Maybe P.Joystick -> Metapad Action -> Scene Title IO Action
 titleScene mjs pad =
-  Scene pad update render transit (return Title) (\_ -> return ())
+  Scene pad update render transit (return Title) -- (\_ -> return ())
   where
     update :: Update Title IO Action
     update _ as t = return t
@@ -144,7 +141,7 @@ titleScene mjs pad =
       | otherwise       = P.continue
 
 mainScene :: Maybe P.Joystick -> Metapad Action -> Scene Game IO Action
-mainScene mjs pad = Scene pad update render transit initGame freeGame
+mainScene mjs pad = Scene pad update render transit allocGame
   where
     update :: Update Game IO Action
     update stt as g0 = do
@@ -201,7 +198,7 @@ mainScene mjs pad = Scene pad update render transit initGame freeGame
     targetCount = 5 :: Int
 
 pauseScene :: Metapad Action -> Scene Game IO Action
-pauseScene pad = Scene pad update render transit initGame freeGame
+pauseScene pad = Scene pad update render transit allocGame
   where
     update _ _ = return
 
@@ -214,7 +211,7 @@ pauseScene pad = Scene pad update render transit initGame freeGame
       | otherwise       = P.continue
 
 clearScene :: Maybe P.Joystick -> Int -> Metapad Action -> Scene Game IO Action
-clearScene mjs score pad = Scene pad update render transit initGame freeGame
+clearScene mjs score pad = Scene pad update render transit allocGame
   where
     update _ _ = return
 
