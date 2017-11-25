@@ -3,31 +3,31 @@
 module Main where
 
 import           Control.Monad.IO.Class (liftIO)
-import           System.Environment (getArgs)
 import           Control.Monad.State
-import qualified Data.ByteString     as B
-import           Data.Int            (Int16, Int32)
-import qualified Data.Text           as T
+import qualified Data.ByteString        as B
+import           Data.Int               (Int16, Int32)
+import qualified Data.Text              as T
+import           Linear.Affine
 import           Linear.V2
 import           Linear.V4
-import           Linear.Affine
+import           System.Environment     (getArgs)
 
 import qualified SDL
 
-import           Kurokos            (Joystick, Metapad, KurokosT, Render,
-                                      Scene (..), SceneState (..), Update,
-                                      addAction, newPad, runKurokos, runScene,
-                                      withKurokos)
-import qualified Kurokos            as P
+import           Kurokos                (Joystick, KurokosT, Metapad, Render,
+                                         Scene (..), SceneState (..), Update,
+                                         addAction, newPad, runKurokos,
+                                         runScene, withKurokos)
+import qualified Kurokos                as P
 
 data Title = Title
 
 data Game = Game
-  { gSprite  :: P.Sprite
+  { gSprite    :: P.Sprite
   , gImgSprite :: P.Sprite
-  , gDeg     :: !Double
-  , gCount   :: !Int
-  , gActions :: [Action]
+  , gDeg       :: !Double
+  , gCount     :: !Int
+  , gActions   :: [Action]
   }
 
 initGame :: MonadIO m => KurokosT m Game

@@ -23,7 +23,7 @@ import qualified SDL
 import qualified SDL.Font              as Font
 
 import           Kurokos.Core
-import           Kurokos.Data         (Sprite (..))
+import           Kurokos.Data          (Sprite (..))
 
 setColor :: MonadIO m => V4 Word8 -> KurokosT m ()
 setColor color =

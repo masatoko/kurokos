@@ -1,15 +1,15 @@
+{-# LANGUAGE ExistentialQuantification  #-}
+{-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE StrictData #-}
-{-# LANGUAGE Strict #-}
+{-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE MultiWayIf                 #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE Strict                     #-}
+{-# LANGUAGE StrictData                 #-}
+{-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE UndecidableInstances       #-}
 
 module Kurokos.Core
   ( Config (..)
@@ -43,50 +43,50 @@ module Kurokos.Core
   , setRendererDrawBlendMode
   ) where
 
-import           Control.Concurrent.MVar (MVar, newMVar, withMVar)
-import qualified Control.Exception.Safe  as E
-import           Control.Exception.Safe  (MonadThrow, MonadCatch, MonadMask)
+import           Control.Concurrent.MVar     (MVar, newMVar, withMVar)
+import           Control.Exception.Safe      (MonadCatch, MonadMask, MonadThrow)
+import qualified Control.Exception.Safe      as E
 import           Control.Monad.Base
-import           Control.Monad.Managed   (managed, runManaged)
+import           Control.Monad.Managed       (managed, runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Control
-import qualified Data.ByteString         as B
-import           Data.Text               (Text)
-import qualified Data.Text               as T
-import qualified Data.Vector.Unboxed     as V
-import           Data.Word               (Word32)
-import           Linear.Affine           (Point (..))
+import qualified Data.ByteString             as B
+import           Data.Text                   (Text)
+import qualified Data.Text                   as T
+import qualified Data.Vector.Unboxed         as V
+import           Data.Word                   (Word32)
+import           Linear.Affine               (Point (..))
 import           Linear.V2
 import           Linear.V4
-import           System.Exit             (exitSuccess)
-import           System.Directory        (doesFileExist)
-import           Text.Printf             (printf)
+import           System.Directory            (doesFileExist)
+import           System.Exit                 (exitSuccess)
+import           Text.Printf                 (printf)
 
-import qualified SDL.Font                as Font
-import           SDL                     (($=))
+import           SDL                         (($=))
 import qualified SDL
+import qualified SDL.Font                    as Font
 
+import           Kurokos.Data                (Font)
+import           Kurokos.Font                (freeFont, loadFont, withFont)
 import           Kurokos.Metapad
-import           Kurokos.Data           (Font)
-import           Kurokos.Font           (loadFont, freeFont, withFont)
 
 data Config = Config
-  { confWinSize :: V2 Int
-  , confWinTitle :: String
-  , confWindowMode :: SDL.WindowMode
-  , confDebugPrintFPS :: Bool
+  { confWinSize          :: V2 Int
+  , confWinTitle         :: String
+  , confWindowMode       :: SDL.WindowMode
+  , confDebugPrintFPS    :: Bool
   , confDebugPrintSystem :: Bool
-  , confDebugJoystick :: DebugJoystick
-  , confNumAverageTime :: Int
-  , confFont :: Either B.ByteString FilePath
+  , confDebugJoystick    :: DebugJoystick
+  , confNumAverageTime   :: Int
+  , confFont             :: Either B.ByteString FilePath
   }
 
 data DebugJoystick = DebugJoystick
   { djVisButton :: Bool
-  , djVisAxis :: Bool
-  , djVisHat :: Bool
+  , djVisAxis   :: Bool
+  , djVisHat    :: Bool
   }
 
 defaultConfig :: Config
@@ -119,13 +119,13 @@ data KurokosEnv = KurokosEnv
 
 data KurokosState = KurokosState
   {
-    messages     :: [Text]
+    messages   :: [Text]
   --
-  , psStart      :: !Time
-  , psCount      :: !Int
+  , psStart    :: !Time
+  , psCount    :: !Int
   --
-  , actualFPS    :: !Double
-  , frameTimes   :: V.Vector Time
+  , actualFPS  :: !Double
+  , frameTimes :: V.Vector Time
   }
 
 data KurokosData = KurokosData KurokosEnv KurokosState
@@ -235,8 +235,8 @@ withKurokos config go =
         setLogicalSize r =
           case confWindowMode conf of
             SDL.FullscreenDesktop -> work
-            SDL.Fullscreen -> work
-            _ -> return ()
+            SDL.Fullscreen        -> work
+            _                     -> return ()
           where
             work = do
               let size = Just $ SDL.windowInitialSize winConf
@@ -257,7 +257,7 @@ data Scene g m a = Scene
   }
 
 data SceneState = SceneState
-  { frameCount :: Integer
+  { frameCount  :: Integer
   , sceneEvents :: [SDL.Event]
   }
 

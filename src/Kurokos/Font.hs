@@ -4,18 +4,18 @@ module Kurokos.Font
   , withFont
   ) where
 
-import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import qualified Control.Exception.Safe   as E
-import qualified Data.ByteString          as B
+import           Control.Monad.IO.Class   (MonadIO, liftIO)
 import           Data.ByteString          (ByteString)
+import qualified Data.ByteString          as B
 import           Data.ByteString.Internal (ByteString (..))
-import           System.Directory         (doesFileExist)
 import           Foreign.ForeignPtr       (withForeignPtr)
 import           Foreign.Ptr              (plusPtr)
+import           System.Directory         (doesFileExist)
 
 import qualified SDL.Font                 as Font
 
-import           Kurokos.Data            (Font, Sprite (..))
+import           Kurokos.Data             (Font, Sprite (..))
 
 loadFont :: MonadIO m => FilePath -> Int -> m Font
 loadFont path size = liftIO $ do
