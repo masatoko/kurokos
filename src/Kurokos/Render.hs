@@ -1,4 +1,4 @@
-module Protonic.Render
+module Kurokos.Render
   ( setColor
   , clearBy
   , drawLine
@@ -22,8 +22,8 @@ import           SDL                   (($=))
 import qualified SDL
 import qualified SDL.Font              as Font
 
-import           Protonic.Core
-import           Protonic.Data         (Sprite (..))
+import           Kurokos.Core
+import           Kurokos.Data         (Sprite (..))
 
 setColor :: V4 Word8 -> KurokosT ()
 setColor color =

@@ -1,4 +1,4 @@
-module Protonic.Data
+module Kurokos.Data
   ( Font
   , Sprite (..)
   ) where

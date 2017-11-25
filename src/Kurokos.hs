@@ -1,4 +1,4 @@
-module Protonic
+module Kurokos
   (
     KurokosData
   , KurokosEnv
@@ -65,9 +65,9 @@ module Protonic
   , rumble
   ) where
 
-import           Protonic.Core
-import           Protonic.Data
-import           Protonic.Font
-import           Protonic.Metapad
-import           Protonic.Render
-import           Protonic.Sprite
+import           Kurokos.Core
+import           Kurokos.Data
+import           Kurokos.Font
+import           Kurokos.Metapad
+import           Kurokos.Render
+import           Kurokos.Sprite

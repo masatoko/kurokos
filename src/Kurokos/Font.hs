@@ -1,4 +1,4 @@
-module Protonic.Font
+module Kurokos.Font
   ( loadFont
   , freeFont
   , withFont
@@ -15,7 +15,7 @@ import           Foreign.Ptr              (plusPtr)
 
 import qualified SDL.Font                 as Font
 
-import           Protonic.Data            (Font, Sprite (..))
+import           Kurokos.Data            (Font, Sprite (..))
 
 loadFont :: MonadIO m => FilePath -> Int -> m Font
 loadFont path size = liftIO $ do

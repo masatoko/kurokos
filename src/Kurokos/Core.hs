@@ -6,7 +6,7 @@
 {-# LANGUAGE StrictData #-}
 {-# LANGUAGE Strict #-}
 
-module Protonic.Core
+module Kurokos.Core
   ( Config (..)
   , defaultConfig
   , KurokosEnv (..)
@@ -60,9 +60,9 @@ import qualified SDL.Font                as Font
 import           SDL                     (($=))
 import qualified SDL
 
-import           Protonic.Metapad
-import           Protonic.Data           (Font)
-import           Protonic.Font           (loadFont, freeFont, withFont)
+import           Kurokos.Metapad
+import           Kurokos.Data           (Font)
+import           Kurokos.Font           (loadFont, freeFont, withFont)
 
 data Config = Config
   { confWinSize :: V2 Int
@@ -84,7 +84,7 @@ data DebugJoystick = DebugJoystick
 defaultConfig :: Config
 defaultConfig = Config
   { confWinSize = V2 640 480
-  , confWinTitle = "protonic"
+  , confWinTitle = "Kurokos"
   , confWindowMode = SDL.Windowed
   , confDebugPrintFPS = False
   , confDebugPrintSystem = False

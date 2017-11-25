@@ -15,13 +15,13 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Protonic
-  other-modules:       Protonic.Core
-                     , Protonic.Data
-                     , Protonic.Font
-                     , Protonic.Metapad
-                     , Protonic.Render
-                     , Protonic.Sprite
+  exposed-modules:     Kurokos
+  other-modules:       Kurokos.Core
+                     , Kurokos.Data
+                     , Kurokos.Font
+                     , Kurokos.Metapad
+                     , Kurokos.Render
+                     , Kurokos.Sprite
   pkgconfig-depends:   sdl2 >= 2
                      , SDL2_ttf >= 2
   build-depends:       base >= 4.7 && < 5

@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Protonic.Sprite
+module Kurokos.Sprite
   ( newSprite
   , loadSprite
   , decodeSprite
@@ -25,8 +25,8 @@ import qualified SDL.Image
 import           SDL                  (($=), get)
 import qualified SDL.Font             as Font
 
-import           Protonic.Core
-import           Protonic.Data        (Font, Sprite (..))
+import           Kurokos.Core
+import           Kurokos.Data        (Font, Sprite (..))
 
 -- TODO: Change color
 newSprite :: (MonadReader KurokosEnv m, MonadIO m) => Font -> V4 Word8 -> Text -> m Sprite

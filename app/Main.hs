@@ -14,11 +14,11 @@ import           Linear.Affine
 
 import qualified SDL
 
-import           Protonic            (Joystick, Metapad, KurokosT, Render,
+import           Kurokos            (Joystick, Metapad, KurokosT, Render,
                                       Scene (..), SceneState (..), Update,
                                       addAction, newPad, runKurokos, runScene,
                                       withKurokos)
-import qualified Protonic            as P
+import qualified Kurokos            as P
 
 data Title = Title
 

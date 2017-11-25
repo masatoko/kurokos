@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Protonic.Metapad
+module Kurokos.Metapad
   ( Input
   , Joystick
   , Metapad
