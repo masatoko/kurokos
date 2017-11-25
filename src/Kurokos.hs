@@ -30,8 +30,8 @@ module Kurokos
   -- Render
   , setColor
   , clearBy
-  , drawLine, drawRect, fillRect
-  , renderS, renderS'
+  -- , drawLine, drawRect, fillRect
+  -- , renderS, renderS'
   , printTest
   -- Font
   , loadFont, freeFont, withFont

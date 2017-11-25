@@ -10,10 +10,12 @@ import qualified Data.Text              as T
 import           Linear.Affine
 import           Linear.V2
 import           Linear.V4
+import           Linear.Vector          ((^*))
 import           System.Environment     (getArgs)
 import           Control.Monad.Trans.Resource (ResourceT, allocate)
 
 import qualified SDL
+import qualified SDL.Primitive          as Prim
 
 import           Kurokos                (Joystick, KurokosT, Metapad, Render,
                                          Scene (..), SceneState (..), Update,
@@ -169,12 +171,17 @@ mainScene mjs pad = Scene pad update render transit allocGame
         setDeg = modify (\g -> g {gDeg = fromIntegral (frameCount stt `mod` 360)})
 
     render :: Render Game IO
-    render _ (Game spr img d i as) = do
+    render sst (Game spr img d i as) = do
       P.clearBy $ V4 0 0 0 255
-      P.renderS spr (P (V2 150 200)) Nothing (Just d)
-      P.renderS img (P (V2 10 200)) Nothing Nothing
-      P.setColor $ V4 0 255 0 255
-      P.drawLine (P (V2 200 200)) (P (V2 270 230))
+      -- P.renderS spr (P (V2 150 200)) Nothing (Just d)
+      -- P.renderS img (P (V2 10 200)) Nothing Nothing
+      P.withRenderer $ \r -> do
+        let p0 = V2 200 250
+            p1 = p0 + (round <$> (V2 dx dy ^* 30))
+              where
+                dx = cos $ fromIntegral t / 5
+                dy = sin $ fromIntegral t / 5
+        Prim.thickLine r p0 p1 4 (V4 0 255 0 255)
       --
       P.printTest (P (V2 10 100)) color "Press Enter key to pause"
       P.printTest (P (V2 10 120)) color "Press F key!"
@@ -183,6 +190,7 @@ mainScene mjs pad = Scene pad update render transit allocGame
       P.printTest (P (V2 10 160)) color $ T.pack $ show as
       where
         color = V4 255 255 255 255
+        t = frameCount sst
 
     transit _ as g
       | cnt > targetCount = P.next $ clearScene mjs cnt pad
