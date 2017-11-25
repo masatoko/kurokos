@@ -51,10 +51,10 @@ freeGame g = liftIO $ do
 main :: IO ()
 main = do
   as <- getArgs
-  fontBytes <- B.readFile "_data/system.ttf"
   let opt = (`elem` as)
       conf = mkConf (opt "button") (opt "axis") (opt "hat")
-      conf' = conf {P.confFont = Left fontBytes}
+      -- conf' = conf {P.confFont = Left fontBytes}
+      conf' = conf {P.confFont = Right "_data/system.ttf"}
   withProtonic conf' $ \proto -> do
     mjs <- P.newJoystickAt 0
     let gamepad = mkGamepad mjs
