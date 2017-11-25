@@ -151,6 +151,19 @@ runKurokos (KurokosData conf stt) k = runStateT (runReaderT (runKT k) conf) stt
 instance MonadTrans KurokosT where
   lift = KurokosT . lift . lift
 
+instance MonadTransControl KurokosT where
+  type StT KurokosT a = (a, KurokosState)
+  liftWith f = KurokosT $
+    liftWith $ \runS ->
+      liftWith $ \runR ->
+        f $ \ma -> runR $ runS $ runKT ma
+  restoreT = KurokosT . restoreT . restoreT
+
+instance MonadBaseControl base m => MonadBaseControl base (KurokosT m) where
+  type StM (KurokosT m) a = ComposeSt KurokosT m a
+  liftBaseWith            = defaultLiftBaseWith
+  restoreM                = defaultRestoreM
+
 newtype KurokosEnvT a = KurokosEnvT {
     runPCT :: ReaderT KurokosEnv IO a
   } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadThrow, MonadCatch, MonadMask)
