@@ -42,6 +42,7 @@ module Kurokos.Core
 import           Control.Concurrent.MVar (MVar, newMVar, withMVar)
 import qualified Control.Exception.Safe  as E
 import           Control.Exception.Safe  (MonadThrow, MonadCatch, MonadMask)
+import           Control.Monad.Base
 import           Control.Monad.Managed   (managed, runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
@@ -138,7 +139,7 @@ initialState = KurokosState
 
 newtype KurokosT m a = KurokosT {
     runPT :: ReaderT KurokosEnv (StateT (KurokosState m) m) a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadState (KurokosState m), MonadThrow, MonadCatch, MonadMask)
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadState (KurokosState m), MonadThrow, MonadCatch, MonadMask, MonadBase base)
 
 runKurokos :: KurokosData m -> KurokosT m a -> m (a, KurokosState m)
 runKurokos (KurokosData conf stt) k = runStateT (runReaderT (runPT k) conf) stt

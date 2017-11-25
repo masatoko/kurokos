@@ -29,6 +29,7 @@ library
                      , sdl2-ttf >= 2.0.0
                      , sdl2-image
                      -- , sdl2-mixer
+                     , transformers-base
                      , transformers
                      , mtl
                      , containers
