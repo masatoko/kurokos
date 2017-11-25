@@ -30,7 +30,7 @@ data Game = Game
   , gActions :: [Action]
   }
 
-initGame :: KurokosT Game
+initGame :: MonadIO m => KurokosT m Game
 initGame = do
   env <- P.getEnv
   liftIO $ P.runKurokosEnvT env $ do
@@ -125,14 +125,14 @@ mkGamepad mjs = flip execState newPad $ do
   -- Touch
   modify . addAction $ P.touchMotionAct TouchMotion
 
-titleScene :: Maybe P.Joystick -> Metapad Action -> Scene Title Action
+titleScene :: Maybe P.Joystick -> Metapad Action -> Scene Title IO Action
 titleScene mjs pad =
   Scene pad update render transit (return Title) (\_ -> return ())
   where
-    update :: Update Title Action
+    update :: Update Title IO Action
     update _ as t = return t
 
-    render :: Render Title
+    render :: Render Title IO
     render _ _ = do
       P.printTest (P (V2 10 100)) (V4 0 255 255 255) "Enter - start"
       P.printTest (P (V2 10 120)) (V4 0 255 255 255) "Escape - exit"
@@ -143,23 +143,23 @@ titleScene mjs pad =
       | Exit  `elem` as = P.end
       | otherwise       = P.continue
 
-mainScene :: Maybe P.Joystick -> Metapad Action -> Scene Game Action
+mainScene :: Maybe P.Joystick -> Metapad Action -> Scene Game IO Action
 mainScene mjs pad = Scene pad update render transit initGame freeGame
   where
-    update :: Update Game Action
+    update :: Update Game IO Action
     update stt as g0 = do
       -- when (frameCount stt `mod` 60 == 0) $ P.averageTime >>= liftIO . print
       let alpha = fromIntegral $ frameCount stt
       P.setAlphaMod (gImgSprite g0) alpha
       execStateT go g0
       where
-        go :: StateT Game KurokosT ()
+        go :: StateT Game (KurokosT IO) ()
         go = do
           mapM_ count as
           setDeg
           unless (null as) $ modify $ \g -> g {gActions = as}
 
-        count :: Action -> StateT Game KurokosT ()
+        count :: Action -> StateT Game (KurokosT IO) ()
         count Go = do
           modify (\a -> let c = gCount a in a {gCount = c + 1})
           c <- gets gCount
@@ -170,7 +170,7 @@ mainScene mjs pad = Scene pad update render transit initGame freeGame
 
         setDeg = modify (\g -> g {gDeg = fromIntegral (frameCount stt `mod` 360)})
 
-    render :: Render Game
+    render :: Render Game IO
     render _ (Game spr img d i as) = do
       P.clearBy $ V4 0 0 0 255
       P.renderS spr (P (V2 150 200)) Nothing (Just d)
@@ -200,7 +200,7 @@ mainScene mjs pad = Scene pad update render transit initGame freeGame
 
     targetCount = 5 :: Int
 
-pauseScene :: Metapad Action -> Scene Game Action
+pauseScene :: Metapad Action -> Scene Game IO Action
 pauseScene pad = Scene pad update render transit initGame freeGame
   where
     update _ _ = return
@@ -213,7 +213,7 @@ pauseScene pad = Scene pad update render transit initGame freeGame
       | Enter `elem` as = P.end
       | otherwise       = P.continue
 
-clearScene :: Maybe P.Joystick -> Int -> Metapad Action -> Scene Game Action
+clearScene :: Maybe P.Joystick -> Int -> Metapad Action -> Scene Game IO Action
 clearScene mjs score pad = Scene pad update render transit initGame freeGame
   where
     update _ _ = return
