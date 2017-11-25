@@ -450,9 +450,6 @@ withRenderer act = do
   mvar <- asks renderer
   liftIO $ withMVar mvar act
 
-assert :: Bool -> IO ()
-assert = flip unless $ error "Assertion failed"
-
 --
 
 setRendererDrawBlendMode :: SDL.BlendMode -> ProtoT ()
