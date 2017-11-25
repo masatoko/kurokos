@@ -14,10 +14,10 @@ import           Linear.Affine
 
 import qualified SDL
 
-import           Protonic            (Joystick, Metapad, ProtoT, Render,
+import           Protonic            (Joystick, Metapad, KurokosT, Render,
                                       Scene (..), SceneState (..), Update,
-                                      addAction, newPad, runProtoT, runScene,
-                                      withProtonic)
+                                      addAction, newPad, runKurokos, runScene,
+                                      withKurokos)
 import qualified Protonic            as P
 
 data Title = Title
@@ -30,10 +30,10 @@ data Game = Game
   , gActions :: [Action]
   }
 
-initGame :: ProtoT Game
+initGame :: KurokosT Game
 initGame = do
-  pconf <- P.getProtoConfig
-  liftIO $ P.runProtoConfT pconf $ do
+  env <- P.getEnv
+  liftIO $ P.runKurokosEnvT env $ do
     font <- P.loadFont fontPath 50
     char <- P.newSprite font (V4 255 255 255 255) "@"
     img <- P.loadSprite "_data/img.png" (pure 48)
@@ -55,10 +55,10 @@ main = do
       conf = mkConf (opt "button") (opt "axis") (opt "hat")
       -- conf' = conf {P.confFont = Left fontBytes}
       conf' = conf {P.confFont = Right "_data/system.ttf"}
-  withProtonic conf' $ \proto -> do
+  withKurokos conf' $ \kuro -> do
     mjs <- P.newJoystickAt 0
     let gamepad = mkGamepad mjs
-    _ <- runProtoT proto $
+    _ <- runKurokos kuro $
       runScene $ titleScene mjs gamepad
     maybe (return ()) P.freeJoystick mjs
     return ()
@@ -153,13 +153,13 @@ mainScene mjs pad = Scene pad update render transit initGame freeGame
       P.setAlphaMod (gImgSprite g0) alpha
       execStateT go g0
       where
-        go :: StateT Game ProtoT ()
+        go :: StateT Game KurokosT ()
         go = do
           mapM_ count as
           setDeg
           unless (null as) $ modify $ \g -> g {gActions = as}
 
-        count :: Action -> StateT Game ProtoT ()
+        count :: Action -> StateT Game KurokosT ()
         count Go = do
           modify (\a -> let c = gCount a in a {gCount = c + 1})
           c <- gets gCount

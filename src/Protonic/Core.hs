@@ -9,11 +9,11 @@
 module Protonic.Core
   ( Config (..)
   , defaultConfig
-  , ProtoConfig (..)
+  , KurokosEnv (..)
   , DebugJoystick (..)
-  , Proto
-  , ProtoT
-  , ProtoConfT
+  , KurokosData
+  , KurokosT
+  , KurokosEnvT
   , Render
   , Scene (..)
   , SceneState (..)
@@ -24,12 +24,12 @@ module Protonic.Core
   , continue, end, next, push
   , runScene
   --
-  , runProtoT
-  , runProtoConfT
-  , withProtonic
+  , runKurokos
+  , runKurokosEnvT
+  , withKurokos
   --
   , printsys
-  , getProtoConfig
+  , getEnv
   , screenSize
   , getWindow
   , averageTime
@@ -95,7 +95,7 @@ defaultConfig = Config
 
 type Time = Word32
 
-data ProtoConfig = ProtoConfig
+data KurokosEnv = KurokosEnv
   { graphFPS         :: Int
   , scrSize          :: V2 Int
   , window           :: SDL.Window
@@ -109,7 +109,7 @@ data ProtoConfig = ProtoConfig
   , numAverateTime   :: Int
   }
 
-data ProtoState = ProtoState
+data KurokosState = KurokosState
   {
     messages     :: [Text]
   --
@@ -118,13 +118,13 @@ data ProtoState = ProtoState
   --
   , actualFPS    :: !Double
   , frameTimes   :: V.Vector Time
-  , execScene    :: Maybe (ProtoT ())
+  , execScene    :: Maybe (KurokosT ())
   }
 
-data Proto = Proto ProtoConfig ProtoState
+data KurokosData = KurokosData KurokosEnv KurokosState
 
-initialState :: ProtoState
-initialState = ProtoState
+initialState :: KurokosState
+initialState = KurokosState
   {
     messages = []
   , psStart = 0
@@ -135,29 +135,29 @@ initialState = ProtoState
   , execScene = Nothing
   }
 
-newtype ProtoT a = ProtoT {
-    runPT :: ReaderT ProtoConfig (StateT ProtoState IO) a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader ProtoConfig, MonadState ProtoState, MonadThrow, MonadCatch, MonadMask)
+newtype KurokosT a = KurokosT {
+    runPT :: ReaderT KurokosEnv (StateT KurokosState IO) a
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadState KurokosState, MonadThrow, MonadCatch, MonadMask)
 
-runProtoT :: Proto -> ProtoT a -> IO (a, ProtoState)
-runProtoT (Proto conf stt) k = runStateT (runReaderT (runPT k) conf) stt
+runKurokos :: KurokosData -> KurokosT a -> IO (a, KurokosState)
+runKurokos (KurokosData conf stt) k = runStateT (runReaderT (runPT k) conf) stt
 
-newtype ProtoConfT a = ProtoConfT {
-    runPCT :: ReaderT ProtoConfig IO a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader ProtoConfig, MonadThrow, MonadCatch, MonadMask)
+newtype KurokosEnvT a = KurokosEnvT {
+    runPCT :: ReaderT KurokosEnv IO a
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadThrow, MonadCatch, MonadMask)
 
-runProtoConfT :: ProtoConfig -> ProtoConfT a -> IO a
-runProtoConfT conf k = runReaderT (runPCT k) conf
+runKurokosEnvT :: KurokosEnv -> KurokosEnvT a -> IO a
+runKurokosEnvT conf k = runReaderT (runPCT k) conf
 
-withProtonic :: Config -> (Proto -> IO ()) -> IO ()
-withProtonic config go =
+withKurokos :: Config -> (KurokosData -> IO ()) -> IO ()
+withKurokos config go =
   E.bracket_ SDL.initializeAll SDL.quit $ do
     specialInit
     withFontInit $ withFont' $ \font ->
       withWinRenderer config $ \win r -> do
         SDL.rendererDrawBlendMode r $= SDL.BlendAlphaBlend
         conf <- mkConf font win r
-        go $ Proto conf initialState
+        go $ KurokosData conf initialState
   where
     specialInit = do
       _ <- SDL.setMouseLocationMode SDL.RelativeLocation
@@ -180,7 +180,7 @@ withProtonic config go =
 
     mkConf font win r = do
       mvar <- newMVar r
-      return ProtoConfig
+      return KurokosEnv
         { graphFPS = 60
         , scrSize = confWinSize config
         , window = win
@@ -221,17 +221,17 @@ withProtonic config go =
               SDL.rendererLogicalSize r $= size
 
 -- Scene
-type Update g a  = SceneState -> [a] -> g -> ProtoT g
-type Render g    = SceneState -> g -> ProtoT ()
-type Transit g a = SceneState -> [a] -> g -> ProtoT (Maybe Transition)
+type Update g a  = SceneState -> [a] -> g -> KurokosT g
+type Render g    = SceneState -> g -> KurokosT ()
+type Transit g a = SceneState -> [a] -> g -> KurokosT (Maybe Transition)
 
 data Scene g a = Scene
   { scenePad     :: Metapad a
   , sceneUpdate  :: Update g a
   , sceneRender  :: Render g
   , sceneTransit :: Transit g a
-  , sceneNew     :: ProtoT g
-  , sceneDelete  :: g -> ProtoT ()
+  , sceneNew     :: KurokosT g
+  , sceneDelete  :: g -> KurokosT ()
   }
 
 data SceneState = SceneState
@@ -239,9 +239,9 @@ data SceneState = SceneState
   , sceneEvents :: [SDL.Event]
   }
 
-type SceneStarter g a = (Scene g a, ProtoT g, g -> ProtoT ())
+type SceneStarter g a = (Scene g a, KurokosT g, g -> KurokosT ())
 
-type Exec = ProtoT ()
+type Exec = KurokosT ()
 
 data Transition
   = End
@@ -254,14 +254,14 @@ continue = return Nothing
 end :: Monad m => m (Maybe Transition)
 end = return $ Just End
 
-next :: Scene g a -> ProtoT (Maybe Transition)
+next :: Scene g a -> KurokosT (Maybe Transition)
 next s = return . Just . Next $ runScene s
 
-push :: Scene g a -> ProtoT (Maybe Transition)
+push :: Scene g a -> KurokosT (Maybe Transition)
 push s = return . Just . Push $ goScene s
 
 -- Start scene
-runScene :: Scene g a -> ProtoT ()
+runScene :: Scene g a -> KurokosT ()
 runScene scn0 = do
   goScene scn0
   gets execScene >>= \case
@@ -270,13 +270,13 @@ runScene scn0 = do
       modify' $ \pst -> pst {execScene = Nothing}
       exec
 
-goScene :: Scene g a -> ProtoT ()
+goScene :: Scene g a -> KurokosT ()
 goScene scene_ =
   E.bracket (sceneNew scene_)
             (sceneDelete scene_)
             (go (SceneState 0 []) scene_)
   where
-    go :: SceneState -> Scene g a -> g -> ProtoT ()
+    go :: SceneState -> Scene g a -> g -> KurokosT ()
     go s0 scene0 g0 = do
       (g', s', trans) <- sceneLoop g0 s0 scene0
       case trans of
@@ -288,7 +288,7 @@ goScene scene_ =
             Just _  -> return ()
             Nothing -> go s' scene0 g'
 
-sceneLoop :: g -> SceneState -> Scene g a -> ProtoT (g, SceneState, Transition)
+sceneLoop :: g -> SceneState -> Scene g a -> KurokosT (g, SceneState, Transition)
 sceneLoop iniG iniS scene =
   loop Nothing iniG iniS
   where
@@ -323,7 +323,7 @@ sceneLoop iniG iniS scene =
         Just trans -> return (g', s2, trans)
 
     -- TODO: Implement frame skip
-    updateTime :: ProtoT ()
+    updateTime :: KurokosT ()
     updateTime = do
       cnt <- gets psCount
       t0 <- gets psStart
@@ -335,7 +335,7 @@ sceneLoop iniG iniS scene =
          | otherwise -> return ()
       modify' $ \a -> a {psCount = psCount a + 1}
 
-    wait :: ProtoT ()
+    wait :: KurokosT ()
     wait = do
       t <- SDL.ticks
       cnt <- gets psCount
@@ -355,13 +355,13 @@ sceneLoop iniG iniS scene =
             in printf "%02d" n ++ " " ++ replicate n '.'
           else "NO WAIT"
 
-    preRender :: ProtoT ()
+    preRender :: KurokosT ()
     preRender =
       withRenderer $ \r -> do
         SDL.rendererDrawColor r $= V4 0 0 0 255
         SDL.clear r
 
-    printSystemState :: SceneState -> ProtoT ()
+    printSystemState :: SceneState -> KurokosT ()
     printSystemState stt = do
       -- p1 <- asks debugPrintSystem
       -- when p1 $
@@ -375,7 +375,7 @@ sceneLoop iniG iniS scene =
     advance s = s {frameCount = c + 1}
       where c = frameCount s
 
-    printMessages :: ProtoT ()
+    printMessages :: KurokosT ()
     printMessages = do
       font <- asks systemFont
       ts <- gets messages
@@ -392,18 +392,18 @@ sceneLoop iniG iniS scene =
             SDL.copy r texture Nothing rect
           return $ y + fromIntegral h
 
-printsys :: Text -> ProtoT ()
+printsys :: Text -> KurokosT ()
 printsys text
   | T.null text = return ()
   | otherwise   = modify $ \s -> s {messages = text : messages s}
 
 -- | Process events about system
-procEvents :: [SDL.Event] -> ProtoT ()
+procEvents :: [SDL.Event] -> KurokosT ()
 procEvents es = go =<< asks debugJoystick
   where
     go dj = mapM_ (work . SDL.eventPayload) es
       where
-        work :: SDL.EventPayload -> ProtoT ()
+        work :: SDL.EventPayload -> KurokosT ()
         work (SDL.WindowClosedEvent _) = liftIO exitSuccess
         work SDL.QuitEvent             = liftIO exitSuccess
         work (SDL.JoyButtonEvent d)    =
@@ -422,16 +422,16 @@ procEvents es = go =<< asks debugJoystick
 
 --
 
-getProtoConfig :: (MonadReader ProtoConfig m, MonadIO m) => m ProtoConfig
-getProtoConfig = ask
+getEnv :: (MonadReader KurokosEnv m, MonadIO m) => m KurokosEnv
+getEnv = ask
 
-screenSize :: (MonadReader ProtoConfig m, MonadIO m) => m (V2 Int)
+screenSize :: (MonadReader KurokosEnv m, MonadIO m) => m (V2 Int)
 screenSize = asks scrSize
 
-getWindow :: (MonadReader ProtoConfig m, MonadIO m) => m SDL.Window
+getWindow :: (MonadReader KurokosEnv m, MonadIO m) => m SDL.Window
 getWindow = asks window
 
-averageTime :: ProtoT Int
+averageTime :: KurokosT Int
 averageTime = do
   ts <- gets frameTimes
   let a = fromIntegral $ V.sum ts
@@ -440,19 +440,19 @@ averageTime = do
              then 0
              else a `div` n
 
-showMessageBox :: (MonadReader ProtoConfig m, MonadIO m) => Text -> Text -> m ()
+showMessageBox :: (MonadReader KurokosEnv m, MonadIO m) => Text -> Text -> m ()
 showMessageBox title message = do
   window <- Just <$> asks window
   SDL.showSimpleMessageBox window SDL.Information title message
 
-withRenderer :: (MonadReader ProtoConfig m, MonadIO m) => (SDL.Renderer -> IO a) -> m a
+withRenderer :: (MonadReader KurokosEnv m, MonadIO m) => (SDL.Renderer -> IO a) -> m a
 withRenderer act = do
   mvar <- asks renderer
   liftIO $ withMVar mvar act
 
 --
 
-setRendererDrawBlendMode :: SDL.BlendMode -> ProtoT ()
+setRendererDrawBlendMode :: SDL.BlendMode -> KurokosT ()
 setRendererDrawBlendMode mode =
   withRenderer $ \r ->
     SDL.rendererDrawBlendMode r $= mode

@@ -1,12 +1,12 @@
 module Protonic
   (
-    Proto
-  , ProtoConfig
-  , ProtoT
-  , ProtoConfT
-  , runProtoT
-  , runProtoConfT
-  , withProtonic
+    KurokosData
+  , KurokosEnv
+  , KurokosT
+  , KurokosEnvT
+  , runKurokos
+  , runKurokosEnvT
+  , withKurokos
   , runScene
   , Update, Render, Transit
   , Config (..), DebugJoystick (..)
@@ -17,7 +17,7 @@ module Protonic
   , Transition
   , continue, end, next, push
   --
-  , getProtoConfig
+  , getEnv
   , screenSize
   , getWindow
   , averageTime

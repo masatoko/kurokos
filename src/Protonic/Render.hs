@@ -25,22 +25,22 @@ import qualified SDL.Font              as Font
 import           Protonic.Core
 import           Protonic.Data         (Sprite (..))
 
-setColor :: V4 Word8 -> ProtoT ()
+setColor :: V4 Word8 -> KurokosT ()
 setColor color =
   withRenderer $ \r ->
     SDL.rendererDrawColor r $= color
 
-clearBy :: V4 Word8 -> ProtoT ()
+clearBy :: V4 Word8 -> KurokosT ()
 clearBy color =
   withRenderer $ \r -> do
     SDL.rendererDrawColor r $= color
     SDL.clear r
 
-renderS :: Sprite -> Point V2 Int -> Maybe (V2 CInt) -> Maybe Double -> ProtoT ()
+renderS :: Sprite -> Point V2 Int -> Maybe (V2 CInt) -> Maybe Double -> KurokosT ()
 renderS spr pos mSize mDeg =
   renderS' spr pos mSize mDeg Nothing
 
-renderS' :: Sprite -> Point V2 Int -> Maybe (V2 CInt) -> Maybe Double -> Maybe (Point V2 CInt) -> ProtoT ()
+renderS' :: Sprite -> Point V2 Int -> Maybe (V2 CInt) -> Maybe Double -> Maybe (Point V2 CInt) -> KurokosT ()
 renderS' (Sprite tex size) pos mSize mDeg mRotCenter =
   withRenderer $ copy mDeg
   where
@@ -54,7 +54,7 @@ renderS' (Sprite tex size) pos mSize mDeg mRotCenter =
         deg' = realToFrac deg
     copy Nothing r = SDL.copy r tex Nothing dest
 
-drawLine :: Point V2 Int -> Point V2 Int -> ProtoT ()
+drawLine :: Point V2 Int -> Point V2 Int -> KurokosT ()
 drawLine org dst =
   withRenderer $ \r ->
     SDL.drawLine r org' dst'
@@ -62,7 +62,7 @@ drawLine org dst =
     org' = fromIntegral <$> org
     dst' = fromIntegral <$> dst
 
-drawRect :: Point V2 Int -> V2 Int -> ProtoT ()
+drawRect :: Point V2 Int -> V2 Int -> KurokosT ()
 drawRect p s =
   withRenderer $ \r ->
     SDL.drawRect r (Just (SDL.Rectangle p' s'))
@@ -70,7 +70,7 @@ drawRect p s =
     p' = fromIntegral <$> p
     s' = fromIntegral <$> s
 
-fillRect :: Point V2 Int -> V2 Int -> ProtoT ()
+fillRect :: Point V2 Int -> V2 Int -> KurokosT ()
 fillRect p s =
   withRenderer $ \r ->
     SDL.fillRect r (Just (SDL.Rectangle p' s'))
@@ -78,7 +78,7 @@ fillRect p s =
     p' = fromIntegral <$> p
     s' = fromIntegral <$> s
 
-printTest :: Point V2 Int -> V4 Word8 -> Text -> ProtoT ()
+printTest :: Point V2 Int -> V4 Word8 -> Text -> KurokosT ()
 printTest pos color text = do
   font <- asks systemFont
   withRenderer $ \r -> do
