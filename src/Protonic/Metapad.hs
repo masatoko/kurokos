@@ -34,7 +34,7 @@ module Protonic.Metapad
   ) where
 
 import qualified Control.Exception      as E
-import           Control.Monad          (forM_)
+import           Control.Monad          (forM_, join)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Bits              (testBit)
 import           Data.Int               (Int16, Int32)
@@ -273,11 +273,11 @@ monitorJoystick joy = do
     norm v = fromIntegral v / 32768
 
     prog :: CInt -> Int16 -> String
-    prog i a =
-      let v =  norm a
-          deg = truncate $ (v + 1) * 10
-          p = take 20 $ replicate deg '*' ++ repeat '-'
-      in show i ++ ": " ++ p ++ " ... " ++ show v
+    prog i a = show i ++ ": " ++ p ++ " ... " ++ show v
+      where
+        v =  norm a
+        deg = truncate $ (v + 1) * 10
+        p = take 20 $ replicate deg '*' ++ repeat '-'
 
 numAxes :: Joystick -> IO Int
 numAxes joy = fromIntegral <$> SDL.numAxes (js joy)
@@ -300,18 +300,17 @@ joyReleased joy button act i =
 
 isTargetButton :: Joystick -> Word8 -> SDL.JoyButtonState -> SDL.JoyButtonEventData -> Bool
 isTargetButton joy button state e =
-  let isId = SDL.joyButtonEventWhich e == jsId joy
-      isButton = SDL.joyButtonEventButton e == button
-      isState = SDL.joyButtonEventState e == state
-  in isId && isButton && isState
+  isId && isButton && isState
+  where
+    isId = SDL.joyButtonEventWhich e == jsId joy
+    isButton = SDL.joyButtonEventButton e == button
+    isState = SDL.joyButtonEventState e == state
 
 joyAxis :: Joystick -> Word8 -> (Int16 -> Int16 -> Maybe act) -> Input -> IO (Maybe act)
-joyAxis joy axis make i = return mact
+joyAxis joy axis make i = return . join $ mmAct
   where
-    mact = do
-      pre <- M.lookup axis $ joyAxesPrePos i
-      cur <- M.lookup axis $ joyAxesCurPos i
-      make pre cur
+    mmAct = make <$> (M.lookup axis $ joyAxesPrePos i)
+                 <*> (M.lookup axis $ joyAxesCurPos i)
 
 joyAxis2 :: Joystick -> Word8 -> Word8 -> (Int16 -> Int16 -> act) -> Input -> IO (Maybe act)
 joyAxis2 joy a0 a1 make _ = fmap Just $
@@ -319,11 +318,10 @@ joyAxis2 joy a0 a1 make _ = fmap Just $
        <*> SDL.axisPosition (js joy) (fromIntegral a1)
 
 joyAxisChanged :: Joystick -> Word8 -> (Int16 -> Int16 -> Maybe act) -> Input -> IO (Maybe act)
-joyAxisChanged joy axis make i = return mact
+joyAxisChanged joy axis make i = return mAct
   where
-    work = axisValue joy axis
-    mact = do
-      cur <- headMay . mapMaybe work . joyAxes $ i
+    mAct = do
+      cur <- headMay . mapMaybe (axisValue joy axis) . joyAxes $ i
       pre <- M.lookup axis $ joyAxesPrePos i
       make pre cur
 
@@ -338,8 +336,9 @@ joyAxisChanged2 joy a0 a1 make i =
     work Nothing   Nothing   = return Nothing
 
 axisValue :: Joystick -> Word8 -> SDL.JoyAxisEventData -> Maybe Int16
-axisValue joy axis (SDL.JoyAxisEventData jid' axis' v) =
-  if jsId joy == jid' && axis == axis' then Just v else Nothing
+axisValue joy axis (SDL.JoyAxisEventData jid' axis' v)
+  | jsId joy == jid' && axis == axis' = Just v
+  | otherwise                         = Nothing
 
 joyAllButtons :: Joystick -> ([Word8] -> act) -> Input -> IO (Maybe act)
 joyAllButtons joy mkAct i =
@@ -355,11 +354,11 @@ joyAllAxes :: Joystick -> ([(Word8, Int16)] -> act) -> Input -> IO (Maybe act)
 joyAllAxes joy mkAct =
   return . Just . mkAct . mapMaybe toAxis . joyAxes
   where
-    toAxis e =
-      let axis = SDL.joyAxisEventAxis e
-          value = SDL.joyAxisEventValue e
-          isId = SDL.joyAxisEventWhich e == jsId joy
-      in boolToMaybe (axis, value) isId
+    toAxis e = boolToMaybe (axis, value) isId
+      where
+        axis = SDL.joyAxisEventAxis e
+        value = SDL.joyAxisEventValue e
+        isId = SDL.joyAxisEventWhich e == jsId joy
 
 -- Hat
 
@@ -402,4 +401,6 @@ rumble joy strength lengthMSec =
 -- Utility
 
 boolToMaybe :: a -> Bool -> Maybe a
-boolToMaybe a p = if p then Just a else Nothing
+boolToMaybe a bool
+  | bool      = Just a
+  | otherwise = Nothing
