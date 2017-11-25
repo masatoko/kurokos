@@ -22,6 +22,7 @@ module Kurokos
   , getWindow
   , averageTime
   , showMessageBox
+  , withRenderer
   , setRendererDrawBlendMode
   -- Data
   , Font

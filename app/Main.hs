@@ -41,6 +41,7 @@ allocGame = do
                        (\a -> P.freeSprite a >> liftIO (putStrLn "free img.png"))
   (_, char) <- allocate (liftIO $ P.runKurokosEnvT env $ P.newSprite font (V4 255 255 255 255) "@")
                         (\a -> P.freeSprite a >> liftIO (putStrLn "free font sprite"))
+  -- lift $ P.withRenderer $ \r -> doSomething
   return $ Game char img 0 0 []
   where
     fontPath = "_data/system.ttf"
