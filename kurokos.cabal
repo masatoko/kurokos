@@ -1,8 +1,8 @@
-name:                kurokon
+name:                kurokos
 version:             0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/githubuser/kurokon#readme
+homepage:            https://github.com/githubuser/kurokos#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Author name here
@@ -47,7 +47,7 @@ executable demo
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
-                     , kurokon
+                     , kurokos
                      , sdl2 >= 2
                      , text
                      , lens
@@ -57,15 +57,15 @@ executable demo
                      , bytestring
   default-language:    Haskell2010
 
-test-suite kurokon-test
+test-suite kurokos-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
   build-depends:       base
-                     , kurokon
+                     , kurokos
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/kurokon
+  location: https://github.com/githubuser/kurokos

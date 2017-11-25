@@ -1,3 +1,3 @@
-# kurokon
+# kurokos
 
 WIP
