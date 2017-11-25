@@ -1,7 +1,11 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE StrictData #-}
@@ -46,6 +50,8 @@ import           Control.Monad.Base
 import           Control.Monad.Managed   (managed, runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Control
 import qualified Data.ByteString         as B
 import           Data.Text               (Text)
 import qualified Data.Text               as T
@@ -111,7 +117,7 @@ data KurokosEnv = KurokosEnv
   , numAverateTime   :: Int
   }
 
-data KurokosState m = KurokosState
+data KurokosState = KurokosState
   {
     messages     :: [Text]
   --
@@ -120,12 +126,11 @@ data KurokosState m = KurokosState
   --
   , actualFPS    :: !Double
   , frameTimes   :: V.Vector Time
-  , execScene    :: Maybe (KurokosT m ())
   }
 
-data KurokosData m = KurokosData KurokosEnv (KurokosState m)
+data KurokosData = KurokosData KurokosEnv KurokosState
 
-initialState :: KurokosState m
+initialState :: KurokosState
 initialState = KurokosState
   {
     messages = []
@@ -134,15 +139,17 @@ initialState = KurokosState
   --
   , actualFPS = 0
   , frameTimes = V.empty
-  , execScene = Nothing
   }
 
 newtype KurokosT m a = KurokosT {
-    runPT :: ReaderT KurokosEnv (StateT (KurokosState m) m) a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadState (KurokosState m), MonadThrow, MonadCatch, MonadMask, MonadBase base)
+    runKT :: ReaderT KurokosEnv (StateT KurokosState m) a
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadState KurokosState, MonadThrow, MonadCatch, MonadMask, MonadBase base)
 
-runKurokos :: KurokosData m -> KurokosT m a -> m (a, KurokosState m)
-runKurokos (KurokosData conf stt) k = runStateT (runReaderT (runPT k) conf) stt
+runKurokos :: KurokosData -> KurokosT m a -> m (a, KurokosState)
+runKurokos (KurokosData conf stt) k = runStateT (runReaderT (runKT k) conf) stt
+
+instance MonadTrans KurokosT where
+  lift = KurokosT . lift . lift
 
 newtype KurokosEnvT a = KurokosEnvT {
     runPCT :: ReaderT KurokosEnv IO a
@@ -151,7 +158,7 @@ newtype KurokosEnvT a = KurokosEnvT {
 runKurokosEnvT :: KurokosEnv -> KurokosEnvT a -> IO a
 runKurokosEnvT conf k = runReaderT (runPCT k) conf
 
-withKurokos :: Config -> (KurokosData m -> IO ()) -> IO ()
+withKurokos :: Config -> (KurokosData -> IO ()) -> IO ()
 withKurokos config go =
   E.bracket_ SDL.initializeAll SDL.quit $ do
     specialInit
@@ -243,6 +250,8 @@ data SceneState = SceneState
 
 -- type SceneStarter g a = (Scene g a, KurokosT g, g -> KurokosT m ())
 
+type Exec m = KurokosT m ()
+
 data Transition m
   = End
   | forall g a. Next (Scene g m a)
@@ -262,30 +271,27 @@ push = return . Just . Push
 
 -- Start scene
 runScene :: (MonadMask m, MonadIO m) => Scene g m a -> KurokosT m ()
-runScene scn0 = do
-  goScene scn0
-  gets execScene >>= \case
-    Nothing  -> return ()
-    Just exec -> do
-      modify' $ \pst -> pst {execScene = Nothing}
-      exec
+runScene scn0 =
+  goScene scn0 >>= \case
+    Nothing   -> return ()
+    Just exec -> exec
 
-goScene :: (MonadMask m, MonadIO m) => Scene g m a -> KurokosT m ()
+goScene :: (MonadMask m, MonadIO m) => Scene g m a -> KurokosT m (Maybe (Exec m))
 goScene scene_ =
   E.bracket (sceneNew scene_)
             (sceneDelete scene_)
             (go (SceneState 0 []) scene_)
   where
-    go :: (MonadMask m, MonadIO m) => SceneState -> Scene g m a -> g -> KurokosT m ()
+    go :: (MonadMask m, MonadIO m) => SceneState -> Scene g m a -> g -> KurokosT m (Maybe (Exec m))
     go s0 scene0 g0 = do
       (g', s', trans) <- sceneLoop g0 s0 scene0
       case trans of
-        End       -> return ()
-        Next s -> modify' $ \pst -> pst {execScene = Just (runScene s)}
+        End       -> return Nothing
+        Next s -> return $ Just (runScene s)
         Push s -> do
-          goScene s
-          gets execScene >>= \case
-            Just _  -> return ()
+          mExec <- goScene s
+          case mExec of
+            Just _  -> return mExec
             Nothing -> go s' scene0 g'
 
 sceneLoop :: MonadIO m => g -> SceneState -> Scene g m a -> KurokosT m (g, SceneState, Transition m)
