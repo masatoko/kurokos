@@ -2,9 +2,7 @@
 
 module Kurokos.Sprite
   ( allocTexture
-  , loadSprite
-  , decodeSprite
-  , freeSprite
+  , allocTextureB
   -- ** Texture State
   , setBlendMode
   , setAlphaMod
@@ -24,22 +22,12 @@ import           Linear.V4
 import           Control.Monad.Trans.Resource (ResourceT, ReleaseKey, allocate, MonadResource)
 
 import qualified SDL
-import qualified SDL.Image
+import qualified SDL.Image            as Image
 import           SDL                  (($=), get)
-import qualified SDL.Font             as Font
 
 import           Kurokos.Core
-import           Kurokos.Data        (Font, Sprite (..))
 
--- TODO: Change color
--- newSprite :: (MonadReader KurokosEnv m, MonadIO m) => Font -> V4 Word8 -> Text -> m Sprite
--- newSprite font color text = do
---   (w,h) <- Font.size font text
---   withRenderer $ \rndr -> do
---     texture <- E.bracket (Font.blended font color text)
---                          SDL.freeSurface
---                          (SDL.createTextureFromSurface rndr)
---     return $ Sprite texture (V2 (fromIntegral w) (fromIntegral h))
+-- Allocate
 
 allocTexture :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m, MonadBase IO m) => FilePath -> ResourceT m (ReleaseKey, SDL.Texture)
 allocTexture path = do
@@ -48,31 +36,27 @@ allocTexture path = do
   where
     load env =
       runKurokosEnvT env $
-        withRenderer $ \r -> SDL.Image.loadTexture r path
+        withRenderer $ \r -> Image.loadTexture r path
 
-freeSprite :: MonadIO m => Sprite -> m ()
-freeSprite (Sprite t _) = SDL.destroyTexture t
+allocTextureB :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m, MonadBase IO m) => ByteString -> ResourceT m (ReleaseKey, SDL.Texture)
+allocTextureB byte = do
+  env <- lift getEnv
+  allocate (load env) SDL.destroyTexture
+  where
+    load env =
+      runKurokosEnvT env $
+        withRenderer $ \r -> Image.decodeTexture r byte
 
-loadSprite :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => FilePath -> V2 Int -> m Sprite
-loadSprite path size =
-  withRenderer $ \r -> do
-    texture <- SDL.Image.loadTexture r path
-    return $ Sprite texture $ fromIntegral <$> size
+-- State
 
-decodeSprite :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => ByteString -> V2 Int -> m Sprite
-decodeSprite bytes size =
-  withRenderer $ \r -> do
-    texture <- SDL.Image.decodeTexture r bytes
-    return $ Sprite texture $ fromIntegral <$> size
+setBlendMode :: MonadIO m => SDL.Texture -> SDL.BlendMode -> m ()
+setBlendMode t mode =
+  SDL.textureBlendMode t $= mode
 
-setBlendMode :: MonadIO m => Sprite -> SDL.BlendMode -> m ()
-setBlendMode s mode =
-  SDL.textureBlendMode (sptex s) $= mode
+setAlphaMod :: MonadIO m => SDL.Texture -> Word8 -> m ()
+setAlphaMod t alpha =
+  SDL.textureAlphaMod t $= alpha
 
-setAlphaMod :: MonadIO m => Sprite -> Word8 -> m ()
-setAlphaMod s alpha =
-  SDL.textureAlphaMod (sptex s) $= alpha
-
-setColorMod :: MonadIO m => Sprite -> V3 Word8 -> m ()
-setColorMod s rgb =
-  SDL.textureColorMod (sptex s) $= rgb
+setColorMod :: MonadIO m => SDL.Texture -> V3 Word8 -> m ()
+setColorMod t rgb =
+  SDL.textureColorMod t $= rgb

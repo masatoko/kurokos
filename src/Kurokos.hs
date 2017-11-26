@@ -26,7 +26,6 @@ module Kurokos
   , setRendererDrawBlendMode
   -- Data
   , Font
-  , Sprite (spsize)
   -- Render
   , setColor
   , clearBy
@@ -37,7 +36,7 @@ module Kurokos
   , loadFont, freeFont, withFont
   -- Sprite
   , allocTexture
-  , loadSprite, decodeSprite, freeSprite
+  , allocTextureB
   , setBlendMode, setAlphaMod, setColorMod
   -- Metapad
   , Metapad

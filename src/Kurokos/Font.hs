@@ -15,7 +15,7 @@ import           System.Directory         (doesFileExist)
 
 import qualified SDL.Font                 as Font
 
-import           Kurokos.Data             (Font, Sprite (..))
+import           Kurokos.Data             (Font)
 
 loadFont :: MonadIO m => FilePath -> Int -> m Font
 loadFont path size = liftIO $ do
