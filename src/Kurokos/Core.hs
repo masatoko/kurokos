@@ -127,6 +127,7 @@ data KurokosState = KurokosState
   --
   , actualFPS  :: !Double
   , frameTimes :: V.Vector Time
+  , kstShouldExit :: Bool
   }
 
 data KurokosData = KurokosData KurokosEnv KurokosState
@@ -140,6 +141,7 @@ initialState = KurokosState
   --
   , actualFPS = 0
   , frameTimes = V.empty
+  , kstShouldExit = False
   }
 
 newtype KurokosT m a = KurokosT {
@@ -337,9 +339,13 @@ sceneLoop iniG iniS scene =
       wait
       let s2 = advance s1
       -- Go next loop
-      case mTrans of
-        Nothing    -> loop (Just curInput) g' s2
-        Just trans -> return (g', s2, trans)
+      shouldExit <- gets kstShouldExit
+      if shouldExit
+        then return (g', s2, End)
+        else
+          case mTrans of
+            Nothing    -> loop (Just curInput) g' s2
+            Just trans -> return (g', s2, trans)
 
     -- TODO: Implement frame skip
     updateTime :: MonadIO m => KurokosT m ()
@@ -423,8 +429,8 @@ procEvents es = go =<< asks debugJoystick
     go dj = mapM_ (work . SDL.eventPayload) es
       where
         work :: MonadIO m => SDL.EventPayload -> KurokosT m ()
-        work (SDL.WindowClosedEvent _) = liftIO exitSuccess
-        work SDL.QuitEvent             = liftIO exitSuccess
+        work (SDL.WindowClosedEvent _) = modify' $ \kst -> kst {kstShouldExit = True}
+        work SDL.QuitEvent             = modify' $ \kst -> kst {kstShouldExit = True}
         work (SDL.JoyButtonEvent d)    =
           when (djVisButton dj) $ liftIO . print $ d
         work (SDL.JoyAxisEvent d)      =
