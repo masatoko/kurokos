@@ -1,13 +1,13 @@
+{-# LANGUAGE DeriveAnyClass            #-}
+{-# LANGUAGE DeriveFunctor             #-}
 {-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveFunctor #-}
-{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell           #-}
 module Kurokos.GUI.Core where
 
-import Control.Lens
-import Control.Monad.State
-import Data.Text (Text)
-import Data.Int (Int64)
+import           Control.Lens
+import           Control.Monad.State
+import           Data.Int            (Int64)
+import           Data.Text           (Text)
 
 -- data Direction
 --   = DirH -- Horizontal
@@ -27,12 +27,12 @@ data WidgetTree
   => Single SingleKey a | Container ContainerKey [WidgetTree]
 
 instance Show WidgetTree where
-  show (Single (SingleKey key) a) = show key ++ "<" ++ showW a ++ ">"
+  show (Single (SingleKey key) a)        = show key ++ "<" ++ showW a ++ ">"
   show (Container (ContainerKey key) ws) = show key ++ "@" ++ show ws
 
 data GuiState = GuiState
-  { _gsSCnt :: Key
-  , _gsCCnt :: Key
+  { _gsSCnt  :: Key
+  , _gsCCnt  :: Key
   --
   , _gsWTree :: WidgetTree
   } deriving Show

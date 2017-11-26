@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Kurokos.GUI.Test where
 
-import Control.Monad.IO.Class (liftIO)
+import           Control.Monad.IO.Class   (liftIO)
 
+import           Kurokos.GUI.Core
 import qualified Kurokos.GUI.Widget.Label as Label
-import Kurokos.GUI.Core
 
 testGui :: IO ()
 testGui = do

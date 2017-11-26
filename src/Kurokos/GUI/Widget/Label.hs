@@ -1,9 +1,9 @@
 module Kurokos.GUI.Widget.Label where
 
-import Data.Text (Text)
-import qualified Data.Text as T
+import           Data.Text        (Text)
+import qualified Data.Text        as T
 
-import Kurokos.GUI.Core
+import           Kurokos.GUI.Core
 
 data Label = Label
   { title :: Text
