@@ -1,9 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE FlexibleContexts #-}
 module Scene where
 
 import           Control.Monad.State
+import           Control.Lens
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
 import qualified Data.Vector         as V
@@ -38,6 +40,46 @@ allocGame = do
     fontPath = "_data/system.ttf"
 
 --
+
+data MouseScene = MouseScene
+  { _msLClicks :: [V2 CInt]
+  , _msRClicks :: [V2 CInt]
+  } deriving Show
+
+makeLenses ''MouseScene
+
+mouseScene :: Scene MouseScene IO Action
+mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
+  where
+    update _ _ s = do
+      es <- K.getEvents
+      execStateT (mapM_ go es) s
+      where
+        go (SDL.MouseButtonEvent dt) =
+          when (SDL.mouseButtonEventMotion dt == SDL.Pressed) $ do
+            let (P pos) = SDL.mouseButtonEventPos dt
+                pos' = fromIntegral <$> pos
+            case SDL.mouseButtonEventButton dt of
+              SDL.ButtonLeft  -> msLClicks %= (pos':)
+              SDL.ButtonRight -> msRClicks %= (pos':)
+              _               -> return ()
+        go _ = return ()
+
+    render _ s = do
+      P pos <- SDL.getAbsoluteMouseLocation
+      let pos' = fromIntegral <$> pos
+      K.withRenderer $ \r ->
+        Gfx.smoothCircle r pos' 5 (V4 255 255 255 255)
+      --
+      K.withRenderer $ \r -> do
+        forM_ (s^.msLClicks) $ \pos ->
+          Gfx.fillCircle r pos 5 (V4 255 255 0 255)
+        forM_ (s^.msRClicks) $ \pos ->
+          Gfx.fillCircle r pos 5 (V4 255 0 255 255)
+
+    transit _ as _
+      | Enter `elem` as = K.end
+      | otherwise       = K.continue
 
 titleScene :: Scene Dummy IO Action
 titleScene =
@@ -157,28 +199,4 @@ clearScene score = Scene defPad update render transit allocGame
 
     transit _ as _g
       | Enter `elem` as = K.next titleScene
-      | otherwise       = K.continue
-
-mouseScene :: Scene Dummy IO Action
-mouseScene = Scene defPad update render transit (pure Dummy)
-  where
-    update _ _ = return
-
-    render _ _ = do
-      P pos <- SDL.getAbsoluteMouseLocation
-      let pos' = fromIntegral <$> pos
-      K.withRenderer $ \r ->
-        Gfx.fillCircle r pos' 5 (V4 255 255 0 255)
-
-      -- mapM_ work =<< K.getEvents
-      -- where
-      --   work (SDL.MouseMotionEvent dt) = do
-      --     let pos = SDL.mouseMotionEventRelMotion dt
-      --         pos' = fromIntegral <$> pos
-      --     K.withRenderer $ \r ->
-      --       Gfx.smoothCircle r pos' 5 (V4 255 255 0 255)
-      --   work _ = return ()
-
-    transit _ as _
-      | Enter `elem` as = K.end
       | otherwise       = K.continue
