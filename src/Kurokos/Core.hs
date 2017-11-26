@@ -50,7 +50,7 @@ import           Control.Exception.Safe       (MonadCatch, MonadMask,
                                                MonadThrow)
 import qualified Control.Exception.Safe       as E
 import           Control.Monad.Base           (MonadBase)
-import           Control.Monad.Managed        (managed, runManaged)
+import           Control.Monad.Managed        (Managed, managed, managed_, runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Control.Monad.Trans.Class
@@ -59,7 +59,8 @@ import           Control.Monad.Trans.Resource
 import qualified Data.ByteString              as B
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
-import qualified Data.Vector.Unboxed          as V
+import qualified Data.Vector                  as V
+import qualified Data.Vector.Unboxed          as VU
 import           Data.Word                    (Word32)
 import           Linear.Affine                (Point (..))
 import           Linear.V2
@@ -125,29 +126,17 @@ data KurokosState = KurokosState
   {
     messages      :: [Text]
   , kstEvents     :: [SDL.Event]
+  , kstJoysticks  :: V.Vector SDL.Joystick
   --
   , psStart       :: !Time
   , psCount       :: !Int
   --
   , actualFPS     :: !Double
-  , frameTimes    :: V.Vector Time
+  , frameTimes    :: VU.Vector Time
   , kstShouldExit :: Bool
   }
 
 data KurokosData = KurokosData KurokosEnv KurokosState
-
-initialState :: KurokosState
-initialState = KurokosState
-  {
-    messages = []
-  , kstEvents = []
-  , psStart = 0
-  , psCount = 0
-  --
-  , actualFPS = 0
-  , frameTimes = V.empty
-  , kstShouldExit = False
-  }
 
 newtype KurokosT m a = KurokosT {
     runKT :: ReaderT KurokosEnv (StateT KurokosState m) a
@@ -181,14 +170,33 @@ runKurokosEnvT conf k = runReaderT (runKET k) conf
 
 withKurokos :: Config -> (KurokosData -> IO ()) -> IO ()
 withKurokos config go =
-  E.bracket_ SDL.initializeAll SDL.quit $ do
+  runManaged $ do
+    managed_ withSDL
     specialInit
-    withFontInit $ withFont' $ \font ->
-      withWinRenderer config $ \win r -> do
-        SDL.rendererDrawBlendMode r $= SDL.BlendAlphaBlend
-        conf <- mkConf font win r
-        go $ KurokosData conf initialState
+    vjs <- V.mapM toManagedJS =<< liftIO SDL.availableJoysticks
+    managed_ withFontInit
+    font <- managed withSystemFont
+    (win, r) <- managed $ withWinRenderer config
+    --
+    liftIO $ do
+      SDL.rendererDrawBlendMode r $= SDL.BlendAlphaBlend
+      env <- mkEnv font win r
+      let state = KurokosState
+            { messages = []
+            , kstEvents = []
+            , kstJoysticks = vjs
+            , psStart = 0
+            , psCount = 0
+            --
+            , actualFPS = 0
+            , frameTimes = VU.empty
+            , kstShouldExit = False
+            }
+
+      go $ KurokosData env state
   where
+    withSDL = E.bracket_ SDL.initializeAll SDL.quit
+
     specialInit = do
       _ <- SDL.setMouseLocationMode SDL.RelativeLocation
       return ()
@@ -198,7 +206,8 @@ withKurokos config go =
                  Font.quit
                  action
 
-    withFont' action =
+    withSystemFont :: (Font -> IO r) -> IO r
+    withSystemFont action =
       case confFont config of
         Left bytes -> withFont bytes size action
         Right path -> E.bracket (loadFont path size)
@@ -208,7 +217,11 @@ withKurokos config go =
         size = max 18 (h `div` 50)
         V2 _ h = confWinSize config
 
-    mkConf font win r = do
+    toManagedJS :: SDL.JoystickDevice -> Managed SDL.Joystick
+    toManagedJS device =
+      managed $ E.bracket (SDL.openJoystick device) SDL.closeJoystick
+
+    mkEnv font win r = do
       mvar <- newMVar r
       return KurokosEnv
         { graphFPS = 60
@@ -222,7 +235,7 @@ withKurokos config go =
         , numAverateTime = confNumAverageTime config
         }
 
-    withWinRenderer :: Config -> (SDL.Window -> SDL.Renderer -> IO a) -> IO a
+    withWinRenderer :: Config -> ((SDL.Window, SDL.Renderer) -> IO r) -> IO r
     withWinRenderer conf work = withW $ withR work
       where
         title = T.pack $ confWinTitle conf
@@ -232,7 +245,7 @@ withKurokos config go =
 
         withR func win = E.bracket (SDL.createRenderer win (-1) SDL.defaultRenderer)
                                    SDL.destroyRenderer
-                                   (\r -> setLogicalSize r >> func win r)
+                                   (\r -> setLogicalSize r >> func (win,r))
 
         winConf = SDL.defaultWindow
           { SDL.windowMode = confWindowMode conf
@@ -464,8 +477,8 @@ getEvents = gets kstEvents
 averageTime :: Monad m => KurokosT m Int
 averageTime = do
   ts <- gets frameTimes
-  let a = fromIntegral $ V.sum ts
-      n = V.length ts
+  let a = fromIntegral $ VU.sum ts
+      n = VU.length ts
   return $ if n == 0
              then 0
              else a `div` n
