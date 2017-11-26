@@ -38,6 +38,7 @@ module Kurokos.Core
   , screenSize
   , getWindow
   , getEvents
+  , getJoysticks
   , averageTime
   , showMessageBox
   , withRenderer
@@ -472,6 +473,9 @@ getWindow = asks window
 
 getEvents :: Monad m => KurokosT m [SDL.Event]
 getEvents = gets kstEvents
+
+getJoysticks :: Monad m => KurokosT m (V.Vector Joystick)
+getJoysticks = gets kstJoysticks
 
 averageTime :: Monad m => KurokosT m Int
 averageTime = do

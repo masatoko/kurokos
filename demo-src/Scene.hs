@@ -3,6 +3,8 @@ module Scene where
 
 import           Control.Monad.State
 import qualified Data.Text           as T
+import qualified Data.Text.IO        as T
+import qualified Data.Vector         as V
 
 import qualified SDL
 import qualified SDL.Font            as Font
@@ -16,20 +18,20 @@ import           Pad
 
 data Title = Title
 
-data Game = Game
+data MyData = MyData
   { gTexture :: SDL.Texture
   , gDeg     :: !Double
   , gCount   :: !Int
   , gActions :: [Action]
   }
 
-allocGame :: ResourceT (KurokosT IO) Game
+allocGame :: ResourceT (KurokosT IO) MyData
 allocGame = do
   env <- lift K.getEnv
   (_, tex) <- K.allocTexture "_data/img.png"
   (_, font) <- allocate (Font.load fontPath 50) Font.free
 
-  return $ Game tex 0 0 []
+  return $ MyData tex 0 0 []
   where
     fontPath = "_data/system.ttf"
 
@@ -44,32 +46,39 @@ titleScene =
 
     render :: Render Title IO
     render _ _ = do
-      K.printTest (P (V2 10 100)) (V4 0 255 255 255) "Enter - start"
-      K.printTest (P (V2 10 120)) (V4 0 255 255 255) "Escape - exit"
-      K.printTest (P (V2 10 160)) (V4 0 255 255 255) "日本語テスト"
+      K.printTest (P (V2 10 100)) white "Enter - start"
+      K.printTest (P (V2 10 120)) white "Escape - exit"
+      K.printTest (P (V2 10 160)) white "日本語テスト"
+      --
+      K.printTest (P (V2 10 200)) white "- Joysticks"
+      vjs <- K.getJoysticks
+      let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> (K.jsDeviceName js)
+      V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) white (showjs js)) vjs
+      where
+        white = V4 255 255 255 255
 
     transit _ as _
       | Enter `elem` as = K.next mainScene
       | Exit  `elem` as = K.end
       | otherwise       = K.continue
 
-mainScene :: Scene Game IO Action
+mainScene :: Scene MyData IO Action
 mainScene = Scene defPad update render transit allocGame
   where
-    update :: Update Game IO Action
+    update :: Update MyData IO Action
     update stt as g0 = do
       -- when (frameCount stt `mod` 60 == 0) $ K.averageTime >>= liftIO . print
       let alpha = fromIntegral $ frameCount stt
       K.setAlphaMod (gTexture g0) alpha
       execStateT go g0
       where
-        go :: StateT Game (KurokosT IO) ()
+        go :: StateT MyData (KurokosT IO) ()
         go = do
           mapM_ count as
           setDeg
           unless (null as) $ modify $ \g -> g {gActions = as}
 
-        count :: Action -> StateT Game (KurokosT IO) ()
+        count :: Action -> StateT MyData (KurokosT IO) ()
         count Go = do
           modify (\a -> let c = gCount a in a {gCount = c + 1})
           c <- gets gCount
@@ -81,8 +90,8 @@ mainScene = Scene defPad update render transit allocGame
 
         setDeg = modify (\g -> g {gDeg = fromIntegral (frameCount stt `mod` 360)})
 
-    render :: Render Game IO
-    render sst (Game tex deg cnt as) = do
+    render :: Render MyData IO
+    render sst (MyData tex deg cnt as) = do
       K.clearBy $ V4 0 0 0 255
 
       K.withRenderer $ \r -> do
@@ -120,7 +129,7 @@ mainScene = Scene defPad update render transit allocGame
 
     targetCount = 5 :: Int
 
-pauseScene :: Scene Game IO Action
+pauseScene :: Scene MyData IO Action
 pauseScene = Scene defPad update render transit allocGame
   where
     update _ _ = return
@@ -133,7 +142,7 @@ pauseScene = Scene defPad update render transit allocGame
       | Enter `elem` as = K.end
       | otherwise       = K.continue
 
-clearScene :: Int -> Scene Game IO Action
+clearScene :: Int -> Scene MyData IO Action
 clearScene score = Scene defPad update render transit allocGame
   where
     update _ _ = return

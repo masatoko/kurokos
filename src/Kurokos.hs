@@ -21,6 +21,7 @@ module Kurokos
   , screenSize
   , getWindow
   , getEvents
+  , getJoysticks
   , averageTime
   , showMessageBox
   , withRenderer
