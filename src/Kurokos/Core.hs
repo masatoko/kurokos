@@ -476,8 +476,8 @@ screenSize = asks scrSize
 getWindow :: (MonadReader KurokosEnv m, MonadIO m) => m SDL.Window
 getWindow = asks window
 
-getEvents :: Monad m => KurokosT m [SDL.Event]
-getEvents = gets kstEvents
+getEvents :: Monad m => KurokosT m [SDL.EventPayload]
+getEvents = map SDL.eventPayload <$> gets kstEvents
 
 getJoysticks :: Monad m => KurokosT m (V.Vector Joystick)
 getJoysticks = gets kstJoysticks

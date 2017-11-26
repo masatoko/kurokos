@@ -25,8 +25,9 @@ main = do
       -- conf' = conf {K.confFont = Left fontBytes}
       conf' = conf {K.confFont = Right "_data/system.ttf"}
   withKurokos conf' $ \kuro -> do
-    runKurokos kuro $
+    runKurokos kuro $ do
       -- Ready original data here
+      SDL.setMouseLocationMode SDL.AbsoluteLocation
       runScene titleScene
     return ()
   where

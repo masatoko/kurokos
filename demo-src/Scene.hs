@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Scene where
 
 import           Control.Monad.State
@@ -16,7 +18,7 @@ import           Import
 
 import           Pad
 
-data Title = Title
+data Dummy = Dummy
 
 data MyData = MyData
   { gTexture :: SDL.Texture
@@ -37,14 +39,14 @@ allocGame = do
 
 --
 
-titleScene :: Scene Title IO Action
+titleScene :: Scene Dummy IO Action
 titleScene =
-  Scene defPad update render transit (return Title)
+  Scene defPad update render transit (return Dummy)
   where
-    update :: Update Title IO Action
+    update :: Update Dummy IO Action
     update _ _as t = return t
 
-    render :: Render Title IO
+    render :: Render Dummy IO
     render _ _ = do
       K.printTest (P (V2 10 100)) white "Enter - start"
       K.printTest (P (V2 10 120)) white "Escape - exit"
@@ -52,13 +54,13 @@ titleScene =
       --
       K.printTest (P (V2 10 200)) white "- Joysticks"
       vjs <- K.getJoysticks
-      let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> (K.jsDeviceName js)
+      let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
       V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) white (showjs js)) vjs
       where
         white = V4 255 255 255 255
 
     transit _ as _
-      | Enter `elem` as = K.next mainScene
+      | Enter `elem` as = K.push mouseScene
       | Exit  `elem` as = K.end
       | otherwise       = K.continue
 
@@ -117,10 +119,10 @@ mainScene = Scene defPad update render transit allocGame
 
     transit _ as g
       | cnt > targetCount = K.next $ clearScene cnt
-      | Enter `elem` as   = K.push $ pauseScene
+      | Enter `elem` as   = K.push pauseScene
       --
-      | PUp   `elem` as   = K.next $ mainScene
-      | PDown `elem` as   = K.push $ mainScene
+      | PUp   `elem` as   = K.next mainScene
+      | PDown `elem` as   = K.push mainScene
       | Exit  `elem` as   = K.end
       --
       | otherwise         = K.continue
@@ -155,4 +157,28 @@ clearScene score = Scene defPad update render transit allocGame
 
     transit _ as _g
       | Enter `elem` as = K.next titleScene
+      | otherwise       = K.continue
+
+mouseScene :: Scene Dummy IO Action
+mouseScene = Scene defPad update render transit (pure Dummy)
+  where
+    update _ _ = return
+
+    render _ _ = do
+      P pos <- SDL.getAbsoluteMouseLocation
+      let pos' = fromIntegral <$> pos
+      K.withRenderer $ \r ->
+        Gfx.fillCircle r pos' 5 (V4 255 255 0 255)
+
+      -- mapM_ work =<< K.getEvents
+      -- where
+      --   work (SDL.MouseMotionEvent dt) = do
+      --     let pos = SDL.mouseMotionEventRelMotion dt
+      --         pos' = fromIntegral <$> pos
+      --     K.withRenderer $ \r ->
+      --       Gfx.smoothCircle r pos' 5 (V4 255 255 0 255)
+      --   work _ = return ()
+
+    transit _ as _
+      | Enter `elem` as = K.end
       | otherwise       = K.continue
