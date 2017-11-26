@@ -21,7 +21,7 @@ module Import
   , withKurokos
   , runKurokos
   , runScene
-  , newPad
+  , metapadFromList
   , addAction
   ) where
 
@@ -36,7 +36,8 @@ import           Linear.Vector                ((^*))
 import           Kurokos                      (Joystick, KurokosT, Metapad,
                                                Render, Scene (..),
                                                SceneState (..), Update,
-                                               addAction, newPad, runKurokos,
-                                               runScene, withKurokos)
+                                               addAction, metapadFromList,
+                                               runKurokos, runScene,
+                                               withKurokos)
 
 import           SDL                          (Point (..))

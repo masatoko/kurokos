@@ -39,7 +39,7 @@ module Kurokos
   , setBlendMode, setAlphaMod, setColorMod
   -- Metapad
   , Metapad
-  , newPad
+  , metapadFromList
   , addAction
   , Input
   , MouseButton (..)

@@ -1,5 +1,3 @@
-{-# LANGUAGE LambdaCase #-}
-
 module Kurokos.Metapad
   ( Input
   , Joystick
@@ -7,7 +5,7 @@ module Kurokos.Metapad
   , MouseButton (..)
   , InputMotion (..)
   , HatDir (..)
-  , newPad
+  , metapadFromList
   , addAction
   , makeActions
   , newJoystickAt
@@ -52,7 +50,19 @@ import           SDL.Internal.Types     (joystickPtr)
 import qualified SDL.Raw.Haptic         as HAP
 import           SDL.Raw.Types          (Haptic)
 
-data Metapad a = Metapad [Input -> IO (Maybe a)]
+type Interpreter action = Input -> IO (Maybe action)
+
+newtype Metapad action = Metapad [Interpreter action]
+
+instance Monoid (Metapad a) where
+  mempty = Metapad []
+  mappend (Metapad xs) (Metapad ys) = Metapad $ xs ++ ys
+
+metapadFromList :: [Interpreter a] -> Metapad a
+metapadFromList = Metapad
+
+addAction :: Interpreter a -> Metapad a -> Metapad a
+addAction f (Metapad fs) = Metapad $ f:fs
 
 data Input = Input
   { keyboard      :: [SDL.KeyboardEventData]
@@ -144,12 +154,6 @@ snapshotInput mPreInput es =
           where
             a = SDL.joyAxisEventAxis jaed
             v = SDL.joyAxisEventValue jaed
-
-newPad :: Metapad a
-newPad = Metapad []
-
-addAction :: (Input -> IO (Maybe a)) -> Metapad a -> Metapad a
-addAction f (Metapad fs) = Metapad (f:fs)
 
 makeActions :: MonadIO m => Maybe Input -> [SDL.Event] -> Metapad a -> m ([a], Input)
 makeActions mPreInput es (Metapad fs) =
@@ -308,8 +312,8 @@ isTargetButton joy button state e =
 joyAxis :: Joystick -> Word8 -> (Int16 -> Int16 -> Maybe act) -> Input -> IO (Maybe act)
 joyAxis joy axis make i = return . join $ mmAct
   where
-    mmAct = make <$> (M.lookup axis $ joyAxesPrePos i)
-                 <*> (M.lookup axis $ joyAxesCurPos i)
+    mmAct = make <$> M.lookup axis (joyAxesPrePos i)
+                 <*> M.lookup axis (joyAxesCurPos i)
 
 joyAxis2 :: Joystick -> Word8 -> Word8 -> (Int16 -> Int16 -> act) -> Input -> IO (Maybe act)
 joyAxis2 joy a0 a1 make _ = fmap Just $
