@@ -3,19 +3,20 @@
 module Main where
 
 import qualified Control.Exception.Safe as E
-import           Control.Monad.IO.Class       (liftIO)
-import qualified Data.ByteString              as B
-import           Data.Int                     (Int16, Int32)
-import           System.Environment           (getArgs)
+import           Control.Monad.IO.Class (liftIO)
+import qualified Data.ByteString        as B
+import           Data.Int               (Int16, Int32)
+import           System.Environment     (getArgs)
 
+import           SDL                    (($=))
 import qualified SDL
 
-import qualified Kurokos                      as K
+import qualified Kurokos                as K
 
-import Import
+import           Import
 
-import Pad
-import Scene
+import           Pad
+import           Scene
 
 main :: IO ()
 main = do
@@ -28,6 +29,7 @@ main = do
     runKurokos kuro $ do
       -- Ready original data here
       SDL.setMouseLocationMode SDL.AbsoluteLocation
+      SDL.cursorVisible $= False
       runScene titleScene
     return ()
   where
