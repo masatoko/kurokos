@@ -55,7 +55,8 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
       es <- K.getEvents
       execStateT (mapM_ go es) s
       where
-        go (SDL.MouseButtonEvent dt) =
+        go (SDL.MouseButtonEvent dt) = do
+          liftIO $ print dt
           when (SDL.mouseButtonEventMotion dt == SDL.Pressed) $ do
             let (P pos) = SDL.mouseButtonEventPos dt
                 pos' = fromIntegral <$> pos
