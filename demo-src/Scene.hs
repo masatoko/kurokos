@@ -86,7 +86,7 @@ titleScene =
   Scene defPad update render transit (return Dummy)
   where
     update :: Update Dummy IO Action
-    update _ _as t = return t
+    update _ _as = return
 
     render :: Render Dummy IO
     render _ _ = do
@@ -102,7 +102,8 @@ titleScene =
         white = V4 255 255 255 255
 
     transit _ as _
-      | Enter `elem` as = K.push mouseScene
+      | Enter `elem` as = K.next mainScene
+      | Go    `elem` as = K.push mouseScene
       | Exit  `elem` as = K.end
       | otherwise       = K.continue
 
@@ -173,8 +174,8 @@ mainScene = Scene defPad update render transit allocGame
 
     targetCount = 5 :: Int
 
-pauseScene :: Scene MyData IO Action
-pauseScene = Scene defPad update render transit allocGame
+pauseScene :: Scene Dummy IO Action
+pauseScene = Scene defPad update render transit (pure Dummy)
   where
     update _ _ = return
 
@@ -186,8 +187,8 @@ pauseScene = Scene defPad update render transit allocGame
       | Enter `elem` as = K.end
       | otherwise       = K.continue
 
-clearScene :: Int -> Scene MyData IO Action
-clearScene score = Scene defPad update render transit allocGame
+clearScene :: Int -> Scene Dummy IO Action
+clearScene score = Scene defPad update render transit (pure Dummy)
   where
     update _ _ = return
 
