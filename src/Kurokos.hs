@@ -25,8 +25,9 @@ module Kurokos
   , showMessageBox
   , withRenderer
   , setRendererDrawBlendMode
-  -- Data
+  -- Types
   , Font
+  , Joystick (..)
   -- Render
   , setColor
   , clearBy
@@ -51,9 +52,6 @@ module Kurokos
   , mouseButtonAct
   , mouseWheelAct
   , touchMotionAct
-  , Joystick
-  , monitorJoystick
-  , newJoystickAt, freeJoystick
   , numAxes, axisPosition
   , joyHold, joyPressed, joyReleased
   , joyAxis, joyAxis2

@@ -21,15 +21,12 @@ main :: IO ()
 main = do
   as <- getArgs
   let opt = (`elem` as)
-      conf = mkConf (opt "button") (opt "axis") (opt "hat")
+      conf = mkConf (opt "button") (opt "axis") (opt "hat") -- TODO: fix mkConf
       -- conf' = conf {K.confFont = Left fontBytes}
       conf' = conf {K.confFont = Right "_data/system.ttf"}
   withKurokos conf' $ \kuro -> do
-    mjs <- K.newJoystickAt 0
-    let gamepad = mkGamepad mjs
-    _ <- runKurokos kuro $
-      runScene $ titleScene mjs gamepad
-    maybe (return ()) K.freeJoystick mjs
+    runKurokos kuro $
+      runScene titleScene
     return ()
   where
     mkConf pBtn pAxis pHat =

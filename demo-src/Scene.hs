@@ -35,9 +35,9 @@ allocGame = do
 
 --
 
-titleScene :: Maybe K.Joystick -> Metapad Action -> Scene Title IO Action
-titleScene mjs pad =
-  Scene pad update render transit (return Title)
+titleScene :: Scene Title IO Action
+titleScene =
+  Scene defPad update render transit (return Title)
   where
     update :: Update Title IO Action
     update _ _as t = return t
@@ -49,12 +49,12 @@ titleScene mjs pad =
       K.printTest (P (V2 10 160)) (V4 0 255 255 255) "日本語テスト"
 
     transit _ as _
-      | Enter `elem` as = K.next $ mainScene mjs pad
+      | Enter `elem` as = K.next mainScene
       | Exit  `elem` as = K.end
       | otherwise       = K.continue
 
-mainScene :: Maybe K.Joystick -> Metapad Action -> Scene Game IO Action
-mainScene mjs pad = Scene pad update render transit allocGame
+mainScene :: Scene Game IO Action
+mainScene = Scene defPad update render transit allocGame
   where
     update :: Update Game IO Action
     update stt as g0 = do
@@ -75,7 +75,8 @@ mainScene mjs pad = Scene pad update render transit allocGame
           c <- gets gCount
           let strength = fromIntegral c * 0.2
               len = fromIntegral c * 100
-          mapM_ (\joy -> K.rumble joy strength len) mjs
+          -- mapM_ (\joy -> K.rumble joy strength len) mjs
+          return ()
         count _  = return ()
 
         setDeg = modify (\g -> g {gDeg = fromIntegral (frameCount stt `mod` 360)})
@@ -106,11 +107,11 @@ mainScene mjs pad = Scene pad update render transit allocGame
         t = frameCount sst
 
     transit _ as g
-      | cnt > targetCount = K.next $ clearScene mjs cnt pad
-      | Enter `elem` as   = K.push $ pauseScene pad
+      | cnt > targetCount = K.next $ clearScene cnt
+      | Enter `elem` as   = K.push $ pauseScene
       --
-      | PUp   `elem` as   = K.next $ mainScene mjs pad
-      | PDown `elem` as   = K.push $ mainScene mjs pad
+      | PUp   `elem` as   = K.next $ mainScene
+      | PDown `elem` as   = K.push $ mainScene
       | Exit  `elem` as   = K.end
       --
       | otherwise         = K.continue
@@ -119,8 +120,8 @@ mainScene mjs pad = Scene pad update render transit allocGame
 
     targetCount = 5 :: Int
 
-pauseScene :: Metapad Action -> Scene Game IO Action
-pauseScene pad = Scene pad update render transit allocGame
+pauseScene :: Scene Game IO Action
+pauseScene = Scene defPad update render transit allocGame
   where
     update _ _ = return
 
@@ -132,8 +133,8 @@ pauseScene pad = Scene pad update render transit allocGame
       | Enter `elem` as = K.end
       | otherwise       = K.continue
 
-clearScene :: Maybe K.Joystick -> Int -> Metapad Action -> Scene Game IO Action
-clearScene mjs score pad = Scene pad update render transit allocGame
+clearScene :: Int -> Scene Game IO Action
+clearScene score = Scene defPad update render transit allocGame
   where
     update _ _ = return
 
@@ -144,5 +145,5 @@ clearScene mjs score pad = Scene pad update render transit allocGame
       K.printTest (P (V2 10 140)) (V4 255 255 255 255) "Enter - title"
 
     transit _ as _g
-      | Enter `elem` as = K.next $ titleScene mjs pad
+      | Enter `elem` as = K.next titleScene
       | otherwise       = K.continue

@@ -8,12 +8,9 @@ module Kurokos.Metapad
   , metapadFromList
   , addAction
   , makeActions
-  , newJoystickAt
-  , freeJoystick
   -- Helper
   , hold, pressed, released
   -- Joystick
-  , monitorJoystick
   , numAxes, axisPosition
   , joyHold, joyPressed, joyReleased
   , joyAxis, joyAxis2
@@ -50,6 +47,8 @@ import qualified SDL
 import           SDL.Internal.Types     (joystickPtr)
 import qualified SDL.Raw.Haptic         as HAP
 import           SDL.Raw.Types          (Haptic)
+
+import           Kurokos.Types          (Joystick (..))
 
 type Interpreter action = Input -> IO (Maybe action)
 
@@ -229,69 +228,69 @@ touchMotionAct mk input =
 
 -- Joystick
 
-type JoystickID = Int32
+-- type JoystickID = Int32
+--
+-- data Joystick = Joy
+--   { js    :: !SDL.Joystick
+--   , jsId  :: !JoystickID
+--   , jsHap :: !(Maybe Haptic)
+--   } deriving (Eq, Show)
 
-data Joystick = Joy
-  { js    :: !SDL.Joystick
-  , jsId  :: !JoystickID
-  , jsHap :: !(Maybe Haptic)
-  } deriving (Eq, Show)
+-- newJoystickAt :: MonadIO m => Int -> m (Maybe Joystick)
+-- newJoystickAt i = do
+--   ds <- SDL.availableJoysticks
+--   liftIO $ case ds V.!? i of
+--     Nothing  -> return Nothing
+--     Just dev -> Just <$> (makeJoystick =<< SDL.openJoystick dev)
+--   where
+--     makeJoystick :: MonadIO m => SDL.Joystick -> m Joystick
+--     makeJoystick j = do
+--       mHap <- liftIO getHaptic
+--       mapM_ HAP.hapticRumbleInit mHap
+--       Joy j <$> SDL.getJoystickID j <*> pure mHap
+--       where
+--         getHaptic :: IO (Maybe Haptic)
+--         getHaptic =
+--           (Just <$> HAP.hapticOpenFromJoystick (joystickPtr j)) `E.catch` handler
+--
+--         handler :: E.SomeException -> IO (Maybe Haptic)
+--         handler _e =
+--           -- putStrLn $ "Exception @getHaptic: " ++ show e
+--           return Nothing
 
-newJoystickAt :: MonadIO m => Int -> m (Maybe Joystick)
-newJoystickAt i = do
-  ds <- SDL.availableJoysticks
-  liftIO $ case ds V.!? i of
-    Nothing  -> return Nothing
-    Just dev -> Just <$> (makeJoystick =<< SDL.openJoystick dev)
-  where
-    makeJoystick :: MonadIO m => SDL.Joystick -> m Joystick
-    makeJoystick j = do
-      mHap <- liftIO getHaptic
-      mapM_ HAP.hapticRumbleInit mHap
-      Joy j <$> SDL.getJoystickID j <*> pure mHap
-      where
-        getHaptic :: IO (Maybe Haptic)
-        getHaptic =
-          (Just <$> HAP.hapticOpenFromJoystick (joystickPtr j)) `E.catch` handler
-
-        handler :: E.SomeException -> IO (Maybe Haptic)
-        handler _e =
-          -- putStrLn $ "Exception @getHaptic: " ++ show e
-          return Nothing
-
-freeJoystick :: MonadIO m => Joystick -> m ()
-freeJoystick joy = do
-  mapM_ HAP.hapticClose $ jsHap joy
-  SDL.closeJoystick $ js joy
+-- freeJoystick :: MonadIO m => Joystick -> m ()
+-- freeJoystick joy = do
+--   mapM_ HAP.hapticClose $ jsHap joy
+--   SDL.closeJoystick $ js joy
 
 -- for test
-monitorJoystick :: Joystick -> IO ()
-monitorJoystick joy = do
-  n <- fromIntegral <$> SDL.numAxes j
-  mapM_ work $ take n [0..]
-  where
-    j = js joy
-    work i = (putStrLn . prog i) =<< SDL.axisPosition j i
-
-    norm :: Int16 -> Double
-    norm v = fromIntegral v / 32768
-
-    prog :: CInt -> Int16 -> String
-    prog i a = show i ++ ": " ++ p ++ " ... " ++ show v
-      where
-        v =  norm a
-        deg = truncate $ (v + 1) * 10
-        p = take 20 $ replicate deg '*' ++ repeat '-'
+-- monitorJoystick :: Joystick -> IO ()
+-- monitorJoystick joy = do
+--   n <- fromIntegral <$> SDL.numAxes j
+--   mapM_ work $ take n [0..]
+--   where
+--     j = js joy
+--     work i = (putStrLn . prog i) =<< SDL.axisPosition j i
+--
+--     norm :: Int16 -> Double
+--     norm v = fromIntegral v / 32768
+--
+--     prog :: CInt -> Int16 -> String
+--     prog i a = show i ++ ": " ++ p ++ " ... " ++ show v
+--       where
+--         v =  norm a
+--         deg = truncate $ (v + 1) * 10
+--         p = take 20 $ replicate deg '*' ++ repeat '-'
 
 numAxes :: Joystick -> IO Int
-numAxes joy = fromIntegral <$> SDL.numAxes (js joy)
+numAxes joy = fromIntegral <$> SDL.numAxes (jsJoystick joy)
 
 axisPosition :: Joystick -> Word8 -> IO Int16
-axisPosition joy idx = SDL.axisPosition (js joy) (fromIntegral idx)
+axisPosition joy idx = SDL.axisPosition (jsJoystick joy) (fromIntegral idx)
 
 joyHold :: Joystick -> Word8 -> act -> Interpreter act
 joyHold joy button act _ = do
-  p <- liftIO $ SDL.buttonPressed (js joy) (fromIntegral button)
+  p <- liftIO $ SDL.buttonPressed (jsJoystick joy) (fromIntegral button)
   return $ boolToMaybe act p
 
 joyPressed :: Joystick -> Word8 -> act -> Interpreter act
@@ -318,8 +317,8 @@ joyAxis joy axis make i = return . join $ mmAct
 
 joyAxis2 :: Joystick -> Word8 -> Word8 -> (Int16 -> Int16 -> act) -> Interpreter act
 joyAxis2 joy a0 a1 make _ = fmap Just $
-  make <$> SDL.axisPosition (js joy) (fromIntegral a0)
-       <*> SDL.axisPosition (js joy) (fromIntegral a1)
+  make <$> SDL.axisPosition (jsJoystick joy) (fromIntegral a0)
+       <*> SDL.axisPosition (jsJoystick joy) (fromIntegral a1)
 
 joyAxisChanged :: Joystick -> Word8 -> (Int16 -> Int16 -> Maybe act) -> Interpreter act
 joyAxisChanged joy axis make i = return mAct
@@ -335,8 +334,8 @@ joyAxisChanged2 joy a0 a1 make i =
        (headMay . mapMaybe (axisValue joy a1) . joyAxes $ i)
   where
     work (Just v0) (Just v1) = return . Just $ make v0 v1
-    work (Just v0) Nothing   = fmap Just $ make <$> pure v0 <*> SDL.axisPosition (js joy) (fromIntegral a1)
-    work Nothing   (Just v1) = fmap Just $ make <$> SDL.axisPosition (js joy) (fromIntegral a0) <*> pure v1
+    work (Just v0) Nothing   = fmap Just $ make <$> pure v0 <*> SDL.axisPosition (jsJoystick joy) (fromIntegral a1)
+    work Nothing   (Just v1) = fmap Just $ make <$> SDL.axisPosition (jsJoystick joy) (fromIntegral a0) <*> pure v1
     work Nothing   Nothing   = return Nothing
 
 axisValue :: Joystick -> Word8 -> SDL.JoyAxisEventData -> Maybe Int16

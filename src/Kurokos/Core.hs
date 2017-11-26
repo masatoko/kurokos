@@ -75,7 +75,7 @@ import qualified SDL.Font                     as Font
 
 import           Kurokos.Font                 (freeFont, loadFont, withFont)
 import           Kurokos.Metapad
-import           Kurokos.Types                (Font)
+import           Kurokos.Types                (Font, Joystick, openJoystickFromDevice, closeJoystick)
 
 data Config = Config
   { confWinSize          :: V2 Int
@@ -126,7 +126,7 @@ data KurokosState = KurokosState
   {
     messages      :: [Text]
   , kstEvents     :: [SDL.Event]
-  , kstJoysticks  :: V.Vector SDL.Joystick
+  , kstJoysticks  :: V.Vector Joystick
   --
   , psStart       :: !Time
   , psCount       :: !Int
@@ -216,9 +216,9 @@ withKurokos config go =
         size = max 18 (h `div` 50)
         V2 _ h = confWinSize config
 
-    toManagedJS :: SDL.JoystickDevice -> Managed SDL.Joystick
+    toManagedJS :: SDL.JoystickDevice -> Managed Joystick
     toManagedJS device =
-      managed $ E.bracket (SDL.openJoystick device) SDL.closeJoystick
+      managed $ E.bracket (openJoystickFromDevice device) closeJoystick
 
     mkEnv font win r = do
       mvar <- newMVar r
