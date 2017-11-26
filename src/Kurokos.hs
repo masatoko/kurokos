@@ -20,6 +20,7 @@ module Kurokos
   , getEnv
   , screenSize
   , getWindow
+  , getEvents
   , averageTime
   , showMessageBox
   , withRenderer

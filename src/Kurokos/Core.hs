@@ -37,6 +37,7 @@ module Kurokos.Core
   , getEnv
   , screenSize
   , getWindow
+  , getEvents
   , averageTime
   , showMessageBox
   , withRenderer
@@ -121,6 +122,7 @@ data KurokosEnv = KurokosEnv
 data KurokosState = KurokosState
   {
     messages   :: [Text]
+  , kstEvents  :: [SDL.Event]
   --
   , psStart    :: !Time
   , psCount    :: !Int
@@ -136,6 +138,7 @@ initialState :: KurokosState
 initialState = KurokosState
   {
     messages = []
+  , kstEvents = []
   , psStart = 0
   , psCount = 0
   --
@@ -260,10 +263,7 @@ data Scene g m a = Scene
 
 data SceneState = SceneState
   { frameCount  :: Integer
-  , sceneEvents :: [SDL.Event]
   }
-
--- type SceneStarter g a = (Scene g a, KurokosT g, g -> KurokosT m ())
 
 type Exec m = KurokosT m ()
 
@@ -295,7 +295,7 @@ goScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene g m a -> Kur
 goScene scene_ =
   runResourceT $ do
     g <- sceneAlloca scene_
-    lift $ go (SceneState 0 []) scene_ g
+    lift $ go (SceneState 0) scene_ g
   where
     go :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => SceneState -> Scene g m a -> g -> KurokosT m (Maybe (Exec m))
     go s0 scene0 g0 = do
@@ -324,28 +324,28 @@ sceneLoop iniG iniS scene =
       events <- SDL.pollEvents
       procEvents events
       (actions, curInput) <- makeActions mPreInput events pad
-      let s1 = s0 {sceneEvents = events}
-      g' <- update s1 actions g
+      modify' $ \kst -> kst {kstEvents = events}
+      g' <- update s0 actions g
       -- Rendering
       preRender
-      render s1 g'
+      render s0 g'
       -- updateFPS
-      printSystemState s1
+      printSystemState s0
       printMessages
       withRenderer SDL.present
       -- Transition
-      mTrans <- transit s1 actions g'
+      mTrans <- transit s0 actions g'
       -- Advance State
       wait
-      let s2 = advance s1
+      let s1 = advance s0
       -- Go next loop
       shouldExit <- gets kstShouldExit
       if shouldExit
-        then return (g', s2, End)
+        then return (g', s1, End)
         else
           case mTrans of
-            Nothing    -> loop (Just curInput) g' s2
-            Just trans -> return (g', s2, trans)
+            Nothing    -> loop (Just curInput) g' s1
+            Just trans -> return (g', s1, trans)
 
     -- TODO: Implement frame skip
     updateTime :: MonadIO m => KurokosT m ()
@@ -455,6 +455,9 @@ screenSize = asks scrSize
 
 getWindow :: (MonadReader KurokosEnv m, MonadIO m) => m SDL.Window
 getWindow = asks window
+
+getEvents :: Monad m => KurokosT m [SDL.Event]
+getEvents = gets kstEvents
 
 averageTime :: Monad m => KurokosT m Int
 averageTime = do
