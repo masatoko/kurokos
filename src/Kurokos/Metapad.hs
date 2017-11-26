@@ -51,9 +51,7 @@ import           SDL.Internal.Types     (joystickPtr)
 import qualified SDL.Raw.Haptic         as HAP
 import           SDL.Raw.Types          (Haptic)
 
-import           Kurokos.Types          (PadId)
-
-type Interpreter action = Input -> IO (Maybe (PadId, action))
+type Interpreter action = Input -> IO (Maybe action)
 
 newtype Metapad action = Metapad [Interpreter action]
 
@@ -158,7 +156,7 @@ snapshotInput mPreInput es =
             a = SDL.joyAxisEventAxis jaed
             v = SDL.joyAxisEventValue jaed
 
-makeActions :: MonadIO m => Maybe Input -> [SDL.Event] -> Metapad a -> m ([(PadId, a)], Input)
+makeActions :: MonadIO m => Maybe Input -> [SDL.Event] -> Metapad a -> m ([a], Input)
 makeActions mPreInput es (Metapad fs) =
   liftIO $ do
     i <- snapshotInput mPreInput es
@@ -167,17 +165,17 @@ makeActions mPreInput es (Metapad fs) =
 
 -- * Helper
 
-hold :: SDL.Scancode -> PadId -> act -> Interpreter act
-hold code pid act i =
-  return $ boolToMaybe (pid,act) $ keyState i code
+hold :: SDL.Scancode -> act -> Interpreter act
+hold code act i =
+  return $ boolToMaybe act $ keyState i code
 
-pressed :: SDL.Scancode -> PadId -> act -> Interpreter act
-pressed code pid act i =
-  return $ boolToMaybe (pid,act) $ any (isTargetKey code SDL.Pressed) $ keyboard i
+pressed :: SDL.Scancode -> act -> Interpreter act
+pressed code act i =
+  return $ boolToMaybe act $ any (isTargetKey code SDL.Pressed) $ keyboard i
 
-released :: SDL.Scancode -> PadId -> act -> Interpreter act
-released code pid act i =
-  return $ boolToMaybe (pid,act) $ any (isTargetKey code SDL.Released) $ keyboard i
+released :: SDL.Scancode -> act -> Interpreter act
+released code act i =
+  return $ boolToMaybe act $ any (isTargetKey code SDL.Released) $ keyboard i
 
 isTargetKey :: SDL.Scancode -> SDL.InputMotion -> SDL.KeyboardEventData -> Bool
 isTargetKey code motion e =
@@ -189,20 +187,20 @@ isTargetKey code motion e =
 -- Mouse
 
 mousePosAct :: Integral a => (V2 a -> act) -> Interpreter act
-mousePosAct f i = return . Just . (,) 0 . f $ fromIntegral <$> pos
+mousePosAct f i = return . Just . f $ fromIntegral <$> pos
   where (P pos) = mousePos i
 
 mouseMotionAct :: (V2 Int32 -> act) -> Interpreter act
 mouseMotionAct mk input =
-  return $ (,) 0 . mk . SDL.mouseMotionEventRelMotion <$> headMay es
+  return $ mk . SDL.mouseMotionEventRelMotion <$> headMay es
   where
     es = mouseMotion input
 
-mouseButtonAct :: MouseButton -> InputMotion -> PadId -> act -> Interpreter act
-mouseButtonAct prtBtn prtMotion pid act i = return $
+mouseButtonAct :: MouseButton -> InputMotion -> act -> Interpreter act
+mouseButtonAct prtBtn prtMotion act i = return $
   case prtMotion of
-    Holded -> boolToMaybe (pid,act) $ mouseButtons i btn
-    _      -> boolToMaybe (pid,act) $ any isTarget $ mouseButton i
+    Holded -> boolToMaybe act $ mouseButtons i btn
+    _      -> boolToMaybe act $ any isTarget $ mouseButton i
   where
     btn = case prtBtn of
             ButtonLeft  -> SDL.ButtonLeft
@@ -217,7 +215,7 @@ mouseButtonAct prtBtn prtMotion pid act i = return $
 
 mouseWheelAct :: (V2 Int32 -> act) -> Interpreter act
 mouseWheelAct mk input =
-  return $ (,) 0 . mk . SDL.mouseWheelEventPos <$> headMay es
+  return $ mk . SDL.mouseWheelEventPos <$> headMay es
   where
     es = mouseWheel input
 
@@ -225,7 +223,7 @@ mouseWheelAct mk input =
 
 touchMotionAct :: (V2 Double -> act) -> Interpreter act
 touchMotionAct mk input =
-  return $ (,) 0 . mk . fmap realToFrac . SDL.touchFingerMotionEventRelMotion <$> headMay es
+  return $ mk . fmap realToFrac . SDL.touchFingerMotionEventRelMotion <$> headMay es
   where
     es = touchMotions input
 
@@ -238,9 +236,6 @@ data Joystick = Joy
   , jsId  :: !JoystickID
   , jsHap :: !(Maybe Haptic)
   } deriving (Eq, Show)
-
-joyToPadId :: Joystick -> PadId
-joyToPadId = fromIntegral . jsId
 
 newJoystickAt :: MonadIO m => Int -> m (Maybe Joystick)
 newJoystickAt i = do
@@ -297,15 +292,15 @@ axisPosition joy idx = SDL.axisPosition (js joy) (fromIntegral idx)
 joyHold :: Joystick -> Word8 -> act -> Interpreter act
 joyHold joy button act _ = do
   p <- liftIO $ SDL.buttonPressed (js joy) (fromIntegral button)
-  return $ boolToMaybe (joyToPadId joy, act) p
+  return $ boolToMaybe act p
 
 joyPressed :: Joystick -> Word8 -> act -> Interpreter act
 joyPressed joy button act i =
-  return $ boolToMaybe (joyToPadId joy, act) $ any (isTargetButton joy button SDL.JoyButtonPressed) $ joyButtons i
+  return $ boolToMaybe act $ any (isTargetButton joy button SDL.JoyButtonPressed) $ joyButtons i
 
 joyReleased :: Joystick -> Word8 -> act -> Interpreter act
 joyReleased joy button act i =
-  return $ boolToMaybe (joyToPadId joy, act) $ any (isTargetButton joy button SDL.JoyButtonReleased) $ joyButtons i
+  return $ boolToMaybe act $ any (isTargetButton joy button SDL.JoyButtonReleased) $ joyButtons i
 
 isTargetButton :: Joystick -> Word8 -> SDL.JoyButtonState -> SDL.JoyButtonEventData -> Bool
 isTargetButton joy button state e =
@@ -316,34 +311,29 @@ isTargetButton joy button state e =
     isState = SDL.joyButtonEventState e == state
 
 joyAxis :: Joystick -> Word8 -> (Int16 -> Int16 -> Maybe act) -> Interpreter act
-joyAxis joy axis make i = return . fmap ((,) pid) . join $ mmAct
+joyAxis joy axis make i = return . join $ mmAct
   where
-    pid = joyToPadId joy
     mmAct = make <$> M.lookup axis (joyAxesPrePos i)
                  <*> M.lookup axis (joyAxesCurPos i)
 
 joyAxis2 :: Joystick -> Word8 -> Word8 -> (Int16 -> Int16 -> act) -> Interpreter act
-joyAxis2 joy a0 a1 make _ = fmap (Just . (,) pid) $
+joyAxis2 joy a0 a1 make _ = fmap Just $
   make <$> SDL.axisPosition (js joy) (fromIntegral a0)
        <*> SDL.axisPosition (js joy) (fromIntegral a1)
-  where
-    pid = joyToPadId joy
 
 joyAxisChanged :: Joystick -> Word8 -> (Int16 -> Int16 -> Maybe act) -> Interpreter act
-joyAxisChanged joy axis make i = return $ (,) pid <$> mAct
+joyAxisChanged joy axis make i = return mAct
   where
-    pid = joyToPadId joy
     mAct = do
       cur <- headMay . mapMaybe (axisValue joy axis) . joyAxes $ i
       pre <- M.lookup axis $ joyAxesPrePos i
       make pre cur
 
 joyAxisChanged2 :: Joystick -> Word8 -> Word8 -> (Int16 -> Int16 -> act) -> Interpreter act
-joyAxisChanged2 joy a0 a1 make i = fmap ((,) pid) <$>
+joyAxisChanged2 joy a0 a1 make i =
   work (headMay . mapMaybe (axisValue joy a0) . joyAxes $ i)
        (headMay . mapMaybe (axisValue joy a1) . joyAxes $ i)
   where
-    pid = joyToPadId joy
     work (Just v0) (Just v1) = return . Just $ make v0 v1
     work (Just v0) Nothing   = fmap Just $ make <$> pure v0 <*> SDL.axisPosition (js joy) (fromIntegral a1)
     work Nothing   (Just v1) = fmap Just $ make <$> SDL.axisPosition (js joy) (fromIntegral a0) <*> pure v1
@@ -384,7 +374,7 @@ isHatOn pos HDRight = pos `elem` [SDL.HatRight, SDL.HatRightUp, SDL.HatRightDown
 
 joyHat :: HatDir -> InputMotion -> act -> Interpreter act
 joyHat hatDir motion act input =
-  return $ boolToMaybe (0,act) matchMotion -- TODO: fix PadId
+  return $ boolToMaybe act matchMotion
   where
     pPre = isHatOn (preHat input) hatDir
     pCur = isHatOn (curHat input) hatDir

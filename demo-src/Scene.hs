@@ -48,25 +48,23 @@ titleScene mjs pad =
       K.printTest (P (V2 10 120)) (V4 0 255 255 255) "Escape - exit"
       K.printTest (P (V2 10 160)) (V4 0 255 255 255) "日本語テスト"
 
-    transit _ as' _ = go $ map snd as'
-      where
-        go as
-          | Enter `elem` as = K.next $ mainScene mjs pad
-          | Exit  `elem` as = K.end
-          | otherwise       = K.continue
+    transit _ as _
+      | Enter `elem` as = K.next $ mainScene mjs pad
+      | Exit  `elem` as = K.end
+      | otherwise       = K.continue
 
 mainScene :: Maybe K.Joystick -> Metapad Action -> Scene Game IO Action
 mainScene mjs pad = Scene pad update render transit allocGame
   where
     update :: Update Game IO Action
-    update stt as' g0 = do
+    update stt as g0 = do
       -- when (frameCount stt `mod` 60 == 0) $ K.averageTime >>= liftIO . print
       let alpha = fromIntegral $ frameCount stt
       K.setAlphaMod (gTexture g0) alpha
-      execStateT (go (map snd as')) g0
+      execStateT go g0
       where
-        go :: [Action] -> StateT Game (KurokosT IO) ()
-        go as = do
+        go :: StateT Game (KurokosT IO) ()
+        go = do
           mapM_ count as
           setDeg
           unless (null as) $ modify $ \g -> g {gActions = as}
@@ -107,18 +105,17 @@ mainScene mjs pad = Scene pad update render transit allocGame
         color = V4 255 255 255 255
         t = frameCount sst
 
-    transit _ as' g = go $ map snd as'
+    transit _ as g
+      | cnt > targetCount = K.next $ clearScene mjs cnt pad
+      | Enter `elem` as   = K.push $ pauseScene pad
+      --
+      | PUp   `elem` as   = K.next $ mainScene mjs pad
+      | PDown `elem` as   = K.push $ mainScene mjs pad
+      | Exit  `elem` as   = K.end
+      --
+      | otherwise         = K.continue
       where
         cnt = gCount g
-        go as
-          | cnt > targetCount = K.next $ clearScene mjs cnt pad
-          | Enter `elem` as   = K.push $ pauseScene pad
-          --
-          | PUp   `elem` as   = K.next $ mainScene mjs pad
-          | PDown `elem` as   = K.push $ mainScene mjs pad
-          | Exit  `elem` as   = K.end
-          --
-          | otherwise         = K.continue
 
     targetCount = 5 :: Int
 
@@ -131,11 +128,9 @@ pauseScene pad = Scene pad update render transit allocGame
       K.clearBy $ V4 50 50 0 255
       K.printTest (P (V2 10 100)) (V4 255 255 255 255) "PAUSE"
 
-    transit _ as' _ = go $ map snd as'
-      where
-        go as
-          | Enter `elem` as = K.end
-          | otherwise       = K.continue
+    transit _ as _
+      | Enter `elem` as = K.end
+      | otherwise       = K.continue
 
 clearScene :: Maybe K.Joystick -> Int -> Metapad Action -> Scene Game IO Action
 clearScene mjs score pad = Scene pad update render transit allocGame
@@ -148,8 +143,6 @@ clearScene mjs score pad = Scene pad update render transit allocGame
       K.printTest (P (V2 10 120)) (V4 255 255 255 255) $ "Score: " <> T.pack (show score)
       K.printTest (P (V2 10 140)) (V4 255 255 255 255) "Enter - title"
 
-    transit _ as' _g = go $ map snd as'
-      where
-        go as
-          | Enter `elem` as = K.next $ titleScene mjs pad
-          | otherwise       = K.continue
+    transit _ as _g
+      | Enter `elem` as = K.next $ titleScene mjs pad
+      | otherwise       = K.continue

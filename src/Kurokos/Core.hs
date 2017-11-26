@@ -74,7 +74,7 @@ import qualified SDL.Font                     as Font
 
 import           Kurokos.Font                 (freeFont, loadFont, withFont)
 import           Kurokos.Metapad
-import           Kurokos.Types                (Font, PadId)
+import           Kurokos.Types                (Font)
 
 data Config = Config
   { confWinSize          :: V2 Int
@@ -251,9 +251,9 @@ withKurokos config go =
               SDL.rendererLogicalSize r $= size
 
 -- Scene
-type Update g m a  = SceneState -> [(PadId, a)] -> g -> KurokosT m g
+type Update g m a  = SceneState -> [a] -> g -> KurokosT m g
 type Render g m    = SceneState -> g -> KurokosT m ()
-type Transit g m a = SceneState -> [(PadId, a)] -> g -> KurokosT m (Maybe (Transition m))
+type Transit g m a = SceneState -> [a] -> g -> KurokosT m (Maybe (Transition m))
 
 data Scene g m a = Scene
   { scenePad     :: Metapad a
