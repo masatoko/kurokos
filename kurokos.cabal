@@ -49,6 +49,9 @@ library
 executable demo
   hs-source-dirs:      demo-src
   main-is:             Main.hs
+  other-modules:       Import
+                     , Pad
+                     , Scene
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , kurokos
