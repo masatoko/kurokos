@@ -58,10 +58,10 @@ module Kurokos
   , joyHold, joyPressed, joyReleased
   , joyAxis, joyAxis2
   , joyAxisChanged, joyAxisChanged2
-  , joyAllButtons
-  , joyAllAxes
+  -- , joyAllButtons
+  -- , joyAllAxes
   , joyHat
-  , joyAllHat
+  -- , joyAllHat
   , rumble
   ) where
 

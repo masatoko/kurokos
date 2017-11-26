@@ -44,35 +44,37 @@ module Kurokos.Core
   , setRendererDrawBlendMode
   ) where
 
-import           Control.Concurrent.MVar     (MVar, newMVar, withMVar, readMVar, takeMVar, putMVar)
-import           Control.Exception.Safe      (MonadCatch, MonadMask, MonadThrow)
-import qualified Control.Exception.Safe      as E
-import           Control.Monad.Base          (MonadBase)
-import           Control.Monad.Managed       (managed, runManaged)
+import           Control.Concurrent.MVar      (MVar, newMVar, putMVar, readMVar,
+                                               takeMVar, withMVar)
+import           Control.Exception.Safe       (MonadCatch, MonadMask,
+                                               MonadThrow)
+import qualified Control.Exception.Safe       as E
+import           Control.Monad.Base           (MonadBase)
+import           Control.Monad.Managed        (managed, runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Control
 import           Control.Monad.Trans.Resource
-import qualified Data.ByteString             as B
-import           Data.Text                   (Text)
-import qualified Data.Text                   as T
-import qualified Data.Vector.Unboxed         as V
-import           Data.Word                   (Word32)
-import           Linear.Affine               (Point (..))
+import qualified Data.ByteString              as B
+import           Data.Text                    (Text)
+import qualified Data.Text                    as T
+import qualified Data.Vector.Unboxed          as V
+import           Data.Word                    (Word32)
+import           Linear.Affine                (Point (..))
 import           Linear.V2
 import           Linear.V4
-import           System.Directory            (doesFileExist)
-import           System.Exit                 (exitSuccess)
-import           Text.Printf                 (printf)
+import           System.Directory             (doesFileExist)
+import           System.Exit                  (exitSuccess)
+import           Text.Printf                  (printf)
 
-import           SDL                         (($=))
+import           SDL                          (($=))
 import qualified SDL
-import qualified SDL.Font                    as Font
+import qualified SDL.Font                     as Font
 
-import           Kurokos.Types                (Font)
-import           Kurokos.Font                (freeFont, loadFont, withFont)
+import           Kurokos.Font                 (freeFont, loadFont, withFont)
 import           Kurokos.Metapad
+import           Kurokos.Types                (Font, PadId)
 
 data Config = Config
   { confWinSize          :: V2 Int
@@ -121,14 +123,14 @@ data KurokosEnv = KurokosEnv
 
 data KurokosState = KurokosState
   {
-    messages   :: [Text]
-  , kstEvents  :: [SDL.Event]
+    messages      :: [Text]
+  , kstEvents     :: [SDL.Event]
   --
-  , psStart    :: !Time
-  , psCount    :: !Int
+  , psStart       :: !Time
+  , psCount       :: !Int
   --
-  , actualFPS  :: !Double
-  , frameTimes :: V.Vector Time
+  , actualFPS     :: !Double
+  , frameTimes    :: V.Vector Time
   , kstShouldExit :: Bool
   }
 
@@ -249,9 +251,9 @@ withKurokos config go =
               SDL.rendererLogicalSize r $= size
 
 -- Scene
-type Update g m a  = SceneState -> [a] -> g -> KurokosT m g
+type Update g m a  = SceneState -> [(PadId, a)] -> g -> KurokosT m g
 type Render g m    = SceneState -> g -> KurokosT m ()
-type Transit g m a = SceneState -> [a] -> g -> KurokosT m (Maybe (Transition m))
+type Transit g m a = SceneState -> [(PadId, a)] -> g -> KurokosT m (Maybe (Transition m))
 
 data Scene g m a = Scene
   { scenePad     :: Metapad a

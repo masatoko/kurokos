@@ -26,9 +26,9 @@ mkGamepad :: Maybe Joystick -> Metapad Action
 mkGamepad mjs = mconcat [keyboard, joystick, mouse, touch]
   where
     keyboard = K.metapadFromList
-      [ K.released SDL.ScancodeF Go
-      , K.pressed SDL.ScancodeReturn Enter
-      , K.pressed SDL.ScancodeEscape Exit
+      [ K.released SDL.ScancodeF 0 Go
+      , K.pressed SDL.ScancodeReturn 0 Enter
+      , K.pressed SDL.ScancodeEscape 0 Exit
       ]
 
     joystick =
@@ -48,7 +48,7 @@ mkGamepad mjs = mconcat [keyboard, joystick, mouse, touch]
             ++ map (uncurry (K.joyPressed js)) [ (10, Go), (11, Go), (12, Go), (13, Go) ] -- Buttons
 
     mouse = K.metapadFromList
-      [ K.mouseButtonAct K.ButtonLeft K.Pressed Go
+      [ K.mouseButtonAct K.ButtonLeft K.Pressed 0 Go
       , K.mousePosAct MousePos
       , K.mouseMotionAct MouseMotion
       , K.mouseWheelAct MouseWheel
