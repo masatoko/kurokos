@@ -26,6 +26,7 @@ main = do
       conf' = conf {K.confFont = Right "_data/system.ttf"}
   withKurokos conf' $ \kuro -> do
     runKurokos kuro $
+      -- Ready original data here
       runScene titleScene
     return ()
   where
