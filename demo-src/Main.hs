@@ -36,17 +36,7 @@ main = do
       K.defaultConfig
         { K.confWinSize = V2 640 480
         , K.confWinTitle = "protpnic-app"
-        -- , K.confWindowMode = SDL.Fullscreen
         , K.confWindowMode = SDL.Windowed
         , K.confDebugPrintSystem = True
         , K.confDebugJoystick = K.DebugJoystick pBtn pAxis pHat
         }
-
-    -- monitor mjs =
-    --   case mjs of
-    --     Nothing -> return ()
-    --     Just js -> forever $ do
-    --       clearScreen
-    --       SDL.pumpEvents
-    --       K.monitorJoystick js
-    --       threadDelay 100000

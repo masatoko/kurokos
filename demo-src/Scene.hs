@@ -37,7 +37,7 @@ allocGame = do
 
 titleScene :: Maybe K.Joystick -> Metapad Action -> Scene Title IO Action
 titleScene mjs pad =
-  Scene pad update render transit (return Title) -- (\_ -> return ())
+  Scene pad update render transit (return Title)
   where
     update :: Update Title IO Action
     update _ as t = return t
@@ -140,7 +140,7 @@ clearScene mjs score pad = Scene pad update render transit allocGame
     render _ _ = do
       K.clearBy $ V4 0 0 255 255
       K.printTest (P (V2 10 100)) (V4 255 255 255 255) "CLEAR!"
-      K.printTest (P (V2 10 120)) (V4 255 255 255 255) $ T.pack ("Score: " ++ show score)
+      K.printTest (P (V2 10 120)) (V4 255 255 255 255) $ "Score: " <> T.pack (show score)
       K.printTest (P (V2 10 140)) (V4 255 255 255 255) "Enter - title"
 
     transit _ as _g
