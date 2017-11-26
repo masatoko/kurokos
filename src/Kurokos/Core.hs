@@ -43,10 +43,10 @@ module Kurokos.Core
   , setRendererDrawBlendMode
   ) where
 
-import           Control.Concurrent.MVar     (MVar, newMVar, withMVar)
+import           Control.Concurrent.MVar     (MVar, newMVar, withMVar, readMVar, takeMVar, putMVar)
 import           Control.Exception.Safe      (MonadCatch, MonadMask, MonadThrow)
 import qualified Control.Exception.Safe      as E
-import           Control.Monad.Base
+import           Control.Monad.Base          (MonadBase)
 import           Control.Monad.Managed       (managed, runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
@@ -307,7 +307,7 @@ goScene scene_ =
             Just _  -> return mExec
             Nothing -> go s' scene0 g'
 
-sceneLoop :: MonadIO m => g -> SceneState -> Scene g m a -> KurokosT m (g, SceneState, Transition m)
+sceneLoop :: (MonadIO m, MonadMask m) => g -> SceneState -> Scene g m a -> KurokosT m (g, SceneState, Transition m)
 sceneLoop iniG iniS scene =
   loop Nothing iniG iniS
   where
@@ -374,7 +374,7 @@ sceneLoop iniG iniS scene =
             in printf "%02d" n ++ " " ++ replicate n '.'
           else "NO WAIT"
 
-    preRender :: MonadIO m => KurokosT m ()
+    preRender :: (MonadIO m, MonadMask m) => KurokosT m ()
     preRender =
       withRenderer $ \r -> do
         SDL.rendererDrawColor r $= V4 0 0 0 255
@@ -394,7 +394,7 @@ sceneLoop iniG iniS scene =
     advance s = s {frameCount = c + 1}
       where c = frameCount s
 
-    printMessages :: MonadIO m => KurokosT m ()
+    printMessages :: (MonadIO m, MonadMask m) => KurokosT m ()
     printMessages = do
       font <- asks systemFont
       ts <- gets messages
@@ -464,14 +464,17 @@ showMessageBox title message = do
   window <- Just <$> asks window
   SDL.showSimpleMessageBox window SDL.Information title message
 
-withRenderer :: (MonadReader KurokosEnv m, MonadIO m) => (SDL.Renderer -> IO a) -> m a
+withRenderer :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => (SDL.Renderer -> m a) -> m a
 withRenderer act = do
   mvar <- asks renderer
-  liftIO $ withMVar mvar act
+  -- liftIO $ withMVar mvar act
+  E.bracket (liftIO $ takeMVar mvar)
+            (liftIO . putMVar mvar)
+            act
 
 --
 
-setRendererDrawBlendMode :: MonadIO m => SDL.BlendMode -> KurokosT m ()
+setRendererDrawBlendMode :: (MonadIO m, MonadMask m) => SDL.BlendMode -> KurokosT m ()
 setRendererDrawBlendMode mode =
   withRenderer $ \r ->
     SDL.rendererDrawBlendMode r $= mode

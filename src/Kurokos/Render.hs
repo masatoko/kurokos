@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Kurokos.Render
   ( setColor
   , clearBy
@@ -7,31 +8,31 @@ module Kurokos.Render
   , printTest
   ) where
 
-import           Control.Exception     (bracket)
-import           Control.Monad.Managed (managed, runManaged)
+import           Control.Exception.Safe (MonadMask)
+import qualified Control.Exception.Safe as E
+import           Control.Monad.Managed  (managed, runManaged)
 import           Control.Monad.Reader
-import           Data.Maybe            (fromMaybe)
-import           Data.Text             (Text)
-import           Data.Word             (Word8)
-import           Foreign.C.Types       (CInt)
-import           Linear.Affine         (Point (..))
+import           Data.Maybe             (fromMaybe)
+import           Data.Text              (Text)
+import           Data.Word              (Word8)
+import           Foreign.C.Types        (CInt)
+import           Linear.Affine          (Point (..))
 import           Linear.V2
 import           Linear.V4
 
-import           SDL                   (($=))
+import           SDL                    (($=))
 import qualified SDL
-import qualified SDL.Font              as Font
-import qualified SDL.Primitive         as Prim
+import qualified SDL.Font               as Font
 
 import           Kurokos.Core
-import           Kurokos.Data          (Sprite (..))
+import           Kurokos.Data           (Sprite (..))
 
-setColor :: MonadIO m => V4 Word8 -> KurokosT m ()
+setColor :: (MonadIO m, MonadMask m) => V4 Word8 -> KurokosT m ()
 setColor color =
   withRenderer $ \r ->
     SDL.rendererDrawColor r $= color
 
-clearBy :: MonadIO m => V4 Word8 -> KurokosT m ()
+clearBy :: (MonadIO m, MonadMask m) => V4 Word8 -> KurokosT m ()
 clearBy color =
   withRenderer $ \r -> do
     SDL.rendererDrawColor r $= color
@@ -76,14 +77,14 @@ clearBy color =
 --     p' = fromIntegral <$> p
 --     s' = fromIntegral <$> s
 
-printTest :: MonadIO m => Point V2 Int -> V4 Word8 -> Text -> KurokosT m ()
+printTest :: (MonadIO m, MonadMask m) => Point V2 Int -> V4 Word8 -> Text -> KurokosT m ()
 printTest pos color text = do
   font <- asks systemFont
-  withRenderer $ \r -> do
+  withRenderer $ \r -> liftIO $ do
     (w,h) <- Font.size font text
     runManaged $ do
-      surface <- managed $ bracket (Font.blended font color text) SDL.freeSurface
-      texture <- managed $ bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
+      surface <- managed $ E.bracket (Font.blended font color text) SDL.freeSurface
+      texture <- managed $ E.bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
       let rect = Just $ SDL.Rectangle pos' (fromIntegral <$> V2 w h)
       SDL.copy r texture Nothing rect
   where

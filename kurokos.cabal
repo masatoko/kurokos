@@ -53,7 +53,10 @@ executable demo
   build-depends:       base
                      , kurokos
                      , sdl2 >= 2
+                     , sdl2-ttf >= 2.0.0
+                     , sdl2-image
                      , sdl2-gfx >= 0.2
+                     , safe-exceptions
                      , text
                      , lens
                      , mtl

@@ -36,7 +36,8 @@ module Kurokos
   -- Font
   , loadFont, freeFont, withFont
   -- Sprite
-  , newSprite, loadSprite, decodeSprite, freeSprite
+  , allocTexture
+  , loadSprite, decodeSprite, freeSprite
   , setBlendMode, setAlphaMod, setColorMod
   -- Metapad
   , Metapad
