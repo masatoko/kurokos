@@ -21,7 +21,7 @@ library
                      , Kurokos.Font
                      , Kurokos.Metapad
                      , Kurokos.Render
-                     , Kurokos.Sprite
+                     , Kurokos.Texture
   pkgconfig-depends:   sdl2 >= 2
                      , SDL2_ttf >= 2
   build-depends:       base >= 4.7 && < 5

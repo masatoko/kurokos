@@ -69,4 +69,4 @@ import           Kurokos.Types
 import           Kurokos.Font
 import           Kurokos.Metapad
 import           Kurokos.Render
-import           Kurokos.Sprite
+import           Kurokos.Texture

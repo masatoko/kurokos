@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Kurokos.Sprite
+module Kurokos.Texture
   ( allocTexture
   , allocTextureB
   -- ** Texture State
