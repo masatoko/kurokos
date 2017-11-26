@@ -18,8 +18,12 @@ import           Import
 import           Pad
 import           Scene
 
+import Kurokos.GUI.Test (testGui)
+
 main :: IO ()
 main = do
+  testGui
+  --
   as <- getArgs
   let opt = (`elem` as)
       conf = mkConf (opt "button") (opt "axis") (opt "hat") -- TODO: fix mkConf

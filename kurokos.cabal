@@ -16,7 +16,12 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Kurokos
+                     , Kurokos.GUI.Test
   other-modules:       Kurokos.Core
+                     , Kurokos.GUI.Def
+                     , Kurokos.GUI.Core
+                    --  , Kurokos.GUI.Test
+                     , Kurokos.GUI.Widget.Label
                      , Kurokos.Types
                      , Kurokos.Font
                      , Kurokos.Metapad
@@ -35,6 +40,7 @@ library
                      , mtl
                      , monad-control
                      , containers
+                     , lens
                      , bytestring
                      , safe-exceptions
                      , text
