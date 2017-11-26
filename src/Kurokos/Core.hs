@@ -10,6 +10,7 @@
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Kurokos.Core
   ( Config (..)
@@ -173,7 +174,6 @@ withKurokos :: Config -> (KurokosData -> IO ()) -> IO ()
 withKurokos config go =
   runManaged $ do
     managed_ withSDL
-    vjs <- V.mapM toManagedJS =<< liftIO SDL.availableJoysticks
     managed_ withFontInit
     font <- managed withSystemFont
     (win, r) <- managed $ withWinRenderer config
@@ -184,7 +184,7 @@ withKurokos config go =
       let state = KurokosState
             { messages = []
             , kstEvents = []
-            , kstJoysticks = vjs
+            , kstJoysticks = V.empty
             , psStart = 0
             , psCount = 0
             --
@@ -216,10 +216,6 @@ withKurokos config go =
       where
         size = max 18 (h `div` 50)
         V2 _ h = confWinSize config
-
-    toManagedJS :: SDL.JoystickDevice -> Managed Joystick
-    toManagedJS device =
-      managed $ E.bracket (openJoystickFromDevice device) closeJoystick
 
     mkEnv font win r = do
       mvar <- newMVar r
@@ -446,6 +442,7 @@ procEvents es = go =<< asks debugJoystick
         work :: MonadIO m => SDL.EventPayload -> KurokosT m ()
         work (SDL.WindowClosedEvent _) = modify' $ \kst -> kst {kstShouldExit = True}
         work SDL.QuitEvent             = modify' $ \kst -> kst {kstShouldExit = True}
+        work (SDL.JoyDeviceEvent dt)   = resetJoysticks dt
         work (SDL.JoyButtonEvent d)    =
           when (djVisButton dj) $ liftIO . print $ d
         work (SDL.JoyAxisEvent d)      =
@@ -459,6 +456,13 @@ procEvents es = go =<< asks debugJoystick
 
     showJoyHatEventData (SDL.JoyHatEventData jid hat value) =
       "Hat: " ++ show jid ++ " @ " ++ show hat ++ " - " ++ show value
+
+resetJoysticks :: MonadIO m => SDL.JoyDeviceEventData -> KurokosT m ()
+resetJoysticks SDL.JoyDeviceEventData{} = do
+  vjs <- getJoysticks
+  V.mapM_ closeJoystick vjs
+  vjs' <- liftIO (V.mapM openJoystickFromDevice =<< SDL.availableJoysticks)
+  modify' $ \kst -> kst {kstJoysticks = vjs'}
 
 --
 
