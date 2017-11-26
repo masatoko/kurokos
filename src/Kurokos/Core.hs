@@ -457,6 +457,7 @@ procEvents es = go =<< asks debugJoystick
     showJoyHatEventData (SDL.JoyHatEventData jid hat value) =
       "Hat: " ++ show jid ++ " @ " ++ show hat ++ " - " ++ show value
 
+-- TODO: Shold check joyDeviceEventConnction
 resetJoysticks :: MonadIO m => SDL.JoyDeviceEventData -> KurokosT m ()
 resetJoysticks SDL.JoyDeviceEventData{} = do
   vjs <- getJoysticks
