@@ -18,12 +18,12 @@
 
 
 # For Linux
-resolver: lts-9.11
-compiler: ghc-8.0.2
+# resolver: lts-9.11
+# compiler: ghc-8.0.2
 
 # For Windows
-# resolver: lts-9.11
-# compiler: ghc-8.0.1
+resolver: lts-9.11
+compiler: ghc-8.0.1
 
 
 # User packages to be built.

@@ -172,14 +172,13 @@ withKurokos :: Config -> (KurokosData -> IO ()) -> IO ()
 withKurokos config go =
   runManaged $ do
     managed_ withSDL
-    specialInit
     vjs <- V.mapM toManagedJS =<< liftIO SDL.availableJoysticks
     managed_ withFontInit
     font <- managed withSystemFont
     (win, r) <- managed $ withWinRenderer config
     --
     liftIO $ do
-      SDL.rendererDrawBlendMode r $= SDL.BlendAlphaBlend
+      initOthers r
       env <- mkEnv font win r
       let state = KurokosState
             { messages = []
@@ -197,9 +196,9 @@ withKurokos config go =
   where
     withSDL = E.bracket_ SDL.initializeAll SDL.quit
 
-    specialInit = do
+    initOthers r = do
       _ <- SDL.setMouseLocationMode SDL.RelativeLocation
-      return ()
+      SDL.rendererDrawBlendMode r $= SDL.BlendAlphaBlend
 
     withFontInit action =
       E.bracket_ Font.initialize
