@@ -9,8 +9,6 @@ import Control.Monad.State
 import Data.Text (Text)
 import Data.Int (Int64)
 
-import Kurokos.GUI.Def
-
 -- data Direction
 --   = DirH -- Horizontal
 --   | DirV -- Vertical
@@ -20,6 +18,9 @@ import Kurokos.GUI.Def
 type Key = Int64
 newtype SingleKey = SingleKey Key deriving Show
 newtype ContainerKey = ContainerKey Key deriving Show
+
+class Widget a where
+  showW :: a -> String
 
 data WidgetTree
   = forall a. (Widget a)

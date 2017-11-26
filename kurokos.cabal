@@ -18,7 +18,6 @@ library
   exposed-modules:     Kurokos
                      , Kurokos.GUI.Test
   other-modules:       Kurokos.Core
-                     , Kurokos.GUI.Def
                      , Kurokos.GUI.Core
                     --  , Kurokos.GUI.Test
                      , Kurokos.GUI.Widget.Label
