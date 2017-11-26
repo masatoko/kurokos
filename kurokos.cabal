@@ -17,7 +17,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Kurokos
   other-modules:       Kurokos.Core
-                     , Kurokos.Data
+                     , Kurokos.Types
                      , Kurokos.Font
                      , Kurokos.Metapad
                      , Kurokos.Render

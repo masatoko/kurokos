@@ -1,4 +1,4 @@
-module Kurokos.Data
+module Kurokos.Types
   ( Font
   ) where
 

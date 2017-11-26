@@ -29,8 +29,6 @@ module Kurokos
   -- Render
   , setColor
   , clearBy
-  -- , drawLine, drawRect, fillRect
-  -- , renderS, renderS'
   , printTest
   -- Font
   , loadFont, freeFont, withFont
@@ -67,7 +65,7 @@ module Kurokos
   ) where
 
 import           Kurokos.Core
-import           Kurokos.Data
+import           Kurokos.Types
 import           Kurokos.Font
 import           Kurokos.Metapad
 import           Kurokos.Render

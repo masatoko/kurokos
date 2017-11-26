@@ -69,7 +69,7 @@ import           SDL                         (($=))
 import qualified SDL
 import qualified SDL.Font                    as Font
 
-import           Kurokos.Data                (Font)
+import           Kurokos.Types                (Font)
 import           Kurokos.Font                (freeFont, loadFont, withFont)
 import           Kurokos.Metapad
 
