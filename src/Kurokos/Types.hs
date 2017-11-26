@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.Types
-  ( Font
+  ( RenderEnv
+  , Font
   , Joystick (..)
   , openJoystickFromDevice
   , closeJoystick
@@ -18,6 +19,10 @@ import qualified SDL.Font
 import qualified SDL.Raw.Haptic         as HAP
 import           SDL.Raw.Types          (Haptic)
 import           SDL.Internal.Types     (joystickPtr)
+
+class RenderEnv m where
+  getRenderer :: m SDL.Renderer
+  getFont :: m SDL.Font.Font
 
 type Font = SDL.Font.Font
 

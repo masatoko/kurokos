@@ -9,18 +9,23 @@ import           Control.Monad.State
 import           Data.Int            (Int64)
 import           Data.Text           (Text)
 
+import qualified SDL
+import qualified SDL.Font
+
+import Kurokos.Types (RenderEnv)
+
 -- data Direction
 --   = DirH -- Horizontal
 --   | DirV -- Vertical
 --   deriving Show
 
+class Widget a where
+  showW :: a -> String
+  render :: RenderEnv m => a -> m ()
 
 type Key = Int64
 newtype SingleKey = SingleKey Key deriving Show
 newtype ContainerKey = ContainerKey Key deriving Show
-
-class Widget a where
-  showW :: a -> String
 
 data WidgetTree
   = forall a. (Widget a)
