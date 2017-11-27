@@ -3,6 +3,7 @@
 module Main where
 
 import qualified Control.Exception.Safe as E
+import           Control.Monad          (void)
 import           Control.Monad.IO.Class (liftIO)
 import           Control.Monad.Managed  (Managed, managed, runManaged)
 import qualified Data.ByteString        as B
@@ -31,14 +32,12 @@ main = do
   withKurokos conf' $ \kuro ->
     -- Ready original data here
     runManaged $ do
-      font <- managed $ K.withFont (K.FontFile "_data/system.ttf") 20
-      liftIO $ do
-        testGui font
+      _font <- managed $ K.withFont (K.FontFile "_data/system.ttf") 20 -- Test
+      liftIO $ void $
         runKurokos kuro $ do
           SDL.setMouseLocationMode SDL.AbsoluteLocation
           SDL.cursorVisible $= False
           runScene titleScene
-        return ()
   where
     mkConf pBtn pAxis pHat =
       K.defaultConfig

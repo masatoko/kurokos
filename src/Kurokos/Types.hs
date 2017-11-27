@@ -23,8 +23,8 @@ import qualified SDL.Raw.Haptic         as HAP
 import           SDL.Raw.Types          (Haptic)
 
 class RenderEnv m where
-  getRenderer :: m SDL.Renderer
-  renderText :: Text -> m ()
+  withRenderer :: (SDL.Renderer -> m a) -> m a
+  renderTexture :: SDL.Texture -> SDL.Rectangle CInt -> m ()
   -- drawRect
   -- fillRect
 

@@ -1,11 +1,11 @@
+{-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Scene where
 
-import           Control.Monad.State
 import           Control.Lens
+import           Control.Monad.State
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
 import qualified Data.Vector         as V
@@ -15,10 +15,17 @@ import qualified SDL.Font            as Font
 import qualified SDL.Primitive       as Gfx
 
 import qualified Kurokos             as K
+import qualified Kurokos.GUI         as GUI
+
+import Kurokos.GUI.Core
+import qualified Kurokos.GUI.Widget.Label as Label
 
 import           Import
 
 import           Pad
+
+fontPath :: FilePath
+fontPath = "_data/system.ttf"
 
 data Dummy = Dummy
 
@@ -36,8 +43,6 @@ allocGame = do
   (_, font) <- allocate (Font.load fontPath 50) Font.free
 
   return $ MyData tex 0 0 []
-  where
-    fontPath = "_data/system.ttf"
 
 --
 
@@ -82,15 +87,29 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
       | Enter `elem` as = K.end
       | otherwise       = K.continue
 
-titleScene :: Scene Dummy IO Action
+newtype Title = Title GUI.GuiState
+
+titleScene :: Scene Title IO Action
 titleScene =
-  Scene defPad update render transit (return Dummy)
+  Scene defPad update render transit alloc
   where
-    update :: Update Dummy IO Action
+    alloc = do
+      (_, font) <- allocate (Font.load fontPath 50) Font.free
+      let env = GUI.GuiEnv font
+      gst <- GUI.newGui env $ do
+        label1 <- GUI.genSingle =<< Label.newLabel "label1"
+        label2 <- GUI.genSingle =<< Label.newLabel "label2"
+        w <- genContainer [label1, label2]
+        putWT w
+      liftIO . print $ getWidgetTree gst
+      return $ Title gst
+      where
+
+    update :: Update Title IO Action
     update _ _as = return
 
-    render :: Render Dummy IO
-    render _ _ = do
+    render :: Render Title IO
+    render _ (Title gui) = do
       K.printTest (P (V2 10 100)) white "Enter - start"
       K.printTest (P (V2 10 120)) white "Escape - exit"
       K.printTest (P (V2 10 160)) white "日本語テスト"
@@ -99,6 +118,8 @@ titleScene =
       vjs <- K.getJoysticks
       let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
       V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) white (showjs js)) vjs
+      --
+      renderGUI gui
       where
         white = V4 255 255 255 255
 

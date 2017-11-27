@@ -6,12 +6,10 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE MultiWayIf                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE Strict                     #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-
 module Kurokos.Core
   ( Config (..)
   , defaultConfig
@@ -78,9 +76,7 @@ import qualified SDL.Font                     as Font
 
 import           Kurokos.Font                 (withFont)
 import           Kurokos.Metapad
-import           Kurokos.Types                (Font, FontSource (..), Joystick,
-                                               closeJoystick,
-                                               openJoystickFromDevice)
+import           Kurokos.Types
 
 data Config = Config
   { confWinSize          :: V2 Int
@@ -267,7 +263,7 @@ data Scene g m a = Scene
   , sceneAlloca  :: ResourceT (KurokosT m) g
   }
 
-data SceneState = SceneState
+newtype SceneState = SceneState
   { frameCount  :: Integer
   }
 
@@ -491,17 +487,23 @@ showMessageBox title message = do
   window <- Just <$> asks window
   SDL.showSimpleMessageBox window SDL.Information title message
 
-withRenderer :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => (SDL.Renderer -> m a) -> m a
-withRenderer act = do
-  mvar <- asks renderer
-  -- liftIO $ withMVar mvar act
-  E.bracket (liftIO $ takeMVar mvar)
-            (liftIO . putMVar mvar)
-            act
-
 --
 
 setRendererDrawBlendMode :: (MonadIO m, MonadMask m) => SDL.BlendMode -> KurokosT m ()
 setRendererDrawBlendMode mode =
   withRenderer $ \r ->
     SDL.rendererDrawBlendMode r $= mode
+
+
+--
+
+instance (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => RenderEnv m where
+  withRenderer act = do
+    mvar <- asks renderer
+    E.bracket (liftIO $ takeMVar mvar)
+              (liftIO . putMVar mvar)
+              act
+
+  renderTexture tex rect =
+    withRenderer $ \r ->
+      SDL.copy r tex Nothing (Just rect)
