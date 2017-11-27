@@ -18,10 +18,12 @@ library
   exposed-modules:     Kurokos
                      , Kurokos.GUI
                      , Kurokos.GUI.Core
-                     , Kurokos.GUI.Widget.Label
   other-modules:       Kurokos.Core
                      , Kurokos.GUI.Def
                      , Kurokos.GUI.Import
+                     , Kurokos.GUI.Widget
+                     , Kurokos.GUI.Widget.Render
+                     , Kurokos.GUI.Widget.Make
                      , Kurokos.Types
                      , Kurokos.Font
                      , Kurokos.Metapad

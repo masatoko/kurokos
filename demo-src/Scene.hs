@@ -18,7 +18,6 @@ import qualified Kurokos             as K
 import qualified Kurokos.GUI         as GUI
 
 import Kurokos.GUI.Core
-import qualified Kurokos.GUI.Widget.Label as Label
 
 import           Import
 
@@ -97,8 +96,8 @@ titleScene =
       (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 50) K.freeFont
       let env = GUI.GuiEnv font
       gui <- GUI.newGui env $ do
-        label1 <- GUI.genSingle =<< Label.newLabel "label1"
-        label2 <- GUI.genSingle =<< Label.newLabel "label2"
+        label1 <- GUI.genSingle =<< GUI.newLabel "label1"
+        label2 <- GUI.genSingle =<< GUI.newLabel "label2"
         w <- genContainer [label1, label2]
         putWT w
       liftIO . print $ getWidgetTree gui
