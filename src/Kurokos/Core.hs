@@ -6,11 +6,11 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE MultiWayIf                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE Strict                     #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Kurokos.Core
   ( Config (..)
@@ -52,7 +52,8 @@ import           Control.Exception.Safe       (MonadCatch, MonadMask,
                                                MonadThrow)
 import qualified Control.Exception.Safe       as E
 import           Control.Monad.Base           (MonadBase)
-import           Control.Monad.Managed        (Managed, managed, managed_, runManaged)
+import           Control.Monad.Managed        (Managed, managed, managed_,
+                                               runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Control.Monad.Trans.Class
@@ -75,9 +76,11 @@ import           SDL                          (($=))
 import qualified SDL
 import qualified SDL.Font                     as Font
 
-import           Kurokos.Font                 (freeFont, loadFont, withFont)
+import           Kurokos.Font                 (freeFont, loadFont, withFont,
+                                               withFontB)
 import           Kurokos.Metapad
-import           Kurokos.Types                (Font, Joystick, openJoystickFromDevice, closeJoystick)
+import           Kurokos.Types                (Font, Joystick, closeJoystick,
+                                               openJoystickFromDevice)
 
 data Config = Config
   { confWinSize          :: V2 Int
@@ -209,10 +212,8 @@ withKurokos config go =
     withSystemFont :: (Font -> IO r) -> IO r
     withSystemFont action =
       case confFont config of
-        Left bytes -> withFont bytes size action
-        Right path -> E.bracket (loadFont path size)
-                                freeFont
-                                action
+        Left bytes -> withFontB bytes size action
+        Right path -> withFont path size action
       where
         size = max 18 (h `div` 50)
         V2 _ h = confWinSize config

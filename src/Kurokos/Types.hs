@@ -1,28 +1,30 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.Types
-  ( RenderEnv
+  ( RenderEnv (..)
   , Font
   , Joystick (..)
   , openJoystickFromDevice
   , closeJoystick
   ) where
 
-import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Control.Exception.Safe as E
-import           Data.Int (Int32)
-import           Foreign.C.Types (CInt)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Data.Int               (Int32)
+import           Data.Text              (Text)
+import           Foreign.C.Types        (CInt)
 import           Linear.V2
-import           Data.Text (Text)
 
 import qualified SDL
 import qualified SDL.Font
+import           SDL.Internal.Types     (joystickPtr)
 import qualified SDL.Raw.Haptic         as HAP
 import           SDL.Raw.Types          (Haptic)
-import           SDL.Internal.Types     (joystickPtr)
 
 class RenderEnv m where
   getRenderer :: m SDL.Renderer
-  getFont :: m SDL.Font.Font
+  renderText :: Text -> m ()
+  -- drawRect
+  -- fillRect
 
 type Font = SDL.Font.Font
 

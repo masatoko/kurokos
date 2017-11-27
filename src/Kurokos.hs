@@ -34,7 +34,7 @@ module Kurokos
   , clearBy
   , printTest
   -- Font
-  , loadFont, freeFont, withFont
+  , loadFont, freeFont, withFont, withFontB
   -- Sprite
   , allocTexture
   , allocTextureB

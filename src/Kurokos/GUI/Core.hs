@@ -1,18 +1,20 @@
-{-# LANGUAGE DeriveAnyClass            #-}
-{-# LANGUAGE DeriveFunctor             #-}
-{-# LANGUAGE ExistentialQuantification #-}
-{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE ExistentialQuantification  #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE Strict                     #-}
+{-# LANGUAGE StrictData                 #-}
+{-# LANGUAGE TemplateHaskell            #-}
 module Kurokos.GUI.Core where
 
 import           Control.Lens
+import           Control.Monad.Reader
 import           Control.Monad.State
-import           Data.Int            (Int64)
-import           Data.Text           (Text)
+import           Data.Int             (Int64)
+import           Data.Text            (Text)
 
 import qualified SDL
-import qualified SDL.Font
+import qualified SDL.Font             as Font
 
-import Kurokos.Types (RenderEnv)
+import           Kurokos.Types        (RenderEnv)
 
 -- data Direction
 --   = DirH -- Horizontal
@@ -35,6 +37,10 @@ instance Show WidgetTree where
   show (Single (SingleKey key) a)        = show key ++ "<" ++ showW a ++ ">"
   show (Container (ContainerKey key) ws) = show key ++ "@" ++ show ws
 
+newtype GuiEnv = GuiEnv
+  { geFont :: Font.Font
+  }
+
 data GuiState = GuiState
   { _gsSCnt  :: Key
   , _gsCCnt  :: Key
@@ -47,20 +53,15 @@ makeLenses ''GuiState
 getWidgetTree :: GuiState -> WidgetTree
 getWidgetTree = _gsWTree
 
--- data GuiT m a = GuiT {
---     runGT :: StateT GuiState m a
---   } deriving (Functor, Applicative, Monad, MonadIO, MonadState GuiState)
+newtype GuiT m a = GuiT {
+    runGT :: ReaderT GuiEnv (StateT GuiState m) a
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader GuiEnv, MonadState GuiState)
 
--- runGuiT :: Monad m => GuiState -> GuiT m a -> m GuiState
--- runGuiT gst k = execStateT (runGT k) gst
+runGuiT :: Monad m => GuiEnv -> GuiState -> GuiT m a -> m GuiState
+runGuiT env gst k = execStateT (runReaderT (runGT k) env) gst
 
-type GuiT m a = StateT GuiState m a
-
-runGuiT :: Monad m => GuiState -> GuiT m a -> m GuiState
-runGuiT gst k = execStateT k gst
-
-newGui :: Monad m => GuiT m () -> m GuiState
-newGui = runGuiT gs0
+newGui :: Monad m => GuiEnv -> GuiT m () -> m GuiState
+newGui env = runGuiT env gs0
   where
     gs0 = GuiState 0 1 (Container (ContainerKey 0) [])
 
@@ -78,3 +79,9 @@ genContainer ws = do
 
 putWT :: Monad m => WidgetTree -> GuiT m ()
 putWT wt = gsWTree .= wt
+
+renderWidgetT :: (RenderEnv m, Monad m) => WidgetTree -> m ()
+renderWidgetT = go
+  where
+    go (Single _ a)     = render a
+    go (Container _ ws) = mapM_ go ws

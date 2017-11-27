@@ -4,6 +4,7 @@ module Main where
 
 import qualified Control.Exception.Safe as E
 import           Control.Monad.IO.Class (liftIO)
+import           Control.Monad.Managed  (Managed, managed, runManaged)
 import qualified Data.ByteString        as B
 import           Data.Int               (Int16, Int32)
 import           System.Environment     (getArgs)
@@ -18,24 +19,26 @@ import           Import
 import           Pad
 import           Scene
 
-import Kurokos.GUI.Test (testGui)
+import           TestGui                (testGui)
 
 main :: IO ()
 main = do
-  testGui
-  --
   as <- getArgs
   let opt = (`elem` as)
       conf = mkConf (opt "button") (opt "axis") (opt "hat") -- TODO: fix mkConf
       -- conf' = conf {K.confFont = Left fontBytes}
       conf' = conf {K.confFont = Right "_data/system.ttf"}
-  withKurokos conf' $ \kuro -> do
-    runKurokos kuro $ do
-      -- Ready original data here
-      SDL.setMouseLocationMode SDL.AbsoluteLocation
-      SDL.cursorVisible $= False
-      runScene titleScene
-    return ()
+  withKurokos conf' $ \kuro ->
+    -- Ready original data here
+    runManaged $ do
+      font <- managed $ K.withFont "_data/system.ttf" 20
+      liftIO $ do
+        testGui font
+        runKurokos kuro $ do
+          SDL.setMouseLocationMode SDL.AbsoluteLocation
+          SDL.cursorVisible $= False
+          runScene titleScene
+        return ()
   where
     mkConf pBtn pAxis pHat =
       K.defaultConfig
