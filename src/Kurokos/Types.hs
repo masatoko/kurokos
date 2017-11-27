@@ -5,10 +5,12 @@ module Kurokos.Types
   , Joystick (..)
   , openJoystickFromDevice
   , closeJoystick
+  , FontSource (..)
   ) where
 
 import qualified Control.Exception.Safe as E
 import           Control.Monad.IO.Class (MonadIO, liftIO)
+import           Data.ByteString
 import           Data.Int               (Int32)
 import           Data.Text              (Text)
 import           Foreign.C.Types        (CInt)
@@ -57,3 +59,8 @@ closeJoystick :: MonadIO m => Joystick -> m ()
 closeJoystick Joystick{..} = do
   mapM_ HAP.hapticClose jsHap
   SDL.closeJoystick jsJoystick
+
+data FontSource
+  = FontFile FilePath
+  | FontBinary ByteString
+  deriving Show

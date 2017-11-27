@@ -27,11 +27,11 @@ main = do
   let opt = (`elem` as)
       conf = mkConf (opt "button") (opt "axis") (opt "hat") -- TODO: fix mkConf
       -- conf' = conf {K.confFont = Left fontBytes}
-      conf' = conf {K.confFont = Right "_data/system.ttf"}
+      conf' = conf {K.confFont = K.FontFile "_data/system.ttf"}
   withKurokos conf' $ \kuro ->
     -- Ready original data here
     runManaged $ do
-      font <- managed $ K.withFont "_data/system.ttf" 20
+      font <- managed $ K.withFont (K.FontFile "_data/system.ttf") 20
       liftIO $ do
         testGui font
         runKurokos kuro $ do

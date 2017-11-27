@@ -76,10 +76,10 @@ import           SDL                          (($=))
 import qualified SDL
 import qualified SDL.Font                     as Font
 
-import           Kurokos.Font                 (freeFont, loadFont, withFont,
-                                               withFontB)
+import           Kurokos.Font                 (withFont)
 import           Kurokos.Metapad
-import           Kurokos.Types                (Font, Joystick, closeJoystick,
+import           Kurokos.Types                (Font, FontSource (..), Joystick,
+                                               closeJoystick,
                                                openJoystickFromDevice)
 
 data Config = Config
@@ -90,7 +90,7 @@ data Config = Config
   , confDebugPrintSystem :: Bool
   , confDebugJoystick    :: DebugJoystick
   , confNumAverageTime   :: Int
-  , confFont             :: Either B.ByteString FilePath
+  , confFont             :: FontSource
   }
 
 data DebugJoystick = DebugJoystick
@@ -108,7 +108,7 @@ defaultConfig = Config
   , confDebugPrintSystem = False
   , confDebugJoystick = DebugJoystick False False False
   , confNumAverageTime = 60
-  , confFont = Right "data/font/system.ttf"
+  , confFont = FontFile "data/font/system.ttf"
   }
 
 type Time = Word32
@@ -204,16 +204,10 @@ withKurokos config go =
       _ <- SDL.setMouseLocationMode SDL.RelativeLocation
       SDL.rendererDrawBlendMode r $= SDL.BlendAlphaBlend
 
-    withFontInit action =
-      E.bracket_ Font.initialize
-                 Font.quit
-                 action
+    withFontInit = E.bracket_ Font.initialize Font.quit
 
     withSystemFont :: (Font -> IO r) -> IO r
-    withSystemFont action =
-      case confFont config of
-        Left bytes -> withFontB bytes size action
-        Right path -> withFont path size action
+    withSystemFont = withFont (confFont config) size
       where
         size = max 18 (h `div` 50)
         V2 _ h = confWinSize config

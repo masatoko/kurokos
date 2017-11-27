@@ -1,8 +1,5 @@
 module Kurokos.Font
-  ( loadFont
-  , freeFont
-  , withFont
-  , withFontB
+  ( withFont
   ) where
 
 import qualified Control.Exception.Safe   as E
@@ -16,27 +13,10 @@ import           System.Directory         (doesFileExist)
 
 import qualified SDL.Font                 as Font
 
-import           Kurokos.Types             (Font)
+import           Kurokos.Types            (Font, FontSource (..))
 
-loadFont :: MonadIO m => FilePath -> Int -> m Font
-loadFont path size = liftIO $ do
-  p <- doesFileExist path
-  if p
-    then Font.load path size
-    else E.throwIO $ userError $ "Missing font file: " ++ path
-
-freeFont :: MonadIO m => Font -> m ()
-freeFont font =
-  liftIO $ Font.free font
-
-withFont :: FilePath -> Int -> (Font -> IO a) -> IO a
-withFont path size action =
-  E.bracket (Font.load path size)
-            Font.free
-            action
-
-withFontB :: ByteString -> Int -> (Font -> IO a) -> IO a
-withFontB bs size action =
-  E.bracket (Font.decode bs size)
-            Font.free
-            action
+withFont :: FontSource -> Int -> (Font -> IO a) -> IO a
+withFont src size action =
+  case src of
+    FontFile path -> E.bracket (Font.load path size) Font.free action
+    FontBinary bs -> E.bracket (Font.decode bs size) Font.free action

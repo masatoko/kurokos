@@ -29,12 +29,13 @@ module Kurokos
   -- Types
   , Font
   , Joystick (..)
+  , FontSource (..)
   -- Render
   , setColor
   , clearBy
   , printTest
   -- Font
-  , loadFont, freeFont, withFont, withFontB
+  , withFont
   -- Sprite
   , allocTexture
   , allocTextureB
