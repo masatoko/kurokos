@@ -94,15 +94,15 @@ titleScene =
   Scene defPad update render transit alloc
   where
     alloc = do
-      (_, font) <- allocate (Font.load fontPath 50) Font.free
+      (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 50) K.freeFont
       let env = GUI.GuiEnv font
-      gst <- GUI.newGui env $ do
+      gui <- GUI.newGui env $ do
         label1 <- GUI.genSingle =<< Label.newLabel "label1"
         label2 <- GUI.genSingle =<< Label.newLabel "label2"
         w <- genContainer [label1, label2]
         putWT w
-      liftIO . print $ getWidgetTree gst
-      return $ Title gst
+      liftIO . print $ getWidgetTree gui
+      return $ Title gui
       where
 
     update :: Update Title IO Action

@@ -1,5 +1,7 @@
 module Kurokos.Font
-  ( withFont
+  ( loadFont
+  , freeFont
+  , withFont
   ) where
 
 import qualified Control.Exception.Safe   as E
@@ -15,8 +17,14 @@ import qualified SDL.Font                 as Font
 
 import           Kurokos.Types            (Font, FontSource (..))
 
-withFont :: FontSource -> Int -> (Font -> IO a) -> IO a
-withFont src size action =
+loadFont :: MonadIO m => FontSource -> Int -> m Font
+loadFont src size =
   case src of
-    FontFile path -> E.bracket (Font.load path size) Font.free action
-    FontBinary bs -> E.bracket (Font.decode bs size) Font.free action
+    FontFile path -> Font.load path size
+    FontBinary bs -> Font.decode bs size
+
+freeFont :: MonadIO m => Font -> m ()
+freeFont = Font.free
+
+withFont :: FontSource -> Int -> (Font -> IO a) -> IO a
+withFont src size = E.bracket (loadFont src size) freeFont
