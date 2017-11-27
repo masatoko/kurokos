@@ -1,5 +1,6 @@
 {-# LANGUAGE ExistentialQuantification  #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE Strict                     #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TemplateHaskell            #-}
@@ -34,8 +35,15 @@ newtype SingleKey = SingleKey Key deriving Show
 newtype ContainerKey = ContainerKey Key deriving Show
 
 data WidgetTree
-  = Single SingleKey SDL.Texture Widget
-  | Container ContainerKey [WidgetTree]
+  = Single
+      { singleKey :: SingleKey
+      , wtTexture :: SDL.Texture
+      , wtWidget  :: Widget
+      }
+  | Container
+      { containerKey :: ContainerKey
+      , wtChildren   :: [WidgetTree]
+      }
 
 instance Show WidgetTree where
   show (Single (SingleKey key) _ w)      = show key ++ show w
@@ -91,6 +99,6 @@ putWT wt = gWTree .= wt
 renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 renderGUI g = go $ g^.gWTree
   where
-    go (Single _ tex _) =
-      renderTexture tex $ SDL.Rectangle (SDL.P $ V2 0 0) (V2 50 50)
-    go (Container _ ws) = mapM_ go ws
+    go Single{..} =
+      renderTexture wtTexture $ SDL.Rectangle (SDL.P $ V2 0 0) (V2 50 50)
+    go Container{..} = mapM_ go wtChildren
