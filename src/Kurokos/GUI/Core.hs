@@ -11,13 +11,14 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.Int                  (Int64)
 import           Data.Text                 (Text)
+import           Linear.V2                 (V2 (..))
 
 import qualified SDL
 import qualified SDL.Font                  as Font
 
-import           Kurokos.GUI.Def           (RenderEnv)
+import           Kurokos.GUI.Def           (RenderEnv (..))
 import           Kurokos.GUI.Widget
-import           Kurokos.GUI.Widget.Render (renderWidget)
+import           Kurokos.GUI.Widget.Render (createTextureFromWidget)
 
 -- data Direction
 --   = DirH -- Horizontal
@@ -33,9 +34,12 @@ newtype SingleKey = SingleKey Key deriving Show
 newtype ContainerKey = ContainerKey Key deriving Show
 
 data WidgetTree
-  = Single SingleKey Widget
+  = Single SingleKey SDL.Texture Widget
   | Container ContainerKey [WidgetTree]
-  deriving Show
+
+instance Show WidgetTree where
+  show (Single (SingleKey key) _ w)      = show key ++ show w
+  show (Container (ContainerKey key) ws) = show key ++ show ws
 
 newtype GuiEnv = GuiEnv
   { geFont :: Font.Font
@@ -60,16 +64,20 @@ newtype GuiT m a = GuiT {
 runGuiT :: Monad m => GuiEnv -> GUI -> GuiT m a -> m GUI
 runGuiT env g k = execStateT (runReaderT (runGT k) env) g
 
+instance MonadTrans GuiT where
+  lift = GuiT . lift . lift
+
 newGui :: Monad m => GuiEnv -> GuiT m () -> m GUI
 newGui env = runGuiT env gui
   where
     gui = GUI 0 1 (Container (ContainerKey 0) [])
 
-genSingle :: Monad m => Widget -> GuiT m WidgetTree
-genSingle a = do
+genSingle :: (RenderEnv m, MonadIO m, MonadMask m) => Widget -> GuiT m WidgetTree
+genSingle w = do
+  tex <- lift $ createTextureFromWidget w
   key <- SingleKey <$> use gSCnt
   gSCnt += 1
-  return $ Single key a
+  return $ Single key tex w
 
 genContainer :: Monad m => [WidgetTree] -> GuiT m WidgetTree
 genContainer ws = do
@@ -83,5 +91,6 @@ putWT wt = gWTree .= wt
 renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 renderGUI g = go $ g^.gWTree
   where
-    go (Single _ a)     = renderWidget a
+    go (Single _ tex _) =
+      renderTexture tex $ SDL.Rectangle (SDL.P $ V2 0 0) (V2 50 50)
     go (Container _ ws) = mapM_ go ws
