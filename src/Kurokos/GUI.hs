@@ -1,6 +1,7 @@
 module Kurokos.GUI
   ( GUI
   , GuiEnv (..)
+  , Direction (..)
   , newGui
   , renderGUI
   , genSingle

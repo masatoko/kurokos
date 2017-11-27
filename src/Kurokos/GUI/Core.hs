@@ -13,7 +13,7 @@ import           Control.Monad.State
 import           Data.Int                  (Int64)
 import           Data.Text                 (Text)
 import           Foreign.C.Types           (CInt)
-import           Linear.V2                 (V2 (..))
+import           Linear.V2
 
 import qualified SDL
 import qualified SDL.Font                  as Font
@@ -22,10 +22,10 @@ import           Kurokos.GUI.Def           (RenderEnv (..))
 import           Kurokos.GUI.Widget
 import           Kurokos.GUI.Widget.Render (createTextureFromWidget)
 
--- data Direction
---   = DirH -- Horizontal
---   | DirV -- Vertical
---   deriving Show
+data Direction
+  = Horizontal
+  | Vertical
+  deriving Show
 
 -- class Widget a where
 --   showW :: a -> String
@@ -43,12 +43,13 @@ data WidgetTree
       }
   | Container
       { containerKey :: ContainerKey
+      , wtDir        :: Direction
       , wtChildren   :: [WidgetTree]
       }
 
 instance Show WidgetTree where
-  show (Single (SingleKey key) _ w)      = show key ++ show w
-  show (Container (ContainerKey key) ws) = show key ++ show ws
+  show (Single (SingleKey key) _ w)        = show key ++ show w
+  show (Container (ContainerKey key) _ ws) = show key ++ show ws
 
 newtype GuiEnv = GuiEnv
   { geFont :: Font.Font
@@ -79,7 +80,7 @@ instance MonadTrans GuiT where
 newGui :: Monad m => GuiEnv -> GuiT m () -> m GUI
 newGui env = runGuiT env gui
   where
-    gui = GUI 0 1 (Container (ContainerKey 0) [])
+    gui = GUI 0 1 (Container (ContainerKey 0) Vertical [])
 
 genSingle :: (RenderEnv m, MonadIO m, MonadMask m) => Widget -> GuiT m WidgetTree
 genSingle w = do
@@ -88,20 +89,26 @@ genSingle w = do
   gSCnt += 1
   return $ Single key tex w
 
-genContainer :: Monad m => [WidgetTree] -> GuiT m WidgetTree
-genContainer ws = do
+genContainer :: Monad m => Direction -> [WidgetTree] -> GuiT m WidgetTree
+genContainer dir ws = do
   key <- ContainerKey <$> use gCCnt
   gCCnt += 1
-  return $ Container key ws
+  return $ Container key dir ws
 
 putWT :: Monad m => WidgetTree -> GuiT m ()
 putWT wt = gWTree .= wt
 
 renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
-renderGUI g = go $ g^.gWTree
+renderGUI g =
+  void $ runStateT (go Vertical $ g^.gWTree) (pure 0)
   where
-    go Single{..} =
-      renderTexture tex $ SDL.Rectangle (SDL.P $ V2 0 0) size
+    go :: (RenderEnv m, MonadIO m, MonadMask m) => Direction -> WidgetTree -> StateT (V2 CInt) m ()
+    go dir Single{..} = do
+      pos <- get
+      lift $ renderTexture tex $ SDL.Rectangle (SDL.P pos) size
+      case dir of
+        Vertical   -> put $ pos & _y +~ (size^._y)
+        Horizontal -> put $ pos & _x +~ (size^._x)
       where
         (size, tex) = wtTexture
-    go Container{..} = mapM_ go wtChildren
+    go dir Container{..} = mapM_ (go wtDir) wtChildren
