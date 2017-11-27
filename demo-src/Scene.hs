@@ -87,7 +87,7 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
       | Enter `elem` as = K.end
       | otherwise       = K.continue
 
-newtype Title = Title GUI.GuiState
+newtype Title = Title GUI.GUI
 
 titleScene :: Scene Title IO Action
 titleScene =

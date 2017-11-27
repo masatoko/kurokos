@@ -1,5 +1,5 @@
 module Kurokos.GUI
-  ( GuiState
+  ( GUI
   , GuiEnv (..)
   , newGui
   , renderGUI
