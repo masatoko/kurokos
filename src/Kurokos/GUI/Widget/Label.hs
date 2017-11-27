@@ -11,7 +11,8 @@ import qualified SDL.Font               as Font
 import           Kurokos.GUI.Import
 
 import           Kurokos.GUI.Core
-import           Kurokos.Types          (Font, RenderEnv (..))
+import           Kurokos.GUI.Def        (RenderEnv (..))
+import           Kurokos.Types          (Font)
 
 data Label = Label
   { title :: Text

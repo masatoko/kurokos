@@ -15,7 +15,7 @@ import           Data.Text              (Text)
 import qualified SDL
 import qualified SDL.Font               as Font
 
-import           Kurokos.Types          (RenderEnv)
+import           Kurokos.GUI.Def        (RenderEnv)
 
 -- data Direction
 --   = DirH -- Horizontal

@@ -20,6 +20,7 @@ library
                      , Kurokos.GUI.Core
                      , Kurokos.GUI.Widget.Label
   other-modules:       Kurokos.Core
+                     , Kurokos.GUI.Def
                      , Kurokos.GUI.Import
                      , Kurokos.Types
                      , Kurokos.Font

@@ -78,6 +78,8 @@ import           Kurokos.Font                 (withFont)
 import           Kurokos.Metapad
 import           Kurokos.Types
 
+import           Kurokos.GUI.Def              (RenderEnv (..))
+
 data Config = Config
   { confWinSize          :: V2 Int
   , confWinTitle         :: String
