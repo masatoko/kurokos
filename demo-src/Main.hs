@@ -20,8 +20,6 @@ import           Import
 import           Pad
 import           Scene
 
-import           TestGui                (testGui)
-
 main :: IO ()
 main = do
   as <- getArgs

@@ -57,7 +57,6 @@ executable demo
   other-modules:       Import
                      , Pad
                      , Scene
-                     , TestGui
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , kurokos
