@@ -98,7 +98,7 @@ titleScene =
       gui <- GUI.newGui env $ do
         label1 <- GUI.genSingle =<< GUI.newLabel "label1"
         label2 <- GUI.genSingle =<< GUI.newLabel "label2"
-        w <- genContainer Vertical [label1, label2]
+        w <- genContainer GUI.Vertical [label1, label2]
         putWT w
       liftIO . print $ getWidgetTree gui
       return $ Title gui

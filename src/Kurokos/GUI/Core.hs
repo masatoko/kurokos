@@ -19,13 +19,9 @@ import qualified SDL
 import qualified SDL.Font                  as Font
 
 import           Kurokos.GUI.Def           (RenderEnv (..))
+import           Kurokos.GUI.Types         (Direction (..))
 import           Kurokos.GUI.Widget
 import           Kurokos.GUI.Widget.Render (createTextureFromWidget)
-
-data Direction
-  = Horizontal
-  | Vertical
-  deriving Show
 
 -- class Widget a where
 --   showW :: a -> String

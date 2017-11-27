@@ -13,4 +13,5 @@ module Kurokos.GUI
 
 import Kurokos.GUI.Core
 
+import Kurokos.GUI.Types
 import Kurokos.GUI.Widget.Make
