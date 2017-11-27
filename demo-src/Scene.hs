@@ -93,7 +93,7 @@ titleScene =
   Scene defPad update render transit alloc
   where
     alloc = do
-      (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 50) K.freeFont
+      (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 20) K.freeFont
       let env = GUI.GuiEnv font
       gui <- GUI.newGui env $ do
         label1 <- GUI.genSingle =<< GUI.newLabel "label1"

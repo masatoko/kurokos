@@ -12,6 +12,7 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.Int                  (Int64)
 import           Data.Text                 (Text)
+import           Foreign.C.Types           (CInt)
 import           Linear.V2                 (V2 (..))
 
 import qualified SDL
@@ -37,7 +38,7 @@ newtype ContainerKey = ContainerKey Key deriving Show
 data WidgetTree
   = Single
       { singleKey :: SingleKey
-      , wtTexture :: SDL.Texture
+      , wtTexture :: (V2 CInt, SDL.Texture)
       , wtWidget  :: Widget
       }
   | Container
@@ -100,5 +101,7 @@ renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 renderGUI g = go $ g^.gWTree
   where
     go Single{..} =
-      renderTexture wtTexture $ SDL.Rectangle (SDL.P $ V2 0 0) (V2 50 50)
+      renderTexture tex $ SDL.Rectangle (SDL.P $ V2 0 0) size
+      where
+        (size, tex) = wtTexture
     go Container{..} = mapM_ go wtChildren

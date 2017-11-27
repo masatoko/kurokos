@@ -10,10 +10,13 @@ import           Kurokos.GUI.Def        (RenderEnv (..))
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Widget
 
-createTextureFromWidget :: (MonadIO m, RenderEnv m, MonadMask m) => Widget -> m SDL.Texture
-createTextureFromWidget Label{..} =
-  withRenderer $ \r ->
+createTextureFromWidget :: (MonadIO m, RenderEnv m, MonadMask m) => Widget -> m (V2 CInt, SDL.Texture)
+createTextureFromWidget Label{..} = do
+  (w,h) <- Font.size wFont wTitle
+  let size = fromIntegral <$> V2 w h
+  texture <- withRenderer $ \r ->
     E.bracket
       (Font.blended wFont (V4 255 255 255 255) wTitle)
       SDL.freeSurface
       (SDL.createTextureFromSurface r)
+  return (size, texture)
