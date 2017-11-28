@@ -6,6 +6,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 module Kurokos.GUI.Core where
 
+import           Control.Concurrent.MVar
 import           Control.Exception.Safe    (MonadMask)
 import qualified Control.Exception.Safe    as E
 import           Control.Lens
@@ -26,7 +27,7 @@ import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
 import           Kurokos.GUI.Widget.Render
-import qualified Kurokos.RPN as RPN
+import qualified Kurokos.RPN               as RPN
 
 -- class Widget a where
 --   showW :: a -> String
@@ -38,21 +39,21 @@ newtype ContainerKey = ContainerKey Key deriving Show
 
 data TextureInfo = TextureInfo
   { tiTexture :: SDL.Texture
-  , tiPos :: GuiPos
-  , tiSize :: GuiSize
+  , tiPos     :: GuiPos
+  , tiSize    :: GuiSize
   }
 
 data WidgetTree
   = Single
       { singleKey :: SingleKey
-      , wtTexture :: Maybe TextureInfo
+      , wtTexture :: MVar TextureInfo
       , wtUPos    :: V2 Exp
       , wtUSize   :: V2 Exp
       , wtWidget  :: Widget
       }
   | Container
       { containerKey :: ContainerKey
-      , wtTexture    :: Maybe TextureInfo
+      , wtTexture    :: MVar TextureInfo
       , wtUPos       :: V2 Exp
       , wtUSize      :: V2 Exp
       , wtChildren   :: [WidgetTree]
@@ -93,51 +94,55 @@ instance MonadTrans GuiT where
 newGui :: (RenderEnv m, MonadIO m, E.MonadThrow m) => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
   (V2 w h) <- getWindowSize
+  mti <- liftIO newEmptyMVar
   let pos = pure (EConst 0)
       size = V2 (EConst w) (EConst h)
-      gui = GUI 0 1 (Container (ContainerKey 0) Nothing pos size [])
+      gui = GUI 0 1 (Container (ContainerKey 0) mti pos size [])
   runGuiT env gui initializer
 
-genSingle :: E.MonadThrow m
+genSingle :: (MonadIO m, E.MonadThrow m)
   => V2 UExp -> V2 UExp -> Widget -> GuiT m WidgetTree
 genSingle pos size w = do
   key <- SingleKey <$> use gSCnt
   gSCnt += 1
+  mti <- liftIO newEmptyMVar
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err
             Right v  -> return v
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  return $ Single key Nothing pos' size' w
+  return $ Single key mti pos' size' w
 
-genContainer :: E.MonadThrow m
+genContainer :: (MonadIO m, E.MonadThrow m)
   => V2 UExp -> V2 UExp -> [WidgetTree] -> GuiT m WidgetTree
 genContainer pos size ws = do
   key <- ContainerKey <$> use gCCnt
   gCCnt += 1
+  mti <- liftIO newEmptyMVar
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err
             Right v  -> return v
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  return $ Container key Nothing pos' size' ws
+  return $ Container key mti pos' size' ws
 
 putWT :: Monad m => WidgetTree -> GuiT m ()
 putWT wt = gWTree .= wt
 
-renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m GUI
+renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 renderGUI g = do
-  ws <- go (pure 0) (g^.gWTree)
-  return $ g & gWTree .~ ws
+  V2 w h <- getWindowSize
+  let vmap = M.fromList [("w", w), ("h", h), ("winw", w), ("winh", h)]
+  go (pure 0) vmap (g^.gWTree)
   where
-    makeTextureInfo upos usize mWidget = do
-      let vmap = M.empty
-      pos <- case evalExp2 vmap upos of
+    makeTextureInfo vmap upos usize mWidget = do
+      let vmap' = M.map fromIntegral vmap
+      pos <- case evalExp2 vmap' upos of
               Left err -> E.throw $ userError err
               Right v  -> return v
-      size <- case evalExp2 vmap usize of
+      size <- case evalExp2 vmap' usize of
               Left err -> E.throw $ userError err
               Right v  -> return v
       tex <- case mWidget of
@@ -145,28 +150,32 @@ renderGUI g = do
         Nothing     -> createDummyTexture size
       return $ TextureInfo tex pos size
 
-    go pos0 wt@Single{..} =
-      case wtTexture of
-        Nothing -> do
-          ti@TextureInfo{..} <- makeTextureInfo wtUPos wtUSize (Just wtWidget)
+    go pos0 vmap wt@Single{..} = do
+      pEmpty <- liftIO $ isEmptyMVar wtTexture
+      if pEmpty
+        then do
+          ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize (Just wtWidget)
+          liftIO $ putMVar wtTexture ti
           let pos' = SDL.P $ pos0 + tiPos
           renderTexture tiTexture $ SDL.Rectangle pos' tiSize
-          return $ wt {wtTexture = Just ti}
-        Just TextureInfo{..} -> do
+        else do
+          TextureInfo{..} <- liftIO $ readMVar wtTexture
           let pos' = SDL.P $ pos0 + tiPos
           renderTexture tiTexture $ SDL.Rectangle pos' tiSize
-          return wt
-    go pos0 wt@Container{..} =
-      case wtTexture of
-        Nothing -> do
-          ti@TextureInfo{..} <- makeTextureInfo wtUPos wtUSize Nothing
+    go pos0 vmap wt@Container{..} = do
+      pEmpty <- liftIO $ isEmptyMVar wtTexture
+      if pEmpty
+        then do
+          ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize Nothing
+          liftIO $ putMVar wtTexture ti
           let pos' = pos0 + tiPos
-          ws <- mapM (go pos') wtChildren
-          return $ wt {wtTexture = Just ti, wtChildren = ws}
-        Just TextureInfo{..} -> do
+              vmap' = M.insert "h" (tiSize^._y) . M.insert "w" (tiSize^._x) $ vmap
+          mapM_ (go pos' vmap') wtChildren
+        else do
+          TextureInfo{..} <- liftIO $ readMVar wtTexture
           let pos' = pos0 + tiPos
-          ws <- mapM (go pos') wtChildren
-          return $ wt {wtChildren = ws}
+              vmap' = M.insert "h" (tiSize^._y) . M.insert "w" (tiSize^._x) $ vmap
+          mapM_ (go pos' vmap') wtChildren
 
 evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)
 evalExp2 vmap (V2 x y) = V2 <$> evalExp x <*> evalExp y
