@@ -64,6 +64,7 @@ import qualified Data.Text                    as T
 import qualified Data.Vector                  as V
 import qualified Data.Vector.Unboxed          as VU
 import           Data.Word                    (Word32)
+import           Foreign.C.Types              (CInt)
 import           Linear.Affine                (Point (..))
 import           Linear.V2
 import           Linear.V4
@@ -82,9 +83,7 @@ import           Kurokos.Types
 import           Kurokos.GUI.Def              (RenderEnv (..))
 
 data Config = Config
-  { confWinSize          :: V2 Int
-  , confWinTitle         :: String
-  , confWindowMode       :: SDL.WindowMode
+  { confWinTitle         :: Text
   , confDebugPrintFPS    :: Bool
   , confDebugPrintSystem :: Bool
   , confDebugJoystick    :: DebugJoystick
@@ -100,9 +99,7 @@ data DebugJoystick = DebugJoystick
 
 defaultConfig :: Config
 defaultConfig = Config
-  { confWinSize = V2 640 480
-  , confWinTitle = "Kurokos"
-  , confWindowMode = SDL.Windowed
+  { confWinTitle = "Kurokos"
   , confDebugPrintFPS = False
   , confDebugPrintSystem = False
   , confDebugJoystick = DebugJoystick False False False
@@ -114,7 +111,6 @@ type Time = Word32
 
 data KurokosEnv = KurokosEnv
   { graphFPS         :: Int
-  , scrSize          :: V2 Int
   , window           :: SDL.Window
   -- Resource
   , renderer         :: MVar SDL.Renderer
@@ -172,13 +168,13 @@ newtype KurokosEnvT a = KurokosEnvT {
 runKurokosEnvT :: KurokosEnv -> KurokosEnvT a -> IO a
 runKurokosEnvT conf k = runReaderT (runKET k) conf
 
-withKurokos :: Config -> (KurokosData -> IO ()) -> IO ()
-withKurokos config go =
+withKurokos :: Config -> SDL.WindowConfig -> (KurokosData -> IO ()) -> IO ()
+withKurokos config winConf go =
   runManaged $ do
     managed_ withSDL
     managed_ withFontInit
     font <- managed withSystemFont
-    (win, r) <- managed $ withWinRenderer config
+    (win, r) <- managed withWinRenderer
     --
     liftIO $ do
       initOthers r
@@ -208,14 +204,13 @@ withKurokos config go =
     withSystemFont :: (Font -> IO r) -> IO r
     withSystemFont = withFont (confFont config) size
       where
-        size = max 18 (h `div` 50)
-        V2 _ h = confWinSize config
+        size = max 18 (fromIntegral h `div` 50)
+        V2 _ h = SDL.windowInitialSize winConf
 
     mkEnv font win r = do
       mvar <- newMVar r
       return KurokosEnv
         { graphFPS = 60
-        , scrSize = confWinSize config
         , window = win
         , renderer = mvar
         , systemFont = font
@@ -225,10 +220,10 @@ withKurokos config go =
         , numAverateTime = confNumAverageTime config
         }
 
-    withWinRenderer :: Config -> ((SDL.Window, SDL.Renderer) -> IO r) -> IO r
-    withWinRenderer conf work = withW $ withR work
+    withWinRenderer :: ((SDL.Window, SDL.Renderer) -> IO r) -> IO r
+    withWinRenderer work = withW $ withR work
       where
-        title = T.pack $ confWinTitle conf
+        title = confWinTitle config
 
         withW = E.bracket (SDL.createWindow title winConf)
                           SDL.destroyWindow
@@ -237,14 +232,8 @@ withKurokos config go =
                                    SDL.destroyRenderer
                                    (\r -> setLogicalSize r >> func (win,r))
 
-        winConf = SDL.defaultWindow
-          { SDL.windowMode = confWindowMode conf
-          , SDL.windowResizable = False
-          , SDL.windowInitialSize = fromIntegral <$> confWinSize conf
-          }
-
         setLogicalSize r =
-          case confWindowMode conf of
+          case SDL.windowMode winConf of
             SDL.FullscreenDesktop -> work
             SDL.Fullscreen        -> work
             _                     -> return ()
@@ -464,8 +453,8 @@ resetJoysticks SDL.JoyDeviceEventData{} = do
 getEnv :: (MonadReader KurokosEnv m, MonadIO m) => m KurokosEnv
 getEnv = ask
 
-screenSize :: (MonadReader KurokosEnv m, MonadIO m) => m (V2 Int)
-screenSize = asks scrSize
+screenSize :: (MonadReader KurokosEnv m, MonadIO m) => m (V2 CInt)
+screenSize = SDL.get . SDL.windowSize =<< getWindow
 
 getWindow :: (MonadReader KurokosEnv m, MonadIO m) => m SDL.Window
 getWindow = asks window

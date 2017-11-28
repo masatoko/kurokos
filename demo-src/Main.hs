@@ -27,7 +27,11 @@ main = do
       conf = mkConf (opt "button") (opt "axis") (opt "hat") -- TODO: fix mkConf
       -- conf' = conf {K.confFont = Left fontBytes}
       conf' = conf {K.confFont = K.FontFile "_data/system.ttf"}
-  withKurokos conf' $ \kuro ->
+      winConf = SDL.defaultWindow
+        { SDL.windowInitialSize = V2 640 480
+        , SDL.windowMode = SDL.Windowed
+        }
+  withKurokos conf' winConf $ \kuro ->
     -- Ready original data here
     runManaged $ do
       _font <- managed $ K.withFont (K.FontFile "_data/system.ttf") 20 -- Test
@@ -39,9 +43,7 @@ main = do
   where
     mkConf pBtn pAxis pHat =
       K.defaultConfig
-        { K.confWinSize = V2 640 480
-        , K.confWinTitle = "protpnic-app"
-        , K.confWindowMode = SDL.Windowed
+        { K.confWinTitle = "protpnic-app"
         , K.confDebugPrintSystem = True
         , K.confDebugJoystick = K.DebugJoystick pBtn pAxis pHat
         }
