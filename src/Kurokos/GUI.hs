@@ -2,9 +2,12 @@ module Kurokos.GUI
   ( module Import
   , GUI
   , GuiEnv (..)
+  -- Types
   , Direction (..)
   , UExp (..)
-  --
+  , Color
+  , WidgetColor
+  -- Def
   , RenderEnv (..)
   , HasEvent (..)
   --
