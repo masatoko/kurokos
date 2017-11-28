@@ -132,6 +132,8 @@ prependRoot w = modify $ \g -> g&gWTrees %~ (w:)
 prependRootWs :: Monad m => [WidgetTree] -> GuiT m ()
 prependRootWs ws = modify $ \g -> g&gWTrees %~ (ws ++)
 
+-- Rendering GUI
+
 updateTexture :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 updateTexture g = do
   V2 w h <- getWindowSize
@@ -167,6 +169,27 @@ updateTexture g = do
         liftIO $ putMVar wtTexture ti
       mapM_ (go vmap) wtChildren
 
+    evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)
+    evalExp2 vmap (V2 x y) = V2 <$> evalExp x <*> evalExp y
+      where
+        evalExp (ERPN expr) = truncate <$> RPN.eval vmap expr
+        evalExp (EConst v)  = return v
+
+    createTexture' size w render =
+      withRenderer $ \r -> do
+        tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget size
+        SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
+        E.bracket_ (SDL.rendererRenderTarget r $= Just tex)
+                   (SDL.rendererRenderTarget r $= Nothing)
+                   (render r size w)
+        return tex
+
+    createDummyTexture size =
+      withRenderer $ \r -> do
+        tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget size
+        SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
+        return tex
+
 renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 renderGUI g = do
   V2 w h <- getWindowSize
@@ -184,24 +207,3 @@ renderGUI g = do
         TextureInfo{..} <- liftIO $ readMVar wtTexture
         let pos' = pos0 + tiPos
         mapM_ (go pos') wtChildren
-
-evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)
-evalExp2 vmap (V2 x y) = V2 <$> evalExp x <*> evalExp y
-  where
-    evalExp (ERPN expr) = truncate <$> RPN.eval vmap expr
-    evalExp (EConst v)  = return v
-
-createTexture' size w render =
-  withRenderer $ \r -> do
-    tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget size
-    SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
-    E.bracket_ (SDL.rendererRenderTarget r $= Just tex)
-               (SDL.rendererRenderTarget r $= Nothing)
-               (render r size w)
-    return tex
-
-createDummyTexture size =
-  withRenderer $ \r -> do
-    tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget size
-    SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
-    return tex
