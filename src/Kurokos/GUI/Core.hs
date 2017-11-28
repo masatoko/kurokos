@@ -83,7 +83,7 @@ instance MonadTrans GuiT where
 
 newGui :: (RenderEnv m, MonadIO m, E.MonadThrow m) => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
-  winSize <- SDL.get . SDL.windowSize =<< getWindow
+  winSize <- getWindowSize
   let gui = GUI 0 1 (Container (ContainerKey 0) (pure 0) winSize [])
   runGuiT env gui initializer
 

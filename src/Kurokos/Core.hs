@@ -467,8 +467,8 @@ getEnv = ask
 screenSize :: (MonadReader KurokosEnv m, MonadIO m) => m (V2 Int)
 screenSize = asks scrSize
 
--- getWindow :: (MonadReader KurokosEnv m, MonadIO m) => m SDL.Window
--- getWindow = asks window
+getWindow :: (MonadReader KurokosEnv m, MonadIO m) => m SDL.Window
+getWindow = asks window
 
 getEvents :: Monad m => KurokosT m [SDL.EventPayload]
 getEvents = map SDL.eventPayload <$> gets kstEvents
@@ -501,7 +501,7 @@ setRendererDrawBlendMode mode =
 --
 
 instance (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => RenderEnv m where
-  getWindow = asks window
+  getWindowSize = SDL.get . SDL.windowSize =<< asks window
 
   withRenderer act = do
     mvar <- asks renderer
