@@ -13,7 +13,7 @@ import           Kurokos.GUI.Widget
 
 renderWidget :: SDL.Renderer -> GuiSize -> Widget -> IO ()
 renderWidget r parentSize Label{..} = do
-  Gfx.roundRectangle r (pure 0) parentSize 10 (V4 0 0 255 100) -- test
+  Gfx.roundRectangle r (pure 0) ((+ (-1)) <$> parentSize) 10 (V4 0 0 255 100) -- test
   --
   (w,h) <- Font.size wFont wTitle
   let size = fromIntegral <$> V2 w h
@@ -22,7 +22,7 @@ renderWidget r parentSize Label{..} = do
     SDL.freeSurface
     (SDL.createTextureFromSurface r)
   let pos = P $ (`div` 2) <$> parentSize - size
-  SDL.copy r tex Nothing $ Just (SDL.Rectangle pos ((\x -> x - 1) <$> size))
+  SDL.copy r tex Nothing $ Just (SDL.Rectangle pos size)
 
 renderWidget r parentSize Button{..} = do
   (w,h) <- Font.size wFont wTitle
@@ -32,8 +32,9 @@ renderWidget r parentSize Button{..} = do
     SDL.freeSurface
     (SDL.createTextureFromSurface r)
   --
-  Gfx.fillRoundRectangle r (pure 0) parentSize 5 (V4 50 50 50 255)
-  Gfx.roundRectangle r (pure 0) parentSize 5 (V4 100 100 100 255)
+  let size' = (+ (-1)) <$> parentSize
+  Gfx.fillRoundRectangle r (pure 0) size' 5 (V4 50 50 50 255)
+  Gfx.roundRectangle r (pure 0) size' 5 (V4 100 100 100 255)
   --
   let pos = P $ (`div` 2) <$> parentSize - size
-  SDL.copy r tex Nothing $ Just (SDL.Rectangle pos ((\x -> x - 1) <$> size))
+  SDL.copy r tex Nothing $ Just (SDL.Rectangle pos size)
