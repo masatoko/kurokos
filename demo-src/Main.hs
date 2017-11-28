@@ -39,7 +39,7 @@ main = do
       liftIO $ void $
         runKurokos kuro $ do
           SDL.setMouseLocationMode SDL.AbsoluteLocation
-          SDL.cursorVisible $= False
+          SDL.cursorVisible $= True
           runScene titleScene
   where
     mkConf pBtn pAxis pHat =
