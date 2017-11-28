@@ -46,6 +46,7 @@ module Kurokos.Core
 
 import           Control.Concurrent.MVar      (MVar, newMVar, putMVar, readMVar,
                                                takeMVar, withMVar)
+import           Control.Exception            (bracket)
 import           Control.Exception.Safe       (MonadCatch, MonadMask,
                                                MonadThrow)
 import qualified Control.Exception.Safe       as E
@@ -504,8 +505,9 @@ instance (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => RenderEnv m where
 
   withRenderer act = do
     mvar <- asks renderer
-    E.bracket (liftIO $ takeMVar mvar)
-              (liftIO . putMVar mvar)
+    liftIO $
+      bracket (takeMVar mvar)
+              (putMVar mvar)
               act
 
   renderTexture tex rect =
