@@ -96,9 +96,10 @@ titleScene =
       (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 20) K.freeFont
       let env = GUI.GuiEnv font
       gui <- GUI.newGui env $ do
-        label1 <- GUI.genSingle =<< GUI.newLabel "label1"
-        label2 <- GUI.genSingle =<< GUI.newLabel "label2"
-        w <- genContainer GUI.Vertical [label1, label2]
+        let size = pure 100
+        label1 <- GUI.genSingle (V2 0 0) size =<< GUI.newLabel "label1"
+        label2 <- GUI.genSingle (V2 0 100) size =<< GUI.newLabel "label2"
+        w <- genContainer (pure 0) (pure 1000) [label1, label2]
         putWT w
       liftIO . print $ getWidgetTree gui
       return $ Title gui
