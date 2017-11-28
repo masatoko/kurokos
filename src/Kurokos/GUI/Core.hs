@@ -7,7 +7,6 @@
 module Kurokos.GUI.Core where
 
 import           Control.Concurrent.MVar
-import           Control.Exception.Safe    (MonadMask, MonadThrow)
 import qualified Control.Exception.Safe    as E
 import           Control.Lens
 import           Control.Monad.Reader
@@ -15,8 +14,6 @@ import           Control.Monad.State
 import           Data.Int                  (Int64)
 import qualified Data.Map                  as M
 import           Data.Text                 (Text)
-import           Foreign.C.Types           (CInt)
-import           Linear.V2
 
 import           SDL                       (($=))
 import qualified SDL

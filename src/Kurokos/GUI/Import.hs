@@ -1,6 +1,7 @@
 module Kurokos.GUI.Import
   (
     MonadMask
+  , MonadThrow
   , MonadIO
   , CInt
   , V2 (..)
@@ -10,7 +11,7 @@ module Kurokos.GUI.Import
   , Point (..)
   ) where
 
-import           Control.Exception.Safe     (MonadMask)
+import           Control.Exception.Safe     (MonadMask, MonadThrow)
 import           Control.Monad.IO.Class     (MonadIO)
 import           Control.Monad.Reader.Class (asks)
 import           Foreign.C.Types            (CInt)
