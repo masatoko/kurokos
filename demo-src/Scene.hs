@@ -96,10 +96,10 @@ titleScene =
       (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 20) K.freeFont
       let env = GUI.GuiEnv font
       gui <- GUI.newGui env $ do
-        let size = pure 100
-        label1 <- GUI.genSingle (V2 300 0) size =<< GUI.newLabel "label1"
-        label2 <- GUI.genSingle (V2 300 100) size =<< GUI.newLabel "label2"
-        w <- genContainer (pure 0) (pure 1000) [label1, label2]
+        let size1 = V2 (GUI.UERPN "100") (GUI.UERPN "100")
+        label1 <- GUI.genSingle (GUI.UEConst <$> V2 300 0) size1 =<< GUI.newLabel "label1"
+        label2 <- GUI.genSingle (GUI.UEConst <$> V2 300 100) size1 =<< GUI.newLabel "label2"
+        w <- genContainer (GUI.UEConst <$> pure 0) (GUI.UEConst <$> pure 1000) [label1, label2]
         putWT w
       liftIO . print $ getWidgetTree gui
       return $ Title gui
@@ -121,7 +121,8 @@ titleScene =
       let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
       V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) white (showjs js)) vjs
       --
-      renderGUI gui
+      gui' <- renderGUI gui
+      return ()
       where
         white = V4 255 255 255 255
 

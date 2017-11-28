@@ -1,5 +1,6 @@
 module Kurokos.RPN
-  ( parse
+  ( Exp
+  , parse
   , eval
   ) where
 
