@@ -2,14 +2,14 @@ module Kurokos.GUI
   ( module Import
   , GUI
   , GuiEnv (..)
+  -- Def
+  , RenderEnv (..)
+  , HasEvent (..)
   -- Types
   , Direction (..)
   , UExp (..)
   , Color
   , WidgetColor (..)
-  -- Def
-  , RenderEnv (..)
-  , HasEvent (..)
   --
   , newGui
   , genSingle
@@ -22,6 +22,7 @@ module Kurokos.GUI
   ) where
 
 import           Kurokos.GUI.Core
+import           Kurokos.GUI.Update
 
 import           Kurokos.GUI.Def
 import           Kurokos.GUI.Types

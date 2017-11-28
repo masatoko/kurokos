@@ -17,10 +17,11 @@ library
   hs-source-dirs:      src
   exposed-modules:     Kurokos
                      , Kurokos.GUI
-                     , Kurokos.GUI.Core
   other-modules:       Kurokos.Core
                      , Kurokos.GUI.Def
                      , Kurokos.GUI.Types
+                     , Kurokos.GUI.Core
+                     , Kurokos.GUI.Update
                      , Kurokos.GUI.Import
                      , Kurokos.GUI.Widget
                      , Kurokos.GUI.Widget.Render

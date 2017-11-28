@@ -1,6 +1,7 @@
 module Kurokos.GUI.Def where
 
-import           Kurokos.GUI.Import
+import           Foreign.C.Types            (CInt)
+import           Linear.V2
 
 import qualified SDL
 

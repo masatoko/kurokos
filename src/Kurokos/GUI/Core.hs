@@ -19,7 +19,6 @@ import           SDL                       (($=))
 import qualified SDL
 import qualified SDL.Font                  as Font
 
-import           Kurokos.GUI.Def           (RenderEnv (..), HasEvent (..))
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
@@ -128,18 +127,6 @@ prependRoot w = modify $ over gWTrees (w:)
 
 prependRootWs :: Monad m => [WidgetTree] -> GuiT m ()
 prependRootWs ws = modify $ over gWTrees (ws ++)
-
-update :: (RenderEnv m, HasEvent m, MonadIO m, MonadMask m) => GUI -> m ()
-update gui = do
-  es <- getEvents
-  win <- getWindow
-  let pWinResized = any (isWinResized win) es
-  when pWinResized $ do
-    resetTexture gui
-    updateTexture gui
-  where
-    isWinResized curWin (SDL.WindowResizedEvent dt) = SDL.windowResizedEventWindow dt == curWin
-    isWinResized _ _ = False
 
 -- Rendering GUI
 
