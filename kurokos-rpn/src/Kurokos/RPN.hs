@@ -7,8 +7,10 @@ import qualified Control.Exception as E
 import           Data.Fixed        (mod')
 import           Data.Foldable     (foldlM)
 import           Safe              (headMay, readMay)
+import qualified Data.Map as M
 
 type Exp = [Term]
+type Key = String
 
 data Term
   = V Double
@@ -26,6 +28,8 @@ data Term
   | Step
   -- Constant
   | PI
+  -- User Defined Constant
+  | Const Key
   deriving (Show, Read, Eq)
 
 parse :: String -> Either String Exp
@@ -37,18 +41,19 @@ parse = mapM work . words
         Just e  -> Right e
 
 toTerm :: String -> Maybe Term
-toTerm "+"   = return Plus
-toTerm "-"   = return Sub
-toTerm "*"   = return Mul
-toTerm "/"   = return Div
-toTerm "sin" = return Sin
-toTerm "cos" = return Cos
-toTerm "min" = return Min
-toTerm "max" = return Max
-toTerm num   = V <$> readMay num
+toTerm "+"       = return Plus
+toTerm "-"       = return Sub
+toTerm "*"       = return Mul
+toTerm "/"       = return Div
+toTerm "sin"     = return Sin
+toTerm "cos"     = return Cos
+toTerm "min"     = return Min
+toTerm "max"     = return Max
+toTerm ('$':key) = return $ Const key
+toTerm num       = V <$> readMay num
 
-eval :: Exp -> Either String Double
-eval ts = do
+eval :: M.Map Key Double -> Exp -> Either String Double
+eval vmap ts = do
   as <- foldlM go [] ts
   case headMay as of
     Nothing  -> Left "empty expression"
@@ -73,3 +78,8 @@ eval ts = do
     go (V x:V y:ys) Step  = return $ V (if y >= x then 1 else 0) : ys
     go xs           PI    = return $ V pi : xs
     go xs           n@V{} = return $ n:xs
+    go xs           (Const key) =
+      case M.lookup key vmap of
+        Nothing -> Left $ "undefined constant value for key: $" ++ key
+        Just v  -> go xs (V v)
+    go xs           t     = Left $ "eval failed: " ++ show xs ++ " - " ++ show t
