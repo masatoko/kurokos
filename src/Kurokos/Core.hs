@@ -180,7 +180,7 @@ withKurokos config winConf go =
     liftIO $ do
       initOthers r
       env <- mkEnv font win r
-      let state = KurokosState
+      let kst = KurokosState
             { messages = []
             , kstEvents = []
             , kstJoysticks = V.empty
@@ -192,7 +192,7 @@ withKurokos config winConf go =
             , kstShouldExit = False
             }
 
-      go $ KurokosData (env, state)
+      go $ KurokosData (env, kst)
   where
     withSDL = E.bracket_ SDL.initializeAll SDL.quit
 
@@ -222,7 +222,7 @@ withKurokos config winConf go =
         }
 
     withWinRenderer :: ((SDL.Window, SDL.Renderer) -> IO r) -> IO r
-    withWinRenderer work = withW $ withR work
+    withWinRenderer act = withW $ withR act
       where
         title = confWinTitle config
 
@@ -325,7 +325,7 @@ sceneLoop iniG iniS scene =
       preRender
       render s0 g'
       -- updateFPS
-      printSystemState s0
+      printSystemState
       printMessages
       withRenderer SDL.present
       -- Transition
@@ -381,15 +381,12 @@ sceneLoop iniG iniS scene =
         SDL.rendererDrawColor r $= V4 0 0 0 255
         SDL.clear r
 
-    printSystemState :: MonadIO m => SceneState -> KurokosT m ()
-    printSystemState stt = do
-      -- p1 <- asks debugPrintSystem
-      -- when p1 $
-      --   printsys . T.pack . show . frameCount $ stt
-
+    printSystemState :: MonadIO m => KurokosT m ()
+    printSystemState = do
       p2 <- asks debugPrintFPS
-      when p2 $
-        printsys =<< (T.pack . show . truncate <$> gets actualFPS)
+      when p2 $ do
+        fps <- truncate <$> gets actualFPS
+        printsys . T.pack . show $ (fps :: Int)
 
     advance :: SceneState -> SceneState
     advance s = s {frameCount = c + 1}
@@ -477,8 +474,8 @@ averageTime = do
 
 showMessageBox :: (MonadReader KurokosEnv m, MonadIO m) => Text -> Text -> m ()
 showMessageBox title message = do
-  window <- Just <$> asks window
-  SDL.showSimpleMessageBox window SDL.Information title message
+  win <- Just <$> asks window
+  SDL.showSimpleMessageBox win SDL.Information title message
 
 --
 

@@ -36,8 +36,6 @@ data MyData = MyData
 allocGame :: ResourceT (KurokosT IO) MyData
 allocGame = do
   (_, tex) <- K.allocTexture "_data/img.png"
-  (_, font) <- allocate (Font.load fontPath 50) Font.free
-
   return $ MyData tex 0 0 []
 
 --
@@ -74,10 +72,10 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
         Gfx.smoothCircle r pos' 5 (V4 255 255 255 255)
       --
       K.withRenderer $ \r -> do
-        forM_ (s^.msLClicks) $ \pos ->
-          Gfx.fillCircle r pos 5 (V4 255 255 0 255)
-        forM_ (s^.msRClicks) $ \pos ->
-          Gfx.fillCircle r pos 5 (V4 255 0 255 255)
+        forM_ (s^.msLClicks) $ \p ->
+          Gfx.fillCircle r p 5 (V4 255 255 0 255)
+        forM_ (s^.msRClicks) $ \p ->
+          Gfx.fillCircle r p 5 (V4 255 0 255 255)
 
     transit _ as _
       | Enter `elem` as = K.end
@@ -104,7 +102,6 @@ titleScene =
 
     update :: Update Title IO Action
     update _ _as t@(Title gui) = do
-      es <- K.getEvents
       GUI.update gui
       return t
 
@@ -151,9 +148,9 @@ mainScene = Scene defPad update render transit allocGame
         count :: Action -> StateT MyData (KurokosT IO) ()
         count Go = do
           modify (\a -> let c = gCount a in a {gCount = c + 1})
-          c <- gets gCount
-          let strength = fromIntegral c * 0.2
-              len = fromIntegral c * 100
+          -- c <- gets gCount
+          -- let strength = fromIntegral c * 0.2
+          --     len = fromIntegral c * 100
           -- mapM_ (\joy -> K.rumble joy strength len) mjs
           return ()
         count _  = return ()
@@ -172,6 +169,7 @@ mainScene = Scene defPad update render transit allocGame
         let p0 = V2 200 250
             p1 = p0 + (round <$> (V2 dx dy ^* 30))
               where
+                dx :: Double
                 dx = cos $ fromIntegral t / 5
                 dy = sin $ fromIntegral t / 5
         Gfx.thickLine r p0 p1 4 (V4 0 255 0 255)

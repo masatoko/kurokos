@@ -93,8 +93,7 @@ instance MonadTrans GuiT where
 
 newGui :: (RenderEnv m, MonadIO m, MonadMask m, MonadThrow m) => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
-  let gui = GUI 0 0 []
-  gui <- runGuiT env gui initializer
+  gui <- runGuiT env (GUI 0 0 []) initializer
   updateTexture gui
   return gui
 
@@ -181,12 +180,12 @@ updateTexture g = do
         Nothing     -> createDummyTexture size
       return $ TextureInfo tex pos size
 
-    go vmap wt@Single{..} = do
+    go vmap Single{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
       when pEmpty $ do
         ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize (Just wtWidget)
         liftIO $ putMVar wtTexture ti
-    go vmap wt@Container{..} = do
+    go vmap Container{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
       when pEmpty $ do
         ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize Nothing
@@ -199,13 +198,13 @@ updateTexture g = do
         evalExp (ERPN expr) = truncate <$> RPN.eval vmap expr
         evalExp (EConst v)  = return v
 
-    createTexture' size w render =
+    createTexture' size w renderW =
       withRenderer $ \r -> do
         tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget size
         SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
         E.bracket_ (SDL.rendererRenderTarget r $= Just tex)
                    (SDL.rendererRenderTarget r $= Nothing)
-                   (render r size w)
+                   (renderW r size w)
         return tex
 
     createDummyTexture size =
@@ -215,17 +214,16 @@ updateTexture g = do
         return tex
 
 render :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
-render g = do
-  V2 w h <- getWindowSize
+render g =
   mapM_ (go (pure 0)) (g^.gWTrees)
   where
-    go pos0 wt@Single{..} = do
+    go pos0 Single{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
       unless pEmpty $ do
         TextureInfo{..} <- liftIO $ readMVar wtTexture
         let pos' = SDL.P $ pos0 + tiPos
         renderTexture tiTexture $ SDL.Rectangle pos' tiSize
-    go pos0 wt@Container{..} = do
+    go pos0 Container{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
       unless pEmpty $ do
         TextureInfo{..} <- liftIO $ readMVar wtTexture
