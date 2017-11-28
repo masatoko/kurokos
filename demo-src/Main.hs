@@ -30,6 +30,7 @@ main = do
       winConf = SDL.defaultWindow
         { SDL.windowInitialSize = V2 640 480
         , SDL.windowMode = SDL.Windowed
+        , SDL.windowResizable = True
         }
   withKurokos conf' winConf $ \kuro ->
     -- Ready original data here
