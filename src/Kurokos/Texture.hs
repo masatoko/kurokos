@@ -13,6 +13,7 @@ import qualified Control.Exception.Safe      as E
 import           Control.Exception.Safe      (MonadCatch, MonadMask, MonadThrow)
 import           Control.Monad.Base          (MonadBase)
 import           Control.Monad.Reader
+import           Control.Monad.State
 import           Data.ByteString      (ByteString)
 import           Data.Text            (Text)
 import           Data.Word            (Word8)
@@ -29,7 +30,8 @@ import           Kurokos.Core
 
 -- Allocate
 
-allocTexture :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m, MonadBase IO m) => FilePath -> ResourceT m (ReleaseKey, SDL.Texture)
+allocTexture :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m, MonadBase IO m)
+  => FilePath -> ResourceT m (ReleaseKey, SDL.Texture)
 allocTexture path = do
   env <- lift getEnv
   allocate (load env) SDL.destroyTexture
@@ -38,7 +40,8 @@ allocTexture path = do
       runKurokosEnvT env $
         withRenderer $ \r -> Image.loadTexture r path
 
-allocTextureB :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m, MonadBase IO m) => ByteString -> ResourceT m (ReleaseKey, SDL.Texture)
+allocTextureB :: (MonadReader KurokosEnv m, MonadIO m, MonadThrow m, MonadBase IO m)
+  => ByteString -> ResourceT m (ReleaseKey, SDL.Texture)
 allocTextureB byte = do
   env <- lift getEnv
   allocate (load env) SDL.destroyTexture

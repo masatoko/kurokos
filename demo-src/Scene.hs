@@ -17,8 +17,6 @@ import qualified SDL.Primitive       as Gfx
 import qualified Kurokos             as K
 import qualified Kurokos.GUI         as GUI
 
-import Kurokos.GUI.Core
-
 import           Import
 
 import           Pad
@@ -37,7 +35,6 @@ data MyData = MyData
 
 allocGame :: ResourceT (KurokosT IO) MyData
 allocGame = do
-  env <- lift K.getEnv
   (_, tex) <- K.allocTexture "_data/img.png"
   (_, font) <- allocate (Font.load fontPath 50) Font.free
 
@@ -101,14 +98,14 @@ titleScene =
             pos2 = V2 (GUI.UERPN "10") (GUI.UERPN "0.2 $h * 50 +")
         label1 <- GUI.genSingle pos1 size =<< GUI.newLabel "label1"
         label2 <- GUI.genSingle pos2 size =<< GUI.newLabel "label2"
-        prependRootWs [label1, label2]
-      liftIO . print $ getWidgetTrees gui
+        GUI.prependRootWs [label1, label2]
+      -- liftIO . print $ getWidgetTrees gui
       return $ Title gui
 
     update :: Update Title IO Action
     update _ _as t@(Title gui) = do
       es <- K.getEvents
-      updateByEvents es gui
+      GUI.update gui
       return t
 
     render :: Render Title IO
@@ -124,7 +121,7 @@ titleScene =
       let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
       V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) white (showjs js)) vjs
       --
-      gui' <- renderGUI gui
+      GUI.render gui
       return ()
       where
         white = V4 255 255 255 255

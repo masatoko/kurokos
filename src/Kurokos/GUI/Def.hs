@@ -12,3 +12,6 @@ class RenderEnv m where
   renderTexture :: SDL.Texture -> SDL.Rectangle CInt -> m ()
   -- drawRect
   -- fillRect
+
+class HasEvent m where
+  getEvents :: m [SDL.EventPayload]

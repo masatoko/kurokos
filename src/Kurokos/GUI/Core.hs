@@ -22,7 +22,7 @@ import           SDL                       (($=))
 import qualified SDL
 import qualified SDL.Font                  as Font
 
-import           Kurokos.GUI.Def           (RenderEnv (..))
+import           Kurokos.GUI.Def           (RenderEnv (..), HasEvent (..))
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
@@ -132,8 +132,9 @@ prependRoot w = modify $ \g -> g&gWTrees %~ (w:)
 prependRootWs :: Monad m => [WidgetTree] -> GuiT m ()
 prependRootWs ws = modify $ \g -> g&gWTrees %~ (ws ++)
 
-updateByEvents :: (RenderEnv m, MonadIO m, MonadMask m) => [SDL.EventPayload] -> GUI -> m ()
-updateByEvents es gui = do
+update :: (RenderEnv m, HasEvent m, MonadIO m, MonadMask m) => GUI -> m ()
+update gui = do
+  es <- getEvents
   win <- getWindow
   let pWinResized = any (isWinResized win) es
   when pWinResized $ do
@@ -213,8 +214,8 @@ updateTexture g = do
         SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
         return tex
 
-renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
-renderGUI g = do
+render :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
+render g = do
   V2 w h <- getWindowSize
   mapM_ (go (pure 0)) (g^.gWTrees)
   where
