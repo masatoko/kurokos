@@ -30,6 +30,7 @@ import           Kurokos.GUI.Widget.Render
 import qualified Kurokos.RPN               as RPN
 
 type Key = Int64
+
 newtype SingleKey = SingleKey Key deriving Show
 newtype ContainerKey = ContainerKey Key deriving Show
 

@@ -10,8 +10,6 @@ class RenderEnv m where
   getWindowSize :: m (V2 CInt)
   withRenderer :: (SDL.Renderer -> IO a) -> m a
   renderTexture :: SDL.Texture -> SDL.Rectangle CInt -> m ()
-  -- drawRect
-  -- fillRect
 
 class HasEvent m where
   getEvents :: m [SDL.EventPayload]
