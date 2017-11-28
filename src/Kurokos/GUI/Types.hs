@@ -22,6 +22,7 @@ type Color = V4 Word8
 data WidgetColor = WidgetColor
   { wcBack :: Color
   , wcTint :: Color
+  , wcFont :: Color
   }
 
 data Exp

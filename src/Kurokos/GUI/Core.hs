@@ -46,6 +46,7 @@ data TextureInfo = TextureInfo
 data WidgetTree
   = Single
       { singleKey :: SingleKey
+      , wtColor   :: WidgetColor
       , wtTexture :: MVar TextureInfo
       , wtUPos    :: V2 Exp
       , wtUSize   :: V2 Exp
@@ -65,8 +66,9 @@ instance Show WidgetTree where
   show Container{..} = show key ++ show wtChildren
     where (ContainerKey key) = containerKey
 
-newtype GuiEnv = GuiEnv
+data GuiEnv = GuiEnv
   { geFont :: Font.Font
+  , geDefaultWidgetColor :: WidgetColor
   }
 
 data GUI = GUI
@@ -91,7 +93,8 @@ runGuiT env g k = execStateT (runReaderT (runGT k) env) g
 instance MonadTrans GuiT where
   lift = GuiT . lift . lift
 
-newGui :: (RenderEnv m, MonadIO m, MonadMask m, MonadThrow m) => GuiEnv -> GuiT m () -> m GUI
+newGui :: (RenderEnv m, MonadIO m, MonadMask m, MonadThrow m)
+  => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
   gui <- runGuiT env (GUI 0 0 []) initializer
   updateTexture gui
@@ -109,7 +112,8 @@ genSingle pos size w = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  return $ Single key mti pos' size' w
+  wc <- asks geDefaultWidgetColor
+  return $ Single key wc mti pos' size' w
 
 genContainer :: (MonadIO m, E.MonadThrow m)
   => V2 UExp -> V2 UExp -> [WidgetTree] -> GuiT m WidgetTree
@@ -176,14 +180,14 @@ updateTexture g = do
               Left err -> E.throw $ userError err
               Right v  -> return v
       tex <- case mWidget of
-        Just widget -> createTexture' size widget renderWidget
-        Nothing     -> createDummyTexture size
+        Just (widget, wcol) -> createTexture' size wcol widget renderWidget
+        Nothing -> createDummyTexture size
       return $ TextureInfo tex pos size
 
     go vmap Single{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
       when pEmpty $ do
-        ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize (Just wtWidget)
+        ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize (Just (wtWidget, wtColor))
         liftIO $ putMVar wtTexture ti
     go vmap Container{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
@@ -198,13 +202,13 @@ updateTexture g = do
         evalExp (ERPN expr) = truncate <$> RPN.eval vmap expr
         evalExp (EConst v)  = return v
 
-    createTexture' size w renderW =
+    createTexture' size wcol w renderW =
       withRenderer $ \r -> do
         tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget size
         SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
         E.bracket_ (SDL.rendererRenderTarget r $= Just tex)
                    (SDL.rendererRenderTarget r $= Nothing)
-                   (renderW r size w)
+                   (renderW r size wcol w)
         return tex
 
     createDummyTexture size =

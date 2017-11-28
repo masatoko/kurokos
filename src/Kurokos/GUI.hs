@@ -6,7 +6,7 @@ module Kurokos.GUI
   , Direction (..)
   , UExp (..)
   , Color
-  , WidgetColor
+  , WidgetColor (..)
   -- Def
   , RenderEnv (..)
   , HasEvent (..)

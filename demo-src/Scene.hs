@@ -88,12 +88,18 @@ titleScene =
   Scene defPad update render transit alloc
   where
     alloc = do
-      (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 20) K.freeFont
-      let env = GUI.GuiEnv font
+      (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 16) K.freeFont
+      let wcol =
+            GUI.WidgetColor
+              { GUI.wcBack = V4 255 255 255 255
+              , GUI.wcTint = V4 220 220 220 255
+              , GUI.wcFont = V4 54 20 171 255
+              }
+      let env = GUI.GuiEnv font wcol
       gui <- GUI.newGui env $ do
-        let size = V2 (GUI.UERPN "100") (GUI.UERPN "100")
-            pos1 = V2 (GUI.UERPN "0.5 $w *") (GUI.UERPN "0.2 $h *")
-            pos2 = V2 (GUI.UERPN "0.5 $w * 100 -") (GUI.UERPN "0.2 $h * 50 +")
+        let size = V2 (GUI.UERPN "0.2 $w *") (GUI.UERPN "40")
+            pos1 = V2 (GUI.UERPN "0.4 $w *") (GUI.UERPN "0.2 $h *")
+            pos2 = V2 (GUI.UERPN "0.4 $w *") (GUI.UERPN "0.2 $h * 50 +")
         label <- GUI.genSingle pos1 size =<< GUI.newLabel "label"
         button <- GUI.genSingle pos2 size =<< GUI.newButton "button"
         GUI.prependRootWs [label, button]
@@ -107,21 +113,21 @@ titleScene =
 
     render :: Render Title IO
     render _ (Title gui) = do
-      K.clearBy $ V4 100 100 100 255
+      K.clearBy $ V4 250 250 250 255
       --
-      K.printTest (P (V2 10 100)) white "Enter - start"
-      K.printTest (P (V2 10 120)) white "Escape - exit"
-      K.printTest (P (V2 10 160)) white "日本語テスト"
+      K.printTest (P (V2 10 100)) color "Enter - start"
+      K.printTest (P (V2 10 120)) color "Escape - exit"
+      K.printTest (P (V2 10 160)) color "日本語テスト"
       --
-      K.printTest (P (V2 10 200)) white "- Joysticks"
+      K.printTest (P (V2 10 200)) color "- Joysticks"
       vjs <- K.getJoysticks
       let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
-      V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) white (showjs js)) vjs
+      V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) color (showjs js)) vjs
       --
       GUI.render gui
       return ()
       where
-        white = V4 255 255 255 255
+        color = V4 50 50 50 255
 
     transit _ as _
       | Enter `elem` as = K.next mainScene
