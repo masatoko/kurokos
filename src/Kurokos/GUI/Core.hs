@@ -16,13 +16,15 @@ import           Data.Text                 (Text)
 import           Foreign.C.Types           (CInt)
 import           Linear.V2
 
+import           SDL                       (($=))
 import qualified SDL
 import qualified SDL.Font                  as Font
 
 import           Kurokos.GUI.Def           (RenderEnv (..))
+import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
-import           Kurokos.GUI.Widget.Render (createTextureFromWidget)
+import           Kurokos.GUI.Widget.Render
 
 -- class Widget a where
 --   showW :: a -> String
@@ -35,7 +37,7 @@ newtype ContainerKey = ContainerKey Key deriving Show
 data WidgetTree
   = Single
       { singleKey :: SingleKey
-      , wtTexture :: (V2 CInt, SDL.Texture)
+      , wtTexture :: SDL.Texture
       , wtPos     :: GuiPos
       , wtSize    :: GuiSize
       , wtWidget  :: Widget
@@ -88,10 +90,15 @@ newGui env initializer = do
 genSingle :: (RenderEnv m, MonadIO m, MonadMask m)
   => GuiPos -> GuiSize -> Widget -> GuiT m WidgetTree
 genSingle pos size w = do
-  tex <- lift $ createTextureFromWidget w
   key <- SingleKey <$> use gSCnt
   gSCnt += 1
-  return $ Single key tex pos size w
+  lift $ withRenderer $ \r -> do
+    tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget size
+    SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
+    E.bracket_ (SDL.rendererRenderTarget r $= Just tex)
+               (SDL.rendererRenderTarget r $= Nothing)
+               (renderWidget r size w)
+    return $ Single key tex pos size w
 
 genContainer :: Monad m
   => GuiPos -> GuiSize -> [WidgetTree] -> GuiT m WidgetTree
@@ -108,9 +115,8 @@ renderGUI g =
   go (pure 0) (g^.gWTree)
   where
     go pos0 Single{..} =
-      renderTexture tex $ SDL.Rectangle pos' size
+      renderTexture wtTexture $ SDL.Rectangle pos' wtSize
       where
         pos' = SDL.P $ pos0 + wtPos
-        (size, tex) = wtTexture
     go pos0 Container{..} =
       mapM_ (go $ pos0 + wtPos) wtChildren

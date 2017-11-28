@@ -97,8 +97,8 @@ titleScene =
       let env = GUI.GuiEnv font
       gui <- GUI.newGui env $ do
         let size = pure 100
-        label1 <- GUI.genSingle (V2 0 0) size =<< GUI.newLabel "label1"
-        label2 <- GUI.genSingle (V2 0 100) size =<< GUI.newLabel "label2"
+        label1 <- GUI.genSingle (V2 300 0) size =<< GUI.newLabel "label1"
+        label2 <- GUI.genSingle (V2 300 100) size =<< GUI.newLabel "label2"
         w <- genContainer (pure 0) (pure 1000) [label1, label2]
         putWT w
       liftIO . print $ getWidgetTree gui
@@ -110,6 +110,8 @@ titleScene =
 
     render :: Render Title IO
     render _ (Title gui) = do
+      K.clearBy $ V4 100 100 100 255
+      --
       K.printTest (P (V2 10 100)) white "Enter - start"
       K.printTest (P (V2 10 120)) white "Escape - exit"
       K.printTest (P (V2 10 160)) white "日本語テスト"
