@@ -29,10 +29,6 @@ import           Kurokos.GUI.Widget
 import           Kurokos.GUI.Widget.Render
 import qualified Kurokos.RPN               as RPN
 
--- class Widget a where
---   showW :: a -> String
---   render :: (MonadIO m, MonadMask m) => RenderEnv m => a -> m ()
-
 type Key = Int64
 newtype SingleKey = SingleKey Key deriving Show
 newtype ContainerKey = ContainerKey Key deriving Show
@@ -130,10 +126,10 @@ genContainer pos size ws = do
   return $ Container key mti pos' size' ws
 
 prependRoot :: Monad m => WidgetTree -> GuiT m ()
-prependRoot w = modify $ \g -> g&gWTrees %~ (w:)
+prependRoot w = modify $ over gWTrees (w:)
 
 prependRootWs :: Monad m => [WidgetTree] -> GuiT m ()
-prependRootWs ws = modify $ \g -> g&gWTrees %~ (ws ++)
+prependRootWs ws = modify $ over gWTrees (ws ++)
 
 update :: (RenderEnv m, HasEvent m, MonadIO m, MonadMask m) => GUI -> m ()
 update gui = do
@@ -150,8 +146,7 @@ update gui = do
 -- Rendering GUI
 
 resetTexture :: MonadIO m => GUI -> m ()
-resetTexture gui =
-  liftIO $ mapM_ go $ gui^.gWTrees
+resetTexture = liftIO . mapM_ go . view gWTrees
   where
     go Single{..} = do
       p <- isEmptyMVar wtTexture
@@ -218,8 +213,7 @@ updateTexture g = do
         return tex
 
 render :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
-render g =
-  mapM_ (go (pure 0)) (g^.gWTrees)
+render = mapM_ (go (pure 0)) . view gWTrees
   where
     go pos0 Single{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
