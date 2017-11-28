@@ -6,7 +6,7 @@ import Kurokos.RPN
 
 main :: IO ()
 main = forever $ do
-  eExpr <- parseRPN <$> getLine
+  eExpr <- parse <$> getLine
   case eExpr of
     Left err   -> putStrLn err
-    Right expr -> print $ evaluate expr
+    Right expr -> print $ eval expr

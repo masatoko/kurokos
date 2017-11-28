@@ -1,6 +1,6 @@
 module Kurokos.RPN
-  ( parseRPN
-  , evaluate
+  ( parse
+  , eval
   ) where
 
 import qualified Control.Exception as E
@@ -8,7 +8,7 @@ import           Data.Fixed        (mod')
 import           Data.Foldable     (foldlM)
 import           Safe              (headMay, readMay)
 
-type Expression = [Term]
+type Exp = [Term]
 
 data Term
   = V Double
@@ -28,8 +28,8 @@ data Term
   | PI
   deriving (Show, Read, Eq)
 
-parseRPN :: String -> Either String Expression
-parseRPN = mapM work . words
+parse :: String -> Either String Exp
+parse = mapM work . words
   where
     work a =
       case toTerm a of
@@ -47,8 +47,8 @@ toTerm "min" = return Min
 toTerm "max" = return Max
 toTerm num   = V <$> readMay num
 
-evaluate :: Expression -> Either String Double
-evaluate ts = do
+eval :: Exp -> Either String Double
+eval ts = do
   as <- foldlM go [] ts
   case headMay as of
     Nothing  -> Left "empty expression"
@@ -60,7 +60,7 @@ evaluate ts = do
     go (V x:V y:ys) Plus  = return $ V (y + x) : ys
     go (V x:V y:ys) Sub   = return $ V (y - x) : ys
     go (V x:V y:ys) Div
-      | x == 0    = Left "divide by zero"
+      | y == 0    = Left "divide by zero"
       | otherwise = return $ V (x / y) : ys
     go (V x:V y:ys) Mul   = return $ V (y * x) : ys
     go (V x:ys)     Sin   = return $ V (sin x) : ys
