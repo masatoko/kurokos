@@ -7,7 +7,7 @@
 module Kurokos.GUI.Core where
 
 import           Control.Concurrent.MVar
-import           Control.Exception.Safe    (MonadMask)
+import           Control.Exception.Safe    (MonadMask, MonadThrow)
 import qualified Control.Exception.Safe    as E
 import           Control.Lens
 import           Control.Monad.Reader
@@ -91,10 +91,12 @@ runGuiT env g k = execStateT (runReaderT (runGT k) env) g
 instance MonadTrans GuiT where
   lift = GuiT . lift . lift
 
-newGui :: (RenderEnv m, MonadIO m, E.MonadThrow m) => GuiEnv -> GuiT m () -> m GUI
+newGui :: (RenderEnv m, MonadIO m, MonadMask m, MonadThrow m) => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
   let gui = GUI 0 0 []
-  runGuiT env gui initializer
+  gui <- runGuiT env gui initializer
+  updateTexture gui
+  return gui
 
 genSingle :: (MonadIO m, E.MonadThrow m)
   => V2 UExp -> V2 UExp -> Widget -> GuiT m WidgetTree
@@ -130,11 +132,15 @@ prependRoot w = modify $ \g -> g&gWTrees %~ (w:)
 prependRootWs :: Monad m => [WidgetTree] -> GuiT m ()
 prependRootWs ws = modify $ \g -> g&gWTrees %~ (ws ++)
 
-renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
-renderGUI g = do
+updateTexture :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
+updateTexture g = do
   V2 w h <- getWindowSize
-  let vmap = M.fromList [("w", w), ("h", h), ("winw", w), ("winh", h)]
-  mapM_ (go (pure 0) vmap) (g^.gWTrees)
+  let vmap = M.fromList
+        [ (keyWidth, w)
+        , (keyHeight, h)
+        , (keyWinWidth, w)
+        , (keyWinHeight, h)]
+  mapM_ (go vmap) (g^.gWTrees)
   where
     makeTextureInfo vmap upos usize mWidget = do
       let vmap' = M.map fromIntegral vmap
@@ -149,32 +155,35 @@ renderGUI g = do
         Nothing     -> createDummyTexture size
       return $ TextureInfo tex pos size
 
-    go pos0 vmap wt@Single{..} = do
+    go vmap wt@Single{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
-      if pEmpty
-        then do
-          ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize (Just wtWidget)
-          liftIO $ putMVar wtTexture ti
-          let pos' = SDL.P $ pos0 + tiPos
-          renderTexture tiTexture $ SDL.Rectangle pos' tiSize
-        else do
-          TextureInfo{..} <- liftIO $ readMVar wtTexture
-          let pos' = SDL.P $ pos0 + tiPos
-          renderTexture tiTexture $ SDL.Rectangle pos' tiSize
-    go pos0 vmap wt@Container{..} = do
+      when pEmpty $ do
+        ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize (Just wtWidget)
+        liftIO $ putMVar wtTexture ti
+    go vmap wt@Container{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
-      if pEmpty
-        then do
-          ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize Nothing
-          liftIO $ putMVar wtTexture ti
-          let pos' = pos0 + tiPos
-              vmap' = M.insert "h" (tiSize^._y) . M.insert "w" (tiSize^._x) $ vmap
-          mapM_ (go pos' vmap') wtChildren
-        else do
-          TextureInfo{..} <- liftIO $ readMVar wtTexture
-          let pos' = pos0 + tiPos
-              vmap' = M.insert "h" (tiSize^._y) . M.insert "w" (tiSize^._x) $ vmap
-          mapM_ (go pos' vmap') wtChildren
+      when pEmpty $ do
+        ti@TextureInfo{..} <- makeTextureInfo vmap wtUPos wtUSize Nothing
+        liftIO $ putMVar wtTexture ti
+      mapM_ (go vmap) wtChildren
+
+renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
+renderGUI g = do
+  V2 w h <- getWindowSize
+  mapM_ (go (pure 0)) (g^.gWTrees)
+  where
+    go pos0 wt@Single{..} = do
+      pEmpty <- liftIO $ isEmptyMVar wtTexture
+      unless pEmpty $ do
+        TextureInfo{..} <- liftIO $ readMVar wtTexture
+        let pos' = SDL.P $ pos0 + tiPos
+        renderTexture tiTexture $ SDL.Rectangle pos' tiSize
+    go pos0 wt@Container{..} = do
+      pEmpty <- liftIO $ isEmptyMVar wtTexture
+      unless pEmpty $ do
+        TextureInfo{..} <- liftIO $ readMVar wtTexture
+        let pos' = pos0 + tiPos
+        mapM_ (go pos') wtChildren
 
 evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)
 evalExp2 vmap (V2 x y) = V2 <$> evalExp x <*> evalExp y

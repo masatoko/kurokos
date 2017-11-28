@@ -104,7 +104,6 @@ titleScene =
         prependRootWs [label1, label2]
       liftIO . print $ getWidgetTrees gui
       return $ Title gui
-      where
 
     update :: Update Title IO Action
     update _ _as = return
