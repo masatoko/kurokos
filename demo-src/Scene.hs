@@ -106,7 +106,10 @@ titleScene =
       return $ Title gui
 
     update :: Update Title IO Action
-    update _ _as = return
+    update _ _as t@(Title gui) = do
+      es <- K.getEvents
+      updateByEvents es gui
+      return t
 
     render :: Render Title IO
     render _ (Title gui) = do

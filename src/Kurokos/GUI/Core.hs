@@ -132,7 +132,30 @@ prependRoot w = modify $ \g -> g&gWTrees %~ (w:)
 prependRootWs :: Monad m => [WidgetTree] -> GuiT m ()
 prependRootWs ws = modify $ \g -> g&gWTrees %~ (ws ++)
 
+updateByEvents :: (RenderEnv m, MonadIO m, MonadMask m) => [SDL.EventPayload] -> GUI -> m ()
+updateByEvents es gui = do
+  win <- getWindow
+  let pWinResized = any (isWinResized win) es
+  when pWinResized $ do
+    resetTexture gui
+    updateTexture gui
+  where
+    isWinResized curWin (SDL.WindowResizedEvent dt) = SDL.windowResizedEventWindow dt == curWin
+    isWinResized _ _ = False
+
 -- Rendering GUI
+
+resetTexture :: MonadIO m => GUI -> m ()
+resetTexture gui =
+  liftIO $ mapM_ go $ gui^.gWTrees
+  where
+    go Single{..} = do
+      p <- isEmptyMVar wtTexture
+      unless p $ void $ takeMVar wtTexture
+    go Container{..} = do
+      p <- isEmptyMVar wtTexture
+      unless p $ void $ takeMVar wtTexture
+      mapM_ go wtChildren
 
 updateTexture :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 updateTexture g = do
