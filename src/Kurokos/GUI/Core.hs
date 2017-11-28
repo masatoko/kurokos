@@ -73,13 +73,13 @@ data GUI = GUI
   { _gSCnt  :: Key
   , _gCCnt  :: Key
   --
-  , _gWTree :: WidgetTree
+  , _gWTrees :: [WidgetTree]
   } deriving Show
 
 makeLenses ''GUI
 
-getWidgetTree :: GUI -> WidgetTree
-getWidgetTree = _gWTree
+getWidgetTrees :: GUI -> [WidgetTree]
+getWidgetTrees g = g^.gWTrees
 
 newtype GuiT m a = GuiT {
     runGT :: ReaderT GuiEnv (StateT GUI m) a
@@ -93,11 +93,7 @@ instance MonadTrans GuiT where
 
 newGui :: (RenderEnv m, MonadIO m, E.MonadThrow m) => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
-  (V2 w h) <- getWindowSize
-  mti <- liftIO newEmptyMVar
-  let pos = pure (EConst 0)
-      size = V2 (EConst w) (EConst h)
-      gui = GUI 0 1 (Container (ContainerKey 0) mti pos size [])
+  let gui = GUI 0 0 []
   runGuiT env gui initializer
 
 genSingle :: (MonadIO m, E.MonadThrow m)
@@ -128,14 +124,17 @@ genContainer pos size ws = do
             Right v  -> return v
   return $ Container key mti pos' size' ws
 
-putWT :: Monad m => WidgetTree -> GuiT m ()
-putWT wt = gWTree .= wt
+prependRoot :: Monad m => WidgetTree -> GuiT m ()
+prependRoot w = modify $ \g -> g&gWTrees %~ (w:)
+
+prependRootWs :: Monad m => [WidgetTree] -> GuiT m ()
+prependRootWs ws = modify $ \g -> g&gWTrees %~ (ws ++)
 
 renderGUI :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 renderGUI g = do
   V2 w h <- getWindowSize
   let vmap = M.fromList [("w", w), ("h", h), ("winw", w), ("winh", h)]
-  go (pure 0) vmap (g^.gWTree)
+  mapM_ (go (pure 0) vmap) (g^.gWTrees)
   where
     makeTextureInfo vmap upos usize mWidget = do
       let vmap' = M.map fromIntegral vmap

@@ -97,12 +97,11 @@ titleScene =
       let env = GUI.GuiEnv font
       gui <- GUI.newGui env $ do
         let size = V2 (GUI.UERPN "100") (GUI.UERPN "100")
-            pos1 = V2 (GUI.UERPN "0.5 $w *") (GUI.UERPN "0.2 $w *")
+            pos1 = V2 (GUI.UERPN "0.5 $w *") (GUI.UERPN "0.2 $h *")
         label1 <- GUI.genSingle pos1 size =<< GUI.newLabel "label1"
         label2 <- GUI.genSingle (GUI.UEConst <$> V2 300 100) size =<< GUI.newLabel "label2"
-        w <- genContainer (GUI.UEConst <$> pure 0) (GUI.UEConst <$> pure 1000) [label1, label2]
-        putWT w
-      liftIO . print $ getWidgetTree gui
+        prependRootWs [label1, label2]
+      liftIO . print $ getWidgetTrees gui
       return $ Title gui
       where
 

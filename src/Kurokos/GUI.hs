@@ -7,7 +7,8 @@ module Kurokos.GUI
   , renderGUI
   , genSingle
   , genContainer
-  , putWT
+  , prependRoot
+  , prependRootWs
   -- Make
   , newLabel
   ) where
