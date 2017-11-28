@@ -95,10 +95,10 @@ titleScene =
       gui <- GUI.newGui env $ do
         let size = V2 (GUI.UERPN "100") (GUI.UERPN "100")
             pos1 = V2 (GUI.UERPN "0.5 $w *") (GUI.UERPN "0.2 $h *")
-            pos2 = V2 (GUI.UERPN "10") (GUI.UERPN "0.2 $h * 50 +")
-        label1 <- GUI.genSingle pos1 size =<< GUI.newLabel "label1"
-        label2 <- GUI.genSingle pos2 size =<< GUI.newLabel "label2"
-        GUI.prependRootWs [label1, label2]
+            pos2 = V2 (GUI.UERPN "0.5 $w * 100 -") (GUI.UERPN "0.2 $h * 50 +")
+        label <- GUI.genSingle pos1 size =<< GUI.newLabel "label"
+        button <- GUI.genSingle pos2 size =<< GUI.newButton "button"
+        GUI.prependRootWs [label, button]
       -- liftIO . print $ getWidgetTrees gui
       return $ Title gui
 

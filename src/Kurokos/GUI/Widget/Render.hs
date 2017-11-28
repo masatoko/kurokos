@@ -7,14 +7,13 @@ import qualified SDL
 import qualified SDL.Font           as Font
 import qualified SDL.Primitive            as Gfx
 
-import           Kurokos.GUI.Def    (RenderEnv (..))
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
 
 renderWidget :: SDL.Renderer -> GuiSize -> Widget -> IO ()
 renderWidget r parentSize Label{..} = do
-  Gfx.fillRoundRectangle r (pure 0) parentSize 10 (V4 0 0 255 10) -- test
+  Gfx.roundRectangle r (pure 0) parentSize 10 (V4 0 0 255 100) -- test
   --
   (w,h) <- Font.size wFont wTitle
   let size = fromIntegral <$> V2 w h
@@ -22,4 +21,19 @@ renderWidget r parentSize Label{..} = do
     (Font.blended wFont (V4 255 255 255 255) wTitle)
     SDL.freeSurface
     (SDL.createTextureFromSurface r)
-  SDL.copy r tex Nothing $ Just (SDL.Rectangle (pure 0) size)
+  let pos = P $ (`div` 2) <$> parentSize - size
+  SDL.copy r tex Nothing $ Just (SDL.Rectangle pos ((\x -> x - 1) <$> size))
+
+renderWidget r parentSize Button{..} = do
+  (w,h) <- Font.size wFont wTitle
+  let size = fromIntegral <$> V2 w h
+  tex <- E.bracket
+    (Font.blended wFont (V4 255 255 255 255) wTitle)
+    SDL.freeSurface
+    (SDL.createTextureFromSurface r)
+  --
+  Gfx.fillRoundRectangle r (pure 0) parentSize 5 (V4 50 50 50 255)
+  Gfx.roundRectangle r (pure 0) parentSize 5 (V4 100 100 100 255)
+  --
+  let pos = P $ (`div` 2) <$> parentSize - size
+  SDL.copy r tex Nothing $ Just (SDL.Rectangle pos ((\x -> x - 1) <$> size))

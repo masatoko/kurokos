@@ -1,5 +1,6 @@
 module Kurokos.GUI
-  ( GUI
+  ( module Import
+  , GUI
   , GuiEnv (..)
   , Direction (..)
   , UExp (..)
@@ -15,12 +16,10 @@ module Kurokos.GUI
   --
   , update
   , render
-  -- Make
-  , newLabel
   ) where
 
-import Kurokos.GUI.Core
+import           Kurokos.GUI.Core
 
-import Kurokos.GUI.Def
-import Kurokos.GUI.Types
-import Kurokos.GUI.Widget.Make
+import           Kurokos.GUI.Def
+import           Kurokos.GUI.Types
+import           Kurokos.GUI.Widget.Make as Import

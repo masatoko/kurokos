@@ -13,3 +13,11 @@ newLabel title = do
     { wTitle = title
     , wFont = font
     }
+
+newButton :: Monad m => Text -> GuiT m Widget
+newButton title = do
+  font <- asks geFont
+  return Button
+    { wTitle = title
+    , wFont = font
+    }
