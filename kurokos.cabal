@@ -38,6 +38,7 @@ library
                      , sdl2-image
                      -- , sdl2-mixer
                      , sdl2-gfx >= 0.2
+                     , kurokos-calc
                      , transformers-base
                      , transformers
                      , mtl
