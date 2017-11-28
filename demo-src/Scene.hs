@@ -97,9 +97,9 @@ titleScene =
               }
       let env = GUI.GuiEnv font wcol
       gui <- GUI.newGui env $ do
-        let size = V2 (GUI.UERPN "0.2 $w *") (GUI.UERPN "40")
-            pos1 = V2 (GUI.UERPN "0.4 $w *") (GUI.UERPN "0.2 $h *")
-            pos2 = V2 (GUI.UERPN "0.4 $w *") (GUI.UERPN "0.2 $h * 50 +")
+        let size = V2 (GUI.UERPN "0.2 $width *") (GUI.UERPN "40")
+            pos1 = V2 (GUI.UERPN "0.4 $width *") (GUI.UERPN "0.2 $height *")
+            pos2 = V2 (GUI.UERPN "0.4 $width *") (GUI.UERPN "0.2 $height * 50 +")
         label <- GUI.genSingle pos1 size =<< GUI.newLabel "label"
         button <- GUI.genSingle pos2 size =<< GUI.newButton "button"
         GUI.prependRootWs [label, button]

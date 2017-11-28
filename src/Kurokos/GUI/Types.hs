@@ -41,7 +41,7 @@ fromUExpV2 :: V2 UExp -> Either String (V2 Exp)
 fromUExpV2 (V2 x y) = V2 <$> fromUExp x <*> fromUExp y
 
 keyWidth, keyHeight, keyWinWidth, keyWinHeight :: String
-keyWidth     = "w"
-keyHeight    = "h"
-keyWinWidth  = "winw"
-keyWinHeight = "winh"
+keyWidth     = "width"
+keyHeight    = "height"
+keyWinWidth  = "winwidth"
+keyWinHeight = "winheight"
