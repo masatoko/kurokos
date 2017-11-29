@@ -162,20 +162,20 @@ readyRender g = do
   return $ g&gWTrees .~ wts
   where
     makeTexture vmap upos usize mWidget = do
-      liftIO $ putStrLn "====="
       let vmap' = M.map fromIntegral vmap
-      liftIO $ do
-        print vmap
-        print vmap'
-        print upos
-        print usize
+      -- liftIO $ do
+      --   putStrLn "====="
+      --   print vmap
+      --   print vmap'
+      --   print upos
+      --   print usize
       pos <- case evalExp2 vmap' upos of
               Left err -> E.throw $ userError err
               Right v  -> return $ P v
       size <- case evalExp2 vmap' usize of
               Left err -> E.throw $ userError err
               Right v  -> return v
-      liftIO . print $ (pos, size, fst <$> mWidget)
+      -- liftIO . print $ (pos, size, fst <$> mWidget)
       tex <- case mWidget of
         Just (widget, wcol) -> createTexture' size wcol widget renderWidget
         Nothing             -> createDummyTexture size
