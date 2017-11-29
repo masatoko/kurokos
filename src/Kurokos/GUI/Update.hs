@@ -34,8 +34,8 @@ procEvent gui = work
     work (MouseMotionEvent MouseMotionEventData{..}) =
       return . flip execState gui $ do
         if SDL.ButtonLeft `elem` mouseMotionEventState
-          then gCursorTrajectory %= (mouseMotionEventPos:)
-          else gCursorTrajectory .= []
+          then gDragTrajectory %= (mouseMotionEventPos:)
+          else gDragTrajectory .= []
         modify $ modifyAt mouseMotionEventPos go
       where
         go wt@Single{} =

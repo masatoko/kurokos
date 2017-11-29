@@ -70,10 +70,10 @@ data GuiEnv = GuiEnv
   }
 
 data GUI = GUI
-  { _gKeyCnt           :: Key
-  , _gWTrees           :: [WidgetTree]
-  , _gEvents           :: [GuiEvent]
-  , _gCursorTrajectory :: [Point V2 Int32]
+  { _gKeyCnt         :: Key
+  , _gWTrees         :: [WidgetTree]
+  , _gEvents         :: [GuiEvent]
+  , _gDragTrajectory :: [Point V2 Int32]
   } deriving Show
 
 makeLenses ''GUI
