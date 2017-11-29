@@ -39,10 +39,15 @@ procEvent gui = work
         modify $ modifyAt mouseMotionEventPos go
       where
         go wt@Single{} =
-          wt { wtNeedsRender = True
-             , wtColor = colorSetHover `modColor` colorSetBasis
-             }
+          if focus ^. hover
+            then wt
+            else
+              wt { wtFocus = focus & hover .~ True
+                 , wtNeedsRender = True
+                 , wtColor = colorSetHover `modColor` colorSetBasis
+                 }
           where
+            focus = wtFocus wt
             ColorSet{..} = wtColorSet wt
         go wt = wt
 

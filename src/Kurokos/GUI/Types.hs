@@ -1,6 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Kurokos.GUI.Types where
 
+import           Control.Lens
 import           Data.Int        (Int64)
 import           Data.Word       (Word8)
 import           Foreign.C.Types (CInt)
@@ -21,8 +23,21 @@ data Direction
   | Vertical
   deriving Show
 
+data Focus = Focus
+  { _hover :: Bool
+  }
+
+makeLenses ''Focus
+
+iniFocus :: Focus
+iniFocus = Focus False
+
+-- Size
+
 type GuiPos = SDL.Point V2 CInt
 type GuiSize = V2 CInt
+
+-- Color
 
 type Color = V4 Word8
 
@@ -48,6 +63,8 @@ modColor (WCM m) (WC a) =
   where
     work f f' = f m (f' a)
 
+-- Expression
+
 data Exp
   = ERPN RPN.Exp
   | EConst CInt
@@ -60,7 +77,7 @@ data UExp
 
 fromUExp :: UExp -> Either String Exp
 fromUExp (Rpn expr) = ERPN <$> RPN.parse expr
-fromUExp (C v)  = return $ EConst $ fromIntegral v
+fromUExp (C v)      = return $ EConst $ fromIntegral v
 
 fromUExpV2 :: V2 UExp -> Either String (V2 Exp)
 fromUExpV2 (V2 x y) = V2 <$> fromUExp x <*> fromUExp y
