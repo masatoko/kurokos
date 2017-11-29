@@ -102,12 +102,6 @@ titleScene =
 
     alloc = do
       (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 16) K.freeFont
-      let wcol =
-            GUI.WidgetColor
-              { GUI.wcBack = V4 255 255 255 255
-              , GUI.wcTint = V4 220 220 220 255
-              , GUI.wcFont = V4 54 20 171 255
-              }
       let env = GUI.GuiEnv font wcol
       gui <- GUI.newGui env $ do
         -- Label
@@ -129,6 +123,13 @@ titleScene =
         GUI.prependRootWs [ctn, label, button1, button2]
       -- liftIO . print $ getWidgetTrees gui
       return $ Title gui 0
+      where
+        wcol =
+          GUI.WidgetColor
+            { GUI.wcBack = V4 255 255 255 255
+            , GUI.wcTint = V4 220 220 220 255
+            , GUI.wcFont = V4 54 20 171 255
+            }
 
     update :: Update Title IO Action
     update _st _as t0 =
