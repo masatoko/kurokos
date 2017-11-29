@@ -10,6 +10,7 @@
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE UndecidableInstances       #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module Kurokos.Core
   ( Config (..)
   , defaultConfig
@@ -81,7 +82,7 @@ import           Kurokos.Font                 (withFont)
 import           Kurokos.Metapad
 import           Kurokos.Types
 
-import           Kurokos.GUI                  (RenderEnv (..), HasEvent (..))
+import           Kurokos.GUI                  (HasEvent (..), RenderEnv (..))
 
 data Config = Config
   { confWinTitle         :: Text
