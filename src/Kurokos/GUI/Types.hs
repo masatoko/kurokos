@@ -13,6 +13,8 @@ import qualified Kurokos.RPN     as RPN
 type Key = Int64
 newtype WTKey = WTKey Key deriving Show
 
+type WidgetIdent = String
+
 data Direction
   = Horizontal
   | Vertical

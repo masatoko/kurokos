@@ -25,6 +25,7 @@ library
                      , Kurokos.GUI.Update
                      , Kurokos.GUI.Import
                      , Kurokos.GUI.Widget
+                     , Kurokos.GUI.Widget.Module
                      , Kurokos.GUI.Widget.Render
                      , Kurokos.GUI.Widget.Make
                      , Kurokos.Types

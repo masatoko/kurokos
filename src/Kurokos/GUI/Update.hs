@@ -64,3 +64,13 @@ isWithinRect p p1 size =
     px = p^._x
     py = p^._y
     p2 = p1 + P size
+
+
+-- update Widget by ident with function
+updateW :: WidgetIdent -> (Widget -> Widget) -> GUI -> GUI
+updateW wid f = over gWTrees (map work)
+  where
+    work wt@Single{..}
+      | wtName == Just wid = wt {wtWidget = f wtWidget}
+      | otherwise          = wt
+    work wt@Container{..} = wt {wtChildren = map work wtChildren}

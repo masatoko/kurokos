@@ -126,12 +126,17 @@ titleScene =
       return $ Title gui
 
     update :: Update Title IO Action
-    update _ _as (Title gui) = do
+    update st _as (Title gui) = do
       gui' <- GUI.update gui
       let es = GUI.getGuiEvents gui'
       unless (null es) $
         liftIO . print $ es
-      return $ Title gui'
+      return $ Title $ execState (mapM_ go es) gui'
+      where
+        go (GuiEvent SelectEvent{..} _wt _key (Just "label")) =
+          when (seInputMotion == SDL.Released) $
+            modify' $ GUI.updateW "label" (GUI.setTitle (T.pack $ show $ K.frameCount st))
+        go _ = return ()
 
     render :: Render Title IO
     render _ (Title gui) = do

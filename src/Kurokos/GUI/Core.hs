@@ -34,7 +34,7 @@ data TextureInfo = TextureInfo
 data WidgetTree
   = Single
       { wtKey     :: WTKey
-      , wtName    :: Maybe String
+      , wtName    :: Maybe WidgetIdent
       , wtColor   :: WidgetColor
       , wtTexture :: MVar SDL.Texture
       , wtTexInfo :: TextureInfo
@@ -102,7 +102,7 @@ newGui env initializer = do
   updateTexture gui
 
 genSingle :: (MonadIO m, E.MonadThrow m)
-  => Maybe String -> V2 UExp -> V2 UExp -> Widget -> GuiT m WidgetTree
+  => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m WidgetTree
 genSingle mName pos size w = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
