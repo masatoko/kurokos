@@ -58,11 +58,26 @@ sudo apt-get install libsdl2-gfx-dev
 
 # Demo
 
-1. 任意のフォントファイル`_data/system.ttf`を準備する。
+1. 任意のフォントファイルを用意して`_data/system.ttf`に配置する。
 
-2. コンパイル
+2. コンパイルと実行
 
 ```sh
 stack build
 stack exec demo
 ```
+
+# TODO
+
+### GUI
+- [ ] Stack Container
+- [ ] Scroll Container
+- [ ] Load GUI from file
+- [ ] Image View
+- [ ] Text Area
+- [ ] Text Field (Editable)
+- [ ] Segmented Control (Radio Button)
+- [ ] Select by cursor buttons (using zipper?)
+
+### Others
+- [ ] File archiver (For releaser. Already made. Include from 'Light It')
