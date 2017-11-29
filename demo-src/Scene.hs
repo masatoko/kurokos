@@ -86,7 +86,12 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
       | Enter `elem` as = K.end
       | otherwise       = K.continue
 
-newtype Title = Title GUI.GUI
+data Title = Title
+  { _tGui :: GUI.GUI
+  , _tCnt :: Int
+  }
+
+makeLenses ''Title
 
 titleScene :: Scene Title IO Action
 titleScene =
@@ -123,23 +128,29 @@ titleScene =
         --
         GUI.prependRootWs [ctn, label, button1, button2]
       -- liftIO . print $ getWidgetTrees gui
-      return $ Title gui
+      return $ Title gui 0
 
     update :: Update Title IO Action
-    update st _as (Title gui) = do
-      gui' <- GUI.update gui
-      let es = GUI.getGuiEvents gui'
-      -- unless (null es) $ liftIO . print $ es
-          gui'' = execState (mapM_ go es) gui'
-      Title <$> GUI.readyRender gui''
+    update _st _as t = do
+      g <- GUI.update $ t^.tGui
+      let t' = execState (mapM_ go (GUI.getGuiEvents g)) $ t&tGui .~ g
+      g' <- GUI.readyRender $ t'^.tGui
+      return $ t' & tGui .~ g'
       where
         go (GuiEvent SelectEvent{..} _wt _key (Just "button")) =
-          when (seInputMotion == SDL.Released) $
-            modify' $ GUI.updateW "label" (GUI.setTitle (T.pack $ show $ K.frameCount st))
+          when (seInputMotion == SDL.Released) $ do
+            modify' $
+              over tCnt (+1)
+            cnt <- gets $ view tCnt
+            let title = T.pack $ show cnt
+                setTitle = GUI.setTitle title
+            modify' $
+              over tGui $
+                GUI.updateW "label" setTitle
         go _ = return ()
 
     render :: Render Title IO
-    render _ (Title gui) = do
+    render _ t = do
       K.clearBy $ V4 250 250 250 255
       --
       K.printTest (P (V2 10 200)) color "- Joysticks"
@@ -147,12 +158,12 @@ titleScene =
       let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
       V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) color (showjs js)) vjs
       --
-      GUI.render gui
+      GUI.render $ t^.tGui
       return ()
       where
         color = V4 50 50 50 255
 
-    transit _ as (Title gui)
+    transit _ as (Title gui _)
       | Exit  `elem` as = K.end
       | otherwise       = do
         let es = GUI.getGuiEvents gui
