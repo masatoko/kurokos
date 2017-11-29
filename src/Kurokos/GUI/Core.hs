@@ -147,8 +147,8 @@ prependRootWs ws = modify $ over gWTrees (ws ++)
 setAllNeedsRender :: GUI -> GUI
 setAllNeedsRender = over gWTrees (map go)
   where
-    go wt@Single{..}    = wt {wtNeedsRender = False}
-    go wt@Container{..} = wt {wtChildren = map go wtChildren}
+    go wt@Single{..}    = wt {wtNeedsRender = True}
+    go wt@Container{..} = wt {wtNeedsRender = True, wtChildren = map go wtChildren}
 
 readyRender :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m GUI
 readyRender g = do
