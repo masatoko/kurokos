@@ -13,7 +13,7 @@ import           Kurokos.GUI.Widget
 
 renderWidget :: SDL.Renderer -> GuiSize -> WidgetColor -> Widget -> IO ()
 renderWidget r parentSize WidgetColor{..} Label{..} = do
-  Prim.roundRectangle r (pure 0) ((+ (-1)) <$> parentSize) 3 (V4 0 0 255 100) -- test
+  -- Prim.roundRectangle r (pure 0) ((+ (-1)) <$> parentSize) 3 (V4 0 0 255 100) -- test
   --
   (w,h) <- Font.size wFont wTitle
   let size = fromIntegral <$> V2 w h

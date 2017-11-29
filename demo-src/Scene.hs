@@ -100,12 +100,15 @@ titleScene =
               }
       let env = GUI.GuiEnv font wcol
       gui <- GUI.newGui env $ do
-        let size = V2 (GUI.UERPN "0.2 $width *") (GUI.UERPN "40")
-            pos1 = V2 (GUI.UERPN "0.4 $width *") (GUI.UERPN "0.2 $height *")
-            pos2 = V2 (GUI.UERPN "0.4 $width *") (GUI.UERPN "0.2 $height * 50 +")
-        label <- GUI.genSingle (Just "go-main") pos1 size =<< GUI.newLabel "Main"
-        button <- GUI.genSingle (Just "go-mouse") pos2 size =<< GUI.newButton "Mouse"
-        GUI.prependRootWs [label, button]
+        let size0 = V2 (GUI.UERPN "$width") (GUI.UEConst 40)
+            pos = V2 (GUI.UEConst 0) (GUI.UEConst 30)
+        label <- GUI.genSingle (Just "title") pos size0 =<< GUI.newLabel "Kurokos デモ"
+        let size = V2 (GUI.UERPN "0.4 $width *") (GUI.UEConst 40)
+            pos1 = V2 (GUI.UERPN "0.3 $width *") (GUI.UERPN "0.2 $height *")
+            pos2 = V2 (GUI.UERPN "0.3 $width *") (GUI.UERPN "0.2 $height * 50 +")
+        button1 <- GUI.genSingle (Just "go-main") pos1 size =<< GUI.newButton "Next: Main Scene"
+        button2 <- GUI.genSingle (Just "go-mouse") pos2 size =<< GUI.newButton "Push: Mouse Scene"
+        GUI.prependRootWs [label, button1, button2]
       -- liftIO . print $ getWidgetTrees gui
       return $ Title gui
 
@@ -120,10 +123,6 @@ titleScene =
     render :: Render Title IO
     render _ (Title gui) = do
       K.clearBy $ V4 250 250 250 255
-      --
-      K.printTest (P (V2 10 100)) color "Enter - start"
-      K.printTest (P (V2 10 120)) color "Escape - exit"
-      K.printTest (P (V2 10 160)) color "日本語テスト"
       --
       K.printTest (P (V2 10 200)) color "- Joysticks"
       vjs <- K.getJoysticks
@@ -149,7 +148,6 @@ titleScene =
                 Just "go-mouse" -> Just $ K.Push mouseScene
                 _ -> Nothing
             else Nothing
-        go _ = Nothing
 
 mainScene :: Scene MyData IO Action
 mainScene = Scene defPad update render transit allocGame
