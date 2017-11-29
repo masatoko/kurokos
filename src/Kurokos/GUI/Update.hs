@@ -40,11 +40,14 @@ procEvent gui = work
       where
         go curPos pos size (cs@ColorSet{..}, _, _, wst, w)
           | not (wst^.hover) && isWithinRect curPos pos size =
-              Just (cs, wc', True, wst', w)
+            let wc' = colorSetHover `modColor` colorSetBasis
+                wst' = wst & hover .~ True
+            in Just (cs, wc', True, wst', w)
+          | wst^.hover && not (isWithinRect curPos pos size) =
+            let wst' = wst & hover .~ False
+            in Just (cs, colorSetBasis, True, wst', w)
           | otherwise = Nothing
           where
-            wc' = colorSetHover `modColor` colorSetBasis
-            wst' = wst & hover .~ True
 
     work (MouseButtonEvent MouseButtonEventData{..}) =
       return $ gui & gEvents %~ (es ++)
