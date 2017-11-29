@@ -17,9 +17,20 @@ procEvent gui = work
   where
     work (WindowResizedEvent WindowResizedEventData{..}) = do
       win <- getWindow
-      when (windowResizedEventWindow == win) $ do
-        resetTexture gui
-        updateTexture gui
-      return gui
+      if windowResizedEventWindow == win
+        then do
+          resetTexture gui
+          updateTexture gui
+        else return gui
+    -- work (MouseButtonEvent MouseButtonEventData{..}) = do
+    --   let ws = findAt gui mouseButtonEventPos
+    --   return gui
 
     work _ = return gui
+
+-- findAt :: GUI -> Point V2 CInt -> [Widget]
+-- findAt gui (P pos) =
+--   concatMap work $ gui^.gWTrees
+--   where
+--     work wt =
+--       wt
