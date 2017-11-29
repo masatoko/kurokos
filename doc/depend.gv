@@ -6,7 +6,7 @@ digraph {
   kurokos       [style = bold, color = pink3, fontcolor = pink3]
   "kurokos-gui" [style = bold, color = pink3, fontcolor = pink3]
   "kurokos-rpn" [style = bold, color = pink3, fontcolor = pink3]
-  "your game"   [shape = rounded, color = black]
+  "your game"   [shape = box, color = black]
   SDL2          [color = royalblue, fontcolor = royalblue]
 
   "your game" -> kurokos
@@ -15,6 +15,6 @@ digraph {
   "your game" -> "kurokos-rpn" [style = dashed]
 
   kurokos -> SDL2
-  kurokos -> "kurokos-rpn"
+  "kurokos-gui" -> "kurokos-rpn"
   "kurokos-gui" -> SDL2
 }
