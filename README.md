@@ -5,6 +5,10 @@ WIP
 ## 注意！
 Kurokosは開発中であり、APIは頻繁に変更されます!
 
+## Dependencies
+
+![Dependencies](./doc/depend.png)
+
 ## Features
 - Frame management
 - Scene management
