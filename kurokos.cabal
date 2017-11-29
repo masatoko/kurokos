@@ -75,6 +75,7 @@ executable demo
                      , sdl2-image
                      , sdl2-gfx >= 0.2
                      , safe-exceptions
+                     , extra
                      , text
                      , lens
                      , mtl

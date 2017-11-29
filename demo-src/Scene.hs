@@ -7,6 +7,7 @@ module Scene where
 
 import           Control.Lens
 import           Control.Monad.State
+import           Data.List.Extra     (firstJust)
 import           Data.Maybe          (mapMaybe)
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
@@ -178,9 +179,7 @@ titleScene =
 
     transit _ as (Title gui _)
       | Exit  `elem` as = K.end
-      | otherwise       = do
-        let es = GUI.getGuiEvents gui
-        return $ headMay $ mapMaybe go es
+      | otherwise       = return . firstJust go . GUI.getGuiEvents $ gui
       where
         go (GuiEvent SelectEvent{..} _wt _key mName) =
           if seInputMotion == SDL.Released
