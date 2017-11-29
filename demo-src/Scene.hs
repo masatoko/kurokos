@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE MultiWayIf        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
@@ -90,6 +91,9 @@ titleScene :: Scene Title IO Action
 titleScene =
   Scene defPad update render transit alloc
   where
+    nameMain = Just "go-main"
+    nameMouse = Just "go-mouse"
+
     alloc = do
       (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 16) K.freeFont
       let wcol =
@@ -106,8 +110,8 @@ titleScene =
         let size = V2 (GUI.UERPN "0.4 $width *") (GUI.UEConst 40)
             pos1 = V2 (GUI.UERPN "0.3 $width *") (GUI.UERPN "0.2 $height *")
             pos2 = V2 (GUI.UERPN "0.3 $width *") (GUI.UERPN "0.2 $height * 50 +")
-        button1 <- GUI.genSingle (Just "go-main") pos1 size =<< GUI.newButton "Next: Main Scene"
-        button2 <- GUI.genSingle (Just "go-mouse") pos2 size =<< GUI.newButton "Push: Mouse Scene"
+        button1 <- GUI.genSingle nameMain pos1 size =<< GUI.newButton "Next: Main Scene"
+        button2 <- GUI.genSingle nameMouse pos2 size =<< GUI.newButton "Push: Mouse Scene"
         GUI.prependRootWs [label, button1, button2]
       -- liftIO . print $ getWidgetTrees gui
       return $ Title gui
@@ -143,10 +147,9 @@ titleScene =
         go (GuiEvent SelectEvent{..} _wt _key mName) =
           if seInputMotion == SDL.Released
             then
-              case mName of
-                Just "go-main"  -> Just $ K.Next mainScene
-                Just "go-mouse" -> Just $ K.Push mouseScene
-                _ -> Nothing
+              if | mName == nameMain  -> Just $ K.Next mainScene
+                 | mName == nameMouse -> Just $ K.Push mouseScene
+                 | otherwise          -> Nothing
             else Nothing
 
 mainScene :: Scene MyData IO Action
