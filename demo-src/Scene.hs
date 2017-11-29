@@ -131,12 +131,16 @@ titleScene =
       return $ Title gui 0
 
     update :: Update Title IO Action
-    update _st _as t = do
-      g <- GUI.update $ t^.tGui
-      let t' = execState (mapM_ go (GUI.getGuiEvents g)) $ t&tGui .~ g
-      g' <- GUI.readyRender $ t'^.tGui
-      return $ t' & tGui .~ g'
+    update _st _as t0 =
+      readyGui . updateTitle =<< updateGui t0
       where
+        updateGui t = t & tGui %%~ GUI.update
+        readyGui t  = t & tGui %%~ GUI.readyRender
+
+        updateTitle t = execState (mapM_ go es) t
+          where
+            es = GUI.getGuiEvents $ t^.tGui
+
         go (GuiEvent SelectEvent{..} _wt _key (Just "button")) =
           when (seInputMotion == SDL.Released) $ do
             modify' $
