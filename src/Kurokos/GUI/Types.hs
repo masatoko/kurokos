@@ -23,14 +23,14 @@ data Direction
   | Vertical
   deriving Show
 
-data Focus = Focus
+data WidgetState = WS
   { _hover :: Bool
   }
 
-makeLenses ''Focus
+makeLenses ''WidgetState
 
-iniFocus :: Focus
-iniFocus = Focus False
+iniWidgetState :: WidgetState
+iniWidgetState = WS False
 
 -- Size
 

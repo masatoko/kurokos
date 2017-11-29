@@ -36,7 +36,7 @@ data WidgetTree
       { wtKey         :: WTKey
       , wtName        :: Maybe WidgetIdent
       , wtNeedsRender :: Bool
-      , wtFocus       :: Focus
+      , wtWidgetState :: WidgetState
       , wtColorSet    :: ColorSet
       , wtColor       :: WidgetColor
       , wtTexture     :: SDL.Texture
@@ -119,7 +119,7 @@ genSingle mName pos size w = do
   let ti = TextureInfo (pure 0) (pure 1)
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  return $ Single key mName True iniFocus colset (colorSetBasis colset) tex ti pos' size' w
+  return $ Single key mName True iniWidgetState colset (colorSetBasis colset) tex ti pos' size' w
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => V2 UExp -> V2 UExp -> [WidgetTree] -> GuiT m WidgetTree

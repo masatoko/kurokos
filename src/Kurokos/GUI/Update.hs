@@ -36,20 +36,15 @@ procEvent gui = work
         if SDL.ButtonLeft `elem` mouseMotionEventState
           then gDragTrajectory %= (mouseMotionEventPos:)
           else gDragTrajectory .= []
-        modify $ modifyAt mouseMotionEventPos go
+        modify $ modifyW (go (fromIntegral <$> mouseMotionEventPos))
       where
-        go wt@Single{} =
-          if focus ^. hover
-            then wt
-            else
-              wt { wtFocus = focus & hover .~ True
-                 , wtNeedsRender = True
-                 , wtColor = colorSetHover `modColor` colorSetBasis
-                 }
+        go curPos pos size (cs@ColorSet{..}, _, _, wst, w)
+          | not (wst^.hover) && isWithinRect curPos pos size =
+              Just (cs, wc', True, wst', w)
+          | otherwise = Nothing
           where
-            focus = wtFocus wt
-            ColorSet{..} = wtColorSet wt
-        go wt = wt
+            wc' = colorSetHover `modColor` colorSetBasis
+            wst' = wst & hover .~ True
 
     work (MouseButtonEvent MouseButtonEventData{..}) =
       return $ gui & gEvents %~ (es ++)
@@ -60,24 +55,31 @@ procEvent gui = work
 
     work _ = return gui
 
-modifyAt :: Point V2 Int32 -> (WidgetTree -> WidgetTree) -> GUI -> GUI
-modifyAt aPos' f =
+type ModifiableWidgetState = (ColorSet, WidgetColor, Bool, WidgetState, Widget)
+
+modifyW :: (Point V2 CInt -> V2 CInt -> ModifiableWidgetState -> Maybe ModifiableWidgetState) -> GUI -> GUI
+modifyW f =
   over gWTrees (map (work (pure 0)))
   where
-    aPos = fromIntegral <$> aPos'
-    work gPos0 wt@Single{..}
-      | pWithin   = f wt
-      | otherwise = wt
+    work pos0 wt@Single{..} =
+      case f pos tiSize mws of
+        Nothing -> wt
+        Just (wtColorSet', wtColor', wtNeedsRender', wtWidgetState', wtWidget') ->
+          wt { wtColorSet = wtColorSet'
+             , wtColor = wtColor'
+             , wtNeedsRender = wtNeedsRender'
+             , wtWidgetState = wtWidgetState'
+             , wtWidget = wtWidget'
+             }
       where
-        pWithin = isWithinRect aPos (gPos0 + tiPos) tiSize
+        mws = (wtColorSet, wtColor, wtNeedsRender, wtWidgetState, wtWidget)
+        pos = pos0 + tiPos
         TextureInfo{..} = wtTexInfo
-    work gPos0 wt@Container{..} = wt {wtChildren = wt'}
+    work pos0 wt@Container{..} =
+      wt {wtChildren = map (work pos) wtChildren}
       where
-        pos = gPos0 + tiPos
+        pos = pos0 + tiPos
         TextureInfo{..} = wtTexInfo
-        wt' = if isWithinRect aPos pos tiSize
-                then map (work pos) wtChildren
-                else wtChildren
 
 findAt :: Point V2 Int32 -> GUI -> [(Widget, WTKey, Maybe String)]
 findAt aPos' gui =
