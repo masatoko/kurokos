@@ -18,6 +18,7 @@ import qualified SDL.Font            as Font
 import qualified SDL.Primitive       as Gfx
 
 import qualified Kurokos             as K
+import           Kurokos.GUI         (UExp (..))
 import qualified Kurokos.GUI         as GUI
 import           Kurokos.GUI.Event
 
@@ -104,12 +105,12 @@ titleScene =
               }
       let env = GUI.GuiEnv font wcol
       gui <- GUI.newGui env $ do
-        let size0 = V2 (GUI.UERPN "$width") (GUI.UEConst 40)
-            pos = V2 (GUI.UEConst 0) (GUI.UEConst 30)
+        let size0 = V2 (Rpn "$width") (C 40)
+            pos = V2 (C 0) (C 30)
         label <- GUI.genSingle (Just "title") pos size0 =<< GUI.newLabel "Kurokos デモ"
-        let size = V2 (GUI.UERPN "0.4 $width *") (GUI.UEConst 40)
-            pos1 = V2 (GUI.UERPN "0.3 $width *") (GUI.UERPN "0.2 $height *")
-            pos2 = V2 (GUI.UERPN "0.3 $width *") (GUI.UERPN "0.2 $height * 50 +")
+        let size = V2 (Rpn "0.4 $width *") (C 40)
+            pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
+            pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
         button1 <- GUI.genSingle nameMain pos1 size =<< GUI.newButton "Next: Main Scene"
         button2 <- GUI.genSingle nameMouse pos2 size =<< GUI.newButton "Push: Mouse Scene"
         GUI.prependRootWs [label, button1, button2]

@@ -34,12 +34,12 @@ data Exp
   | EConst CInt
 
 data UExp
-  = UERPN String -- RPN expression
-  | UEConst Int
+  = Rpn String -- RPN expression
+  | C Int -- Constant
 
 fromUExp :: UExp -> Either String Exp
-fromUExp (UERPN expr) = ERPN <$> RPN.parse expr
-fromUExp (UEConst v)  = return $ EConst $ fromIntegral v
+fromUExp (Rpn expr) = ERPN <$> RPN.parse expr
+fromUExp (C v)  = return $ EConst $ fromIntegral v
 
 fromUExpV2 :: V2 UExp -> Either String (V2 Exp)
 fromUExpV2 (V2 x y) = V2 <$> fromUExp x <*> fromUExp y
