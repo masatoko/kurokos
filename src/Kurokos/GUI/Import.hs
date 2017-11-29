@@ -5,6 +5,7 @@ module Kurokos.GUI.Import
   , MonadIO
   , liftIO
   , CInt
+  , Int32
   , V2 (..)
   , V4 (..)
   , when
@@ -21,6 +22,7 @@ import           Control.Exception.Safe     (MonadMask, MonadThrow)
 import           Control.Monad              (unless, when)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader.Class (asks)
+import           Data.Int                   (Int32)
 import           Foreign.C.Types            (CInt)
 import           Linear.V2
 import           Linear.V4

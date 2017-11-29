@@ -70,17 +70,16 @@ data GuiEnv = GuiEnv
   }
 
 data GUI = GUI
-  { _gKeyCnt :: Key
-  --
-  , _gWTrees :: [WidgetTree]
-  --
-  , _gEvents :: [GuiEvent]
+  { _gKeyCnt           :: Key
+  , _gWTrees           :: [WidgetTree]
+  , _gEvents           :: [GuiEvent]
+  , _gCursorTrajectory :: [Point V2 Int32]
   } deriving Show
 
 makeLenses ''GUI
 
 iniGui :: GUI
-iniGui = GUI 0 [] []
+iniGui = GUI 0 [] [] []
 
 getWidgetTrees :: GUI -> [WidgetTree]
 getWidgetTrees = view gWTrees

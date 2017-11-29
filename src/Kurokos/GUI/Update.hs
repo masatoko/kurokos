@@ -3,7 +3,7 @@ module Kurokos.GUI.Update where
 
 import           Control.Lens
 import           Control.Monad        (foldM)
-import           Control.Monad.Writer
+import           Control.Monad.State
 import           Data.Int             (Int32)
 import           Linear.V2
 
@@ -32,7 +32,11 @@ procEvent gui = work
         then return $ setAllNeedsRender gui
         else return gui
     work (MouseMotionEvent MouseMotionEventData{..}) =
-      return $ modifyAt mouseMotionEventPos go gui
+      return . flip execState gui $ do
+        if SDL.ButtonLeft `elem` mouseMotionEventState
+          then gCursorTrajectory %= (mouseMotionEventPos:)
+          else gCursorTrajectory .= []
+        modify $ modifyAt mouseMotionEventPos go
       where
         go wt@Single{} =
           wt { wtNeedsRender = True
