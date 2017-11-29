@@ -4,6 +4,7 @@ WIP
 
 ## 注意！
 Kurokosは開発中であり、APIは頻繁に変更されます!
+これをもとに実際のゲーム開発をしないでください。
 
 ## Dependencies
 
@@ -12,6 +13,7 @@ Kurokosは開発中であり、APIは頻繁に変更されます!
 ## Features
 - Frame management
 - Scene management
+- GUI (Graphical User Interface)
 
 # Install SDL2
 
@@ -51,4 +53,11 @@ sudo apt-get install libsdl2-image-dev
 sudo apt-get install libsdl2-ttf-dev
 sudo apt-get install libsdl2-mixer-dev
 sudo apt-get install libsdl2-gfx-dev
+```
+
+# Demo
+
+```sh
+stack build
+stack exec demo
 ```
