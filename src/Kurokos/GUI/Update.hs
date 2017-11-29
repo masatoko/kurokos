@@ -22,7 +22,8 @@ update g0 = do
   let g = g0 & gEvents .~ []
   foldM procEvent g es
 
-procEvent :: (RenderEnv m, HasEvent m, MonadIO m, MonadMask m) => GUI -> SDL.EventPayload -> m GUI
+procEvent :: (RenderEnv m, HasEvent m, MonadIO m, MonadMask m)
+  => GUI -> SDL.EventPayload -> m GUI
 procEvent gui = work
   where
     work (WindowResizedEvent WindowResizedEventData{..}) = do
@@ -30,16 +31,47 @@ procEvent gui = work
       if windowResizedEventWindow == win
         then return $ setAllNeedsRender gui
         else return gui
-    work (MouseButtonEvent MouseButtonEventData{..}) = do
-      let ws = findAt gui mouseButtonEventPos
-          et = SelectEvent mouseButtonEventMotion
-          es = map (\(w,k,mn) -> GuiEvent et w k mn) ws
+    work (MouseMotionEvent MouseMotionEventData{..}) =
+      return $ modifyAt mouseMotionEventPos go gui
+      where
+        go wt@Single{} =
+          wt { wtNeedsRender = True
+             , wtColor = colorSetHover `modColor` colorSetBasis
+             }
+          where
+            ColorSet{..} = wtColorSet wt
+        go wt = wt
+
+    work (MouseButtonEvent MouseButtonEventData{..}) =
       return $ gui & gEvents %~ (es ++)
+      where
+        ws = findAt mouseButtonEventPos gui
+        et = SelectEvent mouseButtonEventMotion
+        es = map (\(w,k,mn) -> GuiEvent et w k mn) ws
 
     work _ = return gui
 
-findAt :: GUI -> Point V2 Int32 -> [(Widget, WTKey, Maybe String)]
-findAt gui aPos' =
+modifyAt :: Point V2 Int32 -> (WidgetTree -> WidgetTree) -> GUI -> GUI
+modifyAt aPos' f =
+  over gWTrees (map (work (pure 0)))
+  where
+    aPos = fromIntegral <$> aPos'
+    work gPos0 wt@Single{..}
+      | pWithin   = f wt
+      | otherwise = wt
+      where
+        pWithin = isWithinRect aPos (gPos0 + tiPos) tiSize
+        TextureInfo{..} = wtTexInfo
+    work gPos0 wt@Container{..} = wt {wtChildren = wt'}
+      where
+        pos = gPos0 + tiPos
+        TextureInfo{..} = wtTexInfo
+        wt' = if isWithinRect aPos pos tiSize
+                then map (work pos) wtChildren
+                else wtChildren
+
+findAt :: Point V2 Int32 -> GUI -> [(Widget, WTKey, Maybe String)]
+findAt aPos' gui =
   concatMap (work (pure 0)) $ gui^.gWTrees
   where
     aPos = fromIntegral <$> aPos'

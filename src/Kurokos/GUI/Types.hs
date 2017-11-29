@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Kurokos.GUI.Types where
 
 import           Data.Int        (Int64)
@@ -31,12 +32,21 @@ data WidgetPart a = WP
   , wpFont :: a
   }
 
-newtype WidgetColor = WC (WidgetPart Color)
-newtype WidgetColorModifier = WCM (WidgetPart (Color -> Color))
+instance Functor WidgetPart where
+  fmap f WP{..} = WP (f wpBack) (f wpTint) (f wpFont)
+
+newtype WidgetColor = WC { unWC :: WidgetPart Color }
+newtype WidgetColorModifier = WCM { unWCM :: WidgetPart (Color -> Color) }
 data ColorSet = ColorSet
   { colorSetBasis :: WidgetColor
   , colorSetHover :: WidgetColorModifier
   }
+
+modColor :: WidgetColorModifier -> WidgetColor -> WidgetColor
+modColor (WCM m) (WC a) =
+  WC $ WP (work wpBack wpBack) (work wpTint wpTint) (work wpFont wpFont)
+  where
+    work f f' = f m (f' a)
 
 data Exp
   = ERPN RPN.Exp
