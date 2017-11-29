@@ -44,7 +44,7 @@ main = do
   where
     mkConf pBtn pAxis pHat =
       K.defaultConfig
-        { K.confWinTitle = "protpnic-app"
+        { K.confWinTitle = "kurokos"
         , K.confDebugPrintSystem = True
         , K.confDebugJoystick = K.DebugJoystick pBtn pAxis pHat
         }

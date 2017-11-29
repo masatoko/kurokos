@@ -58,6 +58,10 @@ sudo apt-get install libsdl2-gfx-dev
 
 # Demo
 
+1. 任意のフォントファイル`_data/system.ttf`を準備する。
+
+2. コンパイル
+
 ```sh
 stack build
 stack exec demo
