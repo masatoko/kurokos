@@ -25,11 +25,18 @@ type GuiSize = V2 CInt
 
 type Color = V4 Word8
 
-data WidgetColor = WidgetColor
-  { wcBack :: Color
-  , wcTint :: Color
-  , wcFont :: Color
-  } deriving Show
+data WidgetPart a = WP
+  { wpBack :: a
+  , wpTint :: a
+  , wpFont :: a
+  }
+
+newtype WidgetColor = WC (WidgetPart Color)
+newtype WidgetColorModifier = WCM (WidgetPart (Color -> Color))
+data ColorSet = ColorSet
+  { colorSetBasis :: WidgetColor
+  , colorSetHover :: WidgetColorModifier
+  }
 
 data Exp
   = ERPN RPN.Exp

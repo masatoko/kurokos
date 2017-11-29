@@ -9,7 +9,10 @@ module Kurokos.GUI
   , Direction (..)
   , UExp (..)
   , Color
+  , ColorSet (..)
+  , WidgetPart (..)
   , WidgetColor (..)
+  , WidgetColorModifier (..)
   -- Type
   , GuiEvent (..)
   , EventType (..)

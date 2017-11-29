@@ -33,24 +33,25 @@ data TextureInfo = TextureInfo
 
 data WidgetTree
   = Single
-      { wtKey     :: WTKey
-      , wtName    :: Maybe WidgetIdent
-      , wtColor   :: WidgetColor
+      { wtKey         :: WTKey
+      , wtName        :: Maybe WidgetIdent
       , wtNeedsRender :: Bool
-      , wtTexture :: SDL.Texture
-      , wtTexInfo :: TextureInfo
-      , wtUPos    :: V2 Exp
-      , wtUSize   :: V2 Exp
-      , wtWidget  :: Widget
+      , wtColorSet    :: ColorSet
+      , wtColor       :: WidgetColor
+      , wtTexture     :: SDL.Texture
+      , wtTexInfo     :: TextureInfo
+      , wtUPos        :: V2 Exp
+      , wtUSize       :: V2 Exp
+      , wtWidget      :: Widget
       }
   | Container
-      { wtKey      :: WTKey
+      { wtKey         :: WTKey
       , wtNeedsRender :: Bool
-      , wtTexture  :: SDL.Texture
-      , wtTexInfo  :: TextureInfo
-      , wtUPos     :: V2 Exp
-      , wtUSize    :: V2 Exp
-      , wtChildren :: [WidgetTree]
+      , wtTexture     :: SDL.Texture
+      , wtTexInfo     :: TextureInfo
+      , wtUPos        :: V2 Exp
+      , wtUSize       :: V2 Exp
+      , wtChildren    :: [WidgetTree]
       }
 
 instance Show WidgetTree where
@@ -64,8 +65,8 @@ instance Show WidgetTree where
 -- foldWT f a Container{..} = foldr f a wtChildren
 
 data GuiEnv = GuiEnv
-  { geFont               :: Font.Font
-  , geDefaultWidgetColor :: WidgetColor
+  { geFont            :: Font.Font
+  , geDefaultColorSet :: ColorSet
   }
 
 data GUI = GUI
@@ -114,11 +115,11 @@ genSingle mName pos size w = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  wc <- asks geDefaultWidgetColor
+  colset <- asks geDefaultColorSet
   let ti = TextureInfo (pure 0) (pure 1)
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  return $ Single key mName wc True tex ti pos' size' w
+  return $ Single key mName True colset (colorSetBasis colset) tex ti pos' size' w
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => V2 UExp -> V2 UExp -> [WidgetTree] -> GuiT m WidgetTree

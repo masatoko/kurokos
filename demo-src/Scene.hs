@@ -11,6 +11,7 @@ import           Data.Maybe          (mapMaybe)
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
 import qualified Data.Vector         as V
+import           Linear.V4
 import           Safe                (headMay)
 
 import qualified SDL
@@ -102,7 +103,7 @@ titleScene =
 
     alloc = do
       (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 16) K.freeFont
-      let env = GUI.GuiEnv font wcol
+      let env = GUI.GuiEnv font colset
       gui <- GUI.newGui env $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
@@ -124,12 +125,19 @@ titleScene =
       -- liftIO . print $ getWidgetTrees gui
       return $ Title gui 0
       where
+        colset = GUI.ColorSet wcol wcmod
+
         wcol =
-          GUI.WidgetColor
-            { GUI.wcBack = V4 255 255 255 255
-            , GUI.wcTint = V4 220 220 220 255
-            , GUI.wcFont = V4 54 20 171 255
+          GUI.WC $ GUI.WP
+            { GUI.wpBack = V4 255 255 255 255
+            , GUI.wpTint = V4 220 220 220 255
+            , GUI.wpFont = V4 54 20 171 255
             }
+
+        wcmod = GUI.WCM $ GUI.WP toHover toHover toHover
+          where
+            toHover :: GUI.Color -> GUI.Color
+            toHover = over _xyz (fmap (+ (-50)))
 
     update :: Update Title IO Action
     update _st _as t0 =

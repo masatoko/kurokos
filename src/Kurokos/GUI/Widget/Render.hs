@@ -12,29 +12,29 @@ import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
 
 renderWidget :: SDL.Renderer -> GuiSize -> WidgetColor -> Widget -> IO ()
-renderWidget r parentSize WidgetColor{..} Label{..} = do
+renderWidget r parentSize (WC WP{..}) Label{..} = do
   -- Prim.roundRectangle r (pure 0) ((+ (-1)) <$> parentSize) 3 (V4 0 0 255 100) -- test
   --
   (w,h) <- Font.size wFont wTitle
   let size = fromIntegral <$> V2 w h
   tex <- E.bracket
-    (Font.blended wFont wcFont wTitle)
+    (Font.blended wFont wpFont wTitle)
     SDL.freeSurface
     (SDL.createTextureFromSurface r)
   let pos = P $ (`div` 2) <$> parentSize - size
   SDL.copy r tex Nothing $ Just (Rectangle pos size)
 
-renderWidget r parentSize WidgetColor{..} Button{..} = do
+renderWidget r parentSize (WC WP{..}) Button{..} = do
   (w,h) <- Font.size wFont wTitle
   let size = fromIntegral <$> V2 w h
   tex <- E.bracket
-    (Font.blended wFont wcFont wTitle)
+    (Font.blended wFont wpFont wTitle)
     SDL.freeSurface
     (SDL.createTextureFromSurface r)
   --
   let size' = (+ (-1)) <$> parentSize
-  Prim.fillRoundRectangle r (pure 0) size' 3 wcBack
-  Prim.roundRectangle r (pure 0) size' 5 wcTint
+  Prim.fillRoundRectangle r (pure 0) size' 3 wpBack
+  Prim.roundRectangle r (pure 0) size' 5 wpTint
   --
   let pos = P $ (`div` 2) <$> parentSize - size
   SDL.copy r tex Nothing $ Just (Rectangle pos size)
