@@ -27,15 +27,17 @@ data WidgetColor = WidgetColor
   { wcBack :: Color
   , wcTint :: Color
   , wcFont :: Color
-  }
+  } deriving Show
 
 data Exp
   = ERPN RPN.Exp
   | EConst CInt
+  deriving Show
 
 data UExp
   = Rpn String -- RPN expression
   | C Int -- Constant
+  deriving Show
 
 fromUExp :: UExp -> Either String Exp
 fromUExp (Rpn expr) = ERPN <$> RPN.parse expr

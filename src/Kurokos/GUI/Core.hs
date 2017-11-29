@@ -13,6 +13,7 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import qualified Data.Map                  as M
 import           Data.Text                 (Text)
+import           Linear.V2
 
 import           SDL                       (($=))
 import qualified SDL
@@ -42,12 +43,12 @@ data WidgetTree
       , wtWidget  :: Widget
       }
   | Container
-      { wtKey        :: WTKey
-      , wtTexture    :: MVar SDL.Texture
-      , wtTexInfo    :: TextureInfo
-      , wtUPos       :: V2 Exp
-      , wtUSize      :: V2 Exp
-      , wtChildren   :: [WidgetTree]
+      { wtKey      :: WTKey
+      , wtTexture  :: MVar SDL.Texture
+      , wtTexInfo  :: TextureInfo
+      , wtUPos     :: V2 Exp
+      , wtUSize    :: V2 Exp
+      , wtChildren :: [WidgetTree]
       }
 
 instance Show WidgetTree where
@@ -66,7 +67,7 @@ data GuiEnv = GuiEnv
   }
 
 data GUI = GUI
-  { _gKeyCnt   :: Key
+  { _gKeyCnt :: Key
   --
   , _gWTrees :: [WidgetTree]
   --
@@ -162,13 +163,20 @@ updateTexture g = do
   return $ g&gWTrees .~ wts
   where
     makeTexture vmap upos usize mWidget = do
+      liftIO $ putStrLn "====="
       let vmap' = M.map fromIntegral vmap
+      liftIO $ do
+        print vmap
+        print vmap'
+        print upos
+        print usize
       pos <- case evalExp2 vmap' upos of
               Left err -> E.throw $ userError err
               Right v  -> return $ P v
       size <- case evalExp2 vmap' usize of
               Left err -> E.throw $ userError err
               Right v  -> return v
+      liftIO . print $ (pos, size, mWidget)
       tex <- case mWidget of
         Just (widget, wcol) -> createTexture' size wcol widget renderWidget
         Nothing             -> createDummyTexture size
@@ -184,13 +192,15 @@ updateTexture g = do
         else return wt
     go vmap wt@Container{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
-      wt' <- if pEmpty
+      (wt', vmap') <- if pEmpty
         then do
           (tex, ti) <- makeTexture vmap wtUPos wtUSize Nothing
           liftIO $ putMVar wtTexture tex
-          return $ wt {wtTexInfo = ti}
-        else return wt
-      ws <- mapM (go vmap) wtChildren
+          let (V2 w h) = fromIntegral <$> tiSize ti
+              vmap' = M.insert keyWidth w . M.insert keyHeight h $ vmap -- Update width and height
+          return (wt {wtTexInfo = ti}, vmap')
+        else return (wt, vmap)
+      ws <- mapM (go vmap') wtChildren
       return $ wt' {wtChildren = ws}
 
     evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)

@@ -105,15 +105,21 @@ titleScene =
               }
       let env = GUI.GuiEnv font wcol
       gui <- GUI.newGui env $ do
+        -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- GUI.genSingle (Just "title") pos size0 =<< GUI.newLabel "Kurokos デモ"
+        label <- GUI.genSingle Nothing pos size0 =<< GUI.newLabel "Kurokos デモ"
+        -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
         button1 <- GUI.genSingle nameMain pos1 size =<< GUI.newButton "Next: Main Scene"
         button2 <- GUI.genSingle nameMouse pos2 size =<< GUI.newButton "Push: Mouse Scene"
-        GUI.prependRootWs [label, button1, button2]
+        --
+        label' <- GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newButton "Label in Container"
+        ctn <- GUI.genContainer (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100)) [label']
+        --
+        GUI.prependRootWs [ctn, label, button1, button2]
       -- liftIO . print $ getWidgetTrees gui
       return $ Title gui
 

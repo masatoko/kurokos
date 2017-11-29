@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-unused-matches #-}
+{-# OPTIONS_GHC -fno-warn-unused-binds #-}
 module Kurokos.Metapad
   ( Input
   , Joystick
