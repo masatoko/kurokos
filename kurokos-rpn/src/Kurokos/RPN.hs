@@ -66,8 +66,8 @@ eval vmap ts = do
     go (V x:V y:ys) Plus  = return $ V (y + x) : ys
     go (V x:V y:ys) Sub   = return $ V (y - x) : ys
     go (V x:V y:ys) Div
-      | y == 0    = Left "divide by zero"
-      | otherwise = return $ V (x / y) : ys
+      | x == 0    = Left "divide by zero"
+      | otherwise = return $ V (y / x) : ys
     go (V x:V y:ys) Mul   = return $ V (y * x) : ys
     go (V x:ys)     Sin   = return $ V (sin x) : ys
     go (V x:ys)     Cos   = return $ V (cos x) : ys

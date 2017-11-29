@@ -12,9 +12,10 @@ main = do
   --
   forever $ do
     eExpr <- parse <$> getLine
+    putStrLn $ "Exp: " ++ show eExpr
     case eExpr of
       Left err   -> putStrLn err
-      Right expr -> print $ eval vmap expr
+      Right expr -> putStrLn $ "Eval: " ++ show (eval vmap expr)
   where
     vmap = M.fromList [("x", 10), ("y", 20)]
 
