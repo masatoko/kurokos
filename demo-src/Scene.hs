@@ -116,8 +116,8 @@ titleScene =
         button1 <- GUI.genSingle nameMain pos1 size =<< GUI.newButton "Next: Main Scene"
         button2 <- GUI.genSingle nameMouse pos2 size =<< GUI.newButton "Push: Mouse Scene"
         --
-        label' <- GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newButton "Label in Container"
-        ctn <- GUI.genContainer (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100)) [label']
+        btn' <- GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newButton "Button in Container"
+        ctn <- GUI.genContainer (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100)) [btn']
         --
         GUI.prependRootWs [ctn, label, button1, button2]
       -- liftIO . print $ getWidgetTrees gui
