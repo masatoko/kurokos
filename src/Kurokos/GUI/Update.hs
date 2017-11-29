@@ -30,7 +30,11 @@ procEvent gui = work
 
 -- findAt :: GUI -> Point V2 CInt -> [Widget]
 -- findAt gui (P pos) =
---   concatMap work $ gui^.gWTrees
+--   concatMap (work (pure 0)) $ gui^.gWTrees
 --   where
---     work wt =
---       wt
+--     work p0 wt = do
+--       let localPos = p0 + tiPos
+--       where
+--         TextureInfo{..} = wtTexInfo wt
+
+-- withinRect :: Point V2 CInt -> V2 CInt

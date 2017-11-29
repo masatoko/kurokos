@@ -14,7 +14,7 @@ data Direction
   | Vertical
   deriving Show
 
-type GuiPos = V2 CInt
+type GuiPos = SDL.Point V2 CInt
 type GuiSize = V2 CInt
 
 type Color = V4 Word8

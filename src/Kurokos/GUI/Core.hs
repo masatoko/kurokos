@@ -158,7 +158,7 @@ updateTexture g = do
       let vmap' = M.map fromIntegral vmap
       pos <- case evalExp2 vmap' upos of
               Left err -> E.throw $ userError err
-              Right v  -> return v
+              Right v  -> return $ P v
       size <- case evalExp2 vmap' usize of
               Left err -> E.throw $ userError err
               Right v  -> return v
@@ -215,7 +215,7 @@ render = mapM_ (go (pure 0)) . view gWTrees
       unless pEmpty $ do
         let TextureInfo{..} = wtTexInfo
         tex <- liftIO $ readMVar wtTexture
-        let pos' = P $ pos0 + tiPos
+        let pos' = pos0 + tiPos
         renderTexture tex $ Rectangle pos' tiSize
     go pos0 Container{..} = do
       pEmpty <- liftIO $ isEmptyMVar wtTexture
