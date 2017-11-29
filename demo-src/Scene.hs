@@ -118,7 +118,7 @@ titleScene =
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
         lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
-        btn' <- GUI.genSingle Nothing (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "Button in Container"
+        btn' <- GUI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "Button in Container"
         ctn <- GUI.genContainer (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100)) [lbl', btn']
         --
         GUI.prependRootWs [ctn, label, button1, button2]
@@ -129,11 +129,11 @@ titleScene =
     update st _as (Title gui) = do
       gui' <- GUI.update gui
       let es = GUI.getGuiEvents gui'
-      unless (null es) $
-        liftIO . print $ es
-      return $ Title $ execState (mapM_ go es) gui'
+      -- unless (null es) $ liftIO . print $ es
+          gui'' = execState (mapM_ go es) gui'
+      Title <$> GUI.readyRender gui''
       where
-        go (GuiEvent SelectEvent{..} _wt _key (Just "label")) =
+        go (GuiEvent SelectEvent{..} _wt _key (Just "button")) =
           when (seInputMotion == SDL.Released) $
             modify' $ GUI.updateW "label" (GUI.setTitle (T.pack $ show $ K.frameCount st))
         go _ = return ()

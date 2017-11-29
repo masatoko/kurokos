@@ -28,9 +28,7 @@ procEvent gui = work
     work (WindowResizedEvent WindowResizedEventData{..}) = do
       win <- getWindow
       if windowResizedEventWindow == win
-        then do
-          resetTexture gui
-          updateTexture gui
+        then return $ setAllNeedsRender gui
         else return gui
     work (MouseButtonEvent MouseButtonEventData{..}) = do
       let ws = findAt gui mouseButtonEventPos
@@ -71,6 +69,6 @@ updateW :: WidgetIdent -> (Widget -> Widget) -> GUI -> GUI
 updateW wid f = over gWTrees (map work)
   where
     work wt@Single{..}
-      | wtName == Just wid = wt {wtWidget = f wtWidget}
+      | wtName == Just wid = wt {wtNeedsRender = True, wtWidget = f wtWidget}
       | otherwise          = wt
     work wt@Container{..} = wt {wtChildren = map work wtChildren}

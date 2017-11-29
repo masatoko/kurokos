@@ -36,7 +36,8 @@ data WidgetTree
       { wtKey     :: WTKey
       , wtName    :: Maybe WidgetIdent
       , wtColor   :: WidgetColor
-      , wtTexture :: MVar SDL.Texture
+      , wtNeedsRender :: Bool
+      , wtTexture :: SDL.Texture
       , wtTexInfo :: TextureInfo
       , wtUPos    :: V2 Exp
       , wtUSize   :: V2 Exp
@@ -44,7 +45,8 @@ data WidgetTree
       }
   | Container
       { wtKey      :: WTKey
-      , wtTexture  :: MVar SDL.Texture
+      , wtNeedsRender :: Bool
+      , wtTexture  :: SDL.Texture
       , wtTexInfo  :: TextureInfo
       , wtUPos     :: V2 Exp
       , wtUSize    :: V2 Exp
@@ -99,14 +101,13 @@ newGui :: (RenderEnv m, MonadIO m, MonadMask m, MonadThrow m)
   => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
   gui <- runGuiT env iniGui initializer
-  updateTexture gui
+  readyRender gui
 
-genSingle :: (MonadIO m, E.MonadThrow m)
+genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m WidgetTree
 genSingle mName pos size w = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
-  mTex <- liftIO newEmptyMVar
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err
             Right v  -> return v
@@ -114,23 +115,26 @@ genSingle mName pos size w = do
             Left err -> E.throw $ userError err
             Right v  -> return v
   wc <- asks geDefaultWidgetColor
-  let ti = TextureInfo (pure 0) (pure 0)
-  return $ Single key mName wc mTex ti pos' size' w
+  let ti = TextureInfo (pure 0) (pure 1)
+  tex <- lift $ withRenderer $ \r ->
+    SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
+  return $ Single key mName wc True tex ti pos' size' w
 
-genContainer :: (MonadIO m, E.MonadThrow m)
+genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => V2 UExp -> V2 UExp -> [WidgetTree] -> GuiT m WidgetTree
 genContainer pos size ws = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
-  mTex <- liftIO newEmptyMVar
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err
             Right v  -> return v
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  let ti = TextureInfo (pure 0) (pure 0)
-  return $ Container key mTex ti pos' size' ws
+  let ti = TextureInfo (pure 0) (pure 1)
+  tex <- lift $ withRenderer $ \r ->
+    SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
+  return $ Container key True tex ti pos' size' ws
 
 prependRoot :: Monad m => WidgetTree -> GuiT m ()
 prependRoot w = modify $ over gWTrees (w:)
@@ -140,19 +144,14 @@ prependRootWs ws = modify $ over gWTrees (ws ++)
 
 -- Rendering GUI
 
-resetTexture :: MonadIO m => GUI -> m ()
-resetTexture = liftIO . mapM_ go . view gWTrees
+setAllNeedsRender :: GUI -> GUI
+setAllNeedsRender = over gWTrees (map go)
   where
-    go Single{..} = do
-      p <- isEmptyMVar wtTexture
-      unless p $ void $ takeMVar wtTexture
-    go Container{..} = do
-      p <- isEmptyMVar wtTexture
-      unless p $ void $ takeMVar wtTexture
-      mapM_ go wtChildren
+    go wt@Single{..}    = wt {wtNeedsRender = False}
+    go wt@Container{..} = wt {wtChildren = map go wtChildren}
 
-updateTexture :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m GUI
-updateTexture g = do
+readyRender :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m GUI
+readyRender g = do
   V2 w h <- getWindowSize
   let vmap = M.fromList
         [ (keyWidth, w)
@@ -176,31 +175,29 @@ updateTexture g = do
       size <- case evalExp2 vmap' usize of
               Left err -> E.throw $ userError err
               Right v  -> return v
-      liftIO . print $ (pos, size, mWidget)
+      liftIO . print $ (pos, size, fst <$> mWidget)
       tex <- case mWidget of
         Just (widget, wcol) -> createTexture' size wcol widget renderWidget
         Nothing             -> createDummyTexture size
       return (tex, TextureInfo pos size)
 
-    go vmap wt@Single{..} = do
-      pEmpty <- liftIO $ isEmptyMVar wtTexture
-      if pEmpty
+    go vmap wt@Single{..} =
+      if wtNeedsRender
         then do
+          SDL.destroyTexture wtTexture
           (tex, ti) <- makeTexture vmap wtUPos wtUSize (Just (wtWidget, wtColor))
-          liftIO $ putMVar wtTexture tex
-          return $ wt {wtTexInfo = ti}
+          return $ wt {wtNeedsRender = False, wtTexture = tex, wtTexInfo = ti}
         else return wt
-    go vmap wt@Container{..} = do
-      pEmpty <- liftIO $ isEmptyMVar wtTexture
-      (wt', vmap') <- if pEmpty
-        then do
-          (tex, ti) <- makeTexture vmap wtUPos wtUSize Nothing
-          liftIO $ putMVar wtTexture tex
-          let (V2 w h) = fromIntegral <$> tiSize ti
-              vmap' = M.insert keyWidth w . M.insert keyHeight h $ vmap -- Update width and height
-          return (wt {wtTexInfo = ti}, vmap')
-        else return (wt, vmap)
-      ws <- mapM (go vmap') wtChildren
+    go vmap wt@Container{} = do
+      wt' <- if wtNeedsRender wt
+              then do
+                SDL.destroyTexture $ wtTexture wt
+                (tex, ti) <- makeTexture vmap (wtUPos wt) (wtUSize wt) Nothing
+                return $ wt {wtNeedsRender = False, wtTexture = tex, wtTexInfo = ti}
+              else return wt
+      let (V2 w h) = fromIntegral <$> (tiSize . wtTexInfo $ wt')
+          vmap' = M.insert keyWidth w . M.insert keyHeight h $ vmap -- Update width and height
+      ws <- mapM (go vmap') (wtChildren wt')
       return $ wt' {wtChildren = ws}
 
     evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)
@@ -227,17 +224,17 @@ updateTexture g = do
 render :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 render = mapM_ (go (pure 0)) . view gWTrees
   where
-    go pos0 Single{..} = do
-      pEmpty <- liftIO $ isEmptyMVar wtTexture
-      unless pEmpty $ do
-        let TextureInfo{..} = wtTexInfo
-        tex <- liftIO $ readMVar wtTexture
+    go pos0 Single{..}
+      | wtNeedsRender = E.throw $ userError "Call GUI.readyRender before GUI.render!"
+      | otherwise = do
         let pos' = pos0 + tiPos
-        renderTexture tex $ Rectangle pos' tiSize
-    go pos0 Container{..} = do
-      pEmpty <- liftIO $ isEmptyMVar wtTexture
-      unless pEmpty $ do
-        let TextureInfo{..} = wtTexInfo
-        -- tex <- liftIO $ readMVar wtTexture
+        renderTexture wtTexture $ Rectangle pos' tiSize
+        where
+          TextureInfo{..} = wtTexInfo
+    go pos0 Container{..}
+      | wtNeedsRender = E.throw $ userError "Call GUI.readyRender before GUI.render!"
+      | otherwise = do
         let pos' = pos0 + tiPos
         mapM_ (go pos') wtChildren
+        where
+          TextureInfo{..} = wtTexInfo

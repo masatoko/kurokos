@@ -20,9 +20,12 @@ module Kurokos.GUI
   , genContainer
   , prependRoot
   , prependRootWs
-  --
+  -- Update
   , update
+  , readyRender
+  -- Widget
   , updateW
+  -- Rendering
   , render
   ) where
 
