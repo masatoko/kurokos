@@ -1,10 +1,13 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.GUI.Update where
 
+import Control.Lens
 import           Control.Monad      (foldM)
+import Linear.V2
 
 import           Kurokos.GUI.Core
 import           Kurokos.GUI.Import
+import           Kurokos.GUI.Widget
 
 import qualified SDL
 import           SDL.Event
@@ -22,19 +25,33 @@ procEvent gui = work
           resetTexture gui
           updateTexture gui
         else return gui
-    -- work (MouseButtonEvent MouseButtonEventData{..}) = do
-    --   let ws = findAt gui mouseButtonEventPos
-    --   return gui
+    work (MouseButtonEvent MouseButtonEventData{..}) = do
+      let ws = findAt gui (fromIntegral <$> mouseButtonEventPos)
+      unless (null ws) $ liftIO . print $ ws
+      return gui
 
     work _ = return gui
 
--- findAt :: GUI -> Point V2 CInt -> [Widget]
--- findAt gui (P pos) =
---   concatMap (work (pure 0)) $ gui^.gWTrees
---   where
---     work p0 wt = do
---       let localPos = p0 + tiPos
---       where
---         TextureInfo{..} = wtTexInfo wt
+findAt :: GUI -> Point V2 CInt -> [Widget]
+findAt gui aPos =
+  concatMap (work (pure 0)) $ gui^.gWTrees
+  where
+    work gPos0 Single{..} =
+      [wtWidget | isWithinRect aPos (gPos0 + tiPos) tiSize]
+      where
+        TextureInfo{..} = wtTexInfo
+    work gPos0 Container{..} =
+      if isWithinRect aPos pos tiSize
+        then concatMap (work pos) wtChildren
+        else []
+      where
+        pos = gPos0 + tiPos
+        TextureInfo{..} = wtTexInfo
 
--- withinRect :: Point V2 CInt -> V2 CInt
+isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
+isWithinRect p p1 size =
+  p1^._x <= px && px <= p2^._x && p1^._y <= py && py <= p2^._y
+  where
+    px = p^._x
+    py = p^._y
+    p2 = p1 + P size

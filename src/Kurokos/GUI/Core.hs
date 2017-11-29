@@ -60,6 +60,10 @@ instance Show WidgetTree where
   show Container{..} = show key ++ show wtChildren
     where (ContainerKey key) = containerKey
 
+foldWT :: (WidgetTree -> a -> a) -> a -> WidgetTree -> a
+foldWT f a s@Single{}    = f s a
+foldWT f a Container{..} = foldr f a wtChildren
+
 data GuiEnv = GuiEnv
   { geFont :: Font.Font
   , geDefaultWidgetColor :: WidgetColor

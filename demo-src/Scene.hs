@@ -131,7 +131,7 @@ titleScene =
 
     transit _ as _
       | Enter `elem` as = K.next mainScene
-      | Go    `elem` as = K.push mouseScene
+      -- | Go    `elem` as = K.push mouseScene
       | Exit  `elem` as = K.end
       | otherwise       = K.continue
 
