@@ -128,16 +128,16 @@ titleScene =
         colset = GUI.ColorSet wcol wcmod
 
         wcol =
-          GUI.WC $ GUI.WP
+          GUI.WC GUI.WP
             { GUI.wpBack = V4 255 255 255 255
             , GUI.wpTint = V4 220 220 220 255
             , GUI.wpFont = V4 54 20 171 255
             }
 
-        wcmod = GUI.WCM $ GUI.WP toHover toHover toHover
+        wcmod = GUI.WCM $ GUI.WP toHover toHover id
           where
             toHover :: GUI.Color -> GUI.Color
-            toHover = over _xyz (fmap (+ (-50)))
+            toHover = over _xyz (fmap (+ (-10)))
 
     update :: Update Title IO Action
     update _st _as t0 =

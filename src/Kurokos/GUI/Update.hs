@@ -39,11 +39,11 @@ procEvent gui = work
         modify $ modifyW (go (fromIntegral <$> mouseMotionEventPos))
       where
         go curPos pos size (cs@ColorSet{..}, _, _, wst, w)
-          | not (wst^.hover) && isWithinRect curPos pos size =
+          | hoverable w && not (wst^.hover) && isWithinRect curPos pos size =
             let wc' = colorSetHover `modColor` colorSetBasis
                 wst' = wst & hover .~ True
             in Just (cs, wc', True, wst', w)
-          | wst^.hover && not (isWithinRect curPos pos size) =
+          | hoverable w && wst^.hover && not (isWithinRect curPos pos size) =
             let wst' = wst & hover .~ False
             in Just (cs, colorSetBasis, True, wst', w)
           | otherwise = Nothing

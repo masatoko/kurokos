@@ -19,3 +19,10 @@ data Widget
 instance Show Widget where
   show Label{..} = "<L:" ++ T.unpack wTitle ++ ">"
   show Button{..} = "<B:" ++ T.unpack wTitle ++ ">"
+
+class Hoverable a where
+  hoverable :: a -> Bool
+
+instance Hoverable Widget where
+  hoverable Label{} = False
+  hoverable Button{} = True
