@@ -10,8 +10,12 @@ module Kurokos.GUI
   , UExp (..)
   , Color
   , WidgetColor (..)
+  -- Type
+  , GuiEvent (..)
+  , EventType (..)
   --
   , newGui
+  , getGuiEvents
   , genSingle
   , genContainer
   , prependRoot
@@ -26,4 +30,5 @@ import           Kurokos.GUI.Update
 
 import           Kurokos.GUI.Def
 import           Kurokos.GUI.Types
+import           Kurokos.GUI.Event
 import           Kurokos.GUI.Widget.Make as Import

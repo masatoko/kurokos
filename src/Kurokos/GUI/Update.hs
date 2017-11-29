@@ -1,11 +1,14 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.GUI.Update where
 
-import Control.Lens
-import           Control.Monad      (foldM)
-import Linear.V2
+import           Control.Lens
+import           Control.Monad        (foldM)
+import           Control.Monad.Writer
+import           Data.Int             (Int32)
+import           Linear.V2
 
 import           Kurokos.GUI.Core
+import           Kurokos.GUI.Event
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Widget
 
@@ -13,7 +16,10 @@ import qualified SDL
 import           SDL.Event
 
 update :: (RenderEnv m, HasEvent m, MonadIO m, MonadMask m) => GUI -> m GUI
-update gui = foldM procEvent gui =<< getEvents
+update g0 = do
+  es <- getEvents
+  let g = g0 & gEvents .~ []
+  foldM procEvent g es
 
 procEvent :: (RenderEnv m, HasEvent m, MonadIO m, MonadMask m) => GUI -> SDL.EventPayload -> m GUI
 procEvent gui = work
@@ -26,16 +32,18 @@ procEvent gui = work
           updateTexture gui
         else return gui
     work (MouseButtonEvent MouseButtonEventData{..}) = do
-      let ws = findAt gui (fromIntegral <$> mouseButtonEventPos)
-      unless (null ws) $ liftIO . print $ ws
-      return gui
+      let ws = findAt gui mouseButtonEventPos
+          et = SelectEvent mouseButtonEventMotion
+          es = map (GuiEvent et) ws
+      return $ gui & gEvents %~ (es ++)
 
     work _ = return gui
 
-findAt :: GUI -> Point V2 CInt -> [Widget]
-findAt gui aPos =
+findAt :: GUI -> Point V2 Int32 -> [Widget]
+findAt gui aPos' =
   concatMap (work (pure 0)) $ gui^.gWTrees
   where
+    aPos = fromIntegral <$> aPos'
     work gPos0 Single{..} =
       [wtWidget | isWithinRect aPos (gPos0 + tiPos) tiSize]
       where

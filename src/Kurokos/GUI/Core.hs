@@ -19,6 +19,7 @@ import           SDL                       (($=))
 import qualified SDL
 import qualified SDL.Font                  as Font
 
+import           Kurokos.GUI.Event         (GuiEvent)
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
@@ -31,8 +32,8 @@ newtype SingleKey = SingleKey Key deriving Show
 newtype ContainerKey = ContainerKey Key deriving Show
 
 data TextureInfo = TextureInfo
-  { tiPos     :: GuiPos
-  , tiSize    :: GuiSize
+  { tiPos  :: GuiPos
+  , tiSize :: GuiSize
   }
 
 data WidgetTree
@@ -65,21 +66,29 @@ foldWT f a s@Single{}    = f s a
 foldWT f a Container{..} = foldr f a wtChildren
 
 data GuiEnv = GuiEnv
-  { geFont :: Font.Font
+  { geFont               :: Font.Font
   , geDefaultWidgetColor :: WidgetColor
   }
 
 data GUI = GUI
-  { _gSCnt  :: Key
-  , _gCCnt  :: Key
+  { _gSCnt   :: Key
+  , _gCCnt   :: Key
   --
   , _gWTrees :: [WidgetTree]
+  --
+  , _gEvents :: [GuiEvent]
   } deriving Show
 
 makeLenses ''GUI
 
+iniGui :: GUI
+iniGui = GUI 0 0 [] []
+
 getWidgetTrees :: GUI -> [WidgetTree]
-getWidgetTrees g = g^.gWTrees
+getWidgetTrees = view gWTrees
+
+getGuiEvents :: GUI -> [GuiEvent]
+getGuiEvents = view gEvents
 
 newtype GuiT m a = GuiT {
     runGT :: ReaderT GuiEnv (StateT GUI m) a
@@ -94,7 +103,7 @@ instance MonadTrans GuiT where
 newGui :: (RenderEnv m, MonadIO m, MonadMask m, MonadThrow m)
   => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
-  gui <- runGuiT env (GUI 0 0 []) initializer
+  gui <- runGuiT env iniGui initializer
   updateTexture gui
 
 genSingle :: (MonadIO m, E.MonadThrow m)
@@ -168,7 +177,7 @@ updateTexture g = do
               Right v  -> return v
       tex <- case mWidget of
         Just (widget, wcol) -> createTexture' size wcol widget renderWidget
-        Nothing -> createDummyTexture size
+        Nothing             -> createDummyTexture size
       return (tex, TextureInfo pos size)
 
     go vmap wt@Single{..} = do

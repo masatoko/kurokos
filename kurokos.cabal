@@ -20,6 +20,7 @@ library
   other-modules:       Kurokos.Core
                      , Kurokos.GUI.Def
                      , Kurokos.GUI.Types
+                     , Kurokos.GUI.Event
                      , Kurokos.GUI.Core
                      , Kurokos.GUI.Update
                      , Kurokos.GUI.Import

@@ -107,9 +107,12 @@ titleScene =
       return $ Title gui
 
     update :: Update Title IO Action
-    update _ _as t@(Title gui) = do
-      GUI.update gui
-      return t
+    update _ _as (Title gui) = do
+      gui' <- GUI.update gui
+      let es = GUI.getGuiEvents gui'
+      unless (null es) $
+        liftIO . print $ es
+      return $ Title gui'
 
     render :: Render Title IO
     render _ (Title gui) = do
