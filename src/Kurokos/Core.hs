@@ -24,7 +24,7 @@ module Kurokos.Core
   , Scene (..)
   , SceneState (..)
   , Transit
-  , Transition
+  , Transition (..)
   , Update
   --
   , continue, end, next, push

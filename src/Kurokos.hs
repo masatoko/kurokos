@@ -14,7 +14,7 @@ module Kurokos
   , printsys
   , Scene (..)
   , SceneState (..)
-  , Transition
+  , Transition (..)
   , continue, end, next, push
   --
   , getEnv

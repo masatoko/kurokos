@@ -10,6 +10,7 @@ import           Linear.V2
 import           Kurokos.GUI.Core
 import           Kurokos.GUI.Event
 import           Kurokos.GUI.Import
+import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
 
 import qualified SDL
@@ -34,18 +35,18 @@ procEvent gui = work
     work (MouseButtonEvent MouseButtonEventData{..}) = do
       let ws = findAt gui mouseButtonEventPos
           et = SelectEvent mouseButtonEventMotion
-          es = map (GuiEvent et) ws
+          es = map (\(w,k,mn) -> GuiEvent et w k mn) ws
       return $ gui & gEvents %~ (es ++)
 
     work _ = return gui
 
-findAt :: GUI -> Point V2 Int32 -> [Widget]
+findAt :: GUI -> Point V2 Int32 -> [(Widget, WTKey, Maybe String)]
 findAt gui aPos' =
   concatMap (work (pure 0)) $ gui^.gWTrees
   where
     aPos = fromIntegral <$> aPos'
     work gPos0 Single{..} =
-      [wtWidget | isWithinRect aPos (gPos0 + tiPos) tiSize]
+      [(wtWidget, wtKey, wtName) | isWithinRect aPos (gPos0 + tiPos) tiSize]
       where
         TextureInfo{..} = wtTexInfo
     work gPos0 Container{..} =

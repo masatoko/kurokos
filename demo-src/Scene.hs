@@ -6,9 +6,11 @@ module Scene where
 
 import           Control.Lens
 import           Control.Monad.State
+import           Data.Maybe          (mapMaybe)
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
 import qualified Data.Vector         as V
+import           Safe                (headMay)
 
 import qualified SDL
 import qualified SDL.Font            as Font
@@ -16,6 +18,7 @@ import qualified SDL.Primitive       as Gfx
 
 import qualified Kurokos             as K
 import qualified Kurokos.GUI         as GUI
+import           Kurokos.GUI.Event
 
 import           Import
 
@@ -100,8 +103,8 @@ titleScene =
         let size = V2 (GUI.UERPN "0.2 $width *") (GUI.UERPN "40")
             pos1 = V2 (GUI.UERPN "0.4 $width *") (GUI.UERPN "0.2 $height *")
             pos2 = V2 (GUI.UERPN "0.4 $width *") (GUI.UERPN "0.2 $height * 50 +")
-        label <- GUI.genSingle pos1 size =<< GUI.newLabel "label"
-        button <- GUI.genSingle pos2 size =<< GUI.newButton "button"
+        label <- GUI.genSingle (Just "go-main") pos1 size =<< GUI.newLabel "Main"
+        button <- GUI.genSingle (Just "go-mouse") pos2 size =<< GUI.newButton "Mouse"
         GUI.prependRootWs [label, button]
       -- liftIO . print $ getWidgetTrees gui
       return $ Title gui
@@ -132,11 +135,21 @@ titleScene =
       where
         color = V4 50 50 50 255
 
-    transit _ as _
-      | Enter `elem` as = K.next mainScene
-      -- | Go    `elem` as = K.push mouseScene
+    transit _ as (Title gui)
       | Exit  `elem` as = K.end
-      | otherwise       = K.continue
+      | otherwise       = do
+        let es = GUI.getGuiEvents gui
+        return $ headMay $ mapMaybe go es
+      where
+        go (GuiEvent SelectEvent{..} _wt _key mName) =
+          if seInputMotion == SDL.Released
+            then
+              case mName of
+                Just "go-main"  -> Just $ K.Next mainScene
+                Just "go-mouse" -> Just $ K.Push mouseScene
+                _ -> Nothing
+            else Nothing
+        go _ = Nothing
 
 mainScene :: Scene MyData IO Action
 mainScene = Scene defPad update render transit allocGame

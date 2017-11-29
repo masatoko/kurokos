@@ -11,7 +11,6 @@ import qualified Control.Exception.Safe    as E
 import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
-import           Data.Int                  (Int64)
 import qualified Data.Map                  as M
 import           Data.Text                 (Text)
 
@@ -26,11 +25,6 @@ import           Kurokos.GUI.Widget
 import           Kurokos.GUI.Widget.Render
 import qualified Kurokos.RPN               as RPN
 
-type Key = Int64
-
-newtype SingleKey = SingleKey Key deriving Show
-newtype ContainerKey = ContainerKey Key deriving Show
-
 data TextureInfo = TextureInfo
   { tiPos  :: GuiPos
   , tiSize :: GuiSize
@@ -38,7 +32,8 @@ data TextureInfo = TextureInfo
 
 data WidgetTree
   = Single
-      { singleKey :: SingleKey
+      { wtKey     :: WTKey
+      , wtName    :: Maybe String
       , wtColor   :: WidgetColor
       , wtTexture :: MVar SDL.Texture
       , wtTexInfo :: TextureInfo
@@ -47,7 +42,7 @@ data WidgetTree
       , wtWidget  :: Widget
       }
   | Container
-      { containerKey :: ContainerKey
+      { wtKey        :: WTKey
       , wtTexture    :: MVar SDL.Texture
       , wtTexInfo    :: TextureInfo
       , wtUPos       :: V2 Exp
@@ -57,13 +52,13 @@ data WidgetTree
 
 instance Show WidgetTree where
   show Single{..} = show key ++ show wtWidget
-    where (SingleKey key) = singleKey
+    where (WTKey key) = wtKey
   show Container{..} = show key ++ show wtChildren
-    where (ContainerKey key) = containerKey
+    where (WTKey key) = wtKey
 
-foldWT :: (WidgetTree -> a -> a) -> a -> WidgetTree -> a
-foldWT f a s@Single{}    = f s a
-foldWT f a Container{..} = foldr f a wtChildren
+-- foldWT :: (WidgetTree -> a -> a) -> a -> WidgetTree -> a
+-- foldWT f a s@Single{}    = f s a
+-- foldWT f a Container{..} = foldr f a wtChildren
 
 data GuiEnv = GuiEnv
   { geFont               :: Font.Font
@@ -71,8 +66,7 @@ data GuiEnv = GuiEnv
   }
 
 data GUI = GUI
-  { _gSCnt   :: Key
-  , _gCCnt   :: Key
+  { _gKeyCnt   :: Key
   --
   , _gWTrees :: [WidgetTree]
   --
@@ -82,7 +76,7 @@ data GUI = GUI
 makeLenses ''GUI
 
 iniGui :: GUI
-iniGui = GUI 0 0 [] []
+iniGui = GUI 0 [] []
 
 getWidgetTrees :: GUI -> [WidgetTree]
 getWidgetTrees = view gWTrees
@@ -107,10 +101,10 @@ newGui env initializer = do
   updateTexture gui
 
 genSingle :: (MonadIO m, E.MonadThrow m)
-  => V2 UExp -> V2 UExp -> Widget -> GuiT m WidgetTree
-genSingle pos size w = do
-  key <- SingleKey <$> use gSCnt
-  gSCnt += 1
+  => Maybe String -> V2 UExp -> V2 UExp -> Widget -> GuiT m WidgetTree
+genSingle mName pos size w = do
+  key <- WTKey <$> use gKeyCnt
+  gKeyCnt += 1
   mTex <- liftIO newEmptyMVar
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err
@@ -120,13 +114,13 @@ genSingle pos size w = do
             Right v  -> return v
   wc <- asks geDefaultWidgetColor
   let ti = TextureInfo (pure 0) (pure 0)
-  return $ Single key wc mTex ti pos' size' w
+  return $ Single key mName wc mTex ti pos' size' w
 
 genContainer :: (MonadIO m, E.MonadThrow m)
   => V2 UExp -> V2 UExp -> [WidgetTree] -> GuiT m WidgetTree
 genContainer pos size ws = do
-  key <- ContainerKey <$> use gCCnt
-  gCCnt += 1
+  key <- WTKey <$> use gKeyCnt
+  gKeyCnt += 1
   mTex <- liftIO newEmptyMVar
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err

@@ -1,5 +1,6 @@
 module Kurokos.GUI.Types where
 
+import           Data.Int        (Int64)
 import           Data.Word       (Word8)
 import           Foreign.C.Types (CInt)
 import           Linear.V2
@@ -8,6 +9,9 @@ import           Linear.V4
 import qualified SDL
 
 import qualified Kurokos.RPN     as RPN
+
+type Key = Int64
+newtype WTKey = WTKey Key deriving Show
 
 data Direction
   = Horizontal

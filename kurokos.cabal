@@ -17,10 +17,10 @@ library
   hs-source-dirs:      src
   exposed-modules:     Kurokos
                      , Kurokos.GUI
+                     , Kurokos.GUI.Event
   other-modules:       Kurokos.Core
                      , Kurokos.GUI.Def
                      , Kurokos.GUI.Types
-                     , Kurokos.GUI.Event
                      , Kurokos.GUI.Core
                      , Kurokos.GUI.Update
                      , Kurokos.GUI.Import
@@ -82,6 +82,7 @@ executable demo
                      , bytestring
                      , resourcet
                      , managed
+                     , safe
   default-language:    Haskell2010
 
 test-suite kurokos-test
