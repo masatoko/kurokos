@@ -148,12 +148,14 @@ titleScene =
 
     update :: Update Title IO Action
     update _st _as t0 =
-      readyGui . updateTitle =<< updateGui t0
+      readyGui =<< updateTitle =<< updateGui t0
       where
         updateGui t = t & tGui %%~ GUI.update
         readyGui t  = t & tGui %%~ GUI.readyRender
 
-        updateTitle t = execState (mapM_ go es) t
+        updateTitle t = do
+          mapM_ (liftIO . print) es
+          return $ execState (mapM_ go es) t
           where
             es = GUI.getGuiEvents $ t^.tGui
 
