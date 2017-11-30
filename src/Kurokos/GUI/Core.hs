@@ -31,7 +31,7 @@ data TextureInfo = TextureInfo
   , tiSize :: GuiSize
   }
 
-data WidgetTree
+data WidgetTree a
   = Single
       { wtKey         :: WTKey
       , wtName        :: Maybe WidgetIdent
@@ -43,7 +43,7 @@ data WidgetTree
       , wtTexInfo     :: TextureInfo
       , wtUPos        :: V2 Exp
       , wtUSize       :: V2 Exp
-      , wtWidget      :: Widget
+      , wtWidget      :: a
       }
   | Container
       { wtKey         :: WTKey
@@ -52,10 +52,10 @@ data WidgetTree
       , wtTexInfo     :: TextureInfo
       , wtUPos        :: V2 Exp
       , wtUSize       :: V2 Exp
-      , wtChildren    :: [WidgetTree]
+      , wtChildren    :: [WidgetTree a]
       }
 
-instance Show WidgetTree where
+instance Show a => Show (WidgetTree a) where
   show Single{..} = show key ++ show wtWidget
     where (WTKey key) = wtKey
   show Container{..} = show key ++ show wtChildren
@@ -72,7 +72,7 @@ data GuiEnv = GuiEnv
 
 data GUI = GUI
   { _gKeyCnt         :: Key
-  , _gWTrees         :: [WidgetTree]
+  , _gWTrees         :: [WidgetTree Widget]
   , _gEvents         :: [GuiEvent]
   , _gDragTrajectory :: [Point V2 Int32]
   } deriving Show
@@ -82,7 +82,7 @@ makeLenses ''GUI
 iniGui :: GUI
 iniGui = GUI 0 [] [] []
 
-getWidgetTrees :: GUI -> [WidgetTree]
+getWidgetTrees :: GUI -> [WidgetTree Widget]
 getWidgetTrees = view gWTrees
 
 getGuiEvents :: GUI -> [GuiEvent]
@@ -105,7 +105,7 @@ newGui env initializer = do
   readyRender gui
 
 genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
-  => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m WidgetTree
+  => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m (WidgetTree Widget)
 genSingle mName pos size w = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
@@ -122,7 +122,7 @@ genSingle mName pos size w = do
   return $ Single key mName True iniWidgetState colset (colorSetBasis colset) tex ti pos' size' w
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
-  => V2 UExp -> V2 UExp -> [WidgetTree] -> GuiT m WidgetTree
+  => V2 UExp -> V2 UExp -> [WidgetTree Widget] -> GuiT m (WidgetTree Widget)
 genContainer pos size ws = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
@@ -137,10 +137,10 @@ genContainer pos size ws = do
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   return $ Container key True tex ti pos' size' ws
 
-prependRoot :: Monad m => WidgetTree -> GuiT m ()
+prependRoot :: Monad m => WidgetTree Widget -> GuiT m ()
 prependRoot w = modify $ over gWTrees (w:)
 
-prependRootWs :: Monad m => [WidgetTree] -> GuiT m ()
+prependRootWs :: Monad m => [WidgetTree Widget] -> GuiT m ()
 prependRootWs ws = modify $ over gWTrees (ws ++)
 
 -- Rendering GUI
