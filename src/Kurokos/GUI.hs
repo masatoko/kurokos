@@ -21,8 +21,13 @@ module Kurokos.GUI
   , getGuiEvents
   , genSingle
   , genContainer
-  , prependRoot
-  , prependRootWs
+  , modifyRoot
+  -- WidgetTree
+  , append
+  , prepend
+  , appendC
+  , prependC
+  , appendChild
   -- Update
   , update
   , readyRender
@@ -36,7 +41,8 @@ import           Kurokos.GUI.Core
 import           Kurokos.GUI.Update
 
 import           Kurokos.GUI.Def
-import           Kurokos.GUI.Types
 import           Kurokos.GUI.Event
-import           Kurokos.GUI.Widget.Make as Import
+import           Kurokos.GUI.Types
+import           Kurokos.GUI.Widget.Make   as Import
 import           Kurokos.GUI.Widget.Module as Import
+import           Kurokos.GUI.WidgetTree

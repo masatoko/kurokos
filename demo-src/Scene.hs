@@ -120,9 +120,11 @@ titleScene =
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
         lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
         btn' <- GUI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "Button in Container"
-        ctn <- GUI.genContainer (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100)) [lbl', btn']
+        ctn <- GUI.genContainer (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
+        let Just ctn' = GUI.appendChild (mconcat [lbl', btn']) ctn
         --
-        GUI.prependRootWs [ctn, label, button1, button2]
+        GUI.modifyRoot $ \wt -> mconcat [wt, ctn', label, button1, button2]
+        -- GUI.prependRootWs [ctn, label, button1, button2]
       -- liftIO . print $ getWidgetTrees gui
       return $ Title gui 0
       where

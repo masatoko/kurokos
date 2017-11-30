@@ -3,6 +3,7 @@ module Kurokos.GUI.Widget.Render where
 
 import qualified Control.Exception  as E
 
+import           SDL                (($=))
 import qualified SDL
 import qualified SDL.Font           as Font
 import qualified SDL.Primitive      as Prim
@@ -12,6 +13,10 @@ import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
 
 renderWidget :: SDL.Renderer -> GuiSize -> WidgetColor -> Widget -> IO ()
+renderWidget r _parentSize (WC WP{..}) Fill = do
+  SDL.rendererDrawColor r $= V4 0 255 0 255
+  SDL.clear r
+
 renderWidget r parentSize (WC WP{..}) Label{..} = do
   -- Prim.roundRectangle r (pure 0) ((+ (-1)) <$> parentSize) 3 (V4 0 0 255 100) -- test
   --

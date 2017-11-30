@@ -6,6 +6,9 @@ import           Kurokos.GUI.Core
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Widget
 
+newFill :: Monad m => GuiT m Widget
+newFill = return Fill
+
 newLabel :: Monad m => Text -> GuiT m Widget
 newLabel title = do
   font <- asks geFont

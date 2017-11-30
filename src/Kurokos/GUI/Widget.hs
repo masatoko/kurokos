@@ -7,7 +7,8 @@ import qualified Data.Text as T
 import           SDL.Font  (Font)
 
 data Widget
-  = Label
+  = Fill
+  | Label
     { wTitle :: Text
     , wFont  :: Font
     }
@@ -17,12 +18,14 @@ data Widget
     }
 
 instance Show Widget where
-  show Label{..} = "<L:" ++ T.unpack wTitle ++ ">"
+  show Fill       = "<F>"
+  show Label{..}  = "<L:" ++ T.unpack wTitle ++ ">"
   show Button{..} = "<B:" ++ T.unpack wTitle ++ ">"
 
 class Hoverable a where
   hoverable :: a -> Bool
 
 instance Hoverable Widget where
-  hoverable Label{} = False
+  hoverable Fill     = False
+  hoverable Label{}  = False
   hoverable Button{} = True
