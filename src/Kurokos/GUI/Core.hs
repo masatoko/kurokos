@@ -143,6 +143,9 @@ genContainer pos size = do
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
 appendRoot wt = modify $ over gWTree (wt <>)
 
+prependRoot :: Monad m => GuiWidgetTree -> GuiT m ()
+prependRoot wt = modify $ over gWTree (<> wt)
+
 -- Rendering GUI
 
 setAllNeedsRender :: GUI -> GUI

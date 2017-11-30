@@ -22,6 +22,7 @@ module Kurokos.GUI
   , genSingle
   , genContainer
   , appendRoot
+  , prependRoot
   -- WidgetTree
   , append
   , prepend
