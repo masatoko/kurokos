@@ -22,7 +22,8 @@ module Kurokos.GUI
   , newGui
   , getWidgetTree
   , getGuiEvents
-  , genSingle
+  -- , genSingle
+  , genCtxS
   , genContainer
   , appendRoot
   , prependRoot
@@ -35,6 +36,7 @@ module Kurokos.GUI
   , prependChild
   , wtappend
   , wtconcat
+  , wtFromList
   -- Update
   , update
   , readyRender

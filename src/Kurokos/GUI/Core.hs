@@ -177,9 +177,9 @@ newGui env initializer = do
   gui <- runGuiT env iniGui initializer
   readyRender gui
 
-genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
-  => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
-genSingle mName pos size w = do
+genCtxS :: (RenderEnv m, MonadIO m, E.MonadThrow m)
+  => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> GuiT m WContext
+genCtxS mName pos size = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -192,8 +192,7 @@ genSingle mName pos size w = do
   let ti = TextureInfo (pure 0) (pure 1)
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  let ctx = WContext key mName Nothing True iniWidgetState colset (colorSetBasis colset) tex ti pos' size'
-  return $ Single Null (ctx,w) Null
+  return $ WContext key mName Nothing True iniWidgetState colset (colorSetBasis colset) tex ti pos' size'
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => ContainerType -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree

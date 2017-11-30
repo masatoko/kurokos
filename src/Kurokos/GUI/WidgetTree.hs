@@ -70,6 +70,13 @@ wtappend Null a                 = a
 wtappend wt (Single u a o)      = Single (wt `wtappend` u) a o
 wtappend wt (Container u a c o) = Container (wt `wtappend` u) a c o
 
+wtFromList :: [a] -> WidgetTree a
+wtFromList [] = Null
+wtFromList as = Single (wtFromList us) a (wtFromList os)
+  where
+    k = length as `div` 2
+    (us, a:os) = splitAt k as
+
 wtconcat :: Foldable f => f (WidgetTree a) -> WidgetTree a
 wtconcat = foldl1 wtappend
 
