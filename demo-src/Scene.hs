@@ -161,7 +161,7 @@ titleScene =
                 setTitle = GUI.setTitle title
             modify' $
               over tGui $
-                GUI.updateW "label" setTitle
+                GUI.updateByIdent "label" setTitle
         go _ = return ()
 
     render :: Render Title IO

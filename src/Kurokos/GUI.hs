@@ -33,7 +33,7 @@ module Kurokos.GUI
   , update
   , readyRender
   -- Widget
-  , updateW
+  , updateByIdent
   -- Rendering
   , render
   ) where

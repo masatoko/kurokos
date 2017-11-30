@@ -98,8 +98,8 @@ isWithinRect p p1 size =
 
 
 -- update Widget by ident with function
-updateW :: WidgetIdent -> (Widget -> Widget) -> GUI -> GUI
-updateW wid f = over gWTree (fmap work)
+updateByIdent :: WidgetIdent -> (Widget -> Widget) -> GUI -> GUI
+updateByIdent wid f = over gWTree (fmap work)
   where
     work a@(ctx, w)
       | pIdent    = (ctx', f w)
