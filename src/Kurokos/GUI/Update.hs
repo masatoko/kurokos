@@ -38,17 +38,26 @@ procEvent gui = work
         if SDL.ButtonLeft `elem` mouseMotionEventState
           then gDragTrajectory %= (mouseMotionEventPos:)
           else gDragTrajectory .= []
-      --   modify $ modifyW (go (fromIntegral <$> mouseMotionEventPos))
-      -- where
-      --   go curPos pos size (cs@ColorSet{..}, _, _, wst, w)
-      --     | hoverable w && not (wst^.hover) && isWithinRect curPos pos size =
-      --       let wc' = colorSetHover `modColor` colorSetBasis
-      --           wst' = wst & hover .~ True
-      --       in Just (cs, wc', True, wst', w)
-      --     | hoverable w && wst^.hover && not (isWithinRect curPos pos size) =
-      --       let wst' = wst & hover .~ False
-      --       in Just (cs, colorSetBasis, True, wst', w)
-      --     | otherwise = Nothing
+        modify $ over gWTree $ mapWTPos (go (fromIntegral <$> mouseMotionEventPos)) (pure 0)
+      where
+        go curPos pos0 a@(ctx,w)
+          | hoverable w && not (wst^.hover) && isWithinRect curPos pos size =
+            let ctx' = ctx & ctxWidgetState . hover .~ True
+                           & ctxNeedsRender .~ True
+                           & ctxColor .~ (colorSetHover `modColor` colorSetBasis)
+            in (ctx',w)
+          | hoverable w && wst^.hover && not (isWithinRect curPos pos size) =
+            let ctx' = ctx & ctxWidgetState . hover .~ False
+                           & ctxNeedsRender .~ True
+                           & ctxColor .~ colorSetBasis
+            in (ctx',w)
+          | otherwise = a
+          where
+            wst = ctx^.ctxWidgetState
+            ti = ctx^.ctxTextureInfo
+            pos = pos0 + (ti^.tiPos)
+            size = ti^.tiSize
+            ColorSet{..} = ctx^.ctxColorSet
 
     work (MouseButtonEvent MouseButtonEventData{..}) =
       return $ gui & gEvents %~ (es ++)
@@ -65,30 +74,6 @@ procEvent gui = work
     work _ = return gui
 
 type ModifiableWidgetState = (ColorSet, WidgetColor, Bool, WidgetState, Widget)
-
--- modifyW :: (Point V2 CInt -> V2 CInt -> ModifiableWidgetState -> Maybe ModifiableWidgetState) -> GUI -> GUI
--- modifyW f =
---   over gWTrees (map (work (pure 0)))
---   where
---     work pos0 wt@Single{..} =
---       case f pos tiSize mws of
---         Nothing -> wt
---         Just (wtColorSet', wtColor', wtNeedsRender', wtWidgetState', wtWidget') ->
---           wt { wtColorSet = wtColorSet'
---              , wtColor = wtColor'
---              , wtNeedsRender = wtNeedsRender'
---              , wtWidgetState = wtWidgetState'
---              , wtWidget = wtWidget'
---              }
---       where
---         mws = (wtColorSet, wtColor, wtNeedsRender, wtWidgetState, wtWidget)
---         pos = pos0 + tiPos
---         TextureInfo{..} = wtTexInfo
---     work pos0 wt@Container{..} =
---       wt {wtChildren = map (work pos) wtChildren}
---       where
---         pos = pos0 + tiPos
---         TextureInfo{..} = wtTexInfo
 
 filterAt :: Point V2 Int32 -> GuiWidgetTree -> [(WContext, Widget)]
 filterAt aPos' = catMaybes . WT.toList . mapWTPos work (pure 0)
