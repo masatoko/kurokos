@@ -6,6 +6,7 @@ data WidgetTree a
   = Null
   | Single (WidgetTree a) a (WidgetTree a)
   | Container (WidgetTree a) a (WidgetTree a) (WidgetTree a)
+  deriving Show
 
 size :: WidgetTree a -> Int
 size Null = 0

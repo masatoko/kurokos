@@ -124,7 +124,7 @@ titleScene =
         let Just ctn' = GUI.appendChild (mconcat [lbl', btn']) ctn
         --
         GUI.appendRoot $ mconcat [ctn', label, button1, button2]
-      -- liftIO . print $ getWidgetTrees gui
+      liftIO . print $ GUI.getWidgetTree gui
       return $ Title gui 0
       where
         colset = GUI.ColorSet wcol wcmod

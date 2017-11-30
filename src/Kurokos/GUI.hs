@@ -18,6 +18,7 @@ module Kurokos.GUI
   , EventType (..)
   --
   , newGui
+  , getWidgetTree
   , getGuiEvents
   , genSingle
   , genContainer

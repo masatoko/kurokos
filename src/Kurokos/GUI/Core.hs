@@ -80,8 +80,8 @@ makeLenses ''GUI
 iniGui :: GUI
 iniGui = GUI 0 Null [] []
 
-getWidgetTrees :: GUI -> WidgetTree Widget
-getWidgetTrees = fmap snd . view gWTree
+getWidgetTree :: GUI -> WidgetTree Widget
+getWidgetTree = fmap snd . view gWTree
 
 getGuiEvents :: GUI -> [GuiEvent]
 getGuiEvents = view gEvents
