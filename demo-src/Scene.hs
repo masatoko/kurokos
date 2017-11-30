@@ -132,8 +132,7 @@ titleScene =
         ctn2 <- GUI.genContainer GUI.VerticalStack (V2 (Rpn "$width 50 -") (C 0)) (V2 (C 50) (C 300))
         let Just ctn2' = GUI.appendChild (mconcat bs) ctn2
         --
-        GUI.appendRoot $ mconcat [label, button1, button2, img, ctn1', ctn2']
-        -- GUI.appendRoot $ mconcat [label, button1, button2, img]
+        GUI.prependRoot $ mconcat [label, button1, button2, img, ctn1', ctn2']
       liftIO . putStrLn . GUI.pretty $ GUI.getWidgetTree gui
       liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
       return $ Title gui 0

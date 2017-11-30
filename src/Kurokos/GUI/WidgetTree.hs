@@ -34,7 +34,7 @@ pretty = unlines . work 0
       work n u ++ [indent ++ "+ " ++ show a] ++ work n o
       where
         indent = replicate (2 * n) ' '
-    work n (Container u a c o) =
+    work n (Container u _a c o) =
       work n u ++ [indent ++ "@ | Container"] ++ work (n+1) c ++ work n o
       where
         indent = replicate (2 * n) ' '
@@ -83,6 +83,10 @@ instance Monoid (WidgetTree a) where
 appendChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
 appendChild wt (Container u a c o) = Just $ Container u a (wt <> c) o
 appendChild _ _ = Nothing
+
+prependChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
+prependChild (Container u a c o) wt = Just $ Container u a (c <> wt) o
+prependChild _ _ = Nothing
 
 toList :: WidgetTree a -> [a]
 toList Null                = []

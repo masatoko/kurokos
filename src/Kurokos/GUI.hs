@@ -32,6 +32,7 @@ module Kurokos.GUI
   , appendC
   , prependC
   , appendChild
+  , prependChild
   -- Update
   , update
   , readyRender
