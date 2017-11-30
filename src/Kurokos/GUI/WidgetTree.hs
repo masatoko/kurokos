@@ -8,6 +8,19 @@ data WidgetTree a
   | Container (WidgetTree a) a (WidgetTree a) (WidgetTree a)
   deriving Show
 
+showTree :: Show a => WidgetTree a -> String
+showTree = unlines . work 0
+  where
+    work _ Null = []
+    work n (Single u a o) =
+      work n u ++ [indent ++ "+ " ++ show a] ++ work n o
+      where
+        indent = replicate (2*n) ' '
+    work n (Container u a c o) =
+      work n u ++ [indent ++ "@ | Container"] ++ work (n+1) c ++ work n o
+      where
+        indent = replicate (2*n) ' '
+
 size :: WidgetTree a -> Int
 size Null = 0
 size (Single u _ o) = size u + 1 + size o
