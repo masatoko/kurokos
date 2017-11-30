@@ -1,6 +1,6 @@
 module Kurokos.GUI.WidgetTree where
 
-import           Data.Monoid               ((<>))
+import           Data.Monoid ((<>))
 
 data WidgetTree a
   = Null
@@ -40,28 +40,28 @@ pretty = unlines . work 0
         indent = replicate (2 * n) ' '
 
 size :: WidgetTree a -> Int
-size Null = 0
-size (Single u _ o) = size u + 1 + size o
+size Null                = 0
+size (Single u _ o)      = size u + 1 + size o
 size (Container u _ c o) = size u + 1 + size c + size o
 
 prepend :: a -> WidgetTree a -> WidgetTree a
-prepend k Null = Single Null k Null
-prepend k (Single u a o) = Single (prepend k u) a o
+prepend k Null                = Single Null k Null
+prepend k (Single u a o)      = Single (prepend k u) a o
 prepend k (Container u a c o) = Container (prepend k u) a c o
 
 append :: WidgetTree a -> a -> WidgetTree a
-append Null k = Single Null k Null
-append (Single u a o) k = Single u a (append o k)
+append Null k                = Single Null k Null
+append (Single u a o) k      = Single u a (append o k)
 append (Container u a c o) k = Container u a c (append o k)
 
 prependC :: a -> WidgetTree a -> WidgetTree a
-prependC k Null = Container Null k Null Null
-prependC k (Single u a o) = Single (prependC k u) a o
+prependC k Null                = Container Null k Null Null
+prependC k (Single u a o)      = Single (prependC k u) a o
 prependC k (Container u a c o) = Container (prependC k u) a c o
 
 appendC :: WidgetTree a -> a -> WidgetTree a
-appendC Null k = Container Null k Null Null
-appendC (Single u a o) k = Single u a (appendC o k)
+appendC Null k                = Container Null k Null Null
+appendC (Single u a o) k      = Single u a (appendC o k)
 appendC (Container u a c o) k = Container u a c (appendC o k)
 
 instance Monoid (WidgetTree a) where
@@ -70,23 +70,23 @@ instance Monoid (WidgetTree a) where
     | size wt1 < size wt2 = wt1 `mappendL` wt2
     | otherwise           = wt1 `mappendR` wt2
     where
-      mappendL a Null = a
-      mappendL Null a = a
+      mappendL a Null                 = a
+      mappendL Null a                 = a
       mappendL wt (Single u a o)      = Single u a (wt `mappend` o)
       mappendL wt (Container u a c o) = Container u a c (wt `mappend` o)
 
-      mappendR a Null = a
-      mappendR Null a = a
+      mappendR a Null                 = a
+      mappendR Null a                 = a
       mappendR wt (Single u a o)      = Single (wt `mappend` u) a o
       mappendR wt (Container u a c o) = Container (wt `mappend` u) a c o
 
 appendChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
 appendChild wt (Container u a c o) = Just $ Container u a (wt <> c) o
-appendChild _ _ = Nothing
+appendChild _ _                    = Nothing
 
 prependChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
 prependChild (Container u a c o) wt = Just $ Container u a (c <> wt) o
-prependChild _ _ = Nothing
+prependChild _ _                    = Nothing
 
 toList :: WidgetTree a -> [a]
 toList Null                = []
