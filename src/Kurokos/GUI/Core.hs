@@ -135,7 +135,7 @@ genContainer pos size = do
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let ctx = WContext key Nothing True iniWidgetState colset (colorSetBasis colset) tex ti pos' size'
-      w = Fill
+      w = Transparent
   return $ Container Null (ctx,w) Null Null
   where
     ti = TextureInfo (pure 0) (pure 1)

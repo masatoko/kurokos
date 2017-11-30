@@ -7,7 +7,7 @@ import           Kurokos.GUI.Import
 import           Kurokos.GUI.Widget
 
 newFill :: Monad m => GuiT m Widget
-newFill = return Fill
+newFill = return Transparent
 
 newLabel :: Monad m => Text -> GuiT m Widget
 newLabel title = do
