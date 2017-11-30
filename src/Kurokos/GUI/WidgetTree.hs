@@ -80,3 +80,8 @@ instance Foldable WidgetTree where
   foldMap _ Null                = mempty
   foldMap f (Single u a o)      = foldMap f u <> f a <> foldMap f o
   foldMap f (Container u a c o) = foldMap f u <> f a <> foldMap f c <> foldMap f o
+
+instance Traversable WidgetTree where
+  traverse _ Null = pure Null
+  traverse f (Single u a o) = Single <$> traverse f u <*> f a <*> traverse f o
+  traverse f (Container u a c o) = Container <$> traverse f u <*> f a <*> traverse f c <*> traverse f o
