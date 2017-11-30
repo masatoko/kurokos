@@ -135,6 +135,7 @@ titleScene =
         GUI.appendRoot $ mconcat [label, button1, button2, img, ctn1', ctn2']
         -- GUI.appendRoot $ mconcat [label, button1, button2, img]
       liftIO . putStrLn . GUI.pretty $ GUI.getWidgetTree gui
+      liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
       return $ Title gui 0
       where
         colset = GUI.ColorSet wcol wcmod

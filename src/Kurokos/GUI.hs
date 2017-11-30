@@ -18,6 +18,7 @@ module Kurokos.GUI
   , EventType (..)
   --
   , pretty
+  , showTree
   , newGui
   , getWidgetTree
   , getGuiEvents
