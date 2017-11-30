@@ -12,6 +12,7 @@ import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
 import qualified Data.Map                  as M
+import           Data.Monoid               ((<>))
 import           Data.Text                 (Text)
 import           Linear.V2
 
@@ -24,7 +25,8 @@ import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
 import           Kurokos.GUI.Widget.Render
-import           Kurokos.GUI.WidgetTree
+import           Kurokos.GUI.WidgetTree    (WidgetTree (..))
+import qualified Kurokos.GUI.WidgetTree    as WT
 import qualified Kurokos.RPN               as RPN
 
 data TextureInfo = TextureInfo
@@ -51,8 +53,8 @@ makeLenses ''WContext
 
 type GuiWidgetTree = WidgetTree (WContext, Widget)
 
-mapPos :: (GuiPos -> (WContext, Widget) -> a) -> GuiPos -> GuiWidgetTree -> WidgetTree a
-mapPos f = work
+mapWTPos :: (GuiPos -> (WContext, Widget) -> a) -> GuiPos -> GuiWidgetTree -> WidgetTree a
+mapWTPos f = work
   where
     work _   Null                = Null
     work pos (Single u a o)      = Single (work pos u) (f pos a) (work pos o)
@@ -138,8 +140,8 @@ genContainer pos size = do
   where
     ti = TextureInfo (pure 0) (pure 1)
 
-modifyRoot :: Monad m => (GuiWidgetTree -> GuiWidgetTree) -> GuiT m ()
-modifyRoot f = modify $ over gWTree f
+appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
+appendRoot wt = modify $ over gWTree (wt <>)
 
 -- Rendering GUI
 
@@ -179,7 +181,7 @@ readyRender g = do
         wcol = ctx^.ctxColor
 
     go _ Null = return Null
-    go vmap wt0@(Single u a o) = do
+    go vmap (Single u a o) = do
       u' <- go vmap u
       o' <- go vmap o
       if ctx^.ctxNeedsRender

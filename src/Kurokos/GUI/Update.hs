@@ -91,7 +91,7 @@ type ModifiableWidgetState = (ColorSet, WidgetColor, Bool, WidgetState, Widget)
 --         TextureInfo{..} = wtTexInfo
 
 filterAt :: Point V2 Int32 -> GuiWidgetTree -> [(WContext, Widget)]
-filterAt aPos' = catMaybes . WT.toList . mapPos work (pure 0)
+filterAt aPos' = catMaybes . WT.toList . mapWTPos work (pure 0)
   where
     aPos = fromIntegral <$> aPos'
 
