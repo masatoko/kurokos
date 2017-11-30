@@ -105,6 +105,7 @@ titleScene =
     alloc = do
       (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 16) K.freeFont
       let env = GUI.GuiEnv font colset
+      (_, tex) <- K.allocTexture "_data/img.png"
       gui <- GUI.newGui env $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
@@ -116,6 +117,10 @@ titleScene =
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
         button1 <- GUI.genSingle nameMain pos1 size =<< GUI.newButton "Next: Main Scene"
         button2 <- GUI.genSingle nameMouse pos2 size =<< GUI.newButton "Push: Mouse Scene"
+        -- Image
+        let imgSize = V2 (C 48) (C 48)
+            imgPos = V2 (C 10) (Rpn "$height 58 -")
+        img <- GUI.genSingle (Just "image") imgPos imgSize =<< GUI.newImageView tex
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
         lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
@@ -123,7 +128,7 @@ titleScene =
         ctn <- GUI.genContainer (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
         let Just ctn' = GUI.appendChild (mconcat [lbl', btn']) ctn
         --
-        GUI.appendRoot $ mconcat [ctn', label, button1, button2]
+        GUI.appendRoot $ mconcat [ctn', label, button1, button2, img]
       liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
       return $ Title gui 0
       where
