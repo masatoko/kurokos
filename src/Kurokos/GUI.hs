@@ -33,6 +33,8 @@ module Kurokos.GUI
   , prependC
   , appendChild
   , prependChild
+  , wtappend
+  , wtconcat
   -- Update
   , update
   , readyRender

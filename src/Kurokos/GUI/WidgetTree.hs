@@ -64,28 +64,21 @@ appendC Null k                = Container Null k Null Null
 appendC (Single u a o) k      = Single u a (appendC o k)
 appendC (Container u a c o) k = Container u a c (appendC o k)
 
-instance Monoid (WidgetTree a) where
-  mempty = Null
-  mappend wt1 wt2
-    | size wt1 < size wt2 = wt1 `mappendL` wt2
-    | otherwise           = wt1 `mappendR` wt2
-    where
-      mappendL a Null                 = a
-      mappendL Null a                 = a
-      mappendL wt (Single u a o)      = Single u a (wt `mappend` o)
-      mappendL wt (Container u a c o) = Container u a c (wt `mappend` o)
+wtappend :: WidgetTree a -> WidgetTree a -> WidgetTree a
+wtappend a Null                 = a
+wtappend Null a                 = a
+wtappend wt (Single u a o)      = Single (wt `wtappend` u) a o
+wtappend wt (Container u a c o) = Container (wt `wtappend` u) a c o
 
-      mappendR a Null                 = a
-      mappendR Null a                 = a
-      mappendR wt (Single u a o)      = Single (wt `mappend` u) a o
-      mappendR wt (Container u a c o) = Container (wt `mappend` u) a c o
+wtconcat :: Foldable f => f (WidgetTree a) -> WidgetTree a
+wtconcat = foldl1 wtappend
 
 appendChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
-appendChild wt (Container u a c o) = Just $ Container u a (wt <> c) o
+appendChild wt (Container u a c o) = Just $ Container u a (wt `wtappend` c) o
 appendChild _ _                    = Nothing
 
 prependChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
-prependChild (Container u a c o) wt = Just $ Container u a (c <> wt) o
+prependChild (Container u a c o) wt = Just $ Container u a (c `wtappend` wt) o
 prependChild _ _                    = Nothing
 
 toList :: WidgetTree a -> [a]

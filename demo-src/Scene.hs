@@ -126,13 +126,13 @@ titleScene =
         lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
         btn' <- GUI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "Button in Container"
         ctn1 <- GUI.genContainer GUI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
-        let Just ctn1' = GUI.appendChild (mconcat [lbl', btn']) ctn1
+        let Just ctn1' = GUI.appendChild (GUI.wtconcat [lbl', btn']) ctn1
         --
         bs <- mapM (GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30))) =<< mapM (GUI.newButton . T.pack . show) [(0::Int)..10]
         ctn2 <- GUI.genContainer GUI.VerticalStack (V2 (Rpn "$width 50 -") (C 0)) (V2 (C 50) (C 300))
-        let Just ctn2' = GUI.appendChild (mconcat bs) ctn2
+        let Just ctn2' = GUI.appendChild (GUI.wtconcat bs) ctn2
         --
-        GUI.prependRoot $ mconcat [label, button1, button2, img, ctn1', ctn2']
+        GUI.prependRoot $ GUI.wtconcat [label, button1, button2, img, ctn1', ctn2']
       liftIO . putStrLn . GUI.pretty $ GUI.getWidgetTree gui
       liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
       return $ Title gui 0

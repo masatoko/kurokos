@@ -13,7 +13,6 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import qualified Data.Map                  as M
 import           Data.Maybe                (fromMaybe)
-import           Data.Monoid               ((<>))
 import           Data.Text                 (Text)
 import           Linear.V2
 
@@ -26,7 +25,7 @@ import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
 import           Kurokos.GUI.Widget.Render
-import           Kurokos.GUI.WidgetTree    (WidgetTree (..))
+import           Kurokos.GUI.WidgetTree    (WidgetTree (..), wtappend)
 import qualified Kurokos.GUI.WidgetTree    as WT
 import qualified Kurokos.RPN               as RPN
 
@@ -217,10 +216,10 @@ genContainer ct pos size = do
     ti = TextureInfo (pure 0) (pure 1)
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
-appendRoot wt = modify $ over gWTree (wt <>)
+appendRoot wt = modify $ over gWTree (wt `wtappend`)
 
 prependRoot :: Monad m => GuiWidgetTree -> GuiT m ()
-prependRoot wt = modify $ over gWTree (<> wt)
+prependRoot wt = modify $ over gWTree (`wtappend` wt)
 
 -- Rendering GUI
 
