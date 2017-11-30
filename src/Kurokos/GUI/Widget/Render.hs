@@ -27,7 +27,7 @@ renderWidget r parentSize (WC WP{..}) Label{..} = do
   let pos = P $ (`div` 2) <$> parentSize - size
   SDL.copy r tex Nothing $ Just (Rectangle pos size)
 
-renderWidget r parentSize (WC WP{..}) ImageView{..} =
+renderWidget r _parentSize (WC WP{..}) ImageView{..} =
   SDL.copy r wImage Nothing Nothing
 
 renderWidget r parentSize (WC WP{..}) Button{..} = do

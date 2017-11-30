@@ -125,10 +125,15 @@ titleScene =
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
         lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
         btn' <- GUI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "Button in Container"
-        ctn <- GUI.genContainer (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
-        let Just ctn' = GUI.appendChild (mconcat [lbl', btn']) ctn
+        ctn1 <- GUI.genContainer GUI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
+        let Just ctn1' = GUI.appendChild (mconcat [lbl', btn']) ctn1
         --
-        GUI.appendRoot $ mconcat [ctn', label, button1, button2, img]
+        bs <- mapM (GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30))) =<< mapM (GUI.newButton . T.pack . show) [(0::Int)..10]
+        ctn2 <- GUI.genContainer GUI.VerticalStack (V2 (Rpn "$width 50 -") (C 0)) (V2 (C 50) (C 300))
+        let Just ctn2' = GUI.appendChild (mconcat bs) ctn2
+        --
+        GUI.appendRoot $ mconcat [label, button1, button2, img, ctn1', ctn2']
+        -- GUI.appendRoot $ mconcat [label, button1, button2, img]
       liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
       return $ Title gui 0
       where

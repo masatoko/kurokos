@@ -18,10 +18,10 @@ newtype WTKey = WTKey Key deriving Show
 
 type WidgetIdent = String
 
-data Direction
-  = Horizontal
-  | Vertical
-  deriving Show
+data ContainerType
+  = Unordered
+  | HorizontalStack
+  | VerticalStack
 
 data WidgetState = WS
   { _hover :: Bool

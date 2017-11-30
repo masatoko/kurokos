@@ -12,6 +12,7 @@ import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
 import qualified Data.Map                  as M
+import           Data.Maybe                (fromMaybe)
 import           Data.Monoid               ((<>))
 import           Data.Text                 (Text)
 import           Linear.V2
@@ -37,16 +38,17 @@ data TextureInfo = TextureInfo
 makeLenses ''TextureInfo
 
 data WContext = WContext
-  { _ctxKey         :: WTKey
-  , _ctxIdent       :: Maybe WidgetIdent
-  , _ctxNeedsRender :: Bool
-  , _ctxWidgetState :: WidgetState
-  , _ctxColorSet    :: ColorSet
-  , _ctxColor       :: WidgetColor
-  , _ctxTexture     :: SDL.Texture
-  , _ctxTextureInfo :: TextureInfo
-  , _ctxUPos        :: V2 Exp
-  , _ctxUSize       :: V2 Exp
+  { _ctxKey           :: WTKey
+  , _ctxIdent         :: Maybe WidgetIdent
+  , _ctxContainerType :: Maybe ContainerType
+  , _ctxNeedsRender   :: Bool
+  , _ctxWidgetState   :: WidgetState
+  , _ctxColorSet      :: ColorSet
+  , _ctxColor         :: WidgetColor
+  , _ctxTexture       :: SDL.Texture
+  , _ctxTextureInfo   :: TextureInfo
+  , _ctxUPos          :: V2 Exp
+  , _ctxUSize         :: V2 Exp
   }
 
 makeLenses ''WContext
@@ -55,34 +57,87 @@ type GuiWidgetTree = WidgetTree (WContext, Widget)
 
 -- map with parent position
 mapWTPos :: (GuiPos -> (WContext, Widget) -> a) -> GuiWidgetTree -> WidgetTree a
-mapWTPos f = work (pure 0)
+mapWTPos f wt0 = fst $ work wt0 Unordered (pure 0)
   where
-    work _   Null                = Null
-    work pos (Single u a o)      = Single (work pos u) (f pos a) (work pos o)
-    work pos (Container u a c o) = Container (work pos u) (f pos' a) (work pos' c) (work pos o)
-      where
-        ti = a^._1.ctxTextureInfo
-        pos' = pos + ti^.tiPos
+    modsize ct (x,p) = do
+      case ct of
+        Unordered      -> return ()
+        VerticalStack   -> _y .= (p^._y)
+        HorizontalStack -> _x .= (p^._x)
+      return x
 
-mapWTPosM :: Applicative m => (GuiPos -> (WContext, Widget) -> m a) -> GuiWidgetTree -> m (WidgetTree a)
-mapWTPosM f = work (pure 0)
-  where
-    work _   Null                = pure Null
-    work pos (Single u a o)      = Single <$> work pos u <*> f pos a <*> work pos o
-    work pos (Container u a c o) = Container <$> work pos u <*> f pos' a <*> work pos' c <*> work pos o
+    work Null           _   p0 = (Null, p0)
+    work (Single u a o) ct0 p0 = runState go p0
       where
         ti = a^._1.ctxTextureInfo
-        pos' = pos + ti^.tiPos
+        go = do
+          u' <- modsize ct0 . work u ct0 =<< get
+          pos <- get
+          let pos' = case ct0 of
+                      Unordered -> p0 + (ti^.tiPos)
+                      _          -> pos
+          let a' = f pos' a
+          modsize ct0 ((), pos' + P (ti^.tiSize))
+          o' <- modsize ct0 . work o ct0 =<< get
+          return $ Single u' a' o'
+    work (Container u a c o) ct0 p0 = runState go p0
+      where
+        ti = a^._1.ctxTextureInfo
+        ct' = fromMaybe Unordered $ a^._1.ctxContainerType
+        go = do
+          u' <- modsize ct0 . work u ct0 =<< get
+          pos <- get
+          let pos' = case ct0 of
+                      Unordered -> p0 + (ti^.tiPos)
+                      _          -> pos
+          let a' = f pos' a
+          modsize ct0 ((), pos' + P (ti^.tiSize))
+          c' <- modsize ct0 $ work c ct' pos'
+          o' <- modsize ct0 . work o ct0 =<< get
+          return $ Container u' a' c' o'
 
-mapWTPosM_ :: Monad m => (GuiPos -> (WContext, Widget) -> m a) -> GuiWidgetTree -> m ()
-mapWTPosM_ f = work (pure 0)
+mapWTPosM_ :: (Monad m, Applicative m) => (GuiPos -> (WContext, Widget) -> m a) -> GuiWidgetTree -> m ()
+mapWTPosM_ f wt = void $ mapWTPosM f wt
+
+mapWTPosM :: (Monad m, Applicative m) => (GuiPos -> (WContext, Widget) -> m a) -> GuiWidgetTree -> m (WidgetTree a)
+mapWTPosM f wt0 = fst <$> work wt0 Unordered (pure 0)
   where
-    work _   Null                = return ()
-    work pos (Single u a o)      = work pos u >> f pos a >> work pos o
-    work pos (Container u a c o) = work pos u >> f pos' a >> work pos' c >> work pos o
+    modsize ct (x,p) = do
+      case ct of
+        Unordered      -> return ()
+        VerticalStack   -> _y .= (p^._y)
+        HorizontalStack -> _x .= (p^._x)
+      return x
+
+    work Null           _   p0 = return (Null, p0)
+    work (Single u a o) ct0 p0 = runStateT go p0
       where
         ti = a^._1.ctxTextureInfo
-        pos' = pos + ti^.tiPos
+        go = do
+          u' <- modsize ct0 =<< lift . work u ct0 =<< get
+          pos <- get
+          let pos' = case ct0 of
+                      Unordered -> p0 + (ti^.tiPos)
+                      _          -> pos
+          a' <- lift $ f pos' a
+          modsize ct0 ((), pos' + P (ti^.tiSize))
+          o' <- modsize ct0 =<< lift . work o ct0 =<< get
+          return $ Single u' a' o'
+    work (Container u a c o) ct0 p0 = runStateT go p0
+      where
+        ti = a^._1.ctxTextureInfo
+        ct' = fromMaybe Unordered $ a^._1.ctxContainerType
+        go = do
+          u' <- modsize ct0 =<< lift . work u ct0 =<< get
+          pos <- get
+          let pos' = case ct0 of
+                      Unordered -> p0 + (ti^.tiPos)
+                      _          -> pos
+          a' <- lift $ f pos' a
+          modsize ct0 ((), pos' + P (ti^.tiSize))
+          c' <- modsize ct0 =<< lift (work c ct' pos')
+          o' <- modsize ct0 =<< lift . work o ct0 =<< get
+          return $ Container u' a' c' o'
 
 data GuiEnv = GuiEnv
   { geFont            :: Font.Font
@@ -138,12 +193,12 @@ genSingle mName pos size w = do
   let ti = TextureInfo (pure 0) (pure 1)
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  let ctx = WContext key mName True iniWidgetState colset (colorSetBasis colset) tex ti pos' size'
+  let ctx = WContext key mName Nothing True iniWidgetState colset (colorSetBasis colset) tex ti pos' size'
   return $ Single Null (ctx,w) Null
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
-  => V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
-genContainer pos size = do
+  => ContainerType -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
+genContainer ct pos size = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -155,7 +210,7 @@ genContainer pos size = do
   colset <- asks geDefaultColorSet
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  let ctx = WContext key Nothing True iniWidgetState colset (colorSetBasis colset) tex ti pos' size'
+  let ctx = WContext key Nothing (Just ct) True iniWidgetState colset (colorSetBasis colset) tex ti pos' size'
       w = Transparent
   return $ Container Null (ctx,w) Null Null
   where
@@ -252,7 +307,6 @@ render = mapWTPosM_ go . view gWTree
     go pos0 (ctx,_)
       | ctx^.ctxNeedsRender = E.throw $ userError "Call GUI.readyRender before GUI.render!"
       | otherwise =
-        renderTexture (ctx^.ctxTexture) $ Rectangle pos' (ti^.tiSize)
+        renderTexture (ctx^.ctxTexture) $ Rectangle pos0 (ti^.tiSize)
         where
           ti = ctx^.ctxTextureInfo
-          pos' = pos0 + (ti^.tiPos)

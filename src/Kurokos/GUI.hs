@@ -6,7 +6,7 @@ module Kurokos.GUI
   , RenderEnv (..)
   , HasEvent (..)
   -- Types
-  , Direction (..)
+  , ContainerType (..)
   , UExp (..)
   , Color
   , ColorSet (..)

@@ -40,7 +40,7 @@ procEvent gui = work
           else gDragTrajectory .= []
         modify $ over gWTree $ mapWTPos $ modWhenHover (fromIntegral <$> mouseMotionEventPos)
       where
-        modWhenHover curPos pos0 a@(ctx,w)
+        modWhenHover curPos pos a@(ctx,w)
           | hoverable w && not (wst^.hover) && isWithinRect curPos pos size =
             let ctx' = ctx & ctxWidgetState . hover .~ True
                            & ctxNeedsRender .~ True
@@ -55,7 +55,6 @@ procEvent gui = work
           where
             wst = ctx^.ctxWidgetState
             ti = ctx^.ctxTextureInfo
-            pos = pos0 + (ti^.tiPos)
             size = ti^.tiSize
             ColorSet{..} = ctx^.ctxColorSet
 
@@ -81,12 +80,11 @@ filterAt aPos' = catMaybes . WT.toList . mapWTPos work
     aPos = fromIntegral <$> aPos'
 
     work :: GuiPos -> (WContext, Widget) -> Maybe (WContext, Widget)
-    work pos0 (ctx, w)
+    work pos (ctx, w)
       | isWithinRect aPos pos (ti^.tiSize) = Just (ctx, w)
       | otherwise                          = Nothing
       where
         ti = ctx^.ctxTextureInfo
-        pos = pos0 + (ti^.tiPos)
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =
