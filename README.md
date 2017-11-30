@@ -81,3 +81,4 @@ stack exec demo
 
 ### Others
 - [ ] File archiver (For releaser. Already made. Include from 'Light It')
+- [ ] Localization Manager
