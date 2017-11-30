@@ -8,8 +8,8 @@ data WidgetTree a
   | Container (WidgetTree a) a (WidgetTree a) (WidgetTree a)
   deriving Show
 
-showTree :: Show a => WidgetTree a -> String
-showTree = unlines . work 0
+pretty :: Show a => WidgetTree a -> String
+pretty = unlines . work 0
   where
     work _ Null = []
     work n (Single u a o) =
