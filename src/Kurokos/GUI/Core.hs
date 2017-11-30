@@ -53,12 +53,33 @@ makeLenses ''WContext
 
 type GuiWidgetTree = WidgetTree (WContext, Widget)
 
-mapWTPos :: (GuiPos -> (WContext, Widget) -> a) -> GuiPos -> GuiWidgetTree -> WidgetTree a
-mapWTPos f = work
+-- map with parent position
+mapWTPos :: (GuiPos -> (WContext, Widget) -> a) -> GuiWidgetTree -> WidgetTree a
+mapWTPos f = work (pure 0)
   where
     work _   Null                = Null
     work pos (Single u a o)      = Single (work pos u) (f pos a) (work pos o)
     work pos (Container u a c o) = Container (work pos u) (f pos' a) (work pos' c) (work pos o)
+      where
+        ti = a^._1.ctxTextureInfo
+        pos' = pos + ti^.tiPos
+
+mapWTPosM :: Applicative m => (GuiPos -> (WContext, Widget) -> m a) -> GuiWidgetTree -> m (WidgetTree a)
+mapWTPosM f = work (pure 0)
+  where
+    work _   Null                = pure Null
+    work pos (Single u a o)      = Single <$> work pos u <*> f pos a <*> work pos o
+    work pos (Container u a c o) = Container <$> work pos u <*> f pos' a <*> work pos' c <*> work pos o
+      where
+        ti = a^._1.ctxTextureInfo
+        pos' = pos + ti^.tiPos
+
+mapWTPosM_ :: Monad m => (GuiPos -> (WContext, Widget) -> m a) -> GuiWidgetTree -> m ()
+mapWTPosM_ f = work (pure 0)
+  where
+    work _   Null                = return ()
+    work pos (Single u a o)      = work pos u >> f pos a >> work pos o
+    work pos (Container u a c o) = work pos u >> f pos' a >> work pos' c >> work pos o
       where
         ti = a^._1.ctxTextureInfo
         pos' = pos + ti^.tiPos
@@ -226,25 +247,12 @@ readyRender g = do
         return tex
 
 render :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
-render = go (pure 0) . view gWTree
+render = mapWTPosM_ go . view gWTree
   where
-    go _ Null = return ()
-    go pos0 (Single u (ctx,_) o)
+    go pos0 (ctx,_)
       | ctx^.ctxNeedsRender = E.throw $ userError "Call GUI.readyRender before GUI.render!"
-      | otherwise = do
-        go pos0 u
+      | otherwise =
         renderTexture (ctx^.ctxTexture) $ Rectangle pos' (ti^.tiSize)
-        go pos0 o
-        where
-          ti = ctx^.ctxTextureInfo
-          pos' = pos0 + (ti^.tiPos)
-    go pos0 (Container u (ctx,_) c o)
-      | ctx^.ctxNeedsRender = E.throw $ userError "Call GUI.readyRender before GUI.render!"
-      | otherwise = do
-        go pos0 u
-        renderTexture (ctx^.ctxTexture) $ Rectangle pos' (ti^.tiSize)
-        go pos' c
-        go pos0 o
         where
           ti = ctx^.ctxTextureInfo
           pos' = pos0 + (ti^.tiPos)

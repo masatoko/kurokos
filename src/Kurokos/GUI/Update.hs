@@ -38,7 +38,7 @@ procEvent gui = work
         if SDL.ButtonLeft `elem` mouseMotionEventState
           then gDragTrajectory %= (mouseMotionEventPos:)
           else gDragTrajectory .= []
-        modify $ over gWTree $ mapWTPos (modWhenHover (fromIntegral <$> mouseMotionEventPos)) (pure 0)
+        modify $ over gWTree $ mapWTPos $ modWhenHover (fromIntegral <$> mouseMotionEventPos)
       where
         modWhenHover curPos pos0 a@(ctx,w)
           | hoverable w && not (wst^.hover) && isWithinRect curPos pos size =
@@ -76,7 +76,7 @@ procEvent gui = work
 type ModifiableWidgetState = (ColorSet, WidgetColor, Bool, WidgetState, Widget)
 
 filterAt :: Point V2 Int32 -> GuiWidgetTree -> [(WContext, Widget)]
-filterAt aPos' = catMaybes . WT.toList . mapWTPos work (pure 0)
+filterAt aPos' = catMaybes . WT.toList . mapWTPos work
   where
     aPos = fromIntegral <$> aPos'
 
