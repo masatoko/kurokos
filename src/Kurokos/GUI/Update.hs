@@ -1,5 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.GUI.Update where
+module Kurokos.GUI.Update
+  ( updateGui
+  ) where
 
 import           Control.Lens
 import           Control.Monad       (foldM)
@@ -93,14 +95,3 @@ isWithinRect p p1 size =
     px = p^._x
     py = p^._y
     p2 = p1 + P size
-
-
--- update by ident with function
-update :: WidgetIdent -> ((WContext, Widget) -> (WContext, Widget)) -> GUI -> GUI
-update wid f = over gWTree (fmap work)
-  where
-    work a@(ctx,_)
-      | ctx^.ctxIdent == Just wid =
-          let (ctx', w') = f a
-          in (ctx' & ctxNeedsRender .~ True, w')
-      | otherwise = a
