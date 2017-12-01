@@ -18,4 +18,4 @@ data EventType
   = SelectEvent
       { seInputMotion :: SDL.InputMotion
       }
-  deriving Show
+  deriving (Eq, Show)

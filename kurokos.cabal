@@ -24,6 +24,7 @@ library
                      , Kurokos.GUI.Core
                      , Kurokos.GUI.Update
                      , Kurokos.GUI.Import
+                     , Kurokos.GUI.Helper
                      , Kurokos.GUI.Widget
                      , Kurokos.GUI.WidgetTree
                      , Kurokos.GUI.Widget.Module

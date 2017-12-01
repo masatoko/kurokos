@@ -38,12 +38,14 @@ module Kurokos.GUI
   , wtconcat
   , wtFromList
   -- Update
-  , update
+  , updateGui
   , readyRender
   -- Widget
-  , updateByIdent
+  , update
   -- Rendering
   , render
+  -- Helper
+  , onClick
   ) where
 
 import           Kurokos.GUI.Core
@@ -55,3 +57,4 @@ import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget.Make   as Import
 import           Kurokos.GUI.Widget.Module as Import
 import           Kurokos.GUI.WidgetTree
+import           Kurokos.GUI.Helper

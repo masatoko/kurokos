@@ -18,8 +18,8 @@ import qualified Kurokos.GUI.WidgetTree as WT
 import qualified SDL
 import           SDL.Event
 
-update :: (RenderEnv m, HasEvent m, MonadIO m, MonadMask m) => GUI -> m GUI
-update g0 = do
+updateGui :: (RenderEnv m, HasEvent m, MonadIO m, MonadMask m) => GUI -> m GUI
+updateGui g0 = do
   es <- getEvents
   let g = g0 & gEvents .~ []
   foldM procEvent g es
@@ -95,13 +95,12 @@ isWithinRect p p1 size =
     p2 = p1 + P size
 
 
--- update Widget by ident with function
-updateByIdent :: WidgetIdent -> (Widget -> Widget) -> GUI -> GUI
-updateByIdent wid f = over gWTree (fmap work)
+-- update by ident with function
+update :: WidgetIdent -> ((WContext, Widget) -> (WContext, Widget)) -> GUI -> GUI
+update wid f = over gWTree (fmap work)
   where
-    work a@(ctx, w)
-      | pIdent    = (ctx', f w)
+    work a@(ctx,_)
+      | ctx^.ctxIdent == Just wid =
+          let (ctx', w') = f a
+          in (ctx' & ctxNeedsRender .~ True, w')
       | otherwise = a
-      where
-        pIdent = ctx^.ctxIdent == Just wid
-        ctx' = ctx & ctxNeedsRender .~ True

@@ -5,10 +5,12 @@
 {-# LANGUAGE TemplateHaskell   #-}
 module Scene where
 
+import Debug.Trace (traceM)
+
 import           Control.Lens
 import           Control.Monad.State
 import           Data.List.Extra     (firstJust)
-import           Data.Maybe          (mapMaybe)
+import           Data.Maybe          (mapMaybe, fromMaybe)
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
 import qualified Data.Vector         as V
@@ -110,7 +112,7 @@ titleScene =
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- (,) <$> GUI.genCtxS Nothing pos size0 <*> GUI.newLabel "Kurokos デモ"
+        label <- (,) <$> GUI.genCtxS (Just "title") pos size0 <*> GUI.newLabel "Kurokos デモ"
         -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
@@ -155,10 +157,10 @@ titleScene =
 
     update :: Update Title IO Action
     update _st _as t0 =
-      readyGui =<< updateTitle =<< updateGui t0
+      readyG =<< testOnClick =<< updateTitle =<< updateG t0
       where
-        updateGui t = t & tGui %%~ GUI.update
-        readyGui t  = t & tGui %%~ GUI.readyRender
+        updateG t = t & tGui %%~ GUI.updateGui
+        readyG t  = t & tGui %%~ GUI.readyRender
 
         updateTitle t = do
           mapM_ (liftIO . print) es
@@ -166,16 +168,22 @@ titleScene =
           where
             es = GUI.getGuiEvents $ t^.tGui
 
+        testOnClick = execStateT work
+          where
+            work = modify' $ over tGui $ execState go
+            go = GUI.onClick "title" $
+                  traceM "title is clicked"
+
         go (GuiEvent SelectEvent{..} _wt _key (Just "button")) =
           when (seInputMotion == SDL.Released) $ do
             modify' $
               over tCnt (+1)
             cnt <- gets $ view tCnt
             let title = T.pack $ show cnt
-                setTitle = GUI.setTitle title
+                setTitle (c,wt) = (c, GUI.setTitle title wt)
             modify' $
               over tGui $
-                GUI.updateByIdent "label" setTitle
+                GUI.update "label" setTitle
         go _ = return ()
 
     render :: Render Title IO
