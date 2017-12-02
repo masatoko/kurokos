@@ -38,8 +38,8 @@ update wid f = over gWTree (fmap work)
           in (ctx' & ctxNeedsRender .~ True, w')
       | otherwise = a
 
-lookup :: WidgetIdent -> GUI -> Maybe CtxWidget
-lookup wid = find isTarget . view gWTree
+glookup :: WidgetIdent -> GUI -> Maybe CtxWidget
+glookup wid = find isTarget . view gWTree
   where
     isTarget = (== Just wid) . view (_1 . ctxIdent)
 

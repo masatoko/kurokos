@@ -51,6 +51,7 @@ module Kurokos.GUI
   -- Helper
   , onClick
   , update
+  , glookup
   , setGlobalPosition
   ) where
 

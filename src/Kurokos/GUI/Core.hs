@@ -283,5 +283,4 @@ render = mapWTPosM_ go . view gWTree
   where
     go pos0 (ctx,_)
       | ctx^.ctxNeedsRender = E.throw $ userError "Call GUI.readyRender before GUI.render!"
-      | otherwise =
-        renderTexture (ctx^.ctxTexture) $ Rectangle pos0 (ctx^.ctxWidgetState^.wstSize)
+      | otherwise           = renderTexture (ctx^.ctxTexture) $ Rectangle pos0 (ctx^.ctxWidgetState^.wstSize)

@@ -52,6 +52,7 @@ library
                      , lens
                      , bytestring
                      , safe-exceptions
+                     , extra
                      , text
                      , vector
                      , managed

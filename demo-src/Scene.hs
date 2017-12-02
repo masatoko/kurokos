@@ -5,12 +5,13 @@
 {-# LANGUAGE TemplateHaskell   #-}
 module Scene where
 
-import Debug.Trace (traceM)
+import           Debug.Trace         (traceM)
 
 import           Control.Lens
+import           Control.Monad.Extra (whenJust)
 import           Control.Monad.State
 import           Data.List.Extra     (firstJust)
-import           Data.Maybe          (mapMaybe, fromMaybe)
+import           Data.Maybe          (fromMaybe, mapMaybe)
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
 import qualified Data.Vector         as V
@@ -180,6 +181,8 @@ titleScene =
                   modify $ GUI.update "menu" $ over (_1.ctxWidgetState.wstVisible) not
                   let pos = GUI.seGlobalPosition $ GUI.geType e
                   modify $ GUI.setGlobalPosition "menu" pos
+              -- gui <- use tGui
+              -- whenJust (GUI.glookup "menu" gui) $ liftIO . print . view (_1.ctxWidgetState.wstVisible)
 
         go (GuiEvent SelectEvent{..} _wt _key (Just "button")) =
           when (seInputMotion == SDL.Released) $ do
