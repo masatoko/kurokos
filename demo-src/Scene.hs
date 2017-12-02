@@ -137,11 +137,13 @@ titleScene =
         let Just ctn2' = GUI.appendChild btns ctn2
         --
         clickableArea <- GUI.genSingle (Just "clickable") (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newTransparent
+        fill <- GUI.genSingle (Just "fill") (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newFill
         --
-        GUI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', ctn2']
+        GUI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', fill, ctn2']
 
         -- Modify attribute
         modify' $ GUI.update "clickable" (set (_1 . GUI.ctxAttrib . GUI.clickable) True)
+        modify' $ GUI.update "fill" (set (_1 . GUI.ctxAttrib . GUI.visible) False)
 
       liftIO . putStrLn . GUI.pretty $ GUI.getWidgetTree gui
       liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
@@ -171,19 +173,24 @@ titleScene =
         testOnClick t =
           flip execState t $ do
             -- click
-            whenJust (GUI.clicked "clickable" SDL.ButtonLeft gui0) $ \_ ->
-              modify' $ over tGui $ GUI.update "menu" $ set (_1.ctxAttrib.visible) False
-            whenJust (GUI.clicked "clickable" SDL.ButtonRight gui0) $ \pos -> do
-              modify' $ over tGui $ GUI.update "menu" $ set (_1.ctxAttrib.visible) True
-              modify' $ over tGui $ GUI.setGlobalPosition "menu" pos
+            let modGui = modify' . over tGui
+            whenJust (GUI.clicked "fill" gui0) $ \_ -> do
+              modGui $ GUI.update "menu" $ set (_1.ctxAttrib.visible) False
+              modGui $ GUI.update "fill" $ set (_1.ctxAttrib.visible) False
+            whenJust (GUI.clicked "clickable" gui0) $ \(pos,btn) ->
+              when (btn == SDL.ButtonRight) $ do
+                modGui $ GUI.update "menu" $ set (_1.ctxAttrib.visible) True
+                modGui $ GUI.setGlobalPosition "menu" pos
+                modGui $ GUI.update "fill" $ set (_1.ctxAttrib.visible) True
             -- update title
-            whenJust (GUI.clicked "button" SDL.ButtonLeft gui0) $ \_ -> do
-              modify' $
-                over tCnt (+1)
-              cnt <- gets $ view tCnt
-              let title = T.pack $ show cnt
-              modify' $
-                over tGui $ GUI.update "label" (over _2 (GUI.setTitle title))
+            whenJust (GUI.clicked "button" gui0) $ \(_,btn) ->
+              when (btn == SDL.ButtonLeft) $ do
+                modify' $
+                  over tCnt (+1)
+                cnt <- gets $ view tCnt
+                let title = T.pack $ show cnt
+                modify' $
+                  over tGui $ GUI.update "label" (over _2 (GUI.setTitle title))
           where
             gui0 = t^.tGui
 
@@ -207,7 +214,10 @@ titleScene =
       | onClick nameMouse = K.push mouseScene
       | otherwise         = K.continue
       where
-        onClick ident = isJust $ GUI.clicked ident SDL.ButtonLeft gui
+        onClick ident =
+          case GUI.clicked ident gui of
+            Nothing      -> False
+            Just (_,btn) -> btn == SDL.ButtonLeft
 
 mainScene :: Scene MyData IO Action
 mainScene = Scene defPad update render transit allocGame

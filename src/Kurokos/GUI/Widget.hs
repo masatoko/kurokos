@@ -12,6 +12,7 @@ import           Kurokos.GUI.Types
 
 data Widget
   = Transparent
+  | Fill
   | Label
     { wTitle :: Text
     , wFont  :: Font
@@ -26,12 +27,18 @@ data Widget
 
 instance Show Widget where
   show Transparent   = "<T>"
+  show Fill          = "<F>"
   show Label{..}     = "<L:" ++ T.unpack wTitle ++ ">"
   show ImageView{..} = "<IMG>"
   show Button{..}    = "<B:" ++ T.unpack wTitle ++ ">"
 
 attribOf :: Widget -> WidgetAttrib
 attribOf Transparent =
+  defAttrib
+    & hoverable .~ False
+    & clickable .~ True
+
+attribOf Fill{} =
   defAttrib
     & hoverable .~ False
     & clickable .~ True

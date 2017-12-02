@@ -15,6 +15,10 @@ import           Kurokos.GUI.Widget
 renderWidget :: SDL.Renderer -> GuiSize -> WidgetColor -> Widget -> IO ()
 renderWidget _r _parentSize (WC WP{..}) Transparent = return ()
 
+renderWidget r _parentSize (WC WP{..}) Fill = do
+  SDL.rendererDrawColor r $= V4 0 0 0 50
+  SDL.clear r
+
 renderWidget r parentSize (WC WP{..}) Label{..} = do
   -- Prim.roundRectangle r (pure 0) ((+ (-1)) <$> parentSize) 3 (V4 0 0 255 100) -- test
   --

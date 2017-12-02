@@ -11,6 +11,9 @@ import           Kurokos.GUI.Widget
 newTransparent :: Monad m => GuiT m Widget
 newTransparent = return Transparent
 
+newFill :: Monad m => GuiT m Widget
+newFill = return Fill
+
 newLabel :: Monad m => Text -> GuiT m Widget
 newLabel title = do
   font <- asks geFont

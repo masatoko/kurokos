@@ -20,18 +20,18 @@ import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget  (Widget)
 
-clicked :: WidgetIdent -> SDL.MouseButton -> GUI -> Maybe GuiPos
-clicked wid btn = firstJust isTarget . view gEvents
+clicked :: WidgetIdent -> GUI -> Maybe (GuiPos, SDL.MouseButton)
+clicked wid = firstJust isTarget . view gEvents
   where
     isTarget e
       | geWidgetName e == Just wid = posFrom $ geType e
       | otherwise                  = Nothing
       where
         posFrom (MouseClick MouseButtonEventData{..})
-          | cond      = Just $ fromIntegral <$> mouseButtonEventPos
+          | cond      = Just (fromIntegral <$> mouseButtonEventPos, mouseButtonEventButton)
           | otherwise = Nothing
           where
-            cond = SDL.Pressed == mouseButtonEventMotion && btn == mouseButtonEventButton
+            cond = SDL.Pressed == mouseButtonEventMotion
 
 -- update by ident with function
 update :: WidgetIdent -> (CtxWidget -> CtxWidget) -> GUI -> GUI
