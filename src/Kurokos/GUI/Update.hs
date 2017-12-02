@@ -7,7 +7,7 @@ import           Control.Lens
 import           Control.Monad       (foldM)
 import           Control.Monad.State
 import           Data.Int            (Int32)
-import           Data.Maybe          (catMaybes)
+import           Data.Maybe          (catMaybes, mapMaybe)
 import           Linear.V2
 
 import           Kurokos.GUI.Core
@@ -65,9 +65,11 @@ procEvent gui = work
       where
         ws = filterAt mouseButtonEventPos $ gui^.gWTree
         et = SelectEvent mouseButtonEventMotion
-        es = map conv ws
+        es = mapMaybe conv ws
           where
-            conv (ctx,w) = GuiEvent et w k mn
+            conv (ctx,w)
+              | ctx^.ctxAttrib.clickable = Just $ GuiEvent et w k mn
+              | otherwise                = Nothing
               where
                 k = ctx^.ctxKey
                 mn = ctx^.ctxIdent
