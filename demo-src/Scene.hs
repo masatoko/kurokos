@@ -171,8 +171,10 @@ titleScene =
         testOnClick t =
           flip execState t $ do
             -- click
+            whenJust (GUI.clicked "clickable" SDL.ButtonLeft gui0) $ \_ ->
+              modify' $ over tGui $ GUI.update "menu" $ set (_1.ctxAttrib.visible) False
             whenJust (GUI.clicked "clickable" SDL.ButtonRight gui0) $ \pos -> do
-              modify' $ over tGui $ GUI.update "menu" $ over (_1.ctxAttrib.visible) not
+              modify' $ over tGui $ GUI.update "menu" $ set (_1.ctxAttrib.visible) True
               modify' $ over tGui $ GUI.setGlobalPosition "menu" pos
             -- update title
             whenJust (GUI.clicked "button" SDL.ButtonLeft gui0) $ \_ -> do
