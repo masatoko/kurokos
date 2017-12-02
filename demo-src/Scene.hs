@@ -112,31 +112,29 @@ titleScene =
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- (,) <$> GUI.genCtxS (Just "title") pos size0 <*> GUI.newLabel "Kurokos デモ"
+        label <- GUI.genCtxS (Just "title") pos size0 =<< GUI.newLabel "Kurokos デモ"
         -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
-        button1 <- (,) <$> GUI.genCtxS nameMain pos1 size <*> GUI.newButton "Next: Main Scene"
-        button2 <- (,) <$> GUI.genCtxS nameMouse pos2 size <*> GUI.newButton "Push: Mouse Scene"
+        button1 <- GUI.genCtxS nameMain pos1 size =<< GUI.newButton "Next: Main Scene"
+        button2 <- GUI.genCtxS nameMouse pos2 size =<< GUI.newButton "Push: Mouse Scene"
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
-        img <- (,) <$> GUI.genCtxS (Just "image") imgPos imgSize <*> GUI.newImageView tex
+        img <- GUI.genCtxS (Just "image") imgPos imgSize =<< GUI.newImageView tex
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
-        lbl' <- (,) <$> GUI.genCtxS (Just "label") (V2 (C 0) (C 0)) size' <*> GUI.newLabel "---"
-        btn' <- (,) <$> GUI.genCtxS (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' <*> GUI.newButton "Button in Container"
+        lbl' <- GUI.genCtxS (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
+        btn' <- GUI.genCtxS (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "Button in Container"
         ctn1 <- GUI.genContainer GUI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
-        let Just ctn1' = GUI.appendChild (GUI.wtFromList [lbl', btn']) ctn1
+        let Just ctn1' = GUI.appendChild (GUI.wtconcat [lbl', btn']) ctn1
         --
-        bsW <- mapM (GUI.newButton . T.pack . show) [(0::Int)..9]
-        bsC <- replicateM 10 (GUI.genCtxS Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)))
-        let bs = zip bsC bsW
+        btns <- GUI.wtconcat <$> mapM (GUI.genCtxS Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< GUI.newButton . T.pack . show) [0..(9::Int)]
         ctn2 <- GUI.genContainer GUI.VerticalStack (V2 (Rpn "$width 50 -") (C 0)) (V2 (C 50) (C 300))
-        let Just ctn2' = GUI.appendChild (GUI.wtFromList bs) ctn2
+        let Just ctn2' = GUI.appendChild btns ctn2
         --
-        GUI.prependRoot $ GUI.wtconcat [GUI.wtFromList [label, button1, button2, img], ctn1', ctn2']
+        GUI.prependRoot $ GUI.wtconcat [label, button1, button2, img, ctn1', ctn2']
       liftIO . putStrLn . GUI.pretty $ GUI.getWidgetTree gui
       liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
       return $ Title gui 0

@@ -1,11 +1,14 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.GUI.Widget where
 
-import           Data.Text (Text)
-import qualified Data.Text as T
+import           Control.Lens
+import           Data.Text         (Text)
+import qualified Data.Text         as T
 
 import qualified SDL
-import           SDL.Font  (Font)
+import           SDL.Font          (Font)
+
+import           Kurokos.GUI.Types
 
 data Widget
   = Transparent
@@ -27,11 +30,23 @@ instance Show Widget where
   show ImageView{..} = "<IMG>"
   show Button{..}    = "<B:" ++ T.unpack wTitle ++ ">"
 
-class Hoverable a where
-  hoverable :: a -> Bool
+attribOf :: Widget -> WidgetAttrib
+attribOf Transparent =
+  defAttrib
+    & hoverable .~ False
+    & clickable .~ True
 
-instance Hoverable Widget where
-  hoverable Transparent = False
-  hoverable Label{}     = False
-  hoverable ImageView{} = True
-  hoverable Button{}    = True
+attribOf Label{} =
+  defAttrib
+    & hoverable .~ False
+    & clickable .~ False
+
+attribOf ImageView{} =
+  defAttrib
+    & hoverable .~ False
+    & clickable .~ False
+
+attribOf Button{} =
+  defAttrib
+    & hoverable .~ True
+    & clickable .~ True

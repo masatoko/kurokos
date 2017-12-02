@@ -40,6 +40,7 @@ data WContext = WContext
   { _ctxKey           :: WTKey
   , _ctxIdent         :: Maybe WidgetIdent
   , _ctxContainerType :: Maybe ContainerType
+  , _ctxAttrib        :: WidgetAttrib
   , _ctxNeedsRender   :: Bool
   , _ctxWidgetState   :: WidgetState
   , _ctxColorSet      :: ColorSet
@@ -177,8 +178,8 @@ newGui env initializer = do
   readyRender gui
 
 genCtxS :: (RenderEnv m, MonadIO m, E.MonadThrow m)
-  => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> GuiT m WContext
-genCtxS mName pos size = do
+  => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
+genCtxS mName pos size w = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -190,7 +191,8 @@ genCtxS mName pos size = do
   colset <- asks geDefaultColorSet
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  return $ WContext key mName Nothing True iniWidgetState colset (colorSetBasis colset) tex pos' size'
+  let ctx = WContext key mName Nothing (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
+  return $ Single Null (ctx, w) Null
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => ContainerType -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
@@ -206,8 +208,8 @@ genContainer ct pos size = do
   colset <- asks geDefaultColorSet
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  let ctx = WContext key Nothing (Just ct) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
-      w = Transparent
+  let w = Transparent
+      ctx = WContext key Nothing (Just ct) (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
   return $ Container Null (ctx,w) Null Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()

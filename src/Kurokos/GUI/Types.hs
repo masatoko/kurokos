@@ -27,7 +27,7 @@ data ContainerType
   | HorizontalStack
   | VerticalStack
 
-data WidgetState = WS
+data WidgetState = WidgetState
   { _wstPos :: GuiPos -- Relative position of texture
   , _wstSize :: GuiSize -- Texture size
   , _wstHover :: Bool
@@ -36,7 +36,20 @@ data WidgetState = WS
 makeLenses ''WidgetState
 
 iniWidgetState :: WidgetState
-iniWidgetState = WS (pure 0) (pure 0) False
+iniWidgetState = WidgetState (pure 0) (pure 0) False
+
+data WidgetAttrib = WidgetAttrib
+  { _hoverable :: Bool
+  , _clickable :: Bool
+  }
+
+makeLenses ''WidgetAttrib
+
+defAttrib :: WidgetAttrib
+defAttrib = WidgetAttrib
+  { _hoverable = True
+  , _clickable = True
+  }
 
 -- Color
 
