@@ -5,6 +5,12 @@ module Kurokos.GUI
   -- Def
   , RenderEnv (..)
   , HasEvent (..)
+  --
+  -- WContext (Lens)
+  , ctxAttrib
+  -- WidgetAttrib (Lens)
+  , hoverable
+  , clickable
   -- Types
   , ContainerType (..)
   , UExp (..)

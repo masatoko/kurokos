@@ -8,8 +8,8 @@ import           Kurokos.GUI.Core
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Widget
 
-newFill :: Monad m => GuiT m Widget
-newFill = return Transparent
+newTransparent :: Monad m => GuiT m Widget
+newTransparent = return Transparent
 
 newLabel :: Monad m => Text -> GuiT m Widget
 newLabel title = do

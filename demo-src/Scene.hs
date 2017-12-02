@@ -134,7 +134,13 @@ titleScene =
         ctn2 <- GUI.genContainer GUI.VerticalStack (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
         let Just ctn2' = GUI.appendChild btns ctn2
         --
-        GUI.prependRoot $ GUI.wtconcat [label, button1, button2, img, ctn1', ctn2']
+        clickableArea <- GUI.genSingle (Just "clickable") (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newTransparent
+        --
+        GUI.prependRoot $ GUI.wtconcat [clickableArea, label, button1, button2, img, ctn1', ctn2']
+
+        -- Modify attribute
+        modify' $ GUI.update "clickable" (set (_1 . GUI.ctxAttrib . GUI.clickable) True)
+
       liftIO . putStrLn . GUI.pretty $ GUI.getWidgetTree gui
       liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
       return $ Title gui 0
