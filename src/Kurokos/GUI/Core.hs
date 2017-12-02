@@ -34,9 +34,20 @@ import qualified Kurokos.RPN               as RPN
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
 
+updateVisibility :: GuiWidgetTree -> GuiWidgetTree
+updateVisibility = work True
+  where
+    work _    Null            = Null
+    work vis0 (Fork u a mc o) =
+      Fork (work vis0 u) a' (work vis' <$> mc) (work vis0 o)
+      where
+        atr = a^._1.ctxAttrib
+        vis' = vis0 && atr^.visible
+        a' = a & _1 . ctxWidgetState . wstVisible .~ vis'
+
 -- Update global position and visibility
-updateRenderingState :: GuiWidgetTree -> GuiWidgetTree
-updateRenderingState wt0 = fst $ work wt0 Unordered True (P $ V2 0 0)
+updateLayout :: GuiWidgetTree -> GuiWidgetTree
+updateLayout wt0 = fst $ work wt0 Unordered (P $ V2 0 0)
   where
     modsize ct (x,p) = do
       case ct of
@@ -45,40 +56,34 @@ updateRenderingState wt0 = fst $ work wt0 Unordered True (P $ V2 0 0)
         HorizontalStack -> _x .= (p^._x)
       return x
 
-    work Null                 _   _    p0 = (Null, p0)
-    work (Fork u a Nothing o) ct0 vis0 p0 = runState go p0
+    work Null                 _   p0 = (Null, p0)
+    work (Fork u a Nothing o) ct0 p0 = runState go p0
       where
         wst = a^._1.ctxWidgetState
-        atr = a^._1.ctxAttrib
         go = do
-          u' <- modsize ct0 . work u ct0 vis0 =<< get
+          u' <- modsize ct0 . work u ct0 =<< get
           pos <- get
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
                       _         -> pos
-              vis' = vis0 && atr^.visible
               a' = a & _1 . ctxWidgetState . wstGlobalPos .~ pos'
-                     & _1 . ctxWidgetState . wstVisible .~ vis'
           modsize ct0 ((), pos' + P (wst^.wstSize))
-          o' <- modsize ct0 . work o ct0 vis0 =<< get
+          o' <- modsize ct0 . work o ct0 =<< get
           return $ Fork u' a' Nothing o'
-    work (Fork u a (Just c) o) ct0 vis0 p0 = runState go p0
+    work (Fork u a (Just c) o) ct0 p0 = runState go p0
       where
         wst = a^._1.ctxWidgetState
-        atr = a^._1.ctxAttrib
         ct' = fromMaybe Unordered $ a^._1.ctxContainerType
         go = do
-          u' <- modsize ct0 . work u ct0 vis0 =<< get
+          u' <- modsize ct0 . work u ct0 =<< get
           pos <- get
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
                       _         -> pos
-              vis' = vis0 && atr^.visible
               a' = a & _1 . ctxWidgetState . wstGlobalPos .~ pos'
-                     & _1 . ctxWidgetState . wstVisible .~ vis'
           modsize ct0 ((), pos' + P (wst^.wstSize))
-          c' <- modsize ct0 $ work c ct' vis' pos'
-          o' <- modsize ct0 . work o ct0 vis0 =<< get
+          c' <- modsize ct0 $ work c ct' pos'
+          o' <- modsize ct0 . work o ct0 =<< get
           return $ Fork u' a' (Just c') o'
 
 data GuiEnv = GuiEnv
@@ -177,7 +182,7 @@ readyRender g = do
         , (keyWinWidth, w)
         , (keyWinHeight, h)]
   wt <- go vmap $ g^.gWTree
-  return $ g & gWTree .~ updateRenderingState wt
+  return $ g & gWTree .~ (updateLayout . updateVisibility) wt
   where
     makeTexture vmap (ctx, widget) = do
       let vmap' = M.map fromIntegral vmap
