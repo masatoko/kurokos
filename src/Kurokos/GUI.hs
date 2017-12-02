@@ -42,12 +42,12 @@ module Kurokos.GUI
   -- Update
   , updateGui
   , readyRender
-  -- Widget
-  , update
   -- Rendering
   , render
   -- Helper
   , onClick
+  , update
+  , setGlobalPosition
   ) where
 
 import           Kurokos.GUI.Core

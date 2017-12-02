@@ -43,7 +43,7 @@ procEvent gui = work
           else gDragTrajectory .= []
         modify $ over gWTree $ mapWTPos $ modWhenHover (fromIntegral <$> mouseMotionEventPos)
       where
-        modWhenHover curPos pos a@(ctx,w)
+        modWhenHover curPos _ pos a@(ctx,w)
           | isHoverable && not (wst^.wstHover) && isWithinRect curPos pos size =
             let ctx' = ctx & ctxWidgetState . wstHover .~ True
                            & ctxNeedsRender .~ True
@@ -70,7 +70,7 @@ procEvent gui = work
               | ctx^.ctxAttrib.clickable = Just $ GuiEvent et w k mn
               | otherwise                = Nothing
               where
-                et = SelectEvent mouseButtonEventMotion
+                et = SelectEvent mouseButtonEventMotion (fromIntegral <$> mouseButtonEventPos)
                 k = ctx^.ctxKey
                 mn = ctx^.ctxIdent
 
@@ -84,8 +84,8 @@ filterAt aPos' = catMaybes . WT.toList . mapWTPos work
   where
     aPos = fromIntegral <$> aPos'
 
-    work :: GuiPos -> (WContext, Widget) -> Maybe (WContext, Widget)
-    work pos (ctx, w)
+    work :: GuiPos -> GuiPos -> (WContext, Widget) -> Maybe (WContext, Widget)
+    work _ pos (ctx, w)
       | isWithinRect aPos pos size = Just (ctx, w)
       | otherwise                  = Nothing
       where

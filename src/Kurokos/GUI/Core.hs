@@ -30,26 +30,13 @@ import           Kurokos.GUI.WidgetTree    (WidgetTree (..))
 import qualified Kurokos.GUI.WidgetTree    as WT
 import qualified Kurokos.RPN               as RPN
 
-data WContext = WContext
-  { _ctxKey           :: WTKey
-  , _ctxIdent         :: Maybe WidgetIdent
-  , _ctxContainerType :: Maybe ContainerType
-  , _ctxAttrib        :: WidgetAttrib
-  , _ctxNeedsRender   :: Bool
-  , _ctxWidgetState   :: WidgetState
-  , _ctxColorSet      :: ColorSet
-  , _ctxColor         :: WidgetColor
-  , _ctxTexture       :: SDL.Texture
-  , _ctxUPos          :: V2 Exp
-  , _ctxUSize         :: V2 Exp
-  }
-
-makeLenses ''WContext
-
-type GuiWidgetTree = WidgetTree (WContext, Widget)
+type CtxWidget = (WContext, Widget)
+type GuiWidgetTree = WidgetTree CtxWidget
 
 -- map with parent position
-mapWTPos :: (GuiPos -> (WContext, Widget) -> a) -> GuiWidgetTree -> WidgetTree a
+-- GuiPos-1: Parent position
+-- GuiPos-2: Self position
+mapWTPos :: (GuiPos -> GuiPos -> CtxWidget -> a) -> GuiWidgetTree -> WidgetTree a
 mapWTPos f wt0 = fst $ work wt0 Unordered (pure 0)
   where
     modsize ct (x,p) = do
@@ -69,7 +56,7 @@ mapWTPos f wt0 = fst $ work wt0 Unordered (pure 0)
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
                       _         -> pos
-          let a' = f pos' a
+          let a' = f pos pos' a
           modsize ct0 ((), pos' + P (wst^.wstSize))
           o' <- modsize ct0 . work o ct0 =<< get
           return $ Fork u' a' Nothing o'
@@ -83,16 +70,16 @@ mapWTPos f wt0 = fst $ work wt0 Unordered (pure 0)
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
                       _         -> pos
-          let a' = f pos' a
+          let a' = f pos pos' a
           modsize ct0 ((), pos' + P (wst^.wstSize))
           c' <- modsize ct0 $ work c ct' pos'
           o' <- modsize ct0 . work o ct0 =<< get
           return $ Fork u' a' (Just c') o'
 
-mapWTPosM_ :: (Monad m, Applicative m) => (GuiPos -> (WContext, Widget) -> m a) -> GuiWidgetTree -> m ()
+mapWTPosM_ :: (Monad m, Applicative m) => (GuiPos -> CtxWidget -> m a) -> GuiWidgetTree -> m ()
 mapWTPosM_ f wt = void $ mapWTPosM f wt
 
-mapWTPosM :: (Monad m, Applicative m) => (GuiPos -> (WContext, Widget) -> m a) -> GuiWidgetTree -> m (WidgetTree a)
+mapWTPosM :: (Monad m, Applicative m) => (GuiPos -> CtxWidget -> m a) -> GuiWidgetTree -> m (WidgetTree a)
 mapWTPosM f wt0 = fst <$> work wt0 Unordered (pure 0)
   where
     modsize ct (x,p) = do
@@ -172,7 +159,7 @@ newGui env initializer =
 
 genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
-genSingle mName pos size w = do
+genSingle mIdent pos size w = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -184,12 +171,12 @@ genSingle mName pos size w = do
   colset <- asks geDefaultColorSet
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  let ctx = WContext key mName Nothing (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
+  let ctx = WContext key mIdent Nothing (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
-  => ContainerType -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
-genContainer ct pos size = do
+  => Maybe WidgetIdent -> ContainerType -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
+genContainer mIdent ct pos size = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -202,7 +189,7 @@ genContainer ct pos size = do
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let w = Transparent
-      ctx = WContext key Nothing (Just ct) (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
+      ctx = WContext key mIdent (Just ct) (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()

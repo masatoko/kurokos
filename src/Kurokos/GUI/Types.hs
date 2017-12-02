@@ -3,15 +3,15 @@
 module Kurokos.GUI.Types where
 
 import           Control.Lens
-import           Data.Int        (Int64)
-import           Data.Word       (Word8)
-import           Foreign.C.Types (CInt)
+import           Data.Int           (Int64)
+import           Data.Word          (Word8)
+import           Foreign.C.Types    (CInt)
 import           Linear.V2
 import           Linear.V4
 
 import qualified SDL
 
-import qualified Kurokos.RPN     as RPN
+import qualified Kurokos.RPN        as RPN
 
 type Key = Int64
 newtype WTKey = WTKey Key deriving Show
@@ -28,11 +28,11 @@ data ContainerType
   | VerticalStack
 
 data WidgetState = WidgetState
-  { _wstPos :: GuiPos -- Relative position of texture
-  , _wstSize :: GuiSize -- Texture size
+  { _wstPos     :: GuiPos -- Relative position of texture
+  , _wstSize    :: GuiSize -- Texture size
   --
   , _wstVisible :: Bool
-  , _wstHover :: Bool
+  , _wstHover   :: Bool
   }
 
 makeLenses ''WidgetState
@@ -103,3 +103,19 @@ keyWidth     = "width"
 keyHeight    = "height"
 keyWinWidth  = "winwidth"
 keyWinHeight = "winheight"
+
+data WContext = WContext
+  { _ctxKey           :: WTKey
+  , _ctxIdent         :: Maybe WidgetIdent
+  , _ctxContainerType :: Maybe ContainerType
+  , _ctxAttrib        :: WidgetAttrib
+  , _ctxNeedsRender   :: Bool
+  , _ctxWidgetState   :: WidgetState
+  , _ctxColorSet      :: ColorSet
+  , _ctxColor         :: WidgetColor
+  , _ctxTexture       :: SDL.Texture
+  , _ctxUPos          :: V2 Exp
+  , _ctxUSize         :: V2 Exp
+  }
+
+makeLenses ''WContext

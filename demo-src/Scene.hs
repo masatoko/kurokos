@@ -127,11 +127,11 @@ titleScene =
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
         lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
         btn' <- GUI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "Button in Container"
-        ctn1 <- GUI.genContainer GUI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
+        ctn1 <- GUI.genContainer Nothing GUI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
         let Just ctn1' = GUI.appendChild (mconcat [lbl', btn']) ctn1
         --
         btns <- mconcat <$> mapM (GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< GUI.newButton . T.pack . show) [1..(5::Int)]
-        ctn2 <- GUI.genContainer GUI.VerticalStack (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
+        ctn2 <- GUI.genContainer (Just "menu") GUI.VerticalStack (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
         let Just ctn2' = GUI.appendChild btns ctn2
         --
         clickableArea <- GUI.genSingle (Just "clickable") (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newTransparent
@@ -175,9 +175,14 @@ titleScene =
         testOnClick = execStateT work
           where
             work =
-              modify' $ over tGui $ execState $
-                GUI.onClick "title" $
+              modify' . over tGui $ execState $ do
+                GUI.onClick "title" $ \_ ->
                   traceM "title is clicked"
+
+                GUI.onClick "clickable" $ \e -> do
+                  let pos = GUI.seGlobalPosition $ GUI.geType e
+                  modify' $ GUI.setGlobalPosition "menu" pos
+
 
         go (GuiEvent SelectEvent{..} _wt _key (Just "button")) =
           when (seInputMotion == SDL.Released) $ do

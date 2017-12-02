@@ -17,5 +17,6 @@ data GuiEvent = GuiEvent
 data EventType
   = SelectEvent
       { seInputMotion :: SDL.InputMotion
+      , seGlobalPosition :: GuiPos
       }
   deriving (Eq, Show)
