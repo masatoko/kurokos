@@ -13,6 +13,7 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import qualified Data.Map                  as M
 import           Data.Maybe                (fromMaybe)
+import           Data.Monoid               ((<>))
 import           Data.Text                 (Text)
 import           Linear.V2
 
@@ -25,7 +26,7 @@ import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget
 import           Kurokos.GUI.Widget.Render
-import           Kurokos.GUI.WidgetTree    (WidgetTree (..), wtappend)
+import           Kurokos.GUI.WidgetTree    (WidgetTree (..))
 import qualified Kurokos.GUI.WidgetTree    as WT
 import qualified Kurokos.RPN               as RPN
 
@@ -53,13 +54,13 @@ mapWTPos f wt0 = fst $ work wt0 Unordered (pure 0)
   where
     modsize ct (x,p) = do
       case ct of
-        Unordered      -> return ()
+        Unordered       -> return ()
         VerticalStack   -> _y .= (p^._y)
         HorizontalStack -> _x .= (p^._x)
       return x
 
     work Null           _   p0 = (Null, p0)
-    work (Single u a o) ct0 p0 = runState go p0
+    work (Fork u a Nothing o) ct0 p0 = runState go p0
       where
         wst = a^._1.ctxWidgetState
         go = do
@@ -67,12 +68,12 @@ mapWTPos f wt0 = fst $ work wt0 Unordered (pure 0)
           pos <- get
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
-                      _          -> pos
+                      _         -> pos
           let a' = f pos' a
           modsize ct0 ((), pos' + P (wst^.wstSize))
           o' <- modsize ct0 . work o ct0 =<< get
-          return $ Single u' a' o'
-    work (Container u a c o) ct0 p0 = runState go p0
+          return $ Fork u' a' Nothing o'
+    work (Fork u a (Just c) o) ct0 p0 = runState go p0
       where
         wst = a^._1.ctxWidgetState
         ct' = fromMaybe Unordered $ a^._1.ctxContainerType
@@ -81,12 +82,12 @@ mapWTPos f wt0 = fst $ work wt0 Unordered (pure 0)
           pos <- get
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
-                      _          -> pos
+                      _         -> pos
           let a' = f pos' a
           modsize ct0 ((), pos' + P (wst^.wstSize))
           c' <- modsize ct0 $ work c ct' pos'
           o' <- modsize ct0 . work o ct0 =<< get
-          return $ Container u' a' c' o'
+          return $ Fork u' a' (Just c') o'
 
 mapWTPosM_ :: (Monad m, Applicative m) => (GuiPos -> (WContext, Widget) -> m a) -> GuiWidgetTree -> m ()
 mapWTPosM_ f wt = void $ mapWTPosM f wt
@@ -96,13 +97,13 @@ mapWTPosM f wt0 = fst <$> work wt0 Unordered (pure 0)
   where
     modsize ct (x,p) = do
       case ct of
-        Unordered      -> return ()
+        Unordered       -> return ()
         VerticalStack   -> _y .= (p^._y)
         HorizontalStack -> _x .= (p^._x)
       return x
 
-    work Null           _   p0 = return (Null, p0)
-    work (Single u a o) ct0 p0 = runStateT go p0
+    work Null _ p0 = return (Null, p0)
+    work (Fork u a Nothing o) ct0 p0 = runStateT go p0
       where
         wst = a^._1.ctxWidgetState
         go = do
@@ -110,12 +111,12 @@ mapWTPosM f wt0 = fst <$> work wt0 Unordered (pure 0)
           pos <- get
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
-                      _          -> pos
+                      _         -> pos
           a' <- lift $ f pos' a
           modsize ct0 ((), pos' + P (wst^.wstSize))
           o' <- modsize ct0 =<< lift . work o ct0 =<< get
-          return $ Single u' a' o'
-    work (Container u a c o) ct0 p0 = runStateT go p0
+          return $ Fork u' a' Nothing o'
+    work (Fork u a (Just c) o) ct0 p0 = runStateT go p0
       where
         wst = a^._1.ctxWidgetState
         ct' = fromMaybe Unordered $ a^._1.ctxContainerType
@@ -124,12 +125,12 @@ mapWTPosM f wt0 = fst <$> work wt0 Unordered (pure 0)
           pos <- get
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
-                      _          -> pos
+                      _         -> pos
           a' <- lift $ f pos' a
           modsize ct0 ((), pos' + P (wst^.wstSize))
           c' <- modsize ct0 =<< lift (work c ct' pos')
           o' <- modsize ct0 =<< lift . work o ct0 =<< get
-          return $ Container u' a' c' o'
+          return $ Fork u' a' (Just c') o'
 
 data GuiEnv = GuiEnv
   { geFont            :: Font.Font
@@ -184,7 +185,7 @@ genSingle mName pos size w = do
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let ctx = WContext key mName Nothing (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
-  return $ Single Null (ctx, w) Null
+  return $ Fork Null (ctx, w) Nothing Null
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => ContainerType -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
@@ -202,13 +203,13 @@ genContainer ct pos size = do
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let w = Transparent
       ctx = WContext key Nothing (Just ct) (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
-  return $ Container Null (ctx,w) Null Null
+  return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
-appendRoot wt = modify $ over gWTree (wt `wtappend`)
+appendRoot wt = modify $ over gWTree (wt <>)
 
 prependRoot :: Monad m => GuiWidgetTree -> GuiT m ()
-prependRoot wt = modify $ over gWTree (`wtappend` wt)
+prependRoot wt = modify $ over gWTree (<> wt)
 
 -- Rendering GUI
 
@@ -249,18 +250,18 @@ readyRender g = do
         wcol = ctx^.ctxColor
 
     go _ Null = return Null
-    go vmap (Single u a o) = do
+    go vmap (Fork u a Nothing o) = do
       u' <- go vmap u
       o' <- go vmap o
       if ctx^.ctxNeedsRender
         then do
           SDL.destroyTexture $ ctx^.ctxTexture
           a' <- makeTexture vmap a
-          return $ Single u' a' o'
-        else return $ Single u' a o'
+          return $ Fork u' a' Nothing o'
+        else return $ Fork u' a Nothing o'
       where
         ctx = a^._1
-    go vmap (Container u a c o) = do
+    go vmap (Fork u a (Just c) o) = do
       a' <- if ctx^.ctxNeedsRender
               then do
                 SDL.destroyTexture $ ctx^.ctxTexture
@@ -271,7 +272,7 @@ readyRender g = do
       let (V2 w h) = fromIntegral <$> (a'^._1 . ctxWidgetState . wstSize)
           vmap' = M.insert keyWidth w . M.insert keyHeight h $ vmap -- Update width and height
       c' <- go vmap' c
-      return $ Container u' a' c' o'
+      return $ Fork u' a' (Just c') o'
       where
         ctx = a^._1
 

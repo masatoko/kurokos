@@ -128,15 +128,15 @@ titleScene =
         lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
         btn' <- GUI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "Button in Container"
         ctn1 <- GUI.genContainer GUI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
-        let Just ctn1' = GUI.appendChild (GUI.wtconcat [lbl', btn']) ctn1
+        let Just ctn1' = GUI.appendChild (mconcat [lbl', btn']) ctn1
         --
-        btns <- GUI.wtconcat <$> mapM (GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< GUI.newButton . T.pack . show) [1..(5::Int)]
+        btns <- mconcat <$> mapM (GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< GUI.newButton . T.pack . show) [1..(5::Int)]
         ctn2 <- GUI.genContainer GUI.VerticalStack (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
         let Just ctn2' = GUI.appendChild btns ctn2
         --
         clickableArea <- GUI.genSingle (Just "clickable") (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newTransparent
         --
-        GUI.prependRoot $ GUI.wtconcat [clickableArea, label, button1, button2, img, ctn1', ctn2']
+        GUI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', ctn2']
 
         -- Modify attribute
         modify' $ GUI.update "clickable" (set (_1 . GUI.ctxAttrib . GUI.clickable) True)

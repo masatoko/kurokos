@@ -36,12 +36,8 @@ module Kurokos.GUI
   -- WidgetTree
   , append
   , prepend
-  , appendC
-  , prependC
   , appendChild
   , prependChild
-  , wtappend
-  , wtconcat
   , wtFromList
   -- Update
   , updateGui
