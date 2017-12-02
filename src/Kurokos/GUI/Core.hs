@@ -45,7 +45,6 @@ data WContext = WContext
   , _ctxColorSet      :: ColorSet
   , _ctxColor         :: WidgetColor
   , _ctxTexture       :: SDL.Texture
-  , _ctxTextureInfo   :: TextureInfo
   , _ctxUPos          :: V2 Exp
   , _ctxUSize         :: V2 Exp
   }
@@ -68,29 +67,29 @@ mapWTPos f wt0 = fst $ work wt0 Unordered (pure 0)
     work Null           _   p0 = (Null, p0)
     work (Single u a o) ct0 p0 = runState go p0
       where
-        ti = a^._1.ctxTextureInfo
+        wst = a^._1.ctxWidgetState
         go = do
           u' <- modsize ct0 . work u ct0 =<< get
           pos <- get
           let pos' = case ct0 of
-                      Unordered -> p0 + (ti^.tiPos)
+                      Unordered -> p0 + (wst^.wstPos)
                       _          -> pos
           let a' = f pos' a
-          modsize ct0 ((), pos' + P (ti^.tiSize))
+          modsize ct0 ((), pos' + P (wst^.wstSize))
           o' <- modsize ct0 . work o ct0 =<< get
           return $ Single u' a' o'
     work (Container u a c o) ct0 p0 = runState go p0
       where
-        ti = a^._1.ctxTextureInfo
+        wst = a^._1.ctxWidgetState
         ct' = fromMaybe Unordered $ a^._1.ctxContainerType
         go = do
           u' <- modsize ct0 . work u ct0 =<< get
           pos <- get
           let pos' = case ct0 of
-                      Unordered -> p0 + (ti^.tiPos)
+                      Unordered -> p0 + (wst^.wstPos)
                       _          -> pos
           let a' = f pos' a
-          modsize ct0 ((), pos' + P (ti^.tiSize))
+          modsize ct0 ((), pos' + P (wst^.wstSize))
           c' <- modsize ct0 $ work c ct' pos'
           o' <- modsize ct0 . work o ct0 =<< get
           return $ Container u' a' c' o'
@@ -111,29 +110,29 @@ mapWTPosM f wt0 = fst <$> work wt0 Unordered (pure 0)
     work Null           _   p0 = return (Null, p0)
     work (Single u a o) ct0 p0 = runStateT go p0
       where
-        ti = a^._1.ctxTextureInfo
+        wst = a^._1.ctxWidgetState
         go = do
           u' <- modsize ct0 =<< lift . work u ct0 =<< get
           pos <- get
           let pos' = case ct0 of
-                      Unordered -> p0 + (ti^.tiPos)
+                      Unordered -> p0 + (wst^.wstPos)
                       _          -> pos
           a' <- lift $ f pos' a
-          modsize ct0 ((), pos' + P (ti^.tiSize))
+          modsize ct0 ((), pos' + P (wst^.wstSize))
           o' <- modsize ct0 =<< lift . work o ct0 =<< get
           return $ Single u' a' o'
     work (Container u a c o) ct0 p0 = runStateT go p0
       where
-        ti = a^._1.ctxTextureInfo
+        wst = a^._1.ctxWidgetState
         ct' = fromMaybe Unordered $ a^._1.ctxContainerType
         go = do
           u' <- modsize ct0 =<< lift . work u ct0 =<< get
           pos <- get
           let pos' = case ct0 of
-                      Unordered -> p0 + (ti^.tiPos)
+                      Unordered -> p0 + (wst^.wstPos)
                       _          -> pos
           a' <- lift $ f pos' a
-          modsize ct0 ((), pos' + P (ti^.tiSize))
+          modsize ct0 ((), pos' + P (wst^.wstSize))
           c' <- modsize ct0 =<< lift (work c ct' pos')
           o' <- modsize ct0 =<< lift . work o ct0 =<< get
           return $ Container u' a' c' o'
@@ -189,10 +188,9 @@ genCtxS mName pos size = do
             Left err -> E.throw $ userError err
             Right v  -> return v
   colset <- asks geDefaultColorSet
-  let ti = TextureInfo (pure 0) (pure 1)
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  return $ WContext key mName Nothing True iniWidgetState colset (colorSetBasis colset) tex ti pos' size'
+  return $ WContext key mName Nothing True iniWidgetState colset (colorSetBasis colset) tex pos' size'
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => ContainerType -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
@@ -208,11 +206,9 @@ genContainer ct pos size = do
   colset <- asks geDefaultColorSet
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  let ctx = WContext key Nothing (Just ct) True iniWidgetState colset (colorSetBasis colset) tex ti pos' size'
+  let ctx = WContext key Nothing (Just ct) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
       w = Transparent
   return $ Container Null (ctx,w) Null Null
-  where
-    ti = TextureInfo (pure 0) (pure 1)
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
 appendRoot wt = modify $ over gWTree (wt `wtappend`)
@@ -250,7 +246,8 @@ readyRender g = do
       tex <- createTexture' size wcol widget renderWidget
       let ctx' = ctx & ctxNeedsRender .~ False
                      & ctxTexture .~ tex
-                     & ctxTextureInfo .~ TextureInfo pos size
+                     & ctxWidgetState . wstPos .~ pos
+                     & ctxWidgetState . wstSize .~ size
       return (ctx', widget)
       where
         upos = ctx^.ctxUPos
@@ -277,7 +274,7 @@ readyRender g = do
               else return a
       u' <- go vmap u
       o' <- go vmap o
-      let (V2 w h) = fromIntegral <$> (a'^._1 . ctxTextureInfo . tiSize)
+      let (V2 w h) = fromIntegral <$> (a'^._1 . ctxWidgetState . wstSize)
           vmap' = M.insert keyWidth w . M.insert keyHeight h $ vmap -- Update width and height
       c' <- go vmap' c
       return $ Container u' a' c' o'
@@ -305,6 +302,4 @@ render = mapWTPosM_ go . view gWTree
     go pos0 (ctx,_)
       | ctx^.ctxNeedsRender = E.throw $ userError "Call GUI.readyRender before GUI.render!"
       | otherwise =
-        renderTexture (ctx^.ctxTexture) $ Rectangle pos0 (ti^.tiSize)
-        where
-          ti = ctx^.ctxTextureInfo
+        renderTexture (ctx^.ctxTexture) $ Rectangle pos0 (ctx^.ctxWidgetState^.wstSize)

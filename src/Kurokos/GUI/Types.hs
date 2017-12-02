@@ -18,24 +18,25 @@ newtype WTKey = WTKey Key deriving Show
 
 type WidgetIdent = String
 
+-- Size
+type GuiPos = SDL.Point V2 CInt
+type GuiSize = V2 CInt
+
 data ContainerType
   = Unordered
   | HorizontalStack
   | VerticalStack
 
 data WidgetState = WS
-  { _hover :: Bool
+  { _wstPos :: GuiPos
+  , _wstSize :: GuiSize
+  , _hover :: Bool
   }
 
 makeLenses ''WidgetState
 
 iniWidgetState :: WidgetState
-iniWidgetState = WS False
-
--- Size
-
-type GuiPos = SDL.Point V2 CInt
-type GuiSize = V2 CInt
+iniWidgetState = WS (pure 0) (pure 0) False
 
 -- Color
 

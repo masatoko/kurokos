@@ -56,8 +56,7 @@ procEvent gui = work
           | otherwise = a
           where
             wst = ctx^.ctxWidgetState
-            ti = ctx^.ctxTextureInfo
-            size = ti^.tiSize
+            size = wst^.wstSize
             ColorSet{..} = ctx^.ctxColorSet
 
     work (MouseButtonEvent MouseButtonEventData{..}) =
@@ -74,8 +73,6 @@ procEvent gui = work
 
     work _ = return gui
 
-type ModifiableWidgetState = (ColorSet, WidgetColor, Bool, WidgetState, Widget)
-
 filterAt :: Point V2 Int32 -> GuiWidgetTree -> [(WContext, Widget)]
 filterAt aPos' = catMaybes . WT.toList . mapWTPos work
   where
@@ -83,10 +80,10 @@ filterAt aPos' = catMaybes . WT.toList . mapWTPos work
 
     work :: GuiPos -> (WContext, Widget) -> Maybe (WContext, Widget)
     work pos (ctx, w)
-      | isWithinRect aPos pos (ti^.tiSize) = Just (ctx, w)
-      | otherwise                          = Nothing
+      | isWithinRect aPos pos size = Just (ctx, w)
+      | otherwise                  = Nothing
       where
-        ti = ctx^.ctxTextureInfo
+        size = ctx^.ctxWidgetState.wstSize
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =
