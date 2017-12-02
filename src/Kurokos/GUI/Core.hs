@@ -34,7 +34,7 @@ import qualified Kurokos.RPN               as RPN
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
 
--- update visibiilty in WidgetState
+-- Update visibiilty in WidgetState
 updateVisibility :: GuiWidgetTree -> GuiWidgetTree
 updateVisibility = work True
   where
@@ -57,21 +57,8 @@ updateLayout wt0 = fst $ work wt0 Unordered (P $ V2 0 0)
         HorizontalStack -> _x .= (p^._x)
       return x
 
-    work Null                 _   p0 = (Null, p0)
-    work (Fork u a Nothing o) ct0 p0 = runState go p0
-      where
-        wst = a^._1.ctxWidgetState
-        go = do
-          u' <- modsize ct0 . work u ct0 =<< get
-          pos <- get
-          let pos' = case ct0 of
-                      Unordered -> p0 + (wst^.wstPos)
-                      _         -> pos
-              a' = a & _1 . ctxWidgetState . wstGlobalPos .~ pos'
-          modsize ct0 ((), pos' + P (wst^.wstSize))
-          o' <- modsize ct0 . work o ct0 =<< get
-          return $ Fork u' a' Nothing o'
-    work (Fork u a (Just c) o) ct0 p0 = runState go p0
+    work Null            _   p0 = (Null, p0)
+    work (Fork u a mc o) ct0 p0 = runState go p0
       where
         wst = a^._1.ctxWidgetState
         ct' = fromMaybe Unordered $ a^._1.ctxContainerType
@@ -83,9 +70,11 @@ updateLayout wt0 = fst $ work wt0 Unordered (P $ V2 0 0)
                       _         -> pos
               a' = a & _1 . ctxWidgetState . wstGlobalPos .~ pos'
           modsize ct0 ((), pos' + P (wst^.wstSize))
-          c' <- modsize ct0 $ work c ct' pos'
+          mc' <- case mc of
+            Nothing -> return Nothing
+            Just c  -> fmap Just $ modsize ct0 $ work c ct' pos'
           o' <- modsize ct0 . work o ct0 =<< get
-          return $ Fork u' a' (Just c') o'
+          return $ Fork u' a' mc' o'
 
 data GuiEnv = GuiEnv
   { geFont            :: Font.Font
