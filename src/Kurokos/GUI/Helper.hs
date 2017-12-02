@@ -5,6 +5,7 @@ import           Debug.Trace         (traceM)
 
 import           Control.Lens
 import           Control.Monad.State
+import           Data.Foldable       (find)
 import           Data.List           (find)
 import           Safe                (headMay)
 
@@ -36,6 +37,11 @@ update wid f = over gWTree (fmap work)
           let (ctx', w') = f a
           in (ctx' & ctxNeedsRender .~ True, w')
       | otherwise = a
+
+lookup :: WidgetIdent -> GUI -> Maybe CtxWidget
+lookup wid = find isTarget . view gWTree
+  where
+    isTarget = (== Just wid) . view (_1 . ctxIdent)
 
 setGlobalPosition :: WidgetIdent -> GuiPos -> GUI -> GUI
 setGlobalPosition wid global = over gWTree (mapWTPos work)
