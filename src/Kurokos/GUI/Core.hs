@@ -166,9 +166,8 @@ instance MonadTrans GuiT where
 
 newGui :: (RenderEnv m, MonadIO m, MonadMask m, MonadThrow m)
   => GuiEnv -> GuiT m () -> m GUI
-newGui env initializer = do
-  gui <- runGuiT env iniGui initializer
-  readyRender gui
+newGui env initializer =
+  readyRender . over gWTree WT.balance =<< runGuiT env iniGui initializer
 
 genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree

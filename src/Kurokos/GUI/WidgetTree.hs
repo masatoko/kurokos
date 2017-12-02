@@ -93,6 +93,27 @@ toList Null                = []
 toList (Single u a o)      = toList u ++ a : toList o
 toList (Container u a c o) = toList u ++ a : toList c ++ toList o
 
+balance :: WidgetTree a -> WidgetTree a
+balance = fromList' . toList'
+  where
+    toList' :: WidgetTree a -> [(a, Maybe (WidgetTree a))]
+    toList' Null                = []
+    toList' (Single u a o)      = toList' u ++ (a, Nothing) : toList' o
+    toList' (Container u a c o) = toList' u ++ (a, Just (balance c)) : toList' o
+
+    fromList' :: [(a, Maybe (WidgetTree a))] -> WidgetTree a
+    fromList' [] = Null
+    fromList' es = work x
+      where
+        n = length es
+        (us, x:os) = splitAt (n `div` 2) es
+        us' = fromList' us
+        os' = fromList' os
+
+        work (a, Just wt) = Container us' a wt os'
+        work (a, Nothing) = Single us' a os'
+
+
 instance Functor WidgetTree where
   fmap _ Null                = Null
   fmap f (Single u a o)      = Single (fmap f u) (f a) (fmap f o)
