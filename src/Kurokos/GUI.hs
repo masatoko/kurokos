@@ -23,7 +23,7 @@ module Kurokos.GUI
   , getWidgetTree
   , getGuiEvents
   -- , genSingle
-  , genCtxS
+  , genSingle
   , genContainer
   , appendRoot
   , prependRoot

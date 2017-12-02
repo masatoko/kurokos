@@ -170,9 +170,9 @@ newGui env initializer = do
   gui <- runGuiT env iniGui initializer
   readyRender gui
 
-genCtxS :: (RenderEnv m, MonadIO m, E.MonadThrow m)
+genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
-genCtxS mName pos size w = do
+genSingle mName pos size w = do
   key <- WTKey <$> use gKeyCnt
   gKeyCnt += 1
   pos' <- case fromUExpV2 pos of
