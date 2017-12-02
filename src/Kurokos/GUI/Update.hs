@@ -41,9 +41,9 @@ procEvent gui = work
         if SDL.ButtonLeft `elem` mouseMotionEventState
           then gDragTrajectory %= (mouseMotionEventPos:)
           else gDragTrajectory .= []
-        modify $ over gWTree $ mapWTPos $ modWhenHover (fromIntegral <$> mouseMotionEventPos)
+        modify $ over gWTree $ fmap $ modWhenHover (fromIntegral <$> mouseMotionEventPos)
       where
-        modWhenHover curPos _ pos a@(ctx,w)
+        modWhenHover curPos a@(ctx,w)
           | isHoverable && not (wst^.wstHover) && isWithinRect curPos pos size =
             let ctx' = ctx & ctxWidgetState . wstHover .~ True
                            & ctxNeedsRender .~ True
@@ -56,6 +56,7 @@ procEvent gui = work
             in (ctx',w)
           | otherwise = a
           where
+            pos = ctx^.ctxWidgetState.wstGlobalPos
             isHoverable = ctx^.ctxAttrib.hoverable
             wst = ctx^.ctxWidgetState
             size = wst^.wstSize
@@ -80,16 +81,17 @@ topmostAt :: Point V2 Int32 -> GuiWidgetTree -> Maybe (WContext, Widget)
 topmostAt p = lastMay . filterAt p
 
 filterAt :: Point V2 Int32 -> GuiWidgetTree -> [(WContext, Widget)]
-filterAt aPos' = catMaybes . WT.toList . mapWTPos work
+filterAt aPos' = catMaybes . WT.toList . fmap work
   where
     aPos = fromIntegral <$> aPos'
 
-    work :: GuiPos -> GuiPos -> (WContext, Widget) -> Maybe (WContext, Widget)
-    work _ pos (ctx, w)
-      | isWithinRect aPos pos size = Just (ctx, w)
+    work :: (WContext, Widget) -> Maybe (WContext, Widget)
+    work cw
+      | isWithinRect aPos pos size = Just cw
       | otherwise                  = Nothing
       where
-        size = ctx^.ctxWidgetState.wstSize
+        pos = cw^._1.ctxWidgetState.wstGlobalPos
+        size = cw^._1.ctxWidgetState.wstSize
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =

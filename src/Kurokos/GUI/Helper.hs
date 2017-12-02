@@ -44,12 +44,14 @@ glookup wid = find isTarget . view gWTree
     isTarget = (== Just wid) . view (_1 . ctxIdent)
 
 setGlobalPosition :: WidgetIdent -> GuiPos -> GUI -> GUI
-setGlobalPosition wid global = over gWTree (mapWTPos work)
+setGlobalPosition wid global = over gWTree (fmap work)
   where
-    work :: GuiPos -> GuiPos -> CtxWidget -> CtxWidget
-    work p0 _ a@(ctx, w)
+    work :: CtxWidget -> CtxWidget
+    work a@(ctx, w)
       | ctx^.ctxIdent == Just wid = (ctx', w)
       | otherwise                 = a
       where
+        p0 = ctx^.ctxWidgetState . wstGlobalPos
         local = global - p0
-        ctx' = ctx & ctxWidgetState . wstPos .~ local
+        ctx' = ctx & ctxWidgetState . wstGlobalPos .~ global
+                   & ctxWidgetState . wstPos .~ local

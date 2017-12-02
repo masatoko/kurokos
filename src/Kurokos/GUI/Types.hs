@@ -3,15 +3,15 @@
 module Kurokos.GUI.Types where
 
 import           Control.Lens
-import           Data.Int           (Int64)
-import           Data.Word          (Word8)
-import           Foreign.C.Types    (CInt)
+import           Data.Int        (Int64)
+import           Data.Word       (Word8)
+import           Foreign.C.Types (CInt)
 import           Linear.V2
 import           Linear.V4
 
 import qualified SDL
 
-import qualified Kurokos.RPN        as RPN
+import qualified Kurokos.RPN     as RPN
 
 type Key = Int64
 newtype WTKey = WTKey Key deriving Show
@@ -28,17 +28,18 @@ data ContainerType
   | VerticalStack
 
 data WidgetState = WidgetState
-  { _wstPos     :: GuiPos -- Relative position of texture
-  , _wstSize    :: GuiSize -- Texture size
+  { _wstGlobalPos :: GuiPos -- Change via setGlobalPos. Must not change directly.
+  , _wstPos       :: GuiPos -- Lobal position
+  , _wstSize      :: GuiSize -- Texture size
   --
-  , _wstVisible :: Bool
-  , _wstHover   :: Bool
+  , _wstVisible   :: Bool
+  , _wstHover     :: Bool
   }
 
 makeLenses ''WidgetState
 
 iniWidgetState :: WidgetState
-iniWidgetState = WidgetState (pure 0) (pure 0) True False
+iniWidgetState = WidgetState (pure 0) (pure 0) (pure 0) True False
 
 data WidgetAttrib = WidgetAttrib
   { _hoverable :: Bool
