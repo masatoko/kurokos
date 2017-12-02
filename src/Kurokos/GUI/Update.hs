@@ -62,6 +62,7 @@ procEvent gui = work
             size = wst^.wstSize
             ColorSet{..} = ctx^.ctxColorSet
 
+    -- Make SelectEvent
     work (MouseButtonEvent MouseButtonEventData{..}) =
       return $ gui & gEvents %~ (es ++)
       where
@@ -87,11 +88,15 @@ filterAt aPos' = catMaybes . WT.toList . fmap work
 
     work :: (WContext, Widget) -> Maybe (WContext, Widget)
     work cw
-      | isWithinRect aPos pos size = Just cw
-      | otherwise                  = Nothing
+      | vis && within = Just cw
+      | otherwise     = Nothing
       where
-        pos = cw^._1.ctxWidgetState.wstGlobalPos
-        size = cw^._1.ctxWidgetState.wstSize
+        wst = cw^._1.ctxWidgetState
+        pos = wst^.wstGlobalPos
+        size = wst^.wstSize
+        --
+        vis = wst^.wstVisible
+        within = isWithinRect aPos pos size
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =
