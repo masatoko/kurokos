@@ -7,7 +7,11 @@ module Kurokos.GUI
   , HasEvent (..)
   --
   -- WContext (Lens)
+  , ctxWidgetState
   , ctxAttrib
+  -- WidgetState
+  , wstVisible
+  , wstHover
   -- WidgetAttrib (Lens)
   , hoverable
   , clickable

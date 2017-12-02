@@ -22,7 +22,7 @@ import qualified SDL.Font            as Font
 import qualified SDL.Primitive       as Gfx
 
 import qualified Kurokos             as K
-import           Kurokos.GUI         (UExp (..))
+import           Kurokos.GUI         (UExp (..), ctxWidgetState, wstVisible)
 import qualified Kurokos.GUI         as GUI
 import           Kurokos.GUI.Event
 
@@ -175,14 +175,11 @@ titleScene =
         testOnClick = execStateT work
           where
             work =
-              modify' . over tGui $ execState $ do
-                GUI.onClick "title" $ \_ ->
-                  traceM "title is clicked"
-
+              modify' . over tGui $ execState $
                 GUI.onClick "clickable" $ \e -> do
+                  modify $ GUI.update "menu" $ over (_1.ctxWidgetState.wstVisible) not
                   let pos = GUI.seGlobalPosition $ GUI.geType e
-                  modify' $ GUI.setGlobalPosition "menu" pos
-
+                  modify $ GUI.setGlobalPosition "menu" pos
 
         go (GuiEvent SelectEvent{..} _wt _key (Just "button")) =
           when (seInputMotion == SDL.Released) $ do
