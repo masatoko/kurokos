@@ -67,7 +67,7 @@ stack build
 stack exec demo
 ```
 
-# TODO
+# TODOs
 
 ### GUI
 - [ ] Stack Container
@@ -80,5 +80,7 @@ stack exec demo
 - [ ] Select by cursor buttons (using zipper?)
 
 ### Others
-- [ ] File archiver (For releaser. Already made. Include from 'Light It')
-- [ ] Localization Manager
+- [ ] File Archiver (For releaser. Already made. Include from 'Light It')
+- [ ] Localization Management
+- [ ] Resource Management
+- [ ] Effect System (ex. Particle)
