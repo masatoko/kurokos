@@ -170,8 +170,9 @@ titleScene =
 
         testOnClick = execStateT work
           where
-            work = modify' $ over tGui $ execState go
-            go = GUI.onClick "title" $
+            work =
+              modify' $ over tGui $ execState $
+                GUI.onClick "title" $
                   traceM "title is clicked"
 
         go (GuiEvent SelectEvent{..} _wt _key (Just "button")) =

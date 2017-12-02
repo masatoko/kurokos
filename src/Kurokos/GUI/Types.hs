@@ -28,9 +28,9 @@ data ContainerType
   | VerticalStack
 
 data WidgetState = WS
-  { _wstPos :: GuiPos
-  , _wstSize :: GuiSize
-  , _hover :: Bool
+  { _wstPos :: GuiPos -- Relative position of texture
+  , _wstSize :: GuiSize -- Texture size
+  , _wstHover :: Bool
   }
 
 makeLenses ''WidgetState

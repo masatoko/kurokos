@@ -43,13 +43,13 @@ procEvent gui = work
         modify $ over gWTree $ mapWTPos $ modWhenHover (fromIntegral <$> mouseMotionEventPos)
       where
         modWhenHover curPos pos a@(ctx,w)
-          | hoverable w && not (wst^.hover) && isWithinRect curPos pos size =
-            let ctx' = ctx & ctxWidgetState . hover .~ True
+          | hoverable w && not (wst^.wstHover) && isWithinRect curPos pos size =
+            let ctx' = ctx & ctxWidgetState . wstHover .~ True
                            & ctxNeedsRender .~ True
                            & ctxColor .~ (colorSetHover `modColor` colorSetBasis)
             in (ctx',w)
-          | hoverable w && wst^.hover && not (isWithinRect curPos pos size) =
-            let ctx' = ctx & ctxWidgetState . hover .~ False
+          | hoverable w && wst^.wstHover && not (isWithinRect curPos pos size) =
+            let ctx' = ctx & ctxWidgetState . wstHover .~ False
                            & ctxNeedsRender .~ True
                            & ctxColor .~ colorSetBasis
             in (ctx',w)
