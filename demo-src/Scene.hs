@@ -130,8 +130,8 @@ titleScene =
         ctn1 <- GUI.genContainer GUI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
         let Just ctn1' = GUI.appendChild (GUI.wtconcat [lbl', btn']) ctn1
         --
-        btns <- GUI.wtconcat <$> mapM (GUI.genCtxS Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< GUI.newButton . T.pack . show) [0..(9::Int)]
-        ctn2 <- GUI.genContainer GUI.VerticalStack (V2 (Rpn "$width 50 -") (C 0)) (V2 (C 50) (C 300))
+        btns <- GUI.wtconcat <$> mapM (GUI.genCtxS Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< GUI.newButton . T.pack . show) [1..(5::Int)]
+        ctn2 <- GUI.genContainer GUI.VerticalStack (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
         let Just ctn2' = GUI.appendChild btns ctn2
         --
         GUI.prependRoot $ GUI.wtconcat [label, button1, button2, img, ctn1', ctn2']

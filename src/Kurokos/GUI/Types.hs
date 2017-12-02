@@ -30,13 +30,15 @@ data ContainerType
 data WidgetState = WidgetState
   { _wstPos :: GuiPos -- Relative position of texture
   , _wstSize :: GuiSize -- Texture size
+  --
+  , _wstVisible :: Bool
   , _wstHover :: Bool
   }
 
 makeLenses ''WidgetState
 
 iniWidgetState :: WidgetState
-iniWidgetState = WidgetState (pure 0) (pure 0) False
+iniWidgetState = WidgetState (pure 0) (pure 0) True False
 
 data WidgetAttrib = WidgetAttrib
   { _hoverable :: Bool

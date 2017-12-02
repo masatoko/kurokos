@@ -29,13 +29,6 @@ import           Kurokos.GUI.WidgetTree    (WidgetTree (..), wtappend)
 import qualified Kurokos.GUI.WidgetTree    as WT
 import qualified Kurokos.RPN               as RPN
 
-data TextureInfo = TextureInfo
-  { _tiPos  :: GuiPos
-  , _tiSize :: GuiSize
-  }
-
-makeLenses ''TextureInfo
-
 data WContext = WContext
   { _ctxKey           :: WTKey
   , _ctxIdent         :: Maybe WidgetIdent
