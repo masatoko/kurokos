@@ -63,16 +63,20 @@ updateLayout wt0 = fst $ work wt0 Unordered (P $ V2 0 0)
         wst = a^._1.ctxWidgetState
         ct' = fromMaybe Unordered $ a^._1.ctxContainerType
         go = do
+          -- Under
           u' <- modsize ct0 . work u ct0 =<< get
+          -- CtxWidget
           pos <- get
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
                       _         -> pos
               a' = a & _1 . ctxWidgetState . wstGlobalPos .~ pos'
           modsize ct0 ((), pos' + P (wst^.wstSize))
+          -- Children
           mc' <- case mc of
             Nothing -> return Nothing
             Just c  -> fmap Just $ modsize ct0 $ work c ct' pos'
+          -- Over
           o' <- modsize ct0 . work o ct0 =<< get
           return $ Fork u' a' mc' o'
 
