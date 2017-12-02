@@ -4,11 +4,12 @@ module Kurokos.GUI.Update
   ) where
 
 import           Control.Lens
-import           Control.Monad       (foldM)
+import           Control.Monad          (foldM)
 import           Control.Monad.State
-import           Data.Int            (Int32)
-import           Data.Maybe          (catMaybes, mapMaybe)
+import           Data.Int               (Int32)
+import           Data.Maybe             (catMaybes, mapMaybe, maybeToList)
 import           Linear.V2
+import           Safe                   (lastMay)
 
 import           Kurokos.GUI.Core
 import           Kurokos.GUI.Event
@@ -63,18 +64,20 @@ procEvent gui = work
     work (MouseButtonEvent MouseButtonEventData{..}) =
       return $ gui & gEvents %~ (es ++)
       where
-        ws = filterAt mouseButtonEventPos $ gui^.gWTree
-        et = SelectEvent mouseButtonEventMotion
-        es = mapMaybe conv ws
+        es = maybeToList $ conv =<< topmostAt mouseButtonEventPos (gui^.gWTree)
           where
             conv (ctx,w)
               | ctx^.ctxAttrib.clickable = Just $ GuiEvent et w k mn
               | otherwise                = Nothing
               where
+                et = SelectEvent mouseButtonEventMotion
                 k = ctx^.ctxKey
                 mn = ctx^.ctxIdent
 
     work _ = return gui
+
+topmostAt :: Point V2 Int32 -> GuiWidgetTree -> Maybe (WContext, Widget)
+topmostAt p = lastMay . filterAt p
 
 filterAt :: Point V2 Int32 -> GuiWidgetTree -> [(WContext, Widget)]
 filterAt aPos' = catMaybes . WT.toList . mapWTPos work
