@@ -49,7 +49,7 @@ module Kurokos.GUI
   -- Rendering
   , render
   -- Helper
-  , onClick
+  , clicked
   , update
   , glookup
   , setGlobalPosition

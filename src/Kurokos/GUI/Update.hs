@@ -63,7 +63,7 @@ procEvent gui = work
             ColorSet{..} = ctx^.ctxColorSet
 
     -- Make SelectEvent
-    work (MouseButtonEvent MouseButtonEventData{..}) =
+    work (MouseButtonEvent dt@MouseButtonEventData{..}) =
       return $ gui & gEvents %~ (es ++)
       where
         es = maybeToList $ conv =<< topmostAt mouseButtonEventPos (gui^.gWTree)
@@ -72,7 +72,7 @@ procEvent gui = work
               | ctx^.ctxAttrib.clickable = Just $ GuiEvent et w k mn
               | otherwise                = Nothing
               where
-                et = SelectEvent mouseButtonEventMotion (fromIntegral <$> mouseButtonEventPos)
+                et = MouseClick dt
                 k = ctx^.ctxKey
                 mn = ctx^.ctxIdent
 

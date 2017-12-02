@@ -15,8 +15,5 @@ data GuiEvent = GuiEvent
   } deriving Show
 
 data EventType
-  = SelectEvent
-      { seInputMotion :: SDL.InputMotion
-      , seGlobalPosition :: GuiPos
-      }
+  = MouseClick SDL.MouseButtonEventData
   deriving (Eq, Show)

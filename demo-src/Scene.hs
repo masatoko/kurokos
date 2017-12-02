@@ -11,7 +11,7 @@ import           Control.Lens
 import           Control.Monad.Extra (whenJust)
 import           Control.Monad.State
 import           Data.List.Extra     (firstJust)
-import           Data.Maybe          (fromMaybe, mapMaybe)
+import           Data.Maybe          (fromMaybe, isJust, mapMaybe)
 import qualified Data.Text           as T
 import qualified Data.Text.IO        as T
 import qualified Data.Vector         as V
@@ -103,8 +103,8 @@ titleScene :: Scene Title IO Action
 titleScene =
   Scene defPad update render transit alloc
   where
-    nameMain = Just "go-main"
-    nameMouse = Just "go-mouse"
+    nameMain = "go-main"
+    nameMouse = "go-mouse"
 
     alloc = do
       (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 16) K.freeFont
@@ -119,8 +119,8 @@ titleScene =
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
-        button1 <- GUI.genSingle nameMain pos1 size =<< GUI.newButton "Next: Main Scene"
-        button2 <- GUI.genSingle nameMouse pos2 size =<< GUI.newButton "Push: Mouse Scene"
+        button1 <- GUI.genSingle (Just nameMain) pos1 size =<< GUI.newButton "Next: Main Scene"
+        button2 <- GUI.genSingle (Just nameMouse) pos2 size =<< GUI.newButton "Push: Mouse Scene"
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
@@ -163,37 +163,27 @@ titleScene =
 
     update :: Update Title IO Action
     update _st _as t0 =
-      readyG =<< testOnClick =<< updateTitle =<< updateG t0
+      readyG . testOnClick =<< updateG t0
       where
         updateG t = t & tGui %%~ GUI.updateGui
         readyG t  = t & tGui %%~ GUI.readyRender
 
-        updateTitle t = do
-          mapM_ (liftIO . print) es
-          return $ execState (mapM_ go es) t
+        testOnClick t =
+          flip execState t $ do
+            -- click
+            whenJust (GUI.clicked "clickable" SDL.ButtonRight gui0) $ \pos -> do
+              modify' $ over tGui $ GUI.update "menu" $ over (_1.ctxAttrib.visible) not
+              modify' $ over tGui $ GUI.setGlobalPosition "menu" pos
+            -- update title
+            whenJust (GUI.clicked "button" SDL.ButtonLeft gui0) $ \_ -> do
+              modify' $
+                over tCnt (+1)
+              cnt <- gets $ view tCnt
+              let title = T.pack $ show cnt
+              modify' $
+                over tGui $ GUI.update "label" (over _2 (GUI.setTitle title))
           where
-            es = GUI.getGuiEvents $ t^.tGui
-
-        testOnClick = execStateT work
-          where
-            work =
-              modify' . over tGui $ execState $
-                GUI.onClick "clickable" $ \e -> do
-                  modify $ GUI.update "menu" $ over (_1.ctxAttrib.visible) not
-                  let pos = GUI.seGlobalPosition $ GUI.geType e
-                  modify $ GUI.setGlobalPosition "menu" pos
-
-        go (GuiEvent SelectEvent{..} _wt _key (Just "button")) =
-          when (seInputMotion == SDL.Released) $ do
-            modify' $
-              over tCnt (+1)
-            cnt <- gets $ view tCnt
-            let title = T.pack $ show cnt
-                setTitle (c,wt) = (c, GUI.setTitle title wt)
-            modify' $
-              over tGui $
-                GUI.update "label" setTitle
-        go _ = return ()
+            gui0 = t^.tGui
 
     render :: Render Title IO
     render _ t = do
@@ -210,16 +200,12 @@ titleScene =
         color = V4 50 50 50 255
 
     transit _ as (Title gui _)
-      | Exit  `elem` as = K.end
-      | otherwise       = return . firstJust go . GUI.getGuiEvents $ gui
+      | Exit  `elem` as   = K.end
+      | onClick nameMain  = K.next mainScene
+      | onClick nameMouse = K.push mouseScene
+      | otherwise         = K.continue
       where
-        go (GuiEvent SelectEvent{..} _wt _key mName) =
-          if seInputMotion == SDL.Released
-            then
-              if | mName == nameMain  -> Just $ K.Next mainScene
-                 | mName == nameMouse -> Just $ K.Push mouseScene
-                 | otherwise          -> Nothing
-            else Nothing
+        onClick ident = isJust $ GUI.clicked ident SDL.ButtonLeft gui
 
 mainScene :: Scene MyData IO Action
 mainScene = Scene defPad update render transit allocGame
