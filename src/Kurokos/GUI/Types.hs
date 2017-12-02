@@ -44,6 +44,7 @@ iniWidgetState = WidgetState (pure 0) (pure 0) (pure 0) True False
 data WidgetAttrib = WidgetAttrib
   { _hoverable :: Bool
   , _clickable :: Bool
+  , _visible   :: Bool
   }
 
 makeLenses ''WidgetAttrib
@@ -52,6 +53,7 @@ defAttrib :: WidgetAttrib
 defAttrib = WidgetAttrib
   { _hoverable = True
   , _clickable = True
+  , _visible = True
   }
 
 -- Color

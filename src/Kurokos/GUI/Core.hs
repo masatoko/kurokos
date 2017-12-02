@@ -34,8 +34,9 @@ import qualified Kurokos.RPN               as RPN
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
 
-updatePosition :: GuiWidgetTree -> GuiWidgetTree
-updatePosition wt0 = fst $ work wt0 Unordered (P $ V2 0 0)
+-- Update global position and visibility
+updateRenderingState :: GuiWidgetTree -> GuiWidgetTree
+updateRenderingState wt0 = fst $ work wt0 Unordered True (P $ V2 0 0)
   where
     modsize ct (x,p) = do
       case ct of
@@ -44,78 +45,41 @@ updatePosition wt0 = fst $ work wt0 Unordered (P $ V2 0 0)
         HorizontalStack -> _x .= (p^._x)
       return x
 
-    work Null                 _   p0 = (Null, p0)
-    work (Fork u a Nothing o) ct0 p0 = runState go p0
+    work Null                 _   _    p0 = (Null, p0)
+    work (Fork u a Nothing o) ct0 vis0 p0 = runState go p0
       where
         wst = a^._1.ctxWidgetState
+        atr = a^._1.ctxAttrib
         go = do
-          u' <- modsize ct0 . work u ct0 =<< get
+          u' <- modsize ct0 . work u ct0 vis0 =<< get
           pos <- get
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
                       _         -> pos
+              vis' = vis0 && atr^.visible
               a' = a & _1 . ctxWidgetState . wstGlobalPos .~ pos'
+                     & _1 . ctxWidgetState . wstVisible .~ vis'
           modsize ct0 ((), pos' + P (wst^.wstSize))
-          o' <- modsize ct0 . work o ct0 =<< get
+          o' <- modsize ct0 . work o ct0 vis0 =<< get
           return $ Fork u' a' Nothing o'
-    work (Fork u a (Just c) o) ct0 p0 = runState go p0
+    work (Fork u a (Just c) o) ct0 vis0 p0 = runState go p0
       where
         wst = a^._1.ctxWidgetState
+        atr = a^._1.ctxAttrib
         ct' = fromMaybe Unordered $ a^._1.ctxContainerType
         go = do
-          u' <- modsize ct0 . work u ct0 =<< get
+          u' <- modsize ct0 . work u ct0 vis0 =<< get
           pos <- get
           let pos' = case ct0 of
                       Unordered -> p0 + (wst^.wstPos)
                       _         -> pos
+              vis' = vis0 && atr^.visible
               a' = a & _1 . ctxWidgetState . wstGlobalPos .~ pos'
+                     & _1 . ctxWidgetState . wstVisible .~ vis'
           modsize ct0 ((), pos' + P (wst^.wstSize))
-          c' <- modsize ct0 $ work c ct' pos'
-          o' <- modsize ct0 . work o ct0 =<< get
+          c' <- modsize ct0 $ work c ct' vis' pos'
+          o' <- modsize ct0 . work o ct0 vis0 =<< get
           return $ Fork u' a' (Just c') o'
-
--- mapWTPosM_ :: (Monad m, Applicative m) => (GuiPos -> CtxWidget -> m a) -> GuiWidgetTree -> m ()
--- mapWTPosM_ f wt = void $ mapWTPosM f wt
---
--- mapWTPosM :: (Monad m, Applicative m) => (GuiPos -> CtxWidget -> m a) -> GuiWidgetTree -> m (WidgetTree a)
--- mapWTPosM f wt0 = fst <$> work wt0 Unordered (pure 0)
---   where
---     modsize ct (x,p) = do
---       case ct of
---         Unordered       -> return ()
---         VerticalStack   -> _y .= (p^._y)
---         HorizontalStack -> _x .= (p^._x)
---       return x
---
---     work Null _ p0 = return (Null, p0)
---     work (Fork u a Nothing o) ct0 p0 = runStateT go p0
---       where
---         wst = a^._1.ctxWidgetState
---         go = do
---           u' <- modsize ct0 =<< lift . work u ct0 =<< get
---           pos <- get
---           let pos' = case ct0 of
---                       Unordered -> p0 + (wst^.wstPos)
---                       _         -> pos
---           a' <- lift $ f pos' a
---           modsize ct0 ((), pos' + P (wst^.wstSize))
---           o' <- modsize ct0 =<< lift . work o ct0 =<< get
---           return $ Fork u' a' Nothing o'
---     work (Fork u a (Just c) o) ct0 p0 = runStateT go p0
---       where
---         wst = a^._1.ctxWidgetState
---         ct' = fromMaybe Unordered $ a^._1.ctxContainerType
---         go = do
---           u' <- modsize ct0 =<< lift . work u ct0 =<< get
---           pos <- get
---           let pos' = case ct0 of
---                       Unordered -> p0 + (wst^.wstPos)
---                       _         -> pos
---           a' <- lift $ f pos' a
---           modsize ct0 ((), pos' + P (wst^.wstSize))
---           c' <- modsize ct0 =<< lift (work c ct' pos')
---           o' <- modsize ct0 =<< lift . work o ct0 =<< get
---           return $ Fork u' a' (Just c') o'
 
 data GuiEnv = GuiEnv
   { geFont            :: Font.Font
@@ -213,7 +177,7 @@ readyRender g = do
         , (keyWinWidth, w)
         , (keyWinHeight, h)]
   wt <- go vmap $ g^.gWTree
-  return $ g & gWTree .~ updatePosition wt
+  return $ g & gWTree .~ updateRenderingState wt
   where
     makeTexture vmap (ctx, widget) = do
       let vmap' = M.map fromIntegral vmap
@@ -280,8 +244,9 @@ render :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 render = mapM_ go . view gWTree
   where
     go (ctx,_)
-      | ctx^.ctxNeedsRender = E.throw $ userError "Call GUI.readyRender before GUI.render!"
-      | otherwise           = renderTexture (ctx^.ctxTexture) rect
+      | ctx^.ctxNeedsRender            = E.throw $ userError "Call GUI.readyRender before GUI.render!"
+      | ctx^.ctxWidgetState.wstVisible = renderTexture (ctx^.ctxTexture) rect
+      | otherwise                      = return ()
         where
           rect = Rectangle pos size
           pos = ctx^.ctxWidgetState.wstGlobalPos

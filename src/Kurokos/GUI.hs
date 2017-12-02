@@ -9,12 +9,12 @@ module Kurokos.GUI
   -- WContext (Lens)
   , ctxWidgetState
   , ctxAttrib
-  -- WidgetState
-  , wstVisible
+  -- WidgetState (Lens)
   , wstHover
   -- WidgetAttrib (Lens)
   , hoverable
   , clickable
+  , visible
   -- Types
   , ContainerType (..)
   , UExp (..)
