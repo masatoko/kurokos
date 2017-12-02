@@ -112,6 +112,7 @@ data WContext = WContext
   , _ctxIdent         :: Maybe WidgetIdent
   , _ctxContainerType :: Maybe ContainerType
   , _ctxAttrib        :: WidgetAttrib
+  , _ctxNeedsLayout   :: Bool
   , _ctxNeedsRender   :: Bool
   , _ctxWidgetState   :: WidgetState
   , _ctxColorSet      :: ColorSet

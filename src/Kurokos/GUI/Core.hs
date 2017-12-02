@@ -130,7 +130,7 @@ genSingle mIdent pos size w = do
   colset <- asks geDefaultColorSet
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  let ctx = WContext key mIdent Nothing (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
+  let ctx = WContext key mIdent Nothing (attribOf w) True True iniWidgetState colset (colorSetBasis colset) tex pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
@@ -148,7 +148,7 @@ genContainer mIdent ct pos size = do
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let w = Transparent
-      ctx = WContext key mIdent (Just ct) (attribOf w) True iniWidgetState colset (colorSetBasis colset) tex pos' size'
+      ctx = WContext key mIdent (Just ct) (attribOf w) True True iniWidgetState colset (colorSetBasis colset) tex pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
@@ -159,11 +159,17 @@ prependRoot wt = modify $ over gWTree (<> wt)
 
 -- Rendering GUI
 
+setAllNeedsLayout :: GUI -> GUI
+setAllNeedsLayout =
+  over gWTree (fmap work)
+  where
+    work = set (_1 . ctxNeedsLayout) True
+
 setAllNeedsRender :: GUI -> GUI
 setAllNeedsRender =
-  over gWTree (fmap setNR)
+  over gWTree (fmap work)
   where
-    setNR = set (_1 . ctxNeedsRender) True
+    work = set (_1 . ctxNeedsRender) True
 
 readyRender :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m GUI
 readyRender g = do
@@ -176,6 +182,25 @@ readyRender g = do
   wt <- go vmap $ g^.gWTree
   return $ g & gWTree .~ (updateLayout . updateVisibility) wt
   where
+    go _ Null = return Null
+    go vmap (Fork u a mc o) = do
+      u' <- go vmap u
+      a' <- if ctx^.ctxNeedsRender
+              then do
+                SDL.destroyTexture $ ctx^.ctxTexture
+                makeTexture vmap a
+              else return a
+      mc' <- case mc of
+        Nothing -> return Nothing
+        Just c -> do
+          let (V2 w h) = fromIntegral <$> (a'^._1 . ctxWidgetState . wstSize)
+              vmap' = M.insert keyWidth w . M.insert keyHeight h $ vmap -- Update width and height
+          Just <$> go vmap' c
+      o' <- go vmap o
+      return $ Fork u' a' mc' o'
+      where
+        ctx = a^._1
+
     makeTexture vmap (ctx, widget) = do
       let vmap' = M.map fromIntegral vmap
       pos <- case evalExp2 vmap' upos of
@@ -194,33 +219,6 @@ readyRender g = do
         upos = ctx^.ctxUPos
         usize = ctx^.ctxUSize
         wcol = ctx^.ctxColor
-
-    go _ Null = return Null
-    go vmap (Fork u a Nothing o) = do
-      u' <- go vmap u
-      o' <- go vmap o
-      if ctx^.ctxNeedsRender
-        then do
-          SDL.destroyTexture $ ctx^.ctxTexture
-          a' <- makeTexture vmap a
-          return $ Fork u' a' Nothing o'
-        else return $ Fork u' a Nothing o'
-      where
-        ctx = a^._1
-    go vmap (Fork u a (Just c) o) = do
-      a' <- if ctx^.ctxNeedsRender
-              then do
-                SDL.destroyTexture $ ctx^.ctxTexture
-                makeTexture vmap a
-              else return a
-      u' <- go vmap u
-      o' <- go vmap o
-      let (V2 w h) = fromIntegral <$> (a'^._1 . ctxWidgetState . wstSize)
-          vmap' = M.insert keyWidth w . M.insert keyHeight h $ vmap -- Update width and height
-      c' <- go vmap' c
-      return $ Fork u' a' (Just c') o'
-      where
-        ctx = a^._1
 
     evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)
     evalExp2 vmap (V2 x y) = V2 <$> evalExp x <*> evalExp y
