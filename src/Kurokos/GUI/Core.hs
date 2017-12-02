@@ -34,6 +34,7 @@ import qualified Kurokos.RPN               as RPN
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
 
+-- update visibiilty in WidgetState
 updateVisibility :: GuiWidgetTree -> GuiWidgetTree
 updateVisibility = work True
   where
@@ -41,11 +42,11 @@ updateVisibility = work True
     work vis0 (Fork u a mc o) =
       Fork (work vis0 u) a' (work vis' <$> mc) (work vis0 o)
       where
-        atr = a^._1.ctxAttrib
-        vis' = vis0 && atr^.visible
+        atr = a^._1.ctxAttrib -- Original attribute
+        vis' = vis0 && atr^.visible -- Current state
         a' = a & _1 . ctxWidgetState . wstVisible .~ vis'
 
--- Update global position and visibility
+-- Update global position in WidgetState
 updateLayout :: GuiWidgetTree -> GuiWidgetTree
 updateLayout wt0 = fst $ work wt0 Unordered (P $ V2 0 0)
   where
