@@ -12,6 +12,7 @@ import qualified Control.Exception.Safe    as E
 import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
+import           Data.ByteString (ByteString)
 import qualified Data.Map                  as M
 import           Data.Maybe                (fromMaybe, isJust)
 import           Data.Monoid               ((<>))
@@ -85,6 +86,7 @@ updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
 data GuiEnv = GuiEnv
   { geFont            :: Font.Font
   , geDefaultColorSet :: ColorSet
+  , geFileLoader      :: FilePath -> IO ByteString
   }
 
 data GUI = GUI
@@ -119,6 +121,9 @@ newGui :: (RenderEnv m, MonadIO m, MonadMask m, MonadThrow m)
   => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer =
   readyRender . over gWTree WT.balance =<< runGuiT env iniGui initializer
+
+freeGui :: MonadIO m => GUI -> m ()
+freeGui g = mapM_ (freeWidget . snd) $ g^.gWTree
 
 genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree

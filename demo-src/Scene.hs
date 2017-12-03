@@ -17,6 +17,7 @@ import qualified Data.Text.IO        as T
 import qualified Data.Vector         as V
 import           Linear.V4
 import           Safe                (headMay)
+import qualified Data.ByteString.Char8 as B
 
 import qualified SDL
 import qualified SDL.Font            as Font
@@ -108,8 +109,7 @@ titleScene =
 
     alloc = do
       (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 16) K.freeFont
-      let env = GUI.GuiEnv font colset
-      (_, tex) <- K.allocTexture "_data/img.png"
+      let env = GUI.GuiEnv font colset B.readFile
       gui <- GUI.newGui env $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
@@ -124,7 +124,7 @@ titleScene =
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
-        img <- GUI.genSingle (Just "image") imgPos imgSize =<< GUI.newImageView tex
+        img <- GUI.genSingle (Just "image") imgPos imgSize =<< GUI.newImageView "_data/img.png"
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
         lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
