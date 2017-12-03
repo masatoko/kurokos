@@ -13,10 +13,10 @@ import Kurokos.Archive
 main :: IO ()
 main = do
   B.putStrLn . decode key . encode key $ "KONNICHIWA!"
-  --
-  archiveF key arcPath "sample" isValidPath
-  --
-  extractFiles key arcPath "_extract"
+  -- Archive files
+  archiveF key arcPath "_target" isValidPath
+  -- Extract files
+  extractFiles key arcPath "_extracted"
   putStrLn "\n=== showFiles ==="
   showFiles key arcPath >>= putStrLn
   putStrLn "\n=== text1.txt ==="
@@ -32,17 +32,21 @@ main = do
   putStrLn "\n=== directoryFiles ==="
   directoryFiles key arcPath "child" >>= print
   directoryFiles key arcPath "" >>= print
-  --
-  readArchive key arcPath >>= getFileBS key "child/child1/txt_child1.txt" >>= print
-  return ()
+
+  -- Read data from the archive file
+  putStrLn "\n=== Read from archive ==="
+  arc <- readArchive key arcPath
+  bs <- getFileBS key "child/child1/txt_child1.txt" arc
+  print bs
   where
-    arcPath = "_out/result.arc"
+    arcPath = "_archived/result.arc"
     key = "secret"
 
     isValidPath path =
       isHeadValid name && all isValidDir dirs
       where
         name = takeFileName path
+
         isHeadValid ('@':_) = False
         isHeadValid _       = True
 
