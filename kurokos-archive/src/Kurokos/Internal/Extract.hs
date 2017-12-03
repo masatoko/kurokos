@@ -1,18 +1,19 @@
 module Kurokos.Internal.Extract
   ( Archive
-  , readArchiveBS
+  , InternalPath
+  , readFileA_
   -- , readArchiveText
   -- , readArchiveStr
   , loadArchive
-  , getFileBS
+  , readFileA
   -- , getFileText
   -- , getFileStr
   , extractFiles
   --
   , directoryDirs
   , directoryFiles
-  , allFiles
-  , showFiles
+  -- , allFiles
+  , filesWithSize
   ) where
 
 import qualified Control.Exception        as E
@@ -47,10 +48,11 @@ type InternalPath = String
 -- readArchiveStr seed arc target = T.unpack <$> readArchiveText seed arc target
 --
 -- readArchiveText :: Seed -> FilePath -> InternalPath -> IO T.Text
--- readArchiveText seed arc target = T.decodeUtf8 <$> readArchiveBS seed arc target
+-- readArchiveText seed arc target = T.decodeUtf8 <$> readDirect seed arc target
 
-readArchiveBS :: Seed -> FilePath -> InternalPath -> IO B.ByteString
-readArchiveBS seed arc target = do
+-- | Read data directly from archive data path
+readFileA_ :: Seed -> FilePath -> InternalPath -> IO B.ByteString
+readFileA_ seed arc target = do
   (headerSize, as) <- headerInfo seed arc
   case break isTarget as of
     (_, []) -> do
@@ -67,6 +69,7 @@ readArchiveBS seed arc target = do
 
 --
 
+-- | Load 'Archive'
 loadArchive :: Seed -> FilePath -> IO Archive
 loadArchive seed arc = do
   (offset, infoList) <- headerInfo seed arc
@@ -85,10 +88,11 @@ loadArchive seed arc = do
 -- getFileStr seed path arc = T.unpack <$> getFileText seed path arc
 --
 -- getFileText :: Seed -> InternalPath -> Archive -> IO T.Text
--- getFileText seed path arc = T.decodeUtf8 <$> getFileBS seed path arc
+-- getFileText seed path arc = T.decodeUtf8 <$> readFileA seed path arc
 
-getFileBS :: Seed -> InternalPath -> Archive -> IO B.ByteString
-getFileBS seed path (Archive amap) =
+-- | Read data from Archive data
+readFileA :: Seed -> Archive -> InternalPath -> IO B.ByteString
+readFileA seed (Archive amap) path =
   case M.lookup path' amap of
     Just (bytes, offset) -> return $ decode (seed <+> offset) bytes
     Nothing              -> E.throwIO $ userError $ "Missing '" ++ path ++ "' in archive data"
@@ -97,6 +101,10 @@ getFileBS seed path (Archive amap) =
 
 --
 
+-- | Extract all files from Archive (path)
+--
+-- - 1st 'FilePath': Archive path
+-- - 2nd 'FilePath': Destination directory
 extractFiles :: Seed -> FilePath -> FilePath -> IO ()
 extractFiles seed arcPath outDir = do
   (headerSize, as) <- headerInfo seed arcPath
@@ -137,12 +145,8 @@ directoryFiles seed arc dir =
 allFiles :: Seed -> FilePath -> IO [String]
 allFiles seed path = map fst . snd <$> headerInfo seed path
 
-showFiles :: Seed -> FilePath -> IO String
-showFiles seed path = do
-  (_, cs) <- headerInfo seed path
-  return $ unlines $ map work cs
-  where
-    work (path, size) = path ++ ": " ++ show size
+filesWithSize :: Seed -> FilePath -> IO [(String, Int)]
+filesWithSize seed path = snd <$> headerInfo seed path
 
 headerInfo :: Seed -> FilePath -> IO (Int64, [(String, Int)])
 headerInfo seed path = do

@@ -3,22 +3,18 @@ module Kurokos.Archive
   -- ** Data
     Archive
   , Seed
+  , InternalPath
   -- ** Archive
   , archiveAll
   , archive
   -- ** Extract
-  , readArchiveBS
-  -- , readArchiveText
-  -- , readArchiveStr
   , loadArchive
-  , getFileBS
-  -- , getFileText
-  -- , getFileStr
+  , readFileA
+  , readFileA_
   , extractFiles
+  , filesWithSize
   , directoryDirs
   , directoryFiles
-  , allFiles
-  , showFiles
   ) where
 
 import           Kurokos.Internal.Archive
