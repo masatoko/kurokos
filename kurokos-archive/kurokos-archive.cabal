@@ -1,0 +1,64 @@
+name:                kurokos-archive
+version:             0.1.0.0
+synopsis:            Short description of your package
+homepage:            https://github.com/githubuser/kurokos-archive#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Author name here
+maintainer:          example@example.com
+copyright:           2017 Author name here
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+-- To avoid duplicated efforts in documentation and dealing with the
+-- complications of embedding Haddock markup inside cabal files, it is
+-- common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/githubuser/kurokos-archive#readme>
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     Kurokos.Archive
+  other-modules:       Kurokos.Internal.Archive
+                     , Kurokos.Internal.Encrypt
+                     , Kurokos.Internal.Extract
+                     , Kurokos.Internal.Util
+  build-depends:       base >= 4.7 && < 5
+                     , bytestring
+                     , text
+                     , containers
+                     , mtl
+                     , split
+                     , directory
+                     , filepath
+                     , mmap
+                     , unix-compat
+                     , cryptohash
+                     , safe
+  default-language:    Haskell2010
+
+executable archive-demo
+  hs-source-dirs:      src-demo
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base
+                     , kurokos-archive
+                     , containers
+                     , filepath
+                     , text
+                     , bytestring
+  default-language:    Haskell2010
+
+test-suite kurokos-archive-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , kurokos-archive
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/githubuser/kurokos-archive
