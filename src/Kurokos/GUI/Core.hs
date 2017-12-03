@@ -86,7 +86,7 @@ updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
 data GuiEnv = GuiEnv
   { geDefaultFontPath :: FilePath
   , geDefaultColorSet :: ColorSet
-  , geFileLoader      :: FilePath -> IO ByteString
+  , geFileLoader      :: Maybe (FilePath -> Maybe ByteString)
   }
 
 data GUI = GUI
@@ -128,18 +128,6 @@ freeGui :: MonadIO m => GUI -> m ()
 freeGui g = do
   mapM_ (freeWidget . snd) $ g^.gWTree
   mapM_ Font.free $ M.elems $ g^.gFontMap
-
-loadFont :: (RenderEnv m, MonadIO m) => FilePath -> Font.PointSize -> GuiT m Font.Font
-loadFont path size = do
-  fontMap <- use gFontMap
-  case M.lookup (path,size) fontMap of
-    Just font -> return font
-    Nothing   -> do
-      load <- asks geFileLoader
-      bs <- liftIO $ load path
-      font <- lift $ Font.decode bs size
-      modify' $ over gFontMap $ M.insert (path,size) font
-      return font
 
 genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree

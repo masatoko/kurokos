@@ -13,7 +13,7 @@ import           Kurokos.GUI.Import
 import           Kurokos.GUI.Widget
 import           Kurokos.GUI.Widget.Make
 
-newWidgetTreeFromData :: (RenderEnv m, MonadIO m, MonadThrow m)
+newWidgetTreeFromData :: (RenderEnv m, MonadIO m, MonadThrow m, MonadResource m)
   => ByteString -> GuiT m GuiWidgetTree
 newWidgetTreeFromData bs =
   case decodeWidgets bs of
@@ -24,7 +24,7 @@ newWidgetTreeFromData bs =
       ws <- mapM convert ys
       return $ mconcat ws
 
-convert :: (RenderEnv m, MonadIO m, MonadThrow m)
+convert :: (RenderEnv m, MonadIO m, MonadThrow m, MonadResource m)
   => YWidget -> GuiT m GuiWidgetTree
 convert Single{..} =
   genSingle wIdent (V2 wX wY) (V2 wWidth wHeight) =<< genWidget wType

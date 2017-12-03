@@ -110,7 +110,7 @@ titleScene =
 
     alloc = do
       guiYaml <- liftIO $ B.readFile "_data/gui-title.yaml"
-      let env = GUI.GuiEnv fontPath colset B.readFile
+      let env = GUI.GuiEnv fontPath colset Nothing
       gui <- GUI.newGui env $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)

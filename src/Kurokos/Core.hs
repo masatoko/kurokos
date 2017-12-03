@@ -493,6 +493,8 @@ instance (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => RenderEnv m where
 
   getWindowSize = SDL.get . SDL.windowSize =<< getWindow
 
+  getRenderer = liftIO . readMVar =<< asks renderer
+
   withRenderer act = do
     mvar <- asks renderer
     liftIO $
