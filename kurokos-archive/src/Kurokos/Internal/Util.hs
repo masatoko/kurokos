@@ -2,11 +2,15 @@ module Kurokos.Internal.Util
   ( packSize
   , unpackSize
   , (<+>)
+  , validatePath
   ) where
 
-import qualified Data.ByteString as B
-import           Data.Int        (Int64)
-import           Data.Word       (Word8)
+import qualified Data.ByteString        as B
+import           Data.Int               (Int64)
+import           Data.List              (intercalate, isInfixOf)
+import           Data.List.Split        (splitOn)
+import           Data.Word              (Word8)
+import           System.FilePath.Posix
 
 packSize :: Int64 -> B.ByteString
 packSize n =
@@ -27,3 +31,14 @@ unpackSize = work 1 . take 4 . B.unpack
 
 (<+>) :: B.ByteString -> Int64 -> B.ByteString
 (<+>) bytes x = packSize $ unpackSize bytes + x
+
+validatePath :: FilePath -> FilePath
+validatePath path
+  | "../" `isInfixOf` path = validatePath $
+      if null a
+        then intercalate "../" as
+        else initDirs a </> intercalate "../" as
+  | otherwise              = path
+  where
+    a:as = splitOn "../" path
+    initDirs = joinPath . init . splitDirectories

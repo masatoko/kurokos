@@ -44,19 +44,21 @@ extract = do
   ARC.extractFiles key arcPath "_extracted"
   putStrLn "\n=== showFiles ==="
   ARC.filesWithSize key arcPath >>= mapM_ print
+  ARC.files key arcPath >>= mapM_ print
   putStrLn "\n=== text1.txt ==="
   ARC.readFileA_ key arcPath "text1.txt" >>= B.putStrLn
   putStrLn "\n=== child/text2.txt ==="
   ARC.readFileA_ key arcPath "child/text2.txt" >>= B.putStrLn
   ARC.readFileA_ key arcPath "child/child1/../text2.txt" >>= B.putStrLn
-  putStrLn "\n=== directoryFiles ==="
-  ARC.directoryFiles key arcPath "child" >>= print
-  putStrLn "\n=== directoryDirs ==="
-  ARC.directoryDirs key arcPath "child" >>= print
-  ARC.directoryDirs key arcPath "" >>= print
-  putStrLn "\n=== directoryFiles ==="
-  ARC.directoryFiles key arcPath "child" >>= print
-  ARC.directoryFiles key arcPath "" >>= print
+  putStrLn "\n=== filesIn ==="
+  fs <- ARC.files key arcPath
+  print $ ARC.filesIn fs "child"
+  putStrLn "\n=== dirsIn ==="
+  print $ ARC.dirsIn fs "child"
+  print $ ARC.dirsIn fs ""
+  putStrLn "\n=== filesIn ==="
+  print $ ARC.filesIn fs "child"
+  print $ ARC.filesIn fs ""
 
 -- Read an archive file as 'Archive' data
 readFromArc :: IO ()

@@ -15,7 +15,8 @@ import           System.IO                (IOMode (..), withFile)
 import           System.Posix.Types       (FileOffset)
 import           System.PosixCompat.Files (fileSize, getFileStatus)
 
-import           Kurokos.Internal.Encrypt (Seed, encode)
+import           Kurokos.Internal.Encrypt (encode)
+import           Kurokos.Internal.Types   (Seed)
 import           Kurokos.Internal.Util    (packSize, (<+>))
 
 -- | Archive files.

@@ -23,7 +23,9 @@ library
   other-modules:       Kurokos.Internal.Archive
                      , Kurokos.Internal.Encrypt
                      , Kurokos.Internal.Extract
+                     , Kurokos.Internal.Types
                      , Kurokos.Internal.Util
+                     , Kurokos.Internal.Helper
   build-depends:       base >= 4.7 && < 5
                      , bytestring
                      , text

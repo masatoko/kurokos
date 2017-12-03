@@ -14,10 +14,14 @@ module Kurokos.Archive
   , readFileA_
   -- ** Info
   , filesWithSize
-  , directoryDirs
-  , directoryFiles
+  , files
+  -- ** Helper
+  , dirsIn
+  , filesIn
   ) where
 
 import           Kurokos.Internal.Archive
-import           Kurokos.Internal.Extract
 import           Kurokos.Internal.Encrypt
+import           Kurokos.Internal.Extract
+import           Kurokos.Internal.Helper
+import           Kurokos.Internal.Types   (InternalPath, Seed)

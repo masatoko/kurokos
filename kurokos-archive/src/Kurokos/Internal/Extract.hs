@@ -9,10 +9,7 @@ module Kurokos.Internal.Extract
   -- , getFileText
   -- , getFileStr
   , extractFiles
-  --
-  , directoryDirs
-  , directoryFiles
-  -- , allFiles
+  , files
   , filesWithSize
   ) where
 
@@ -22,27 +19,22 @@ import qualified Data.ByteString          as B
 import qualified Data.ByteString.Char8    as C
 import           Data.Char                (chr, ord)
 import           Data.Int                 (Int64)
-import           Data.List                (intercalate, isInfixOf, isPrefixOf,
-                                           nub)
+import           Data.List                (nub)
 import           Data.List.Split          (splitOn)
 import qualified Data.Map.Strict          as M
-import           Data.Maybe               (mapMaybe)
 import qualified Data.Text                as T
 import qualified Data.Text.Encoding       as T
 import qualified Data.Text.IO             as T
 import           Data.Word                (Word8)
-import           Safe                     (headMay, readMay)
 import           System.Directory         (createDirectoryIfMissing)
 import           System.FilePath.Posix
 import           System.IO.MMap
-import           System.Posix.Types       (FileOffset)
 
-import           Kurokos.Internal.Encrypt (Seed, decode)
-import           Kurokos.Internal.Util    (unpackSize, (<+>))
+import           Kurokos.Internal.Encrypt (decode)
+import           Kurokos.Internal.Types   (InternalPath, Seed)
+import           Kurokos.Internal.Util    (unpackSize, validatePath, (<+>))
 
 newtype Archive = Archive (M.Map FilePath (B.ByteString, Int64)) deriving Show
-
-type InternalPath = String
 
 -- readArchiveStr :: Seed -> FilePath -> InternalPath -> IO String
 -- readArchiveStr seed arc target = T.unpack <$> readArchiveText seed arc target
@@ -118,35 +110,12 @@ extractFiles seed arcPath outDir = do
         range = Just (offset, size)
         outPath = outDir </> path
 
-directoryDirs :: Seed -> FilePath -> FilePath -> IO [FilePath]
-directoryDirs seed arc dir = do
-  fs <- allFiles seed arc
-  let as = nub . mapMaybe childDir $ filter (dir' `isPrefixOf`) fs
-  return $ map (dir' ++) $ filter (/= ".") as
-  where
-    dir' = if null dir
-             then dir
-             else addTrailingPathSeparator . validatePath $ dir
-    n = length $ splitDirectories dir'
-    childDir = headMay . drop n . splitDirectories . dropFileName
-
-directoryFiles :: Seed -> FilePath -> FilePath -> IO [FilePath]
-directoryFiles seed arc dir =
-  filter isChild <$> allFiles seed arc
-  where
-    isChild path
-      | null dir  = dropFileName path == "./"
-      | otherwise = dropFileName path == dir'
-
-    dir' = if null dir
-             then dir
-             else addTrailingPathSeparator . validatePath $ dir
-
-allFiles :: Seed -> FilePath -> IO [String]
-allFiles seed path = map fst . snd <$> headerInfo seed path
-
 filesWithSize :: Seed -> FilePath -> IO [(String, Int)]
 filesWithSize seed path = snd <$> headerInfo seed path
+
+-- | map fst <$> filesWithSize
+files :: Seed -> FilePath -> IO [String]
+files seed path = map fst . snd <$> headerInfo seed path
 
 headerInfo :: Seed -> FilePath -> IO (Int64, [(String, Int)])
 headerInfo seed path = do
@@ -162,17 +131,6 @@ headerInfo seed path = do
       case break (== ':') part of
         (size, ':':path) -> (,) path <$> readIO size
         _                -> E.throwIO $ userError $ "Parse error: " ++ part
-
-validatePath :: FilePath -> FilePath
-validatePath path
-  | "../" `isInfixOf` path = validatePath $
-      if null a
-        then intercalate "../" as
-        else initDirs a </> intercalate "../" as
-  | otherwise              = path
-  where
-    a:as = splitOn "../" path
-    initDirs = joinPath . init . splitDirectories
 
 charToByte :: Char -> Word8
 charToByte = fromIntegral . ord

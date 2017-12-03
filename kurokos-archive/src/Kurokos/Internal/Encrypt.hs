@@ -1,18 +1,17 @@
 module Kurokos.Internal.Encrypt where
 
 import           Control.Monad.State
-import           Data.Bits             (xor)
-import           Data.ByteString       (ByteString)
-import qualified Data.ByteString       as B
-import           Data.Char             (ord)
-import           Data.Int              (Int64)
-import           Data.Word             (Word8)
+import           Data.Bits              (xor)
+import           Data.ByteString        (ByteString)
+import qualified Data.ByteString        as B
+import           Data.Char              (ord)
+import           Data.Int               (Int64)
+import           Data.Word              (Word8)
 
-import qualified Crypto.Hash.SHA256    as SHA
+import qualified Crypto.Hash.SHA256     as SHA
 
-import           Kurokos.Internal.Util (packSize, unpackSize)
-
-type Seed = ByteString
+import           Kurokos.Internal.Types (Seed)
+import           Kurokos.Internal.Util  (packSize, unpackSize)
 
 encode :: Seed -> ByteString -> ByteString
 encode seed bytes0 =
