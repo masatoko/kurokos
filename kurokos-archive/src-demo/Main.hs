@@ -18,7 +18,6 @@ key = "secret"
 
 main :: IO ()
 main = do
-  B.putStrLn . ARC.decode key . ARC.encode key $ "KONNICHIWA!" -- Test decode and encode
   archiveFiles
   extract
   readFromArc

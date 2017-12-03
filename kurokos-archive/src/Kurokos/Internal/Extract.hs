@@ -15,28 +15,29 @@ module Kurokos.Internal.Extract
   , showFiles
   ) where
 
-import Control.Monad (foldM_)
-import qualified Control.Exception as E
-import Data.Maybe (mapMaybe)
-import Data.Char (chr, ord)
-import Data.Word (Word8)
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as C
-import Data.List (isPrefixOf, isInfixOf, nub, intercalate)
-import Data.List.Split (splitOn)
-import qualified Data.Map.Strict as M
-import Data.Int (Int64)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import qualified Data.Text.Encoding as T
-import System.Directory (createDirectoryIfMissing)
-import System.Posix.Types (FileOffset)
-import System.FilePath.Posix
-import System.IO.MMap
-import Safe (readMay, headMay)
+import qualified Control.Exception        as E
+import           Control.Monad            (foldM_)
+import qualified Data.ByteString          as B
+import qualified Data.ByteString.Char8    as C
+import           Data.Char                (chr, ord)
+import           Data.Int                 (Int64)
+import           Data.List                (intercalate, isInfixOf, isPrefixOf,
+                                           nub)
+import           Data.List.Split          (splitOn)
+import qualified Data.Map.Strict          as M
+import           Data.Maybe               (mapMaybe)
+import qualified Data.Text                as T
+import qualified Data.Text.Encoding       as T
+import qualified Data.Text.IO             as T
+import           Data.Word                (Word8)
+import           Safe                     (headMay, readMay)
+import           System.Directory         (createDirectoryIfMissing)
+import           System.FilePath.Posix
+import           System.IO.MMap
+import           System.Posix.Types       (FileOffset)
 
-import Kurokos.Internal.Util (unpackSize, (<+>))
-import Kurokos.Internal.Encrypt (Seed, decode)
+import           Kurokos.Internal.Encrypt (Seed, decode)
+import           Kurokos.Internal.Util    (unpackSize, (<+>))
 
 newtype Archive = Archive (M.Map FilePath (B.ByteString, Int64)) deriving Show
 
@@ -55,7 +56,7 @@ readArchiveBS seed arc target = do
     (_, []) -> do
       let msg = "Missing '" ++ target ++ "' in '" ++ arc ++ "'"
       E.throwIO $ userError msg
-    (ks, ((_,size):_)) -> do
+    (ks, (_,size):_) -> do
       let offset = headerSize + fromIntegral (sum (map snd ks))
           range = Just (offset, size)
       bytes <- mmapFileByteString arc range

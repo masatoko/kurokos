@@ -4,9 +4,9 @@ module Kurokos.Internal.Util
   , (<+>)
   ) where
 
-import Data.Int (Int64)
-import Data.Word (Word8)
 import qualified Data.ByteString as B
+import           Data.Int        (Int64)
+import           Data.Word       (Word8)
 
 packSize :: Int64 -> B.ByteString
 packSize n =

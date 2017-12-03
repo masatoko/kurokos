@@ -17,11 +17,7 @@ module Kurokos.Archive
   , directoryFiles
   , allFiles
   , showFiles
-  -- Encrypt
-  , encode
-  , decode
   ) where
 
 import Kurokos.Internal.Archive
 import Kurokos.Internal.Extract
-import Kurokos.Internal.Encrypt
