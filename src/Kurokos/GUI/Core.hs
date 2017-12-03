@@ -84,7 +84,7 @@ updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
           return $ Fork u' a' mc' o'
 
 data GuiEnv = GuiEnv
-  { geFont            :: Font.Font
+  { geDefaultFontPath :: FilePath
   , geDefaultColorSet :: ColorSet
   , geFileLoader      :: FilePath -> IO ByteString
   }
@@ -94,12 +94,14 @@ data GUI = GUI
   , _gWTree          :: GuiWidgetTree
   , _gEvents         :: [GuiEvent]
   , _gDragTrajectory :: [Point V2 Int32]
+  -- Resource
+  , _gFontMap        :: M.Map (FilePath, Font.PointSize) Font.Font
   }
 
 makeLenses ''GUI
 
 iniGui :: GUI
-iniGui = GUI 0 Null [] []
+iniGui = GUI 0 Null [] [] M.empty
 
 getWidgetTree :: GUI -> WidgetTree Widget
 getWidgetTree = fmap snd . view gWTree
@@ -123,7 +125,21 @@ newGui env initializer =
   readyRender . over gWTree WT.balance =<< runGuiT env iniGui initializer
 
 freeGui :: MonadIO m => GUI -> m ()
-freeGui g = mapM_ (freeWidget . snd) $ g^.gWTree
+freeGui g = do
+  mapM_ (freeWidget . snd) $ g^.gWTree
+  mapM_ Font.free $ M.elems $ g^.gFontMap
+
+loadFont :: (RenderEnv m, MonadIO m) => FilePath -> Font.PointSize -> GuiT m Font.Font
+loadFont path size = do
+  fontMap <- use gFontMap
+  case M.lookup (path,size) fontMap of
+    Just font -> return font
+    Nothing   -> do
+      load <- asks geFileLoader
+      bs <- liftIO $ load path
+      font <- lift $ Font.decode bs size
+      modify' $ over gFontMap $ M.insert (path,size) font
+      return font
 
 genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree

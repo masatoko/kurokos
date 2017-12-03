@@ -108,8 +108,7 @@ titleScene =
     nameMouse = "go-mouse"
 
     alloc = do
-      (_, font) <- allocate (K.loadFont (K.FontFile fontPath) 16) K.freeFont
-      let env = GUI.GuiEnv font colset B.readFile
+      let env = GUI.GuiEnv fontPath colset B.readFile
       gui <- GUI.newGui env $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)

@@ -1,10 +1,10 @@
-{-# LANGUAGE RecordWildCards #-}
 module Kurokos.GUI.Widget.Make where
 
 import           Data.Text
 
-import qualified SDL.Image as Image
 import qualified SDL
+import qualified SDL.Font           as Font
+import qualified SDL.Image          as Image
 
 import           Kurokos.GUI.Core
 import           Kurokos.GUI.Import
@@ -16,9 +16,9 @@ newTransparent = return Transparent
 newFill :: Monad m => GuiT m Widget
 newFill = return Fill
 
-newLabel :: Monad m => Text -> GuiT m Widget
+newLabel :: (RenderEnv m, MonadIO m) => Text -> GuiT m Widget
 newLabel title = do
-  font <- asks geFont
+  font <- loadDefaultFont
   return Label
     { wTitle = title
     , wFont = font
@@ -31,10 +31,17 @@ newImageView texPath = do
   tex <- lift $ withRenderer $ \r -> Image.decodeTexture r byte
   return $ ImageView tex
 
-newButton :: Monad m => Text -> GuiT m Widget
+newButton :: (RenderEnv m, MonadIO m) => Text -> GuiT m Widget
 newButton title = do
-  font <- asks geFont
+  font <- loadDefaultFont
   return Button
     { wTitle = title
     , wFont = font
     }
+
+-- Helper
+
+loadDefaultFont :: (RenderEnv m, MonadIO m) => GuiT m Font.Font
+loadDefaultFont = do
+  path <- asks geDefaultFontPath
+  loadFont path 16
