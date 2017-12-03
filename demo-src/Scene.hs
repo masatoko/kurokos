@@ -109,7 +109,7 @@ titleScene =
     nameMouse = "go-mouse"
 
     alloc = do
-      bs <- liftIO $ B.readFile "_data/gui-title.yaml"
+      guiYaml <- liftIO $ B.readFile "_data/gui-title.yaml"
       let env = GUI.GuiEnv fontPath colset B.readFile
       gui <- GUI.newGui env $ do
         -- Label
@@ -147,7 +147,7 @@ titleScene =
         modify' $ GUI.update "fill" (set (_1 . GUI.ctxAttrib . GUI.visible) False)
 
         -- From file
-        GUI.appendRoot =<< GUI.newWidgetTreeFromData bs
+        GUI.appendRoot =<< GUI.newWidgetTreeFromData guiYaml
 
       liftIO . putStrLn . GUI.pretty $ GUI.getWidgetTree gui
       liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
