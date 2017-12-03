@@ -7,11 +7,12 @@ module Kurokos.Archive
   -- ** Archive
   , archiveAll
   , archive
-  -- ** Extract
   , loadArchive
+  -- ** Extract
+  , extractFiles
   , readFileA
   , readFileA_
-  , extractFiles
+  -- ** Info
   , filesWithSize
   , directoryDirs
   , directoryFiles
