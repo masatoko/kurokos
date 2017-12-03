@@ -62,6 +62,8 @@ instance FromJSON YWidget where
         <*> v .:? "title"
   parseJSON _ = fail "Expected Object for Config value"
 
+makeContainer v = undefined
+
 getUExp :: Text -> UExp -> Y.Object -> Y.Parser UExp
 getUExp label def v = do
   m <- fmap C <$> v .:? label
@@ -83,19 +85,3 @@ getUExp label def v = do
 --
 --     evalExp (ERPN expr) = RPN.eval vmap expr
 --     evalExp (EConst v)  = return $ fromIntegral v
-
-makeContainer v = undefined
---
--- makeSingle :: Y.Value -> String -> WidgetTree
--- makeSingle v wtype = do
---   w <- makeWidget wtype v
---   mIdent <- v .:? "ident"
---   x <- toUExp <$> v .:? "x"
---   y <- toUExp <$> v .:? "y"
---   w <- toUExp <$> v .: "width"
---   h <- toUExp <$> v .: "height"
---   genSingle mIdent (V2 x y) (V2 w h) w
---   where
---
--- makeWidget :: Y.Value -> String -> Widget
--- makeWidget v "button" = undefined
