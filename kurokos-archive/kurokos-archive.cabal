@@ -1,12 +1,12 @@
 name:                kurokos-archive
 version:             0.1.0.0
 synopsis:            Short description of your package
-homepage:            https://github.com/githubuser/kurokos-archive#readme
+homepage:            https://github.com/masatoko/kurokos/kurokos-archive#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2017 Author name here
+author:              Masato Kobayashi
+maintainer:          masatokodo@gmail.com
+copyright:           2017 Masato Kobayashi
 category:            Web
 build-type:          Simple
 extra-source-files:  README.md
@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 -- To avoid duplicated efforts in documentation and dealing with the
 -- complications of embedding Haddock markup inside cabal files, it is
 -- common to point users to the README.md file.
-description:         Please see the README on Github at <https://github.com/githubuser/kurokos-archive#readme>
+description:         Please see the README on Github at <https://github.com/masatoko/kurokos/kurokos-archive#readme>
 
 library
   hs-source-dirs:      src
@@ -61,4 +61,4 @@ test-suite kurokos-archive-test
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/kurokos-archive
+  location: https://github.com/masatoko/kurokos/kurokos-archive
