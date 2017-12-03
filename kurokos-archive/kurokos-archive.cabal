@@ -50,6 +50,7 @@ executable archive-demo
                      , filepath
                      , text
                      , bytestring
+                     , extra
   default-language:    Haskell2010
 
 test-suite kurokos-archive-test

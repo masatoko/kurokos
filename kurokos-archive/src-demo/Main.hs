@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import           Control.Monad.Extra   (whenJust)
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Map.Strict       as M
 import qualified Data.Text             as T
@@ -46,10 +47,10 @@ extract = do
   ARC.filesWithSize key arcPath >>= mapM_ print
   ARC.files key arcPath >>= mapM_ print
   putStrLn "\n=== text1.txt ==="
-  ARC.readFileA_ key arcPath "text1.txt" >>= B.putStrLn
+  ARC.findFile_ key arcPath "text1.txt" >>= B.putStrLn
   putStrLn "\n=== child/text2.txt ==="
-  ARC.readFileA_ key arcPath "child/text2.txt" >>= B.putStrLn
-  ARC.readFileA_ key arcPath "child/child1/../text2.txt" >>= B.putStrLn
+  ARC.findFile_ key arcPath "child/text2.txt" >>= B.putStrLn
+  ARC.findFile_ key arcPath "child/child1/../text2.txt" >>= B.putStrLn
   putStrLn "\n=== filesIn ==="
   fs <- ARC.files key arcPath
   print $ ARC.filesIn fs "child"
@@ -65,5 +66,4 @@ readFromArc :: IO ()
 readFromArc = do
   putStrLn "\n=== Read archive ==="
   arc <- ARC.loadArchive key arcPath -- read an archive file and make 'Archive' data
-  bs <- ARC.readFileA key arc "child/child1/txt_child1.txt" -- read data from the Archive data
-  print bs
+  whenJust (ARC.findFile key arc "child/child1/txt_child1.txt") print -- read data from the Archive data

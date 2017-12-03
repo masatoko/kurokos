@@ -1,11 +1,11 @@
 module Kurokos.Internal.Extract
   ( Archive
   , InternalPath
-  , readFileA_
+  , findFile_
   -- , readArchiveText
   -- , readArchiveStr
   , loadArchive
-  , readFileA
+  , findFile
   -- , getFileText
   -- , getFileStr
   , extractFiles
@@ -43,8 +43,8 @@ newtype Archive = Archive (M.Map FilePath (B.ByteString, Int64)) deriving Show
 -- readArchiveText seed arc target = T.decodeUtf8 <$> readDirect seed arc target
 
 -- | Read data directly from archive data path
-readFileA_ :: Seed -> FilePath -> InternalPath -> IO B.ByteString
-readFileA_ seed arc target = do
+findFile_ :: Seed -> FilePath -> InternalPath -> IO B.ByteString
+findFile_ seed arc target = do
   (headerSize, as) <- headerInfo seed arc
   case break isTarget as of
     (_, []) -> do
@@ -80,14 +80,14 @@ loadArchive seed arc = do
 -- getFileStr seed path arc = T.unpack <$> getFileText seed path arc
 --
 -- getFileText :: Seed -> InternalPath -> Archive -> IO T.Text
--- getFileText seed path arc = T.decodeUtf8 <$> readFileA seed path arc
+-- getFileText seed path arc = T.decodeUtf8 <$> findFile seed path arc
 
 -- | Read data from Archive data
-readFileA :: Seed -> Archive -> InternalPath -> IO B.ByteString
-readFileA seed (Archive amap) path =
+findFile :: Seed -> Archive -> InternalPath -> Maybe B.ByteString
+findFile seed (Archive amap) path =
   case M.lookup path' amap of
-    Just (bytes, offset) -> return $ decode (seed <+> offset) bytes
-    Nothing              -> E.throwIO $ userError $ "Missing '" ++ path ++ "' in archive data"
+    Just (bytes, offset) -> Just $ decode (seed <+> offset) bytes
+    Nothing              -> Nothing
   where
     path' = validatePath path
 

@@ -10,8 +10,8 @@ module Kurokos.Archive
   , loadArchive
   -- ** Extract
   , extractFiles
-  , readFileA
-  , readFileA_
+  , findFile
+  , findFile_
   -- ** Info
   , filesWithSize
   , files
