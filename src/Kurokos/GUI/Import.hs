@@ -17,6 +17,8 @@ module Kurokos.GUI.Import
   --
   , RenderEnv (..)
   , HasEvent (..)
+  -- Maybe
+  , fromMaybe
   ) where
 
 import           Control.Exception.Safe     (MonadMask, MonadThrow)
@@ -25,6 +27,7 @@ import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader.Class (asks)
 import           Control.Monad.Trans.Class  (lift)
 import           Data.Int                   (Int32)
+import           Data.Maybe
 import           Foreign.C.Types            (CInt)
 import           Linear.V2
 import           Linear.V4

@@ -1,0 +1,8 @@
+-
+  ident: btn-ident
+  type: label
+  title: Label From Yaml
+  x: 20
+  y-rpn: $height 100 -
+  w-rpn: $width 2 /
+  h: 50

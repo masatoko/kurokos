@@ -18,6 +18,7 @@ import qualified Data.Vector         as V
 import           Linear.V4
 import           Safe                (headMay)
 import qualified Data.ByteString.Char8 as B
+import qualified Data.Yaml as Y
 
 import qualified SDL
 import qualified SDL.Font            as Font
@@ -108,6 +109,7 @@ titleScene =
     nameMouse = "go-mouse"
 
     alloc = do
+      bs <- liftIO $ B.readFile "_data/gui-title.yaml"
       let env = GUI.GuiEnv fontPath colset B.readFile
       gui <- GUI.newGui env $ do
         -- Label
@@ -143,6 +145,9 @@ titleScene =
         -- Modify attribute
         modify' $ GUI.update "clickable" (set (_1 . GUI.ctxAttrib . GUI.clickable) True)
         modify' $ GUI.update "fill" (set (_1 . GUI.ctxAttrib . GUI.visible) False)
+
+        -- From file
+        GUI.appendRoot =<< GUI.newWidgetTreeFromData bs
 
       liftIO . putStrLn . GUI.pretty $ GUI.getWidgetTree gui
       liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui

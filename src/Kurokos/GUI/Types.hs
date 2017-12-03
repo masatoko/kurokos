@@ -87,12 +87,12 @@ modColor (WCM m) (WC a) =
 data Exp
   = ERPN RPN.Exp
   | EConst CInt
-  deriving Show
+  deriving (Eq, Show)
 
 data UExp
   = Rpn String -- RPN expression
   | C Int -- Constant
-  deriving Show
+  deriving (Eq, Show)
 
 fromUExp :: UExp -> Either String Exp
 fromUExp (Rpn expr) = ERPN <$> RPN.parse expr

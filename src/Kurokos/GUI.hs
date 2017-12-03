@@ -32,7 +32,7 @@ module Kurokos.GUI
   , newGui
   , getWidgetTree
   , getGuiEvents
-  -- , genSingle
+  , newWidgetTreeFromData
   , genSingle
   , genContainer
   , appendRoot
@@ -60,8 +60,9 @@ import           Kurokos.GUI.Update
 
 import           Kurokos.GUI.Def
 import           Kurokos.GUI.Event
+import           Kurokos.GUI.File.Convert  (newWidgetTreeFromData)
+import           Kurokos.GUI.Helper
 import           Kurokos.GUI.Types
 import           Kurokos.GUI.Widget.Make   as Import
 import           Kurokos.GUI.Widget.Module as Import
 import           Kurokos.GUI.WidgetTree
-import           Kurokos.GUI.Helper
