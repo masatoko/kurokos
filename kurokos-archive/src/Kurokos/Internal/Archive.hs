@@ -3,19 +3,20 @@ module Kurokos.Internal.Archive
   , archiveF
   ) where
 
-import System.IO (withFile, IOMode (..))
-import Control.Monad (filterM, foldM_)
-import Data.Char (ord)
-import Data.Word (Word8)
-import Data.Int (Int64)
-import System.Directory (getDirectoryContents, doesFileExist, doesDirectoryExist)
-import System.FilePath.Posix ((</>), takeFileName, splitPath)
-import System.PosixCompat.Files (getFileStatus, fileSize)
-import System.Posix.Types (FileOffset)
-import qualified Data.ByteString as B
+import           Control.Monad            (filterM, foldM_)
+import qualified Data.ByteString          as B
+import           Data.Char                (ord)
+import           Data.Int                 (Int64)
+import           Data.Word                (Word8)
+import           System.Directory         (doesDirectoryExist, doesFileExist,
+                                           getDirectoryContents)
+import           System.FilePath.Posix    (splitPath, takeFileName, (</>))
+import           System.IO                (IOMode (..), withFile)
+import           System.Posix.Types       (FileOffset)
+import           System.PosixCompat.Files (fileSize, getFileStatus)
 
-import Kurokos.Internal.Util (packSize, (<+>))
-import Kurokos.Internal.Encrypt (Seed, encode)
+import           Kurokos.Internal.Encrypt (Seed, encode)
+import           Kurokos.Internal.Util    (packSize, (<+>))
 
 archive :: Seed -> FilePath -> FilePath -> IO ()
 archive seed outPath rootDir =

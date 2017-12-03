@@ -19,5 +19,5 @@ module Kurokos.Archive
   , showFiles
   ) where
 
-import Kurokos.Internal.Archive
-import Kurokos.Internal.Extract
+import           Kurokos.Internal.Archive
+import           Kurokos.Internal.Extract
