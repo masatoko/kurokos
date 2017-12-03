@@ -1,11 +1,20 @@
+{-# LANGUAGE TemplateHaskell   #-}
 module Kurokos.GUI.WidgetTree where
 
+import           Control.Lens
 import           Data.Monoid ((<>))
 
 data WidgetTree a
   = Null
-  | Fork (WidgetTree a) a (Maybe (WidgetTree a)) (WidgetTree a) -- Under Element Children Over
+  | Fork
+    { _wtUnder :: WidgetTree a
+    , _wtElement :: a
+    , _wtChildren :: Maybe (WidgetTree a)
+    , _wtOver :: WidgetTree a
+    }
   deriving (Eq, Show, Read)
+
+makeLenses ''WidgetTree
 
 showTree :: Show a => WidgetTree a -> String
 showTree = unlines . work 0

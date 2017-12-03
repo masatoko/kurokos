@@ -51,6 +51,7 @@ data YWidget
     , wChildren  :: [YWidget]
     -- Attribute
     , wVisible   :: Maybe Bool
+    , wClickable :: Maybe Bool
     }
   deriving (Eq, Show)
 
@@ -84,6 +85,7 @@ makeContainer v = Container
   <*> v .: "children"
   -- Attribute
   <*> v .:? "visible"
+  <*> v .:? "clickable"
 
 getUExp :: Text -> UExp -> Y.Object -> Y.Parser UExp
 getUExp label def v = do
