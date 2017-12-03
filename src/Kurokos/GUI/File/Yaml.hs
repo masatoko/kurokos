@@ -38,6 +38,7 @@ data YWidget
     , wVisible   :: Maybe Bool
     , wClickable :: Maybe Bool
     --
+    , wPath      :: Maybe FilePath
     , wTitle     :: Maybe Text
     } deriving (Eq, Show)
   -- | Container
@@ -59,6 +60,7 @@ instance FromJSON YWidget where
         <*> v .:? "visible"
         <*> v .:? "clickable"
         --
+        <*> v .:? "path"
         <*> v .:? "title"
   parseJSON _ = fail "Expected Object for Config value"
 

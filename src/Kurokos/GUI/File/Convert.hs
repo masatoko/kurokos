@@ -31,6 +31,11 @@ convert Single{..} =
   where
     title = fromMaybe " " wTitle
 
+    genWidget "fill"   = newFill
     genWidget "label"  = newLabel title
     genWidget "button" = newButton title
+    genWidget "image"  =
+      case wPath of
+        Nothing -> E.throwIO $ userError "missing path for image"
+        Just path -> newImageView path
     genWidget wtype    = E.throwIO $ userError $ "unkown widget type: " ++ wtype

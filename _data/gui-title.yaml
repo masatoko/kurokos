@@ -6,3 +6,15 @@
   y-rpn: $height 100 -
   w-rpn: $width 2 /
   h: 50
+
+-
+  type: fill
+  x-rpn: "$width $width 5 / -"
+  w-rpn: "$width 5 /"
+
+-
+  type: image
+  path: _data/img.png
+  y: 32
+  w: 128
+  h: 128
