@@ -24,7 +24,7 @@ main = do
 -- Archive files
 archiveFiles :: IO ()
 archiveFiles =
-  ARC.archiveF key arcPath "_target" isValidPath
+  ARC.archive key "_target" arcPath isValidPath
   where
     isValidPath path =
       isHeadValid name && all isValidDir dirs
@@ -45,10 +45,10 @@ extract = do
   putStrLn "\n=== showFiles ==="
   ARC.showFiles key arcPath >>= putStrLn
   putStrLn "\n=== text1.txt ==="
-  ARC.readArchiveText key arcPath "text1.txt" >>= T.putStrLn
+  ARC.readArchiveBS key arcPath "text1.txt" >>= B.putStrLn
   putStrLn "\n=== child/text2.txt ==="
-  ARC.readArchiveStr key arcPath "child/text2.txt" >>= putStrLn
-  ARC.readArchiveStr key arcPath "child/child1/../text2.txt" >>= putStrLn
+  ARC.readArchiveBS key arcPath "child/text2.txt" >>= B.putStrLn
+  ARC.readArchiveBS key arcPath "child/child1/../text2.txt" >>= B.putStrLn
   putStrLn "\n=== directoryFiles ==="
   ARC.directoryFiles key arcPath "child" >>= print
   putStrLn "\n=== directoryDirs ==="
@@ -62,6 +62,6 @@ extract = do
 readFromArc :: IO ()
 readFromArc = do
   putStrLn "\n=== Read archive ==="
-  arc <- ARC.readArchive key arcPath -- read an archive file and make 'Archive' data
+  arc <- ARC.loadArchive key arcPath -- read an archive file and make 'Archive' data
   bs <- ARC.getFileBS key "child/child1/txt_child1.txt" arc -- read data from the Archive data
   print bs

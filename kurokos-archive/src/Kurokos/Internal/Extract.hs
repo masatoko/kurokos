@@ -1,12 +1,12 @@
 module Kurokos.Internal.Extract
   ( Archive
   , readArchiveBS
-  , readArchiveText
-  , readArchiveStr
-  , readArchive
+  -- , readArchiveText
+  -- , readArchiveStr
+  , loadArchive
   , getFileBS
-  , getFileText
-  , getFileStr
+  -- , getFileText
+  -- , getFileStr
   , extractFiles
   --
   , directoryDirs
@@ -43,11 +43,11 @@ newtype Archive = Archive (M.Map FilePath (B.ByteString, Int64)) deriving Show
 
 type InternalPath = String
 
-readArchiveStr :: Seed -> FilePath -> InternalPath -> IO String
-readArchiveStr seed arc target = T.unpack <$> readArchiveText seed arc target
-
-readArchiveText :: Seed -> FilePath -> InternalPath -> IO T.Text
-readArchiveText seed arc target = T.decodeUtf8 <$> readArchiveBS seed arc target
+-- readArchiveStr :: Seed -> FilePath -> InternalPath -> IO String
+-- readArchiveStr seed arc target = T.unpack <$> readArchiveText seed arc target
+--
+-- readArchiveText :: Seed -> FilePath -> InternalPath -> IO T.Text
+-- readArchiveText seed arc target = T.decodeUtf8 <$> readArchiveBS seed arc target
 
 readArchiveBS :: Seed -> FilePath -> InternalPath -> IO B.ByteString
 readArchiveBS seed arc target = do
@@ -67,8 +67,8 @@ readArchiveBS seed arc target = do
 
 --
 
-readArchive :: Seed -> FilePath -> IO Archive
-readArchive seed arc = do
+loadArchive :: Seed -> FilePath -> IO Archive
+loadArchive seed arc = do
   (offset, infoList) <- headerInfo seed arc
   content <- B.drop (fromIntegral offset) <$> B.readFile arc
   return . Archive . M.fromList $ work offset content infoList
@@ -81,11 +81,11 @@ readArchive seed arc = do
         offset' = offset + fromIntegral size
         (bytes', rest) = B.splitAt size bytes
 
-getFileStr :: Seed -> InternalPath -> Archive -> IO String
-getFileStr seed path arc = T.unpack <$> getFileText seed path arc
-
-getFileText :: Seed -> InternalPath -> Archive -> IO T.Text
-getFileText seed path arc = T.decodeUtf8 <$> getFileBS seed path arc
+-- getFileStr :: Seed -> InternalPath -> Archive -> IO String
+-- getFileStr seed path arc = T.unpack <$> getFileText seed path arc
+--
+-- getFileText :: Seed -> InternalPath -> Archive -> IO T.Text
+-- getFileText seed path arc = T.decodeUtf8 <$> getFileBS seed path arc
 
 getFileBS :: Seed -> InternalPath -> Archive -> IO B.ByteString
 getFileBS seed path (Archive amap) =

@@ -1,6 +1,6 @@
 module Kurokos.Internal.Archive
-  ( archive
-  , archiveF
+  ( archiveAll
+  , archive
   ) where
 
 import           Control.Monad            (filterM, foldM_)
@@ -18,12 +18,20 @@ import           System.PosixCompat.Files (fileSize, getFileStatus)
 import           Kurokos.Internal.Encrypt (Seed, encode)
 import           Kurokos.Internal.Util    (packSize, (<+>))
 
-archive :: Seed -> FilePath -> FilePath -> IO ()
-archive seed outPath rootDir =
-  archiveF seed outPath rootDir (const True)
+-- | Archive files.
+--
+-- - 1st 'FilePath': Root directory for files you want to archive
+-- - 2nd 'FilePath': Destination path
+archiveAll :: Seed -> FilePath -> FilePath -> IO ()
+archiveAll seed rootDir outPath =
+  archive seed rootDir outPath (const True)
 
-archiveF :: Seed -> FilePath -> FilePath -> (FilePath -> Bool) -> IO ()
-archiveF seed outPath rootDir isValidPath =
+-- | Archive files with path validator.
+--
+-- - 1st 'FilePath': Root directory for files you want to archive
+-- - 2nd 'FilePath': Destination path
+archive :: Seed -> FilePath -> FilePath -> (FilePath -> Bool) -> IO ()
+archive seed rootDir outPath isValidPath =
   getFiles >>= mapM addFileSize >>= generate outPath
   where
     generate :: FilePath -> [(FilePath, FileOffset)] -> IO ()

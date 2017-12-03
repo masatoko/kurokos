@@ -1,17 +1,19 @@
 module Kurokos.Archive
   (
-  -- Archive
+  -- ** Data
     Archive
+  , Seed
+  -- ** Archive
+  , archiveAll
   , archive
-  , archiveF
-  -- Extract
+  -- ** Extract
   , readArchiveBS
-  , readArchiveText
-  , readArchiveStr
-  , readArchive
+  -- , readArchiveText
+  -- , readArchiveStr
+  , loadArchive
   , getFileBS
-  , getFileText
-  , getFileStr
+  -- , getFileText
+  -- , getFileStr
   , extractFiles
   , directoryDirs
   , directoryFiles
@@ -21,3 +23,4 @@ module Kurokos.Archive
 
 import           Kurokos.Internal.Archive
 import           Kurokos.Internal.Extract
+import           Kurokos.Internal.Encrypt
