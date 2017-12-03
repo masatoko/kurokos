@@ -24,7 +24,7 @@ main = do
 -- Archive files
 archiveFiles :: IO ()
 archiveFiles =
-  ARC.archive key "_target" arcPath isValidPath
+  ARC.archive key "_sample" arcPath isValidPath
   where
     isValidPath path =
       isHeadValid name && all isValidDir dirs
