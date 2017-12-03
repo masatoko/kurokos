@@ -40,10 +40,19 @@ data YWidget
     --
     , wPath      :: Maybe FilePath
     , wTitle     :: Maybe Text
-    } deriving (Eq, Show)
-  -- | Container
-  --   { wIdent :: String
-  --   }
+    }
+  | Container
+    { wIdent     :: Maybe String
+    , wX         :: UExp
+    , wY         :: UExp
+    , wWidth     :: UExp
+    , wHeight    :: UExp
+    , wContainerType :: ContainerType
+    , wChildren  :: [YWidget]
+    -- Attribute
+    , wVisible   :: Maybe Bool
+    }
+  deriving (Eq, Show)
 
 instance FromJSON YWidget where
   parseJSON (Y.Object v) = do
@@ -64,7 +73,17 @@ instance FromJSON YWidget where
         <*> v .:? "title"
   parseJSON _ = fail "Expected Object for Config value"
 
-makeContainer v = undefined
+makeContainer :: Y.Object -> Y.Parser YWidget
+makeContainer v = Container
+  <$> v .:? "ident"
+  <*> getUExp "x" (C 0) v
+  <*> getUExp "y" (C 0) v
+  <*> getUExp "w" (Rpn "$width") v
+  <*> getUExp "h" (Rpn "$height") v
+  <*> (parseContainerType <$> (v .:? "order"))
+  <*> v .: "children"
+  -- Attribute
+  <*> v .:? "visible"
 
 getUExp :: Text -> UExp -> Y.Object -> Y.Parser UExp
 getUExp label def v = do
@@ -72,6 +91,15 @@ getUExp label def v = do
   mRpn <- fmap Rpn <$> v .:? (label <> "-rpn")
   let uexp = fromMaybe def $ firstJust id [mRpn, m]
   return uexp
+
+parseContainerType :: Maybe String -> ContainerType
+parseContainerType Nothing   = Unordered
+parseContainerType (Just ct) = work ct
+  where
+    work "unordered"  = Unordered
+    work "horizontal" = HorizontalStack
+    work "vertical"   = VerticalStack
+    work _            = Unordered -- fail $ "unkown container type: " ++ ct
 
 -- validateUExp :: UExp -> Either String Double
 -- validateUExp uexp =

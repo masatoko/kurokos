@@ -26,6 +26,7 @@ data ContainerType
   = Unordered
   | HorizontalStack
   | VerticalStack
+  deriving (Eq, Show)
 
 data WidgetState = WidgetState
   { _wstGlobalPos :: GuiPos -- Change via setGlobalPos. Must not change directly.

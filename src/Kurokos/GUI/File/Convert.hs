@@ -11,6 +11,7 @@ import           Kurokos.GUI.Def
 import           Kurokos.GUI.File.Yaml   (YWidget (..), decodeWidgets)
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Widget
+import           Kurokos.GUI.WidgetTree (prependChild)
 import           Kurokos.GUI.Widget.Make
 
 newWidgetTreeFromData :: (RenderEnv m, MonadIO m, MonadThrow m, MonadResource m)
@@ -39,3 +40,9 @@ convert Single{..} =
         Nothing -> E.throwIO $ userError "missing path for image"
         Just path -> newImageView path
     genWidget wtype    = E.throwIO $ userError $ "unkown widget type: " ++ wtype
+
+convert Container{..} = do
+  cnt <- genContainer wIdent wContainerType (V2 wX wY) (V2 wWidth wHeight)
+  ws <- mapM convert wChildren
+  let w = mconcat ws
+  return $ fromMaybe w $ prependChild cnt w
