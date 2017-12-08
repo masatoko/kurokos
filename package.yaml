@@ -1,0 +1,52 @@
+name: kurokos
+version: 0.0.0
+synopsis: A simple game framework
+description: See README at <https://github.com/masatoko/kurokos#README>
+maintainer: Masato Kobayashi <masatokodo@gmail.com>
+license: MIT
+github: masatoko/kurokos
+category: Game Engine
+
+ghc-options:
+  - -Wall
+  - -fno-warn-unused-do-bind
+  - -fno-warn-unused-imports
+
+dependencies:
+  - base >= 4.7 && < 5
+  - sdl2 >= 2.2.0
+  - sdl2-ttf >= 2.0.0
+  - sdl2-image
+  - sdl2-gfx >= 0.2
+  - kurokos-rpn
+  - transformers-base
+  - transformers
+  - mtl
+  - monad-control
+  - containers
+  - lens
+  - bytestring
+  - safe-exceptions
+  - extra
+  - text
+  - vector
+  - managed
+  - resourcet
+  - linear
+  - directory
+  - safe
+  # For kurokos-gui
+  - yaml
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Kurokos
+    - Kurokos.GUI
+    - Kurokos.GUI.Event
+
+executable:
+  main: Main.hs
+  source-dirs: demo-src
+  dependencies:
+    - kurokos
