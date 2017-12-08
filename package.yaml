@@ -12,6 +12,12 @@ ghc-options:
   - -fno-warn-unused-do-bind
   - -fno-warn-unused-imports
 
+flags:
+  demo:
+    description: Build demo executable
+    manual: False
+    default: False
+
 dependencies:
   - base >= 4.7 && < 5
   - sdl2 >= 2.2.0
@@ -48,5 +54,10 @@ library:
 executable:
   main: Main.hs
   source-dirs: demo-src
-  dependencies:
-    - kurokos
+  when:
+    - condition: flag(demo)
+      then:
+        dependencies:
+          - kurokos
+      else:
+        buildable: False
