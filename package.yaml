@@ -52,13 +52,14 @@ library:
     - Kurokos.GUI
     - Kurokos.GUI.Event
 
-executable:
-  main: Main.hs
-  source-dirs: demo-src
-  when:
-    - condition: flag(demo)
-      then:
-        dependencies:
-          - kurokos
-      else:
-        buildable: False
+executables:
+  demo:
+    main: Main.hs
+    source-dirs: demo-src
+    when:
+      - condition: flag(demo)
+        then:
+          dependencies:
+            - kurokos
+        else:
+          buildable: False
