@@ -2,9 +2,6 @@ _common:
   - &data-dir ./_data/
   - &font-dir ./_data/font/
 
-config:
-  default-font-size: 30
-
 assets:
   -
     id: sample-image

@@ -46,11 +46,7 @@ data AssetInfo = AssetInfo
   , aiSize      :: Maybe Int
   } deriving Show
 
-data AssetFile = AssetFile [AssetInfo] Config deriving Show
-
-newtype Config = Config
-  { confDefaultFontSize :: Int
-  } deriving Show
+newtype AssetFile = AssetFile [AssetInfo] deriving Show
 
 testAssets :: MonadIO m => SDL.Renderer -> FilePath -> m ()
 testAssets r path = liftIO $ do
@@ -67,7 +63,7 @@ decodeAssetFile bytes = liftIO $
     Right af -> return af
 
 loadAssetManager :: MonadIO m => SDL.Renderer -> AssetFile -> m AssetManager
-loadAssetManager r (AssetFile as Config{..}) =
+loadAssetManager r (AssetFile as) =
   liftIO $ foldM work empty as
   where
     empty = AssetManager M.empty M.empty M.empty
@@ -82,7 +78,7 @@ loadAssetManager r (AssetFile as Config{..}) =
         ident' = fromMaybe (T.pack aiFileName) aiIdent
         update
           | ext == "ttf" = do
-              font <- Font.load path (fromMaybe confDefaultFontSize aiSize)
+              font <- Font.load path (fromMaybe 16 aiSize)
               return $ am {fontMap = M.insert ident' font fontMap}
           | ext == "tga" = do
               tex <- Image.loadTextureTGA r path
@@ -117,10 +113,4 @@ instance FromJSON AssetInfo where
 instance FromJSON AssetFile where
   parseJSON (Y.Object v) = AssetFile
     <$> v .: "assets"
-    <*> v .: "config"
   parseJSON _            = fail "Expected Object for AssetFile"
-
-instance FromJSON Config where
-  parseJSON (Y.Object v) = Config
-    <$> v .: "default-font-size"
-  parseJSON _            = fail "Expected Object for Config"
