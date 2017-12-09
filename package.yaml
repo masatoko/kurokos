@@ -42,6 +42,7 @@ dependencies:
   - linear
   - directory
   - safe
+  - filepath
   # For kurokos-gui
   - yaml
 
@@ -51,6 +52,7 @@ library:
     - Kurokos
     - Kurokos.GUI
     - Kurokos.GUI.Event
+    - Kurokos.Asset
 
 executables:
   demo:

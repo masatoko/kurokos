@@ -1,0 +1,21 @@
+_common:
+  - &data-dir ./_data/
+  - &font-dir ./_data/font/
+
+config:
+  default-font-size: 30
+
+assets:
+  -
+    id: sample-image
+    dir: *data-dir
+    file: img.png
+  -
+    id: gui-title
+    dir: *data-dir
+    file: gui-title.yaml
+  -
+    id: system-font
+    dir: *font-dir
+    file: system.ttf
+    size: 18

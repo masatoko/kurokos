@@ -35,7 +35,7 @@ import           Import
 import           Pad
 
 fontPath :: FilePath
-fontPath = "_data/system.ttf"
+fontPath = "_data/font/system.ttf"
 
 data Dummy = Dummy
 

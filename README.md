@@ -58,7 +58,7 @@ sudo apt-get install libsdl2-gfx-dev
 
 # Demo
 
-1. 任意のフォントファイルを用意して`_data/system.ttf`に配置する。
+1. 任意のフォントファイルを用意して`_data/font/system.ttf`に配置する。
 
 2. コンパイルと実行
 

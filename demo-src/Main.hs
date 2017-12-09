@@ -20,13 +20,15 @@ import           Import
 import           Pad
 import           Scene
 
+import Kurokos.Asset (testAssets)
+
 main :: IO ()
 main = do
   as <- getArgs
   let opt = (`elem` as)
       conf = mkConf (opt "button") (opt "axis") (opt "hat") -- TODO: fix mkConf
       -- conf' = conf {K.confFont = Left fontBytes}
-      conf' = conf {K.confFont = K.FontFile "_data/system.ttf"}
+      conf' = conf {K.confFont = K.FontFile "_data/font/system.ttf"}
       winConf = SDL.defaultWindow
         { SDL.windowInitialSize = V2 640 480
         , SDL.windowMode = SDL.Windowed
@@ -35,7 +37,7 @@ main = do
   withKurokos conf' winConf $ \kuro ->
     -- Ready original data here
     runManaged $ do
-      _font <- managed $ K.withFont (K.FontFile "_data/system.ttf") 20 -- Test
+      _font <- managed $ K.withFont (K.FontFile "_data/font/system.ttf") 20 -- Example
       liftIO $ void $
         runKurokos kuro $ do
           SDL.setMouseLocationMode SDL.AbsoluteLocation
