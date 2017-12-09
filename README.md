@@ -58,12 +58,23 @@ sudo apt-get install libsdl2-gfx-dev
 
 # Demo
 
-1. 任意のフォントファイルを用意して`_data/font/system.ttf`に配置する。
+## 1. フォントファイルを用意する
 
-2. コンパイルと実行
+### 自動
+
+```
+sh setup-font.sh
+```
+
+### マニュアル
+
+https://ja.osdn.net/projects/robotoj-font/downloads/66649/RobotoJ_20161105.tar.gz/
+からフォントファイル（TTF）をダウンロードして、`_data/font/`に配置する。
+
+## 2. コンパイルと実行
 
 ```sh
-stack build
+stack build --flag=kurokos:demo
 stack exec demo
 ```
 
