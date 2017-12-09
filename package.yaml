@@ -23,7 +23,8 @@ dependencies:
   - sdl2 >= 2.2.0
   - sdl2-ttf >= 2.0.0
   - sdl2-image
-  - sdl2-gfx >= 0.2
+  # - sdl2-gfx >= 0.2
+  - kurokos-sdl2-gfx
   - kurokos-rpn
   - transformers-base
   - transformers

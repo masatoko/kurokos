@@ -15,7 +15,8 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     SDL.Raw.Primitive
+  exposed-modules:     SDL.Primitive
+  other-modules:       SDL.Raw.Primitive
   pkgconfig-depends:   sdl2 >= 2.0.4
                      , SDL2_gfx >= 1.0.1
   build-depends:       base >= 4.7 && < 5
