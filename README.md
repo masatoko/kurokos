@@ -81,17 +81,17 @@ stack exec demo
 # TODOs
 
 ### GUI
-- [ ] Stack Container
+- [x] Stack Container
 - [ ] Scroll Container
-- [ ] Load GUI from file
-- [ ] Image View
+- [x] Load GUI from file
+- [x] Image View
 - [ ] Text Area
 - [ ] Text Field (Editable)
 - [ ] Segmented Control (Radio Button)
 - [ ] Select by cursor buttons (using zipper?)
 
 ### Others
-- [ ] File Archiver (For releaser. Already made. Include from 'Light It')
-- [ ] Localization Management
-- [ ] Resource Management
+- [x] File Archiver
+- [ ] Localization Manager
+- [ ] Asset Manager
 - [ ] Effect System (ex. Particle)
