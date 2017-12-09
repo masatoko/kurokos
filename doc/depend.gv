@@ -6,15 +6,24 @@ digraph {
   kurokos       [style = bold, color = pink3, fontcolor = pink3]
   "kurokos-gui" [style = bold, color = pink3, fontcolor = pink3]
   "kurokos-rpn" [style = bold, color = pink3, fontcolor = pink3]
+  "kurokos-asset" [style = bold, color = pink3, fontcolor = pink3]
+  "kurokos-archive" [style = bold, color = pink3, fontcolor = pink3]
   "your game"   [shape = box, color = black]
   SDL2          [color = royalblue, fontcolor = royalblue]
 
   "your game" -> kurokos
   "your game" -> "kurokos-gui" [style = dashed]
-  "your game" -> SDL2
   "your game" -> "kurokos-rpn" [style = dashed]
+  "your game" -> "kurokos-asset" [style = dashed]
+  "your game" -> "kurokos-archive" [style = dashed]
+  "your game" -> SDL2
 
   kurokos -> SDL2
+  kurokos -> "kurokos-asset"
+  kurokos -> "kurokos-archive"
+  "kurokos-asset" -> SDL2
+  "kurokos-archive" -> "kurokos-asset"
   "kurokos-gui" -> "kurokos-rpn"
+  "kurokos-gui" -> "kurokos-asset"
   "kurokos-gui" -> SDL2
 }
