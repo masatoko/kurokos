@@ -28,7 +28,7 @@ Kurokosは開発中であり、APIは頻繁に変更されます!
 pacman -S mingw64/mingw-w64-x86_64-SDL2
 pacman -S mingw64/mingw-w64-x86_64-SDL2_gfx
 pacman -S mingw64/mingw-w64-x86_64-SDL2_image
-pacman -S mingw64/mingw-w64-x86_64-SDL2_mixer
+# pacman -S mingw64/mingw-w64-x86_64-SDL2_mixer
 pacman -S mingw64/mingw-w64-x86_64-SDL2_ttf
 ```
 
@@ -52,7 +52,7 @@ pacman -S mingw64/mingw-w64-x86_64-SDL2_ttf
 sudo apt-get install libsdl2-dev
 sudo apt-get install libsdl2-image-dev
 sudo apt-get install libsdl2-ttf-dev
-sudo apt-get install libsdl2-mixer-dev
+# sudo apt-get install libsdl2-mixer-dev
 sudo apt-get install libsdl2-gfx-dev
 ```
 
