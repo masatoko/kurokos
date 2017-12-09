@@ -78,6 +78,12 @@ stack build --flag=kurokos:demo
 stack exec demo
 ```
 
+# Memo
+
+## Make GUI using Asset
+
+![make-gui-using-asset](./doc/make-gui-using-asset.png)
+
 # TODOs
 
 ### GUI

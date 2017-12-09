@@ -1,0 +1,32 @@
+digraph {
+  graph [
+    label = "Make GUI using Asset",
+    labelloc = "t",
+    layout = dot,
+    fontname = "Ubuntu",
+  ]
+  node [
+    fontname = "Ubuntu",
+  ]
+  edge [
+    fontname = "Ubuntu",
+    labelfloat = false,
+  ]
+
+  "assets.yaml" [shape = note]
+  "gui.yaml" [shape = note]
+  "GuiT monad" [shape = plain]
+
+  // Asset
+  "assets.yaml" -> "ByteString(asset)" [label = "ByteString.readFile"];
+  "ByteString(asset)" -> AssetManager [label = "Asset.decodeAssetFile"];
+  AssetManager -> GuiEnv [label = "Constructor of GuiEnv"];
+  GuiEnv -> GUI [label = "GUI.newGui"];
+  GUI -> "GuiT monad" [label = "GUI.runGuiT"];
+
+  // GUI
+  "gui.yaml" -> "ByteString(gui)" [label = "ByteString.readFile"];
+  "ByteString(gui)" -> "WidgetTree" [label = "GUI.newWidgetTreeFromData"];
+  "WidgetTree" -> "GuiT monad" [label = "GUI.appendRoot"];
+
+}
