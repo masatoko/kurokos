@@ -14,8 +14,19 @@ assets:
     id: gui-title
     dir: *data-dir
     file: gui-title.yaml
+
   -
-    id: system-font
+    id: robotoj-b
     dir: *font-dir
-    file: system.ttf
-    size: 18
+    file: RobotoJ-Bold.ttf
+    size: 20
+  -
+    id: robotoj-m
+    dir: *font-dir
+    file: RobotoJ-Medium.ttf
+    size: 16
+  -
+    id: robotoj-r
+    dir: *font-dir
+    file: RobotoJ-Regular.ttf
+    size: 16

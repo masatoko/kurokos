@@ -4,6 +4,7 @@ module Kurokos.Asset
   ( testAssets
   -- ** Type
   , AssetManager
+  , Ident
   -- ** Load
   , decodeAssetFile
   , loadAssetManager
@@ -54,15 +55,16 @@ newtype Config = Config
 testAssets :: MonadIO m => SDL.Renderer -> FilePath -> m ()
 testAssets r path = liftIO $ do
   bytes <- BS.readFile path
-  case decodeAssetFile bytes of
-    Left e -> print e
-    Right ap -> do
-      print ap
-      am <- loadAssetManager r ap
-      print . M.keys . byteMap $ am
+  af <- decodeAssetFile bytes
+  print af
+  am <- loadAssetManager r af
+  print . M.keys . byteMap $ am
 
-decodeAssetFile :: BS.ByteString -> Either Y.ParseException AssetFile -- Assets
-decodeAssetFile = Y.decodeEither'
+decodeAssetFile :: MonadIO m => BS.ByteString -> m AssetFile
+decodeAssetFile bytes = liftIO $
+  case Y.decodeEither' bytes of
+    Left e   -> E.throwIO e
+    Right af -> return af
 
 loadAssetManager :: MonadIO m => SDL.Renderer -> AssetFile -> m AssetManager
 loadAssetManager r (AssetFile as Config{..}) =

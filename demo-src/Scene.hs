@@ -5,29 +5,30 @@
 {-# LANGUAGE TemplateHaskell   #-}
 module Scene where
 
-import           Debug.Trace         (traceM)
+import           Debug.Trace           (traceM)
 
 import           Control.Lens
-import           Control.Monad.Extra (whenJust)
+import           Control.Monad.Extra   (whenJust)
 import           Control.Monad.State
-import           Data.List.Extra     (firstJust)
-import           Data.Maybe          (fromMaybe, isJust, mapMaybe)
-import qualified Data.Text           as T
-import qualified Data.Text.IO        as T
-import qualified Data.Vector         as V
-import           Linear.V4
-import           Safe                (headMay)
 import qualified Data.ByteString.Char8 as B
-import qualified Data.Yaml as Y
+import           Data.List.Extra       (firstJust)
+import           Data.Maybe            (fromMaybe, isJust, mapMaybe)
+import qualified Data.Text             as T
+import qualified Data.Text.IO          as T
+import qualified Data.Vector           as V
+import qualified Data.Yaml             as Y
+import           Linear.V4
+import           Safe                  (headMay)
 
 import qualified SDL
-import qualified SDL.Font            as Font
-import qualified SDL.Primitive       as Gfx
+import qualified SDL.Font              as Font
+import qualified SDL.Primitive         as Gfx
 
-import qualified Kurokos             as K
-import           Kurokos.GUI         (UExp (..), ctxAttrib, ctxWidgetState,
-                                      visible)
-import qualified Kurokos.GUI         as GUI
+import qualified Kurokos               as K
+import qualified Kurokos.Asset         as Asset
+import           Kurokos.GUI           (UExp (..), ctxAttrib, ctxWidgetState,
+                                        visible)
+import qualified Kurokos.GUI           as GUI
 import           Kurokos.GUI.Event
 
 import           Import
@@ -110,30 +111,32 @@ titleScene =
 
     alloc = do
       guiYaml <- liftIO $ B.readFile "_data/gui-title.yaml"
-      let env = GUI.GuiEnv fontPath colset Nothing
+      assetFile <- Asset.decodeAssetFile =<< liftIO (B.readFile "_data/assets.yaml")
+      assetManager <- K.withRenderer $ \r -> Asset.loadAssetManager r assetFile
+      let env = GUI.GuiEnv fontPath colset assetManager
       gui <- GUI.newGui env $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- GUI.genSingle (Just "title") pos size0 =<< GUI.newLabel "Kurokos デモ"
+        label <- GUI.genSingle (Just "title") pos size0 =<< GUI.newLabel "robotoj-b" "Kurokos デモ"
         -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
-        button1 <- GUI.genSingle (Just nameMain) pos1 size =<< GUI.newButton "Next: Main Scene"
-        button2 <- GUI.genSingle (Just nameMouse) pos2 size =<< GUI.newButton "Push: Mouse Scene"
+        button1 <- GUI.genSingle (Just nameMain) pos1 size =<< GUI.newButton "robotoj-r" "Next: Main Scene"
+        button2 <- GUI.genSingle (Just nameMouse) pos2 size =<< GUI.newButton "robotoj-r" "Push: Mouse Scene"
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
-        img <- GUI.genSingle (Just "image") imgPos imgSize =<< GUI.newImageView "_data/img.png"
+        img <- GUI.genSingle (Just "image") imgPos imgSize =<< GUI.newImageView "sample-image"
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
-        lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "---"
-        btn' <- GUI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "Button in Container"
+        lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "robotoj-b" "---"
+        btn' <- GUI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "robotoj-m" "Button in Container"
         ctn1 <- GUI.genContainer Nothing GUI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
         let Just ctn1' = GUI.appendChild (mconcat [lbl', btn']) ctn1
         --
-        btns <- mconcat <$> mapM (GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< GUI.newButton . T.pack . show) [1..(5::Int)]
+        btns <- mconcat <$> mapM (GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< GUI.newButton "robotoj-m" . T.pack . show) [1..(5::Int)]
         ctn2 <- GUI.genContainer (Just "menu") GUI.VerticalStack (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
         let Just ctn2' = GUI.appendChild btns ctn2
         --

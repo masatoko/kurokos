@@ -31,6 +31,7 @@ import           Kurokos.GUI.Widget.Render
 import           Kurokos.GUI.WidgetTree    (WidgetTree (..))
 import qualified Kurokos.GUI.WidgetTree    as WT
 import qualified Kurokos.RPN               as RPN
+import Kurokos.Asset
 
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
@@ -86,7 +87,7 @@ updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
 data GuiEnv = GuiEnv
   { geDefaultFontPath :: FilePath
   , geDefaultColorSet :: ColorSet
-  , geFileLoader      :: Maybe (FilePath -> Maybe ByteString)
+  , geAssetManager    :: AssetManager
   }
 
 data GUI = GUI
@@ -94,14 +95,12 @@ data GUI = GUI
   , _gWTree          :: GuiWidgetTree
   , _gEvents         :: [GuiEvent]
   , _gDragTrajectory :: [Point V2 Int32]
-  -- Resource
-  , _gFontMap        :: M.Map (FilePath, Font.PointSize) Font.Font
   }
 
 makeLenses ''GUI
 
 iniGui :: GUI
-iniGui = GUI 0 Null [] [] M.empty
+iniGui = GUI 0 Null [] []
 
 getWidgetTree :: GUI -> WidgetTree Widget
 getWidgetTree = fmap snd . view gWTree
@@ -125,9 +124,8 @@ newGui env initializer =
   readyRender . over gWTree WT.balance =<< runGuiT env iniGui initializer
 
 freeGui :: MonadIO m => GUI -> m ()
-freeGui g = do
+freeGui g =
   mapM_ (freeWidget . snd) $ g^.gWTree
-  mapM_ Font.free $ M.elems $ g^.gFontMap
 
 genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree

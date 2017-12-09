@@ -12,6 +12,7 @@ import           Safe                  (readMay)
 import           Data.Yaml             (FromJSON (..), (.:), (.:?))
 import qualified Data.Yaml             as Y
 
+import qualified Kurokos.Asset         as Asset
 import           Kurokos.GUI.Core
 import           Kurokos.GUI.Import
 import           Kurokos.GUI.Types
@@ -38,20 +39,20 @@ data YWidget
     , wVisible   :: Maybe Bool
     , wClickable :: Maybe Bool
     --
-    , wPath      :: Maybe FilePath
+    , wAsset     :: Maybe Asset.Ident
     , wTitle     :: Maybe Text
     }
   | Container
-    { wIdent     :: Maybe String
-    , wX         :: UExp
-    , wY         :: UExp
-    , wWidth     :: UExp
-    , wHeight    :: UExp
+    { wIdent         :: Maybe String
+    , wX             :: UExp
+    , wY             :: UExp
+    , wWidth         :: UExp
+    , wHeight        :: UExp
     , wContainerType :: ContainerType
-    , wChildren  :: [YWidget]
+    , wChildren      :: [YWidget]
     -- Attribute
-    , wVisible   :: Maybe Bool
-    , wClickable :: Maybe Bool
+    , wVisible       :: Maybe Bool
+    , wClickable     :: Maybe Bool
     }
   deriving (Eq, Show)
 
@@ -70,7 +71,7 @@ instance FromJSON YWidget where
         <*> v .:? "visible"
         <*> v .:? "clickable"
         --
-        <*> v .:? "path"
+        <*> v .:? "asset"
         <*> v .:? "title"
   parseJSON _ = fail "Expected Object for Config value"
 

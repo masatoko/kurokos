@@ -6,6 +6,7 @@
   y-rpn: $height 100 -
   w-rpn: $width 2 /
   h: 50
+  asset: robotoj-r
 
 -
   type: fill
@@ -22,10 +23,12 @@
       type: label
       title: Label
       h: 20
+      asset: robotoj-r
     - *test
     - *test
     -
       type: image
       path: _data/img.png
       h: 30
+      asset: sample-image
     - *test
