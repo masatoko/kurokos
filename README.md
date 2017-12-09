@@ -69,7 +69,7 @@ sh setup-font.sh
 ### マニュアル
 
 https://ja.osdn.net/projects/robotoj-font/downloads/66649/RobotoJ_20161105.tar.gz/
-からフォントファイル（TTF）をダウンロードして、`_data/font/`に配置する。
+からフォントをダウンロードして、`_data/font/`内に解凍した全てのTTFファイルを配置する。
 
 ## 2. コンパイルと実行
 
