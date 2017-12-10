@@ -1,5 +1,5 @@
 _common:
-  - &data-dir ./_data/
+  - &data-dir _data/
 
 files:
   -

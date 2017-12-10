@@ -26,7 +26,7 @@ exportAssetManager pwd dest (AssetManager amap) =
         foldM_ (work h) offset fs
       where
         work h offset (ident, (file, bytes)) = do
-          putStrLn $ "Archiving '" ++ T.unpack ident ++ ": " ++ file ++ "' ..."
+          putStrLn $ "Archiving " ++ T.unpack ident ++ ": '" ++ file ++ "' ..."
           BS.hPutStr h coded
           return offset'
           where

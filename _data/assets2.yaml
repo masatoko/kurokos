@@ -1,5 +1,5 @@
 _common:
-  - &font-dir ./_data/font/
+  - &font-dir _data/font/
 
 files:
   -
