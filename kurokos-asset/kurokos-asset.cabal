@@ -19,6 +19,10 @@ library
   other-modules:       Kurokos.Internal.Types
                      , Kurokos.Internal.AssetManager
                      , Kurokos.Internal.Glob
+                     , Kurokos.Internal.Archive.Decode
+                     , Kurokos.Internal.Archive.Encode
+                     , Kurokos.Internal.Archive.Encrypt
+                     , Kurokos.Internal.Archive.Util
   build-depends:       base >= 4.7 && < 5
                      , sdl2 >= 2.2.0
                      , sdl2-ttf >= 2.0.0
@@ -26,9 +30,15 @@ library
                      , bytestring
                      , text
                      , containers
+                     , mtl
                      , filepath
                      , yaml
                      , Glob >= 0.9
+                     , mmap
+                     , unix-compat
+                     , cryptohash
+                     , safe
+                     , split
   default-language:    Haskell2010
   ghc-options:         -Wall -fno-warn-unused-do-bind
 

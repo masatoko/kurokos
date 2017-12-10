@@ -9,7 +9,6 @@ import qualified Data.Yaml            as Y
 import Data.Maybe (fromMaybe)
 
 import qualified SDL
-import qualified SDL.Font             as Font
 
 type Ident = T.Text
 

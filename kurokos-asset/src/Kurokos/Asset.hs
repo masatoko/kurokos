@@ -12,16 +12,21 @@ module Kurokos.Asset
   , lookupBytes
   , lookupFont
   , lookupTexture
+  -- ** Encrypt
+  , exportAssetManager
+  , importAssetManager
   ) where
 
-import qualified Control.Exception             as E
-import           Control.Monad.IO.Class        (MonadIO, liftIO)
-import qualified Data.ByteString               as BS
-import qualified Data.Yaml                     as Y
+import qualified Control.Exception               as E
+import           Control.Monad.IO.Class          (MonadIO, liftIO)
+import qualified Data.ByteString                 as BS
+import qualified Data.Yaml                       as Y
 
+import           Kurokos.Internal.Archive.Decode (importAssetManager)
+import           Kurokos.Internal.Archive.Encode (exportAssetManager)
 import           Kurokos.Internal.AssetManager
-import           Kurokos.Internal.Types
 import           Kurokos.Internal.Glob
+import           Kurokos.Internal.Types
 
 -- testAssets :: MonadIO m => SDL.Renderer -> FilePath -> m ()
 -- testAssets r path = liftIO $ do
