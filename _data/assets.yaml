@@ -31,6 +31,7 @@ files:
 patterns:
   -
     id: my-texts
+    id-fname: true
     dir: _data/dir-a
     pattern: "*.txt"
     ignores:

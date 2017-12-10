@@ -1,12 +1,13 @@
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 module Kurokos.Internal.Glob where
 
 import qualified Control.Exception      as E
-import qualified Data.Set as Set
+import           Data.Monoid            ((<>))
+import qualified Data.Set               as Set
+import qualified Data.Text              as T
 import qualified System.FilePath.Glob   as Glob
-import qualified Data.Text as T
-import Data.Monoid ((<>))
+import           System.FilePath.Posix  (takeFileName)
 
 import           Kurokos.Internal.Types
 
@@ -29,8 +30,11 @@ yamlToAssetList (AssetYaml fs ds) = do
           AssetInfo (Just ident) Nothing path Nothing
           where
             ident = case pidIdPrefix of
-              Nothing  -> T.pack path
-              Just pfx -> pfx <> T.cons ':' (T.pack path)
+                      Nothing  -> pathid
+                      Just pfx -> pfx <> T.cons ':' pathid
+            pathid
+              | pidIdFname = T.pack $ takeFileName path
+              | otherwise  = T.pack path
 
         compilePattern ptnStr =
           case Glob.tryCompileWith Glob.compDefault ptnStr of

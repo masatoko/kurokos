@@ -30,6 +30,7 @@ instance FromJSON AssetInfo where
 
 data PatternsInDir = PatternsInDir
   { pidIdPrefix  :: Maybe Ident
+  , pidIdFname   :: Bool
   , pidDirectory :: FilePath
   , pidPattern   :: String
   , pidIgnores   :: [String]
@@ -38,6 +39,7 @@ data PatternsInDir = PatternsInDir
 instance FromJSON PatternsInDir where
   parseJSON (Y.Object v) = PatternsInDir
     <$> v .:? "id"
+    <*> (fromMaybe True <$> v .:? "id-fname")
     <*> v .: "dir"
     <*> v .: "pattern"
     <*> (fromMaybe [] <$> v .:? "ignores")
