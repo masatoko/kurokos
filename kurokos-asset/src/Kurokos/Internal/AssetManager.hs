@@ -56,6 +56,18 @@ allocSDL r (AssetManager bmap) =
           | otherwise    =
               return $ am {byteMap = M.insert ident bytes byteMap}
 
+    imageEtxs :: S.Set String
+    imageEtxs = S.fromList ["bmp", "gif", "jpeg", "lbm", "pcx", "png", "pnm", "svg", "tiff", "webp", "xcf", "xpm", "xv"]
+
+lookupFont :: Ident -> SDLAssetManager -> Maybe Font.Font
+lookupFont ident SDLAssetManager{..} = M.lookup ident fontMap
+
+lookupTexture :: Ident -> SDLAssetManager -> Maybe SDL.Texture
+lookupTexture ident SDLAssetManager{..} = M.lookup ident textureMap
+
+lookupBytes :: Ident -> SDLAssetManager -> Maybe BS.ByteString
+lookupBytes ident SDLAssetManager{..} = M.lookup ident byteMap
+
 -- | Deprecated
 -- loadAssetManager :: MonadIO m => SDL.Renderer -> AssetList -> m SDLAssetManager
 -- loadAssetManager r (AssetList as) =
@@ -84,15 +96,3 @@ allocSDL r (AssetManager bmap) =
 --           | otherwise    = do
 --               bytes <- BS.readFile path
 --               return $ am {byteMap = M.insert ident' bytes byteMap}
-
-imageEtxs :: S.Set String
-imageEtxs = S.fromList ["bmp", "gif", "jpeg", "lbm", "pcx", "png", "pnm", "svg", "tiff", "webp", "xcf", "xpm", "xv"]
-
-lookupFont :: Ident -> SDLAssetManager -> Maybe Font.Font
-lookupFont ident SDLAssetManager{..} = M.lookup ident fontMap
-
-lookupTexture :: Ident -> SDLAssetManager -> Maybe SDL.Texture
-lookupTexture ident SDLAssetManager{..} = M.lookup ident textureMap
-
-lookupBytes :: Ident -> SDLAssetManager -> Maybe BS.ByteString
-lookupBytes ident SDLAssetManager{..} = M.lookup ident byteMap
