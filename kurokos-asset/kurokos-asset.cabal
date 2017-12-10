@@ -16,8 +16,8 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Kurokos.Asset
-  other-modules:       Kurokos.Asset.Types
-                     , Kurokos.Asset.AssetManager
+  other-modules:       Kurokos.Internal.Types
+                     , Kurokos.Internal.AssetManager
   build-depends:       base >= 4.7 && < 5
                      , sdl2 >= 2.2.0
                      , sdl2-ttf >= 2.0.0

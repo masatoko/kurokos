@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.Asset.AssetManager where
+module Kurokos.Internal.AssetManager where
 
 import           Control.Monad          (foldM)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
@@ -15,7 +15,7 @@ import qualified SDL
 import qualified SDL.Font               as Font
 import qualified SDL.Image              as Image
 
-import           Kurokos.Asset.Types
+import           Kurokos.Internal.Types
 
 loadAssetManager :: MonadIO m => SDL.Renderer -> AssetFile -> m AssetManager
 loadAssetManager r (AssetFile as) =

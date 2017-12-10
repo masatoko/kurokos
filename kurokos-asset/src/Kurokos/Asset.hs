@@ -12,16 +12,16 @@ module Kurokos.Asset
   , lookupTexture
   ) where
 
-import qualified Control.Exception          as E
-import           Control.Monad.IO.Class     (MonadIO, liftIO)
-import qualified Data.ByteString            as BS
-import qualified Data.Map                   as M
-import qualified Data.Yaml                  as Y
+import qualified Control.Exception             as E
+import           Control.Monad.IO.Class        (MonadIO, liftIO)
+import qualified Data.ByteString               as BS
+import qualified Data.Map                      as M
+import qualified Data.Yaml                     as Y
 
 import qualified SDL
 
-import           Kurokos.Asset.AssetManager
-import           Kurokos.Asset.Types
+import           Kurokos.Internal.AssetManager
+import           Kurokos.Internal.Types
 
 testAssets :: MonadIO m => SDL.Renderer -> FilePath -> m ()
 testAssets r path = liftIO $ do
