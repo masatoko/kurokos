@@ -1,11 +1,12 @@
 module Kurokos.Asset
   ( testAssets
   -- ** Type
-  , AssetManager
+  , SDLAssetManager
   , Ident
   -- ** Load
   , decodeAssetFile
   , loadAssetManager
+  , allocSDL
   -- ** Find Assets
   , lookupBytes
   , lookupFont
@@ -28,7 +29,7 @@ testAssets r path = liftIO $ do
   bytes <- BS.readFile path
   af <- decodeAssetFile bytes
   print af
-  am <- loadAssetManager r af
+  am <- allocSDL r =<< loadAssetManager af
   print . M.keys . byteMap $ am
 
 decodeAssetFile :: MonadIO m => BS.ByteString -> m AssetFile

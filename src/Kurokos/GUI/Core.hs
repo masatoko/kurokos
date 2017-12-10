@@ -31,7 +31,7 @@ import           Kurokos.GUI.Widget.Render
 import           Kurokos.GUI.WidgetTree    (WidgetTree (..))
 import qualified Kurokos.GUI.WidgetTree    as WT
 import qualified Kurokos.RPN               as RPN
-import Kurokos.Asset
+import qualified Kurokos.Asset as Asset
 
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
@@ -87,7 +87,7 @@ updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
 data GuiEnv = GuiEnv
   { geDefaultFontPath :: FilePath
   , geDefaultColorSet :: ColorSet
-  , geAssetManager    :: AssetManager
+  , geAssetManager    :: Asset.SDLAssetManager
   }
 
 data GUI = GUI

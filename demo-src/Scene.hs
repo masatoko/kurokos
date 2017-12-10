@@ -112,7 +112,7 @@ titleScene =
     alloc = do
       guiYaml <- liftIO $ B.readFile "_data/gui-title.yaml"
       assetFile <- Asset.decodeAssetFile =<< liftIO (B.readFile "_data/assets.yaml")
-      assetManager <- K.withRenderer $ \r -> Asset.loadAssetManager r assetFile
+      assetManager <- K.withRenderer $ \r -> Asset.allocSDL r =<< Asset.loadAssetManager assetFile
       let env = GUI.GuiEnv fontPath colset assetManager
       gui <- GUI.newGui env $ do
         -- Label

@@ -23,7 +23,7 @@ instance FromJSON AssetInfo where
   parseJSON (Y.Object v) = AssetInfo
     <$> v .:? "id"
     <*> v .:? "dir"
-    <*> v .: "file"
+    <*> v .:  "file"
     <*> v .:? "size"
   parseJSON _ = fail "Expected Object for AssetInfo"
 
@@ -34,7 +34,11 @@ instance FromJSON AssetFile where
     <$> v .: "assets"
   parseJSON _            = fail "Expected Object for AssetFile"
 
-data AssetManager = AssetManager
+newtype AssetManager = AssetManager
+  { unAstMng :: M.Map Ident (AssetInfo, BS.ByteString)
+  }
+
+data SDLAssetManager = SDLAssetManager
   { byteMap    :: M.Map Ident BS.ByteString
   , fontMap    :: M.Map Ident Font.Font
   , textureMap :: M.Map Ident SDL.Texture
