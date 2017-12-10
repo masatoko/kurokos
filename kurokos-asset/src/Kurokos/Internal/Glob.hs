@@ -27,7 +27,7 @@ fileToAssetList (AssetFile fs ds) = do
       return $ map pathToAssetInfo . Set.toList $ includes `Set.difference` ignores
       where
         pathToAssetInfo path =
-          AssetInfo (Just ident) Nothing path Nothing
+          AssetInfo (Just ident) Nothing path
           where
             ident = case pidIdPrefix of
                       Nothing  -> pathid

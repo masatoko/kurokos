@@ -1,7 +1,10 @@
 module Kurokos.GUI.Widget.Make where
 
 import qualified Control.Exception.Safe as E
+import           Control.Lens
+import           Control.Monad.State
 import qualified Data.ByteString        as BS
+import qualified Data.Map               as M
 import           Data.Text
 import qualified Data.Text              as T
 import           System.IO              (IOMode (..), hClose, openFile)
@@ -25,7 +28,7 @@ newFill = return Fill
 newLabel :: (RenderEnv m, MonadIO m, MonadResource m)
   => Asset.Ident -> Text -> GuiT m Widget
 newLabel ident title = do
-  font <- getFont ident
+  font <- getFont ident 16
   return Label
     { wTitle = title
     , wFont = font
@@ -40,7 +43,7 @@ newImageView ident = do
 newButton :: (RenderEnv m, MonadIO m, MonadResource m)
   => Asset.Ident -> Text -> GuiT m Widget
 newButton ident title = do
-  font <- getFont ident
+  font <- getFont ident 16
   return Button
     { wTitle = title
     , wFont = font
@@ -53,12 +56,19 @@ getTexture ident = do
     Nothing   -> liftIO $ E.throwIO $ userError $ "missing texture: " ++ T.unpack ident
     Just font -> return font
 
-getFont :: MonadIO m => Asset.Ident -> GuiT m Font.Font
-getFont ident = do
-  ast <- asks geAssetManager
-  case Asset.lookupFont ident ast of
-    Nothing   -> liftIO $ E.throwIO $ userError $ "missing font: " ++ T.unpack ident
+getFont :: MonadIO m => Asset.Ident -> Int -> GuiT m Font.Font
+getFont ident size = do
+  fontMap <- use gFontMap
+  case M.lookup (ident, size) fontMap of
     Just font -> return font
+    Nothing   -> do
+      ast <- asks geAssetManager
+      case Asset.lookupFont ident ast of
+        Nothing   -> liftIO $ E.throwIO $ userError $ "missing font: " ++ T.unpack ident
+        Just bytes -> do
+          font <- Font.decode bytes size
+          modify' $ over gFontMap $ M.insert (ident, size) font
+          return font
 
 -- allocTexture :: (RenderEnv m, MonadIO m, MonadResource m) => FilePath -> GuiT m SDL.Texture
 -- allocTexture path = do

@@ -95,12 +95,13 @@ data GUI = GUI
   , _gWTree          :: GuiWidgetTree
   , _gEvents         :: [GuiEvent]
   , _gDragTrajectory :: [Point V2 Int32]
+  , _gFontMap        :: M.Map (Asset.Ident, Int) Font.Font
   }
 
 makeLenses ''GUI
 
 iniGui :: GUI
-iniGui = GUI 0 Null [] []
+iniGui = GUI 0 Null [] [] M.empty
 
 getWidgetTree :: GUI -> WidgetTree Widget
 getWidgetTree = fmap snd . view gWTree

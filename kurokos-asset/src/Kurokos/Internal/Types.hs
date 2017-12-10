@@ -17,7 +17,7 @@ data AssetInfo = AssetInfo
   { aiIdent     :: Maybe Ident
   , aiDirectory :: Maybe FilePath
   , aiFileName  :: String
-  , aiSize      :: Maybe Int
+  -- , aiSize      :: Maybe Int -- Font point size
   } deriving Show
 
 instance FromJSON AssetInfo where
@@ -25,7 +25,7 @@ instance FromJSON AssetInfo where
     <$> v .:? "id"
     <*> v .:? "dir"
     <*> v .:  "file"
-    <*> v .:? "size"
+    -- <*> v .:? "size"
   parseJSON _ = fail "Expected Object for AssetInfo"
 
 data PatternsInDir = PatternsInDir
@@ -67,6 +67,6 @@ newtype AssetManager = AssetManager
 
 data SDLAssetManager = SDLAssetManager
   { byteMap    :: M.Map Ident BS.ByteString
-  , fontMap    :: M.Map Ident Font.Font
+  , fontMap    :: M.Map Ident BS.ByteString
   , textureMap :: M.Map Ident SDL.Texture
   }

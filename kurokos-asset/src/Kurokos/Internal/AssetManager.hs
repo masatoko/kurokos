@@ -44,9 +44,8 @@ allocSDL r (AssetManager bmap) =
       where
         ext = filter (/= '.') . map toLower . takeExtension $ aiFileName
         update
-          | ext == "ttf" = do
-              font <- Font.decode bytes (fromMaybe 16 aiSize)
-              return $ am {fontMap = M.insert ident font fontMap}
+          | ext == "ttf" =
+              return $ am {fontMap = M.insert ident bytes fontMap}
           | ext == "tga" = do
               tex <- Image.decodeTextureTGA r bytes
               return $ am {textureMap = M.insert ident tex textureMap}
@@ -59,7 +58,7 @@ allocSDL r (AssetManager bmap) =
     imageEtxs :: S.Set String
     imageEtxs = S.fromList ["bmp", "gif", "jpeg", "lbm", "pcx", "png", "pnm", "svg", "tiff", "webp", "xcf", "xpm", "xv"]
 
-lookupFont :: Ident -> SDLAssetManager -> Maybe Font.Font
+lookupFont :: Ident -> SDLAssetManager -> Maybe BS.ByteString
 lookupFont ident SDLAssetManager{..} = M.lookup ident fontMap
 
 lookupTexture :: Ident -> SDLAssetManager -> Maybe SDL.Texture
