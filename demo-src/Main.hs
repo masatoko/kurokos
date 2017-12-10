@@ -20,8 +20,6 @@ import           Import
 import           Pad
 import           Scene
 
-import Kurokos.Asset (testAssets)
-
 main :: IO ()
 main = do
   as <- getArgs
