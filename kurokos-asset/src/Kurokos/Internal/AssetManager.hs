@@ -21,7 +21,7 @@ import           Kurokos.Internal.Types
 
 loadAssetManager :: MonadIO m => AssetList -> m AssetManager
 loadAssetManager (AssetList as) =
-  AssetManager . M.fromList <$> liftIO (mapM work as)
+  AssetManager . M.fromList <$> liftIO (mapM work as) -- TODO: Shold check whether keys are duplicated or not.
   where
     work ai@AssetInfo{..} =
       IO.withFile path IO.ReadMode $ \h -> do
