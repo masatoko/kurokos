@@ -3,13 +3,16 @@ module Kurokos.Internal.Util
   , unpackSize
   , (<+>)
   , validatePath
+  , charToByte
+  , byteToChar
   ) where
 
-import qualified Data.ByteString        as B
-import           Data.Int               (Int64)
-import           Data.List              (intercalate, isInfixOf)
-import           Data.List.Split        (splitOn)
-import           Data.Word              (Word8)
+import qualified Data.ByteString       as B
+import           Data.Char             (chr, ord)
+import           Data.Int              (Int64)
+import           Data.List             (intercalate, isInfixOf)
+import           Data.List.Split       (splitOn)
+import           Data.Word             (Word8)
 import           System.FilePath.Posix
 
 packSize :: Int64 -> B.ByteString
@@ -42,3 +45,9 @@ validatePath path
   where
     a:as = splitOn "../" path
     initDirs = joinPath . init . splitDirectories
+
+charToByte :: Char -> Word8
+charToByte = fromIntegral . ord
+
+byteToChar :: Word8 -> Char
+byteToChar = chr . fromIntegral

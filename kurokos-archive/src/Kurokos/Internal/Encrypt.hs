@@ -4,14 +4,13 @@ import           Control.Monad.State
 import           Data.Bits              (xor)
 import           Data.ByteString        (ByteString)
 import qualified Data.ByteString        as B
-import           Data.Char              (ord)
 import           Data.Int               (Int64)
 import           Data.Word              (Word8)
 
 import qualified Crypto.Hash.SHA256     as SHA
 
 import           Kurokos.Internal.Types (Seed)
-import           Kurokos.Internal.Util  (packSize, unpackSize)
+import           Kurokos.Internal.Util  (unpackSize)
 
 encode :: Seed -> ByteString -> ByteString
 encode seed bytes0 =

@@ -2,12 +2,8 @@ module Kurokos.Internal.Extract
   ( Archive
   , InternalPath
   , findFile_
-  -- , readArchiveText
-  -- , readArchiveStr
   , loadArchive
   , findFile
-  -- , getFileText
-  -- , getFileStr
   , extractFiles
   , files
   , filesWithSize
@@ -32,15 +28,10 @@ import           System.IO.MMap
 
 import           Kurokos.Internal.Encrypt (decode)
 import           Kurokos.Internal.Types   (InternalPath, Seed)
-import           Kurokos.Internal.Util    (unpackSize, validatePath, (<+>))
+import           Kurokos.Internal.Util    (byteToChar, unpackSize, validatePath,
+                                           (<+>))
 
 newtype Archive = Archive (M.Map FilePath (B.ByteString, Int64)) deriving Show
-
--- readArchiveStr :: Seed -> FilePath -> InternalPath -> IO String
--- readArchiveStr seed arc target = T.unpack <$> readArchiveText seed arc target
---
--- readArchiveText :: Seed -> FilePath -> InternalPath -> IO T.Text
--- readArchiveText seed arc target = T.decodeUtf8 <$> readDirect seed arc target
 
 -- | Read data directly from archive data path
 findFile_ :: Seed -> FilePath -> InternalPath -> IO B.ByteString
@@ -75,12 +66,6 @@ loadArchive seed arc = do
       where
         offset' = offset + fromIntegral size
         (bytes', rest) = B.splitAt size bytes
-
--- getFileStr :: Seed -> InternalPath -> Archive -> IO String
--- getFileStr seed path arc = T.unpack <$> getFileText seed path arc
---
--- getFileText :: Seed -> InternalPath -> Archive -> IO T.Text
--- getFileText seed path arc = T.decodeUtf8 <$> findFile seed path arc
 
 -- | Read data from Archive data
 findFile :: Seed -> Archive -> InternalPath -> Maybe B.ByteString
@@ -131,9 +116,3 @@ headerInfo seed path = do
       case break (== ':') part of
         (size, ':':path) -> (,) path <$> readIO size
         _                -> E.throwIO $ userError $ "Parse error: " ++ part
-
-charToByte :: Char -> Word8
-charToByte = fromIntegral . ord
-
-byteToChar :: Word8 -> Char
-byteToChar = chr . fromIntegral

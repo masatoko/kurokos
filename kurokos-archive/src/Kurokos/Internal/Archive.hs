@@ -5,19 +5,16 @@ module Kurokos.Internal.Archive
 
 import           Control.Monad            (filterM, foldM_)
 import qualified Data.ByteString          as B
-import           Data.Char                (ord)
-import           Data.Int                 (Int64)
-import           Data.Word                (Word8)
 import           System.Directory         (doesDirectoryExist, doesFileExist,
                                            getDirectoryContents)
-import           System.FilePath.Posix    (splitPath, takeFileName, (</>))
+import           System.FilePath.Posix    ((</>))
 import           System.IO                (IOMode (..), withFile)
 import           System.Posix.Types       (FileOffset)
 import           System.PosixCompat.Files (fileSize, getFileStatus)
 
 import           Kurokos.Internal.Encrypt (encode)
 import           Kurokos.Internal.Types   (Seed)
-import           Kurokos.Internal.Util    (packSize, (<+>))
+import           Kurokos.Internal.Util    (charToByte, packSize, (<+>))
 
 -- | Archive files.
 --
@@ -33,10 +30,10 @@ archiveAll seed rootDir outPath =
 -- - 2nd 'FilePath': Destination path
 archive :: Seed -> FilePath -> FilePath -> (FilePath -> Bool) -> IO ()
 archive seed rootDir outPath isValidPath =
-  getFiles >>= mapM addFileSize >>= generate outPath
+  getFiles >>= mapM addFileSize >>= generate
   where
-    generate :: FilePath -> [(FilePath, FileOffset)] -> IO ()
-    generate outPath fs =
+    generate :: [(FilePath, FileOffset)] -> IO ()
+    generate fs =
       withFile outPath WriteMode $ \h -> do
         let header = makeHeader fs
             offset = fromIntegral (B.length header) + 4
@@ -70,6 +67,3 @@ archive seed rootDir outPath isValidPath =
           ds <- filterM (doesDirectoryExist . (rootDir </>)) cs
           let fs' = filter isValidPath fs
           (fs' ++) . concat <$> mapM work ds
-
-charToByte :: Char -> Word8
-charToByte = fromIntegral . ord

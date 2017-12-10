@@ -39,6 +39,7 @@ library
                      , cryptohash
                      , safe
   default-language:    Haskell2010
+  ghc-options:         -Wall -fno-warn-unused-do-bind
 
 executable archive-demo
   hs-source-dirs:      src-demo
