@@ -116,13 +116,7 @@ titleScene =
         assets2 <- Asset.decodeAssetList =<< B.readFile "_data/assets2.yaml"
         return $ assets1 <> assets2 -- AssetList is Monoid
       astMng <- Asset.loadAssetManager assetList
-      astMng' <- liftIO $ do
-        let pass = "weoivn923j4"
-            path = "__temp/archive.arc"
-        Asset.exportAssetManager pass path astMng
-        Asset.importAssetManager pass path
-
-      sdlAssets <- K.withRenderer $ \r -> Asset.allocSDL r astMng'
+      sdlAssets <- K.withRenderer $ \r -> Asset.allocSDL r astMng
       let env = GUI.GuiEnv fontPath colset sdlAssets
       gui <- GUI.newGui env $ do
         -- Label
