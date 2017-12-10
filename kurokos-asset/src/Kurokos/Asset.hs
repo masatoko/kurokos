@@ -35,4 +35,4 @@ decodeAssetList :: MonadIO m => BS.ByteString -> m AssetList
 decodeAssetList bytes = liftIO $
   case Y.decodeEither' bytes of
     Left e          -> E.throwIO e
-    Right assetYaml -> yamlToAssetList assetYaml
+    Right assetYaml -> fileToAssetList assetYaml

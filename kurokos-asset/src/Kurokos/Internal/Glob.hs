@@ -11,8 +11,8 @@ import           System.FilePath.Posix  (takeFileName)
 
 import           Kurokos.Internal.Types
 
-yamlToAssetList :: AssetYaml -> IO AssetList
-yamlToAssetList (AssetYaml fs ds) = do
+fileToAssetList :: AssetFile -> IO AssetList
+fileToAssetList (AssetFile fs ds) = do
   fs' <- concat <$> mapM toAssetInfo ds
   return $ AssetList $ fs ++ fs'
   where

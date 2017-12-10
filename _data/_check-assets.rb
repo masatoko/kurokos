@@ -1,6 +1,8 @@
 require 'yaml'
 require 'pp'
 
-assets = YAML.load_file('assets.yaml')
+assets1 = YAML.load_file('assets1.yaml')
+pp assets1
 
-pp assets
+assets2 = YAML.load_file('assets1.yaml')
+pp assets2

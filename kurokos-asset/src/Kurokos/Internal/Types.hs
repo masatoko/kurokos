@@ -45,17 +45,21 @@ instance FromJSON PatternsInDir where
     <*> (fromMaybe [] <$> v .:? "ignores")
   parseJSON _            = fail "Expected Object for PatternsInDir"
 
-data AssetYaml = AssetYaml [AssetInfo] [PatternsInDir]
+data AssetFile = AssetFile [AssetInfo] [PatternsInDir]
 
-instance FromJSON AssetYaml where
-  parseJSON (Y.Object v) = AssetYaml
-    <$> (fromMaybe [] <$> v .: "files")
-    <*> (fromMaybe [] <$> v .: "patterns")
-  parseJSON _            = fail "Expected Object for AssetYaml"
+instance FromJSON AssetFile where
+  parseJSON (Y.Object v) = AssetFile
+    <$> (fromMaybe [] <$> v .:? "files")
+    <*> (fromMaybe [] <$> v .:? "patterns")
+  parseJSON _            = fail "Expected Object for AssetFile"
 
 newtype AssetList =
-  AssetList { unAssetList :: [AssetInfo]}
+  AssetList { unAssetList :: [AssetInfo] }
   deriving Show
+
+instance Monoid AssetList where
+  mempty = AssetList []
+  mappend (AssetList xs) (AssetList ys) = AssetList $ xs ++ ys
 
 newtype AssetManager = AssetManager
   { unAstMng :: M.Map Ident (AssetInfo, BS.ByteString)

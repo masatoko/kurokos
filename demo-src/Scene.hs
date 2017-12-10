@@ -111,9 +111,12 @@ titleScene =
 
     alloc = do
       guiYaml <- liftIO $ B.readFile "_data/gui-title.yaml"
-      assetFile <- Asset.decodeAssetList =<< liftIO (B.readFile "_data/assets.yaml")
-      assetManager <- K.withRenderer $ \r -> Asset.allocSDL r =<< Asset.loadAssetManager assetFile
-      let env = GUI.GuiEnv fontPath colset assetManager
+      assetList <- liftIO $ do
+        assets1 <- Asset.decodeAssetList =<< B.readFile "_data/assets1.yaml"
+        assets2 <- Asset.decodeAssetList =<< B.readFile "_data/assets2.yaml"
+        return $ assets1 <> assets2 -- AssetList is Monoid
+      sdlAssets <- K.withRenderer $ \r -> Asset.allocSDL r =<< Asset.loadAssetManager assetList
+      let env = GUI.GuiEnv fontPath colset sdlAssets
       gui <- GUI.newGui env $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)

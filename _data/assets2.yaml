@@ -1,17 +1,7 @@
 _common:
-  - &data-dir ./_data/
   - &font-dir ./_data/font/
 
 files:
-  -
-    id: sample-image
-    dir: *data-dir
-    file: img.png
-  -
-    id: gui-title
-    dir: *data-dir
-    file: gui-title.yaml
-
   -
     id: robotoj-b
     dir: *font-dir
@@ -27,12 +17,3 @@ files:
     dir: *font-dir
     file: RobotoJ-Regular.ttf
     size: 16
-
-patterns:
-  -
-    id: my-texts
-    id-fname: true
-    dir: _data/dir-a
-    pattern: "*.txt"
-    ignores:
-      - "*2.txt"
