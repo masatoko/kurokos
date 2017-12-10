@@ -3,8 +3,9 @@ module Kurokos.Asset
   -- ** Type
     SDLAssetManager
   , Ident
+  , AssetList (..)
   -- ** Load
-  , decodeAssetFile
+  , decodeAssetList
   , loadAssetManager
   , allocSDL
   -- ** Find Assets
@@ -20,17 +21,18 @@ import qualified Data.Yaml                     as Y
 
 import           Kurokos.Internal.AssetManager
 import           Kurokos.Internal.Types
+import           Kurokos.Internal.Glob
 
 -- testAssets :: MonadIO m => SDL.Renderer -> FilePath -> m ()
 -- testAssets r path = liftIO $ do
 --   bytes <- BS.readFile path
---   af <- decodeAssetFile bytes
+--   af <- decodeAssetList bytes
 --   print af
 --   am <- allocSDL r =<< loadAssetManager af
 --   print . M.keys . byteMap $ am
 
-decodeAssetFile :: MonadIO m => BS.ByteString -> m AssetFile
-decodeAssetFile bytes = liftIO $
+decodeAssetList :: MonadIO m => BS.ByteString -> m AssetList
+decodeAssetList bytes = liftIO $
   case Y.decodeEither' bytes of
-    Left e   -> E.throwIO e
-    Right af -> return af
+    Left e          -> E.throwIO e
+    Right assetYaml -> yamlToAssetList assetYaml

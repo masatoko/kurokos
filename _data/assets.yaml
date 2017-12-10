@@ -2,7 +2,7 @@ _common:
   - &data-dir ./_data/
   - &font-dir ./_data/font/
 
-assets:
+files:
   -
     id: sample-image
     dir: *data-dir
@@ -27,3 +27,11 @@ assets:
     dir: *font-dir
     file: RobotoJ-Regular.ttf
     size: 16
+
+patterns:
+  -
+    id: my-texts
+    dir: _data/dir-a
+    pattern: "*.txt"
+    ignores:
+      - "*2.txt"

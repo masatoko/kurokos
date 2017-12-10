@@ -19,8 +19,8 @@ import qualified SDL.Image              as Image
 
 import           Kurokos.Internal.Types
 
-loadAssetManager :: MonadIO m => AssetFile -> m AssetManager
-loadAssetManager (AssetFile as) =
+loadAssetManager :: MonadIO m => AssetList -> m AssetManager
+loadAssetManager (AssetList as) =
   AssetManager . M.fromList <$> liftIO (mapM work as)
   where
     work ai@AssetInfo{..} =
@@ -56,12 +56,9 @@ allocSDL r (AssetManager bmap) =
           | otherwise    =
               return $ am {byteMap = M.insert ident bytes byteMap}
 
--- loadSDLAssetManager r af = allocSDL r =<< loadAssetManager af
-
-
 -- | Deprecated
--- loadAssetManager :: MonadIO m => SDL.Renderer -> AssetFile -> m SDLAssetManager
--- loadAssetManager r (AssetFile as) =
+-- loadAssetManager :: MonadIO m => SDL.Renderer -> AssetList -> m SDLAssetManager
+-- loadAssetManager r (AssetList as) =
 --   liftIO $ foldM work empty as
 --   where
 --     empty = SDLAssetManager M.empty M.empty M.empty

@@ -1,14 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Kurokos.Internal.Types where
 
-import qualified Data.ByteString as BS
-import qualified Data.Map        as M
-import qualified Data.Text       as T
-import           Data.Yaml       (FromJSON (..), (.:), (.:?))
-import qualified Data.Yaml       as Y
+import qualified Data.ByteString      as BS
+import qualified Data.Map             as M
+import qualified Data.Text            as T
+import           Data.Yaml            (FromJSON (..), (.:), (.:?))
+import qualified Data.Yaml            as Y
+import Data.Maybe (fromMaybe)
 
 import qualified SDL
-import qualified SDL.Font        as Font
+import qualified SDL.Font             as Font
 
 type Ident = T.Text
 
@@ -27,12 +28,32 @@ instance FromJSON AssetInfo where
     <*> v .:? "size"
   parseJSON _ = fail "Expected Object for AssetInfo"
 
-newtype AssetFile = AssetFile [AssetInfo] deriving Show
+data PatternsInDir = PatternsInDir
+  { pidIdPrefix  :: Maybe Ident
+  , pidDirectory :: FilePath
+  , pidPattern   :: String
+  , pidIgnores   :: [String]
+  }
 
-instance FromJSON AssetFile where
-  parseJSON (Y.Object v) = AssetFile
-    <$> v .: "assets"
-  parseJSON _            = fail "Expected Object for AssetFile"
+instance FromJSON PatternsInDir where
+  parseJSON (Y.Object v) = PatternsInDir
+    <$> v .:? "id"
+    <*> v .: "dir"
+    <*> v .: "pattern"
+    <*> (fromMaybe [] <$> v .:? "ignores")
+  parseJSON _            = fail "Expected Object for PatternsInDir"
+
+data AssetYaml = AssetYaml [AssetInfo] [PatternsInDir]
+
+instance FromJSON AssetYaml where
+  parseJSON (Y.Object v) = AssetYaml
+    <$> (fromMaybe [] <$> v .: "files")
+    <*> (fromMaybe [] <$> v .: "patterns")
+  parseJSON _            = fail "Expected Object for AssetYaml"
+
+newtype AssetList =
+  AssetList { unAssetList :: [AssetInfo]}
+  deriving Show
 
 newtype AssetManager = AssetManager
   { unAstMng :: M.Map Ident (AssetInfo, BS.ByteString)
