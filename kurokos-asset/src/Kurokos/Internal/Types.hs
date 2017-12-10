@@ -17,7 +17,6 @@ data AssetInfo = AssetInfo
   { aiIdent     :: Maybe Ident
   , aiDirectory :: Maybe FilePath
   , aiFileName  :: String
-  -- , aiSize      :: Maybe Int -- Font point size
   } deriving Show
 
 instance FromJSON AssetInfo where
@@ -25,7 +24,6 @@ instance FromJSON AssetInfo where
     <$> v .:? "id"
     <*> v .:? "dir"
     <*> v .:  "file"
-    -- <*> v .:? "size"
   parseJSON _ = fail "Expected Object for AssetInfo"
 
 data PatternsInDir = PatternsInDir
@@ -62,7 +60,7 @@ instance Monoid AssetList where
   mappend (AssetList xs) (AssetList ys) = AssetList $ xs ++ ys
 
 newtype AssetManager = AssetManager
-  { unAstMng :: M.Map Ident (AssetInfo, BS.ByteString)
+  { unAstMng :: M.Map Ident (FilePath, BS.ByteString)
   }
 
 data SDLAssetManager = SDLAssetManager

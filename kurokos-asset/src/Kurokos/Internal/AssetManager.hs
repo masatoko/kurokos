@@ -14,7 +14,6 @@ import qualified Data.Text              as T
 import           System.FilePath.Posix
 
 import qualified SDL
-import qualified SDL.Font               as Font
 import qualified SDL.Image              as Image
 
 import           Kurokos.Internal.Types
@@ -23,11 +22,11 @@ loadAssetManager :: MonadIO m => AssetList -> m AssetManager
 loadAssetManager (AssetList as) =
   AssetManager . M.fromList <$> liftIO (mapM work as) -- TODO: Shold check whether keys are duplicated or not.
   where
-    work ai@AssetInfo{..} =
+    work AssetInfo{..} =
       IO.withFile path IO.ReadMode $ \h -> do
         bytes <- BS.hGetContents h
         E.evaluate bytes
-        return (ident', (ai, bytes))
+        return (ident', (path, bytes))
       where
         path =
           case aiDirectory of
@@ -40,9 +39,9 @@ allocSDL r (AssetManager bmap) =
   foldM work empty $ M.toList bmap
   where
     empty = SDLAssetManager M.empty M.empty M.empty
-    work am@SDLAssetManager{..} (ident, (AssetInfo{..}, bytes)) = update
+    work am@SDLAssetManager{..} (ident, (path, bytes)) = update
       where
-        ext = filter (/= '.') . map toLower . takeExtension $ aiFileName
+        ext = filter (/= '.') . map toLower . takeExtension $ path
         update
           | ext == "ttf" =
               return $ am {fontMap = M.insert ident bytes fontMap}
