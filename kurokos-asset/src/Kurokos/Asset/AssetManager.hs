@@ -1,20 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-module Kurokos.Asset
-  ( testAssets
-  -- ** Type
-  , AssetManager
-  , Ident
-  -- ** Load
-  , decodeAssetFile
-  , loadAssetManager
-  -- ** Find Assets
-  , lookupBytes
-  , lookupFont
-  , lookupTexture
-  ) where
+{-# LANGUAGE RecordWildCards #-}
+module Kurokos.Asset.AssetManager where
 
-import qualified Control.Exception.Safe as E
 import           Control.Monad          (foldM)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import qualified Data.ByteString        as BS
@@ -23,44 +9,13 @@ import qualified Data.Map               as M
 import           Data.Maybe             (fromMaybe)
 import qualified Data.Set               as S
 import qualified Data.Text              as T
-import           Data.Yaml              (FromJSON (..), (.:), (.:?))
-import qualified Data.Yaml              as Y
 import           System.FilePath.Posix
 
 import qualified SDL
 import qualified SDL.Font               as Font
 import qualified SDL.Image              as Image
 
-type Ident = T.Text
-
-data AssetManager = AssetManager
-  { byteMap    :: M.Map Ident BS.ByteString
-  , fontMap    :: M.Map Ident Font.Font
-  , textureMap :: M.Map Ident SDL.Texture
-  }
-
-data AssetInfo = AssetInfo
-  { aiIdent     :: Maybe Ident
-  , aiDirectory :: Maybe FilePath
-  , aiFileName  :: String
-  , aiSize      :: Maybe Int
-  } deriving Show
-
-newtype AssetFile = AssetFile [AssetInfo] deriving Show
-
-testAssets :: MonadIO m => SDL.Renderer -> FilePath -> m ()
-testAssets r path = liftIO $ do
-  bytes <- BS.readFile path
-  af <- decodeAssetFile bytes
-  print af
-  am <- loadAssetManager r af
-  print . M.keys . byteMap $ am
-
-decodeAssetFile :: MonadIO m => BS.ByteString -> m AssetFile
-decodeAssetFile bytes = liftIO $
-  case Y.decodeEither' bytes of
-    Left e   -> E.throwIO e
-    Right af -> return af
+import           Kurokos.Asset.Types
 
 loadAssetManager :: MonadIO m => SDL.Renderer -> AssetFile -> m AssetManager
 loadAssetManager r (AssetFile as) =
@@ -101,16 +56,3 @@ lookupTexture ident AssetManager{..} = M.lookup ident textureMap
 
 lookupBytes :: Ident -> AssetManager -> Maybe BS.ByteString
 lookupBytes ident AssetManager{..} = M.lookup ident byteMap
-
-instance FromJSON AssetInfo where
-  parseJSON (Y.Object v) = AssetInfo
-    <$> v .:? "id"
-    <*> v .:? "dir"
-    <*> v .: "file"
-    <*> v .:? "size"
-  parseJSON _ = fail "Expected Object for AssetInfo"
-
-instance FromJSON AssetFile where
-  parseJSON (Y.Object v) = AssetFile
-    <$> v .: "assets"
-  parseJSON _            = fail "Expected Object for AssetFile"

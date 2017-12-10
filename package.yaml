@@ -16,7 +16,7 @@ flags:
   demo:
     description: Build demo executable
     manual: False
-    default: False
+    default: True
 
 dependencies:
   - base >= 4.7 && < 5
@@ -24,6 +24,7 @@ dependencies:
   - sdl2-ttf >= 2.0.0
   - sdl2-image
   # - sdl2-gfx >= 0.2
+  - kurokos-asset
   - kurokos-sdl2-gfx
   - kurokos-rpn
   - transformers-base
@@ -52,7 +53,6 @@ library:
     - Kurokos
     - Kurokos.GUI
     - Kurokos.GUI.Event
-    - Kurokos.Asset
 
 executables:
   demo:
