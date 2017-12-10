@@ -39,5 +39,5 @@ exportAssetManager pwd dest (AssetManager amap) =
           where
             toInfo (ident, (path, bytes)) = C8.pack info
               where
-                info = show size ++ ":" ++ T.unpack ident ++ ":" ++ path ++ ";"
+                info = show size ++ ";" ++ T.unpack ident ++ ";" ++ path ++ "\n"
                 size = BS.length bytes

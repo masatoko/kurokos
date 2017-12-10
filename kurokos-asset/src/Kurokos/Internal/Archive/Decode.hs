@@ -26,7 +26,6 @@ importAssetManager pass orgPath = do
   AssetManager . snd <$> foldM work (headerSize, M.empty) as
   where
     work (offset, amap) (size, ident, path) = do
-      putStrLn $ "range: " ++ show range
       bytes <- decode (pass <+> offset) <$> mmapFileByteString orgPath range
       let amap' = M.insert ident (path, bytes) amap
       return (offset + fromIntegral size, amap')
@@ -42,10 +41,10 @@ readHeaderInfo pass orgPath = do
   where
     read' from size = mmapFileByteString orgPath (Just (from, size))
 
-    toFileInfo = mapM toInfo . init . splitOn ";"
+    toFileInfo = mapM toInfo . init . splitOn "\n"
     toInfo part = do
       size' <- readIO size
       return (size', T.pack ident, path)
       where
-        (size, ':':rest) = break (== ':') part
-        (ident, ':':path) = break (== ':') rest
+        (size, _:rest) = break (== ';') part
+        (ident, _:path) = break (== ';') rest
