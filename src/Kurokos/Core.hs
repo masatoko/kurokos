@@ -445,7 +445,7 @@ resetJoysticks SDL.JoyDeviceEventData{} = do
 
 --
 
-getEnv :: (MonadReader KurokosEnv m, MonadIO m) => m KurokosEnv
+getEnv :: (MonadReader KurokosEnv m) => m KurokosEnv
 getEnv = ask
 
 screenSize :: (MonadReader KurokosEnv m, MonadIO m) => m (V2 CInt)
