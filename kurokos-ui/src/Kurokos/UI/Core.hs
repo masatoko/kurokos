@@ -93,9 +93,12 @@ data GuiEnv = GuiEnv
 
 data GUI = GUI
   { _gKeyCnt         :: Key
+  -- ^ Counter for WidgetTree ID
   , _gWTree          :: GuiWidgetTree
   , _gEvents         :: [GuiEvent]
+  -- ^ Generated `GuiEvent`s on this frame
   , _gDragTrajectory :: [Point V2 Int32]
+  -- ^ Mouse dragging trajectory
   }
 
 makeLenses ''GUI
