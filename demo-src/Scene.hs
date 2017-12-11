@@ -165,9 +165,8 @@ titleScene =
             toHover = over _xyz (fmap (+ (-10)))
 
     update :: Update Title IO Action
-    update _st _as t0 = do
-      es <- K.getEvents
-      readyG . testOnClick =<< updateG t0 es
+    update _st _as t0 =
+      readyG . testOnClick =<< updateG t0 =<< K.getEvents
       where
         updateG t es = t & tGui %%~ UI.updateGui es
         readyG t = t & tGui %%~ UI.readyRender
