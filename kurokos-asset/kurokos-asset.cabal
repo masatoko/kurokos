@@ -24,9 +24,6 @@ library
                      , Kurokos.Asset.Internal.Archive.Encrypt
                      , Kurokos.Asset.Internal.Archive.Util
   build-depends:       base >= 4.7 && < 5
-                     , sdl2 >= 2.2.0
-                     , sdl2-ttf >= 2.0.0
-                     , sdl2-image
                      , bytestring
                      , text
                      , containers

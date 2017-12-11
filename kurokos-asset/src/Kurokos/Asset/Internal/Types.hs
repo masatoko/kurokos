@@ -8,8 +8,6 @@ import           Data.Yaml            (FromJSON (..), (.:), (.:?))
 import qualified Data.Yaml            as Y
 import Data.Maybe (fromMaybe)
 
-import qualified SDL
-
 type Ident = T.Text
 
 data AssetInfo = AssetInfo
@@ -60,10 +58,4 @@ instance Monoid AssetList where
 
 newtype AssetManager = AssetManager
   { unAssetManager :: M.Map Ident (FilePath, BS.ByteString)
-  }
-
-data SDLAssetManager = SDLAssetManager
-  { byteMap    :: M.Map Ident BS.ByteString
-  , fontMap    :: M.Map Ident BS.ByteString
-  , textureMap :: M.Map Ident SDL.Texture
   }
