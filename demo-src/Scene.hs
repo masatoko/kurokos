@@ -108,9 +108,10 @@ titleScene =
       assetList <- liftIO $ do
         assets1 <- Asset.decodeAssetList =<< B.readFile "_data/assets1.yaml"
         assets2 <- Asset.decodeAssetList =<< B.readFile "_data/assets2.yaml"
-        return $ assets1 <> assets2 -- AssetList is Monoid
+        return $ assets1 <> assets2
       astMng <- Asset.loadAssetManager assetList
-      sdlAssets <- K.withRenderer $ \r -> Asset.allocSDL r astMng
+      r <- K.getRenderer
+      (_,sdlAssets) <- allocate (Asset.genSDLAssetManager r astMng) Asset.freeSDLAssetManager
       let env = GUI.GuiEnv fontPath colset sdlAssets
       gui <- GUI.newGui env $ do
         -- Label

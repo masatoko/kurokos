@@ -24,6 +24,7 @@ module Kurokos
   , getJoysticks
   , averageTime
   , showMessageBox
+  , getRenderer
   , withRenderer
   , setRendererDrawBlendMode
   -- Types

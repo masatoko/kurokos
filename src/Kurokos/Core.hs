@@ -42,6 +42,7 @@ module Kurokos.Core
   , getJoysticks
   , averageTime
   , showMessageBox
+  , getRenderer
   , withRenderer
   , setRendererDrawBlendMode
   ) where

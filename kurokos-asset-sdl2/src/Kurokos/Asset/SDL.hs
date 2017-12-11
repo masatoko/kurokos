@@ -4,7 +4,8 @@ module Kurokos.Asset.SDL
   -- ** Types
     SDLAssetManager
   -- ** Generate
-  , allocSDL
+  , genSDLAssetManager
+  , freeSDLAssetManager
   -- ** Get
   , getFont
   , lookupTexture
@@ -38,8 +39,8 @@ data SDLAssetManager = SDLAssetManager
   , amFontHolder :: MVar (M.Map (Ident, Font.PointSize) Font.Font)
   }
 
-allocSDL :: MonadIO m => SDL.Renderer -> AssetManager -> m SDLAssetManager
-allocSDL r (AssetManager bmap) = do
+genSDLAssetManager :: MonadIO m => SDL.Renderer -> AssetManager -> m SDLAssetManager
+genSDLAssetManager r (AssetManager bmap) = do
   mvFontHolder <- liftIO $ newMVar M.empty
   let empty = SDLAssetManager M.empty M.empty M.empty mvFontHolder
   foldM work empty $ M.toList bmap
@@ -62,7 +63,11 @@ allocSDL r (AssetManager bmap) = do
     imageEtxs :: S.Set String
     imageEtxs = S.fromList ["bmp", "gif", "jpeg", "lbm", "pcx", "png", "pnm", "svg", "tiff", "webp", "xcf", "xpm", "xv"]
 
--- freeSDLAssetManager - TODO
+freeSDLAssetManager :: MonadIO m => SDLAssetManager -> m ()
+freeSDLAssetManager SDLAssetManager{..} = liftIO $ do
+  mapM_ SDL.destroyTexture $ M.elems amTexMap
+  fontmap <- readMVar amFontHolder
+  mapM_ Font.free $ M.elems fontmap
 
 getFont :: MonadIO m => Ident -> Font.PointSize -> SDLAssetManager -> m Font.Font
 getFont ident size SDLAssetManager{..} = liftIO $ do
