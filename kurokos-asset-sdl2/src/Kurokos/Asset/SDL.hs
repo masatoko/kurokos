@@ -1,15 +1,29 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.Asset.SDL where
+module Kurokos.Asset.SDL
+  (
+  -- ** Types
+    SDLAssetManager
+  -- ** Generate
+  , allocSDL
+  -- ** Get
+  , getFont
+  , lookupTexture
+  , lookupBytes
+  ) where
 
+import           Control.Concurrent.MVar
+import qualified Control.Exception            as E
 import           Control.Monad                (foldM)
 import           Control.Monad.IO.Class       (MonadIO, liftIO)
 import qualified Data.ByteString              as BS
 import           Data.Char                    (toLower)
 import qualified Data.Map                     as M
 import qualified Data.Set                     as S
+import qualified Data.Text                    as T
 import qualified SDL
 import           System.FilePath.Posix
 
+import qualified SDL.Font                     as Font
 import qualified SDL.Image                    as Image
 
 import           Kurokos.Asset                (Ident)
@@ -17,68 +31,57 @@ import qualified Kurokos.Asset                as Asset
 import           Kurokos.Asset.Internal.Types (AssetManager (..))
 
 data SDLAssetManager = SDLAssetManager
-  { byteMap    :: M.Map Ident BS.ByteString
-  , fontMap    :: M.Map Ident BS.ByteString
-  , textureMap :: M.Map Ident SDL.Texture
+  { amByteMap    :: M.Map Ident BS.ByteString
+  , amFontMap    :: M.Map Ident BS.ByteString
+  , amTexMap     :: M.Map Ident SDL.Texture
+  --
+  , amFontHolder :: MVar (M.Map (Ident, Font.PointSize) Font.Font)
   }
 
 allocSDL :: MonadIO m => SDL.Renderer -> AssetManager -> m SDLAssetManager
-allocSDL r (AssetManager bmap) =
+allocSDL r (AssetManager bmap) = do
+  mvFontHolder <- liftIO $ newMVar M.empty
+  let empty = SDLAssetManager M.empty M.empty M.empty mvFontHolder
   foldM work empty $ M.toList bmap
   where
-    empty = SDLAssetManager M.empty M.empty M.empty
     work am@SDLAssetManager{..} (ident, (path, bytes)) = update
       where
         ext = filter (/= '.') . map toLower . takeExtension $ path
         update
           | ext == "ttf" =
-              return $ am {fontMap = M.insert ident bytes fontMap}
+              return $ am {amFontMap = M.insert ident bytes amFontMap}
           | ext == "tga" = do
               tex <- Image.decodeTextureTGA r bytes
-              return $ am {textureMap = M.insert ident tex textureMap}
+              return $ am {amTexMap = M.insert ident tex amTexMap}
           | S.member ext imageEtxs = do
               tex <- Image.decodeTexture r bytes
-              return $ am {textureMap = M.insert ident tex textureMap}
+              return $ am {amTexMap = M.insert ident tex amTexMap}
           | otherwise    =
-              return $ am {byteMap = M.insert ident bytes byteMap}
+              return $ am {amByteMap = M.insert ident bytes amByteMap}
 
     imageEtxs :: S.Set String
     imageEtxs = S.fromList ["bmp", "gif", "jpeg", "lbm", "pcx", "png", "pnm", "svg", "tiff", "webp", "xcf", "xpm", "xv"]
 
-lookupFont :: Ident -> SDLAssetManager -> Maybe BS.ByteString
-lookupFont ident SDLAssetManager{..} = M.lookup ident fontMap
+-- freeSDLAssetManager - TODO
+
+getFont :: MonadIO m => Ident -> Font.PointSize -> SDLAssetManager -> m Font.Font
+getFont ident size SDLAssetManager{..} = liftIO $ do
+  fontmap <- readMVar amFontHolder
+  case M.lookup key fontmap of
+    Just font -> return font
+    Nothing ->
+      case M.lookup ident amFontMap of
+        Nothing        -> liftIO $ E.throwIO $ userError $ "Missing font '" ++ T.unpack ident ++ "' From SDLAssetManager"
+        Just fontBytes -> do
+          font <- Font.decode fontBytes size
+          modifyMVar_ amFontHolder $ \fm ->
+            return $ M.insert key font fontmap
+          return font
+  where
+    key = (ident, size)
 
 lookupTexture :: Ident -> SDLAssetManager -> Maybe SDL.Texture
-lookupTexture ident SDLAssetManager{..} = M.lookup ident textureMap
+lookupTexture ident SDLAssetManager{..} = M.lookup ident amTexMap
 
 lookupBytes :: Ident -> SDLAssetManager -> Maybe BS.ByteString
-lookupBytes ident SDLAssetManager{..} = M.lookup ident byteMap
-
--- | Deprecated
--- loadAssetManager :: MonadIO m => SDL.Renderer -> AssetList -> m SDLAssetManager
--- loadAssetManager r (AssetList as) =
---   liftIO $ foldM work empty as
---   where
---     empty = SDLAssetManager M.empty M.empty M.empty
---
---     work am@SDLAssetManager{..} AssetInfo{..} = update
---       where
---         path =
---           case aiDirectory of
---             Nothing  -> aiFileName
---             Just dir -> dir </> aiFileName
---         ext = filter (/= '.') . map toLower . takeExtension $ aiFileName
---         ident' = fromMaybe (T.pack aiFileName) aiIdent
---         update
---           | ext == "ttf" = do
---               font <- Font.load path (fromMaybe 16 aiSize)
---               return $ am {fontMap = M.insert ident' font fontMap}
---           | ext == "tga" = do
---               tex <- Image.loadTextureTGA r path
---               return $ am {textureMap = M.insert ident' tex textureMap}
---           | S.member ext imageEtxs = do
---               tex <- Image.loadTexture r path
---               return $ am {textureMap = M.insert ident' tex textureMap}
---           | otherwise    = do
---               bytes <- BS.readFile path
---               return $ am {byteMap = M.insert ident' bytes byteMap}
+lookupBytes ident SDLAssetManager{..} = M.lookup ident amByteMap

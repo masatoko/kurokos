@@ -57,19 +57,10 @@ getTexture ident = do
     Nothing   -> liftIO $ E.throwIO $ userError $ "missing texture: " ++ T.unpack ident
     Just font -> return font
 
-getFont :: MonadIO m => Asset.Ident -> Int -> GuiT m Font.Font
+getFont :: MonadIO m => Asset.Ident -> Font.PointSize -> GuiT m Font.Font
 getFont ident size = do
-  fontMap <- use gFontMap
-  case M.lookup (ident, size) fontMap of
-    Just font -> return font
-    Nothing   -> do
-      ast <- asks geAssetManager
-      case Asset.lookupFont ident ast of
-        Nothing   -> liftIO $ E.throwIO $ userError $ "missing font: " ++ T.unpack ident
-        Just bytes -> do
-          font <- Font.decode bytes size
-          modify' $ over gFontMap $ M.insert (ident, size) font
-          return font
+  ast <- asks geAssetManager
+  lift $ Asset.getFont ident size ast
 
 -- allocTexture :: (RenderEnv m, MonadIO m, MonadResource m) => FilePath -> GuiT m SDL.Texture
 -- allocTexture path = do
