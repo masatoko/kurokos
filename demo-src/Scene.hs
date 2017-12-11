@@ -23,6 +23,7 @@ import qualified Kurokos.Asset         as Asset
 import qualified Kurokos.Asset.SDL     as Asset
 import           Kurokos.UI            (UExp (..), ctxAttrib, visible)
 import qualified Kurokos.UI            as UI
+import qualified Kurokos.UI.Cursor     as UI
 
 import           Import
 
@@ -86,8 +87,9 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
       | otherwise       = K.continue
 
 data Title = Title
-  { _tGui :: UI.GUI
-  , _tCnt :: Int
+  { _tGui    :: UI.GUI
+  , _tCursor :: UI.Cursor
+  , _tCnt    :: Int
   }
 
 makeLenses ''Title
@@ -148,7 +150,7 @@ titleScene =
 
       liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui
       liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui
-      return $ Title gui 0
+      return $ Title gui UI.makeCursor 0
       where
         colset = UI.ColorSet wcol wcmod
 
@@ -165,10 +167,12 @@ titleScene =
             toHover = over _xyz (fmap (+ (-10)))
 
     update :: Update Title IO Action
-    update _st _as t0 =
-      readyG . testOnClick =<< updateG t0 =<< K.getEvents
+    update _st _as title0 =
+      readyG . testOnClick =<< updateT title0 =<< K.getEvents
       where
-        updateG t es = t & tGui %%~ UI.updateGui es
+        updateT t0 es = do
+          t1 <- t0 & tCursor %%~ UI.updateCursor es
+          t1 & tGui %%~ UI.updateGui es (t1^.tCursor)
         readyG t = t & tGui %%~ UI.readyRender
 
         testOnClick t =
@@ -205,16 +209,20 @@ titleScene =
       V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) color (showjs js)) vjs
       --
       UI.render $ t^.tGui
+      K.withRenderer $ \r -> do
+        let P pos = UI._cursorPos $ t^.tCursor
+        Gfx.smoothCircle r pos 10 (V4 0 255 0 255)
       return ()
       where
         color = V4 50 50 50 255
 
-    transit _ as (Title gui _)
-      | Exit  `elem` as   = K.end
+    transit _ as t
+      | Exit `elem` as    = K.end
       | onClick nameMain  = K.next mainScene
       | onClick nameMouse = K.push mouseScene
       | otherwise         = K.continue
       where
+        gui = t^.tGui
         onClick ident =
           case UI.clicked ident gui of
             Nothing      -> False

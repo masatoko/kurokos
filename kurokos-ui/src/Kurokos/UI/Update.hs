@@ -22,14 +22,14 @@ import qualified SDL
 import           SDL.Event
 
 -- | Update Gui data by SDL Events. Call this at the top of Update
-updateGui :: (RenderEnv m, MonadIO m, MonadMask m) => [SDL.EventPayload] -> GUI -> m GUI
-updateGui es g0 = foldM procEvent g es
+updateGui :: (RenderEnv m, MonadIO m, MonadMask m) => [SDL.EventPayload] -> Cursor -> GUI -> m GUI
+updateGui es cursor g0 = foldM (procEvent cursor) g es
   where
     g = g0 & gEvents .~ []
 
 procEvent :: (RenderEnv m, MonadIO m, MonadMask m)
-  => GUI -> SDL.EventPayload -> m GUI
-procEvent gui = work
+  => Cursor -> GUI -> SDL.EventPayload -> m GUI
+procEvent cursor gui = work
   where
     work (WindowResizedEvent WindowResizedEventData{..}) = do
       win <- getWindow
@@ -37,12 +37,10 @@ procEvent gui = work
         then return $ setAllNeedsRender gui
         else return gui
     work (MouseMotionEvent MouseMotionEventData{..}) =
-      return . flip execState gui $ do
-        if SDL.ButtonLeft `elem` mouseMotionEventState
-          then gDragTrajectory %= (mouseMotionEventPos:)
-          else gDragTrajectory .= []
-        modify $ over gWTree $ fmap $ modWhenHover (fromIntegral <$> mouseMotionEventPos)
+      return . flip execState gui $
+        modify $ over gWTree $ fmap $ modWhenHover pos
       where
+        pos = cursor^.cursorPos
         modWhenHover curPos a@(ctx,w)
           | isHoverable && not (wst^.wstHover) && isWithinRect curPos pos size =
             let ctx' = ctx & ctxWidgetState . wstHover .~ True

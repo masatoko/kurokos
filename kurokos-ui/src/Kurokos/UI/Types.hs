@@ -124,3 +124,12 @@ data WContext = WContext
   }
 
 makeLenses ''WContext
+
+newtype Cursor = Cursor
+  { _cursorPos :: GuiPos
+  } deriving Show
+
+makeLenses ''Cursor
+
+makeCursor :: Cursor
+makeCursor = Cursor (pure 0)

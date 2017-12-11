@@ -34,8 +34,11 @@ main = do
       _font <- managed $ K.withFont (K.FontFile "_data/font/system.ttf") 20 -- Example
       liftIO $ void $
         runKurokos kuro $ do
+          -- === SDL Settings
           SDL.setMouseLocationMode SDL.AbsoluteLocation
+          -- SDL.setMouseLocationMode SDL.RelativeLocation
           SDL.cursorVisible $= True
+          -- ===
           runScene titleScene
   where
     mkConf pBtn pAxis pHat =

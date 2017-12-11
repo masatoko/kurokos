@@ -97,14 +97,12 @@ data GUI = GUI
   , _gWTree          :: GuiWidgetTree
   , _gEvents         :: [GuiEvent]
   -- ^ Generated `GuiEvent`s on this frame
-  , _gDragTrajectory :: [Point V2 Int32]
-  -- ^ Mouse dragging trajectory
   }
 
 makeLenses ''GUI
 
 iniGui :: GUI
-iniGui = GUI 0 Null [] []
+iniGui = GUI 0 Null []
 
 getWidgetTree :: GUI -> WidgetTree Widget
 getWidgetTree = fmap snd . view gWTree
