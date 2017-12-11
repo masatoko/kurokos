@@ -23,7 +23,6 @@ dependencies:
   - sdl2-ttf >= 2.0.0
   - sdl2-image
   - kurokos-ui
-  - kurokos-asset
   - kurokos-sdl2-gfx
   - kurokos-rpn
   - transformers-base
@@ -59,6 +58,7 @@ executables:
           dependencies:
             - kurokos
             - kurokos-ui
+            - kurokos-asset
             - kurokos-asset-sdl2
         else:
           buildable: False
