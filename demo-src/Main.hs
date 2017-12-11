@@ -29,7 +29,7 @@ main = do
         , SDL.windowResizable = True
         }
   withKurokos conf' winConf $ \kuro ->
-    -- Ready original data here
+    -- Allocate original data here
     runManaged $
       -- _font <- managed $ K.withFont (K.FontFile "_data/font/system.ttf") 20 -- Example
       liftIO $ void $

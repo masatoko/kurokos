@@ -150,7 +150,8 @@ titleScene =
 
       liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui
       liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui
-      return $ Title gui UI.makeCursor 0
+      cursor <- UI.newCursor
+      return $ Title gui cursor 0
       where
         colset = UI.ColorSet wcol wcmod
 
