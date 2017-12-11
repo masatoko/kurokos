@@ -21,16 +21,12 @@ import qualified SDL.Primitive         as Gfx
 import qualified Kurokos               as K
 import qualified Kurokos.Asset         as Asset
 import qualified Kurokos.Asset.SDL     as Asset
-import           Kurokos.UI           (UExp (..), ctxAttrib,
-                                        visible)
-import qualified Kurokos.UI           as GUI
+import           Kurokos.UI            (UExp (..), ctxAttrib, visible)
+import qualified Kurokos.UI            as UI
 
 import           Import
 
 import           Pad
-
-fontPath :: FilePath
-fontPath = "_data/font/system.ttf"
 
 data Dummy = Dummy
 
@@ -90,7 +86,7 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
       | otherwise       = K.continue
 
 data Title = Title
-  { _tGui :: GUI.GUI
+  { _tGui :: UI.GUI
   , _tCnt :: Int
   }
 
@@ -112,91 +108,91 @@ titleScene =
       astMng <- Asset.loadAssetManager assetList
       r <- K.getRenderer
       (_,sdlAssets) <- allocate (Asset.genSDLAssetManager r astMng) Asset.freeSDLAssetManager
-      let env = GUI.GuiEnv fontPath colset sdlAssets
-      gui <- GUI.newGui env $ do
+      let env = UI.GuiEnv colset sdlAssets
+      gui <- UI.newGui env $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- GUI.genSingle (Just "title") pos size0 =<< GUI.newLabel "robotoj-b" "Kurokos デモ"
+        label <- UI.genSingle (Just "title") pos size0 =<< UI.newLabel "robotoj-b" "Kurokos デモ"
         -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
-        button1 <- GUI.genSingle (Just nameMain) pos1 size =<< GUI.newButton "robotoj-r" "Next: Main Scene"
-        button2 <- GUI.genSingle (Just nameMouse) pos2 size =<< GUI.newButton "robotoj-r" "Push: Mouse Scene"
+        button1 <- UI.genSingle (Just nameMain) pos1 size =<< UI.newButton "robotoj-r" "Next: Main Scene"
+        button2 <- UI.genSingle (Just nameMouse) pos2 size =<< UI.newButton "robotoj-r" "Push: Mouse Scene"
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
-        img <- GUI.genSingle (Just "image") imgPos imgSize =<< GUI.newImageView "sample-image"
+        img <- UI.genSingle (Just "image") imgPos imgSize =<< UI.newImageView "sample-image"
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
-        lbl' <- GUI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< GUI.newLabel "robotoj-b" "---"
-        btn' <- GUI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< GUI.newButton "robotoj-m" "Button in Container"
-        ctn1 <- GUI.genContainer Nothing GUI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
-        let Just ctn1' = GUI.appendChild (mconcat [lbl', btn']) ctn1
+        lbl' <- UI.genSingle (Just "label") (V2 (C 0) (C 0)) size' =<< UI.newLabel "robotoj-b" "---"
+        btn' <- UI.genSingle (Just "button") (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "robotoj-m" "Button in Container"
+        ctn1 <- UI.genContainer Nothing UI.Unordered (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
+        let Just ctn1' = UI.appendChild (mconcat [lbl', btn']) ctn1
         --
-        btns <- mconcat <$> mapM (GUI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< GUI.newButton "robotoj-m" . T.pack . show) [1..(5::Int)]
-        ctn2 <- GUI.genContainer (Just "menu") GUI.VerticalStack (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
-        let Just ctn2' = GUI.appendChild btns ctn2
+        btns <- mconcat <$> mapM (UI.genSingle Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< UI.newButton "robotoj-m" . T.pack . show) [1..(5::Int)]
+        ctn2 <- UI.genContainer (Just "menu") UI.VerticalStack (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
+        let Just ctn2' = UI.appendChild btns ctn2
         --
-        clickableArea <- GUI.genSingle (Just "clickable") (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newTransparent
-        fill <- GUI.genSingle (Just "fill") (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< GUI.newFill
+        clickableArea <- UI.genSingle (Just "clickable") (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
+        fill <- UI.genSingle (Just "fill") (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
         --
-        GUI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', fill, ctn2']
+        UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', fill, ctn2']
 
         -- Modify attribute
-        modify' $ GUI.update "clickable" (set (_1 . GUI.ctxAttrib . GUI.clickable) True)
-        modify' $ GUI.update "fill" (set (_1 . GUI.ctxAttrib . GUI.visible) False)
+        modify' $ UI.update "clickable" (set (_1 . UI.ctxAttrib . UI.clickable) True)
+        modify' $ UI.update "fill" (set (_1 . UI.ctxAttrib . UI.visible) False)
 
         -- From file
-        GUI.appendRoot =<< GUI.newWidgetTreeFromData guiYaml
+        UI.appendRoot =<< UI.newWidgetTreeFromData guiYaml
 
-      liftIO . putStrLn . GUI.pretty $ GUI.getWidgetTree gui
-      liftIO . putStrLn . GUI.showTree $ GUI.getWidgetTree gui
+      liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui
+      liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui
       return $ Title gui 0
       where
-        colset = GUI.ColorSet wcol wcmod
+        colset = UI.ColorSet wcol wcmod
 
         wcol =
-          GUI.WC GUI.WP
-            { GUI.wpBack = V4 255 255 255 255
-            , GUI.wpTint = V4 220 220 220 255
-            , GUI.wpFont = V4 54 20 171 255
+          UI.WC UI.WP
+            { UI.wpBack = V4 255 255 255 255
+            , UI.wpTint = V4 220 220 220 255
+            , UI.wpFont = V4 54 20 171 255
             }
 
-        wcmod = GUI.WCM $ GUI.WP toHover toHover id
+        wcmod = UI.WCM $ UI.WP toHover toHover id
           where
-            toHover :: GUI.Color -> GUI.Color
+            toHover :: UI.Color -> UI.Color
             toHover = over _xyz (fmap (+ (-10)))
 
     update :: Update Title IO Action
     update _st _as t0 =
       readyG . testOnClick =<< updateG t0
       where
-        updateG t = t & tGui %%~ GUI.updateGui
-        readyG t  = t & tGui %%~ GUI.readyRender
+        updateG t = t & tGui %%~ UI.updateGui
+        readyG t  = t & tGui %%~ UI.readyRender
 
         testOnClick t =
           flip execState t $ do
             -- click
             let modGui = modify' . over tGui
-            whenJust (GUI.clicked "fill" gui0) $ \_ -> do
-              modGui $ GUI.update "menu" $ set (_1.ctxAttrib.visible) False
-              modGui $ GUI.update "fill" $ set (_1.ctxAttrib.visible) False
-            whenJust (GUI.clicked "clickable" gui0) $ \(pos,btn) ->
+            whenJust (UI.clicked "fill" gui0) $ \_ -> do
+              modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) False
+              modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) False
+            whenJust (UI.clicked "clickable" gui0) $ \(pos,btn) ->
               when (btn == SDL.ButtonRight) $ do
-                modGui $ GUI.update "menu" $ set (_1.ctxAttrib.visible) True
-                modGui $ GUI.setGlobalPosition "menu" pos
-                modGui $ GUI.update "fill" $ set (_1.ctxAttrib.visible) True
+                modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) True
+                modGui $ UI.setGlobalPosition "menu" pos
+                modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) True
             -- update title
-            whenJust (GUI.clicked "button" gui0) $ \(_,btn) ->
+            whenJust (UI.clicked "button" gui0) $ \(_,btn) ->
               when (btn == SDL.ButtonLeft) $ do
                 modify' $
                   over tCnt (+1)
                 cnt <- gets $ view tCnt
                 let title = T.pack $ show cnt
                 modify' $
-                  over tGui $ GUI.update "label" (over _2 (GUI.setTitle title))
+                  over tGui $ UI.update "label" (over _2 (UI.setTitle title))
           where
             gui0 = t^.tGui
 
@@ -209,7 +205,7 @@ titleScene =
       let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
       V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) color (showjs js)) vjs
       --
-      GUI.render $ t^.tGui
+      UI.render $ t^.tGui
       return ()
       where
         color = V4 50 50 50 255
@@ -221,7 +217,7 @@ titleScene =
       | otherwise         = K.continue
       where
         onClick ident =
-          case GUI.clicked ident gui of
+          case UI.clicked ident gui of
             Nothing      -> False
             Just (_,btn) -> btn == SDL.ButtonLeft
 

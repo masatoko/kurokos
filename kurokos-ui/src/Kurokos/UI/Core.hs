@@ -87,8 +87,7 @@ updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
           return $ Fork u' a' mc' o'
 
 data GuiEnv = GuiEnv
-  { geDefaultFontPath :: FilePath
-  , geDefaultColorSet :: ColorSet
+  { geDefaultColorSet :: ColorSet
   , geAssetManager    :: Asset.SDLAssetManager
   }
 

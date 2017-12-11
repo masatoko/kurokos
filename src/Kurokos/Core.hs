@@ -54,8 +54,7 @@ import           Control.Exception.Safe       (MonadCatch, MonadMask,
                                                MonadThrow)
 import qualified Control.Exception.Safe       as E
 import           Control.Monad.Base           (MonadBase)
-import           Control.Monad.Managed        (managed, managed_,
-                                               runManaged)
+import           Control.Monad.Managed        (managed, managed_, runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Control.Monad.Trans.Control
@@ -79,7 +78,7 @@ import           Kurokos.Font                 (withFont)
 import           Kurokos.Metapad
 import           Kurokos.Types
 
-import           Kurokos.UI                  (HasEvent (..), RenderEnv (..))
+import           Kurokos.UI                   (HasEvent (..), RenderEnv (..))
 
 data Config = Config
   { confWinTitle         :: Text
