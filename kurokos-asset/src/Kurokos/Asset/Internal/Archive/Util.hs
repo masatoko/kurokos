@@ -1,4 +1,4 @@
-module Kurokos.Internal.Archive.Util
+module Kurokos.Asset.Internal.Archive.Util
   ( Password
   , packSize
   , unpackSize

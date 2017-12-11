@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Kurokos.Internal.Types where
+module Kurokos.Asset.Internal.Types where
 
 import qualified Data.ByteString      as BS
 import qualified Data.Map             as M

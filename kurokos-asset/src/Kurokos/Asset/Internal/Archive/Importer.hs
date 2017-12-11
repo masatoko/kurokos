@@ -1,4 +1,4 @@
-module Kurokos.Internal.Archive.Importer
+module Kurokos.Asset.Internal.Archive.Importer
   ( importAssetManager
   ) where
 
@@ -16,9 +16,9 @@ import           System.IO.MMap
 -- import           Data.Word                        (Word8)
 -- import           System.FilePath.Posix
 
-import           Kurokos.Internal.Archive.Encrypt (decode)
-import           Kurokos.Internal.Archive.Util    (Password, unpackSize, (<+>))
-import           Kurokos.Internal.Types
+import           Kurokos.Asset.Internal.Archive.Encrypt (decode)
+import           Kurokos.Asset.Internal.Archive.Util    (Password, unpackSize, (<+>))
+import           Kurokos.Asset.Internal.Types
 
 importAssetManager :: Password -> FilePath -> IO AssetManager
 importAssetManager pass orgPath = do

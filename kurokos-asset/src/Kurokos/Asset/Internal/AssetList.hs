@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-module Kurokos.Internal.AssetList
+module Kurokos.Asset.Internal.AssetList
   ( decodeAssetList
   ) where
 
@@ -14,7 +14,7 @@ import qualified Data.Yaml              as Y
 import qualified System.FilePath.Glob   as Glob
 import           System.FilePath.Posix  (takeFileName)
 
-import           Kurokos.Internal.Types
+import           Kurokos.Asset.Internal.Types
 
 decodeAssetList :: MonadIO m => BS.ByteString -> m AssetList
 decodeAssetList bytes = liftIO $

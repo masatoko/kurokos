@@ -1,4 +1,4 @@
-module Kurokos.Internal.Archive.Exporter
+module Kurokos.Asset.Internal.Archive.Exporter
   ( exportAssetManager
   ) where
 
@@ -9,9 +9,9 @@ import qualified Data.Map                         as M
 import qualified Data.Text                        as T
 import qualified System.IO                        as IO
 
-import           Kurokos.Internal.Archive.Encrypt (encode)
-import           Kurokos.Internal.Archive.Util    (Password, packSize, (<+>))
-import           Kurokos.Internal.Types
+import           Kurokos.Asset.Internal.Archive.Encrypt (encode)
+import           Kurokos.Asset.Internal.Archive.Util    (Password, packSize, (<+>))
+import           Kurokos.Asset.Internal.Types
 
 exportAssetManager :: Password -> FilePath -> AssetManager -> IO ()
 exportAssetManager pwd dest (AssetManager amap) =

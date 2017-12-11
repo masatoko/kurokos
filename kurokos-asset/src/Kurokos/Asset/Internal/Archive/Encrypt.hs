@@ -1,4 +1,4 @@
-module Kurokos.Internal.Archive.Encrypt
+module Kurokos.Asset.Internal.Archive.Encrypt
   ( encode
   , decode
   ) where
@@ -11,7 +11,7 @@ import qualified Data.ByteString               as B
 import           Data.Int                      (Int64)
 import           Data.Word                     (Word8)
 
-import           Kurokos.Internal.Archive.Util (Password, unpackSize)
+import           Kurokos.Asset.Internal.Archive.Util (Password, unpackSize)
 
 encode :: Password -> ByteString -> ByteString
 encode pw bytes0 =

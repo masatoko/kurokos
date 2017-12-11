@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.Internal.AssetManager where
+module Kurokos.Asset.Internal.AssetManager where
 
 import qualified Control.Exception as E
 import qualified System.IO as IO
@@ -16,7 +16,7 @@ import           System.FilePath.Posix
 import qualified SDL
 import qualified SDL.Image              as Image
 
-import           Kurokos.Internal.Types
+import           Kurokos.Asset.Internal.Types
 
 loadAssetManager :: MonadIO m => AssetList -> m AssetManager
 loadAssetManager (AssetList as) =

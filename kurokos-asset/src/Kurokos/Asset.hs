@@ -17,11 +17,11 @@ module Kurokos.Asset
   , importAssetManager
   ) where
 
-import           Kurokos.Internal.Archive.Exporter (exportAssetManager)
-import           Kurokos.Internal.Archive.Importer (importAssetManager)
-import           Kurokos.Internal.AssetList        (decodeAssetList)
-import           Kurokos.Internal.AssetManager
-import           Kurokos.Internal.Types
+import           Kurokos.Asset.Internal.Archive.Exporter (exportAssetManager)
+import           Kurokos.Asset.Internal.Archive.Importer (importAssetManager)
+import           Kurokos.Asset.Internal.AssetList        (decodeAssetList)
+import           Kurokos.Asset.Internal.AssetManager
+import           Kurokos.Asset.Internal.Types
 
 -- test :: MonadIO m => SDL.Renderer -> FilePath -> m ()
 -- test r path = liftIO $ do

@@ -16,13 +16,13 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Kurokos.Asset
-  other-modules:       Kurokos.Internal.Types
-                     , Kurokos.Internal.AssetManager
-                     , Kurokos.Internal.AssetList
-                     , Kurokos.Internal.Archive.Importer
-                     , Kurokos.Internal.Archive.Exporter
-                     , Kurokos.Internal.Archive.Encrypt
-                     , Kurokos.Internal.Archive.Util
+                     , Kurokos.Asset.Internal.Types
+  other-modules:       Kurokos.Asset.Internal.AssetManager
+                     , Kurokos.Asset.Internal.AssetList
+                     , Kurokos.Asset.Internal.Archive.Importer
+                     , Kurokos.Asset.Internal.Archive.Exporter
+                     , Kurokos.Asset.Internal.Archive.Encrypt
+                     , Kurokos.Asset.Internal.Archive.Util
   build-depends:       base >= 4.7 && < 5
                      , sdl2 >= 2.2.0
                      , sdl2-ttf >= 2.0.0
