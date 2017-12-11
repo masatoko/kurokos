@@ -4,7 +4,7 @@ module Main where
 
 import           Control.Monad          (void)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Managed  (managed, runManaged)
+import           Control.Monad.Managed  (runManaged) -- managed
 import           System.Environment     (getArgs)
 
 import           SDL                    (($=))
@@ -30,8 +30,8 @@ main = do
         }
   withKurokos conf' winConf $ \kuro ->
     -- Ready original data here
-    runManaged $ do
-      _font <- managed $ K.withFont (K.FontFile "_data/font/system.ttf") 20 -- Example
+    runManaged $
+      -- _font <- managed $ K.withFont (K.FontFile "_data/font/system.ttf") 20 -- Example
       liftIO $ void $
         runKurokos kuro $ do
           -- === SDL Settings

@@ -211,7 +211,7 @@ titleScene =
       UI.render $ t^.tGui
       K.withRenderer $ \r -> do
         let P pos = UI._cursorPos $ t^.tCursor
-        Gfx.smoothCircle r pos 10 (V4 0 255 0 255)
+        Gfx.smoothCircle r pos 5 (V4 0 0 0 255)
       return ()
       where
         color = V4 50 50 50 255

@@ -14,13 +14,14 @@ import           Kurokos.UI.Types
 import qualified SDL
 import           SDL.Event
 
-updateCursor :: MonadIO m => [SDL.EventPayload] -> Cursor -> m Cursor
+updateCursor :: (MonadIO m, RenderEnv m) => [SDL.EventPayload] -> Cursor -> m Cursor
 updateCursor es cursor0 = do
+  winSize <- getWindowSize
   locmode <- SDL.getMouseLocationMode
   let isAbs = locmode == SDL.AbsoluteLocation
-  return $ foldl' (work isAbs) cursor0 es
+  return $ foldl' (work isAbs winSize) cursor0 es
   where
-    work isAbs c (MouseMotionEvent MouseMotionEventData{..}) =
+    work isAbs (V2 w h) c (MouseMotionEvent MouseMotionEventData{..}) =
       if isAbs
         then c & cursorPos .~ (fromIntegral <$> mouseMotionEventPos)
         else c & cursorPos %~ trim . modPos
@@ -30,6 +31,6 @@ updateCursor es cursor0 = do
 
         trim (P (V2 x y)) = P $ V2 x' y'
           where
-            x' = max 0 . min 640 $ x
-            y' = max 0 . min 480 $ y
-    work _ c _ = c
+            x' = max 0 . min w $ x
+            y' = max 0 . min h $ y
+    work _ _ c _ = c
