@@ -17,9 +17,9 @@ module Kurokos.Asset
   , importAssetManager
   ) where
 
-import           Kurokos.Internal.Archive.Decode (importAssetManager)
-import           Kurokos.Internal.Archive.Encode (exportAssetManager)
-import           Kurokos.Internal.AssetList      (decodeAssetList)
+import           Kurokos.Internal.Archive.Exporter (exportAssetManager)
+import           Kurokos.Internal.Archive.Importer (importAssetManager)
+import           Kurokos.Internal.AssetList        (decodeAssetList)
 import           Kurokos.Internal.AssetManager
 import           Kurokos.Internal.Types
 

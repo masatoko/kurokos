@@ -1,4 +1,4 @@
-module Kurokos.Internal.Archive.Decode
+module Kurokos.Internal.Archive.Importer
   ( importAssetManager
   ) where
 

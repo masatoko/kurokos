@@ -1,4 +1,4 @@
-module Kurokos.Internal.Archive.Encode
+module Kurokos.Internal.Archive.Exporter
   ( exportAssetManager
   ) where
 

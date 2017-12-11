@@ -19,8 +19,8 @@ library
   other-modules:       Kurokos.Internal.Types
                      , Kurokos.Internal.AssetManager
                      , Kurokos.Internal.AssetList
-                     , Kurokos.Internal.Archive.Decode
-                     , Kurokos.Internal.Archive.Encode
+                     , Kurokos.Internal.Archive.Importer
+                     , Kurokos.Internal.Archive.Exporter
                      , Kurokos.Internal.Archive.Encrypt
                      , Kurokos.Internal.Archive.Util
   build-depends:       base >= 4.7 && < 5
