@@ -9,22 +9,17 @@ module Kurokos.Texture
   , setColorMod
   ) where
 
-import qualified Control.Exception.Safe      as E
-import           Control.Exception.Safe      (MonadCatch, MonadMask, MonadThrow)
+import           Control.Exception.Safe      (MonadMask, MonadThrow)
 import           Control.Monad.Base          (MonadBase)
 import           Control.Monad.Reader
-import           Control.Monad.State
 import           Data.ByteString      (ByteString)
-import           Data.Text            (Text)
 import           Data.Word            (Word8)
-import           Linear.V2
 import           Linear.V3
-import           Linear.V4
-import           Control.Monad.Trans.Resource (ResourceT, ReleaseKey, allocate, MonadResource)
+import           Control.Monad.Trans.Resource (ResourceT, ReleaseKey, allocate)
 
 import qualified SDL
 import qualified SDL.Image            as Image
-import           SDL                  (($=), get)
+import           SDL                  (($=))
 
 import           Kurokos.Core
 

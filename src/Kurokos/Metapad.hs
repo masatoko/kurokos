@@ -31,14 +31,11 @@ module Kurokos.Metapad
   , rumble
   ) where
 
-import qualified Control.Exception      as E
 import           Control.Monad          (forM_, join)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Data.Bits              (testBit)
 import           Data.Int               (Int16, Int32)
 import qualified Data.Map               as M
 import           Data.Maybe             (catMaybes, fromMaybe, mapMaybe)
-import qualified Data.Vector            as V
 import           Data.Word              (Word32, Word8)
 import           Foreign.C.Types        (CInt)
 import           Linear.Affine
@@ -46,9 +43,7 @@ import           Linear.V2
 import           Safe                   (headMay)
 
 import qualified SDL
-import           SDL.Internal.Types     (joystickPtr)
 import qualified SDL.Raw.Haptic         as HAP
-import           SDL.Raw.Types          (Haptic)
 
 import           Kurokos.Types          (Joystick (..))
 

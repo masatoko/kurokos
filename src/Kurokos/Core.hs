@@ -47,20 +47,18 @@ module Kurokos.Core
   ) where
 
 import           Control.Concurrent.MVar      (MVar, newMVar, putMVar, readMVar,
-                                               takeMVar, withMVar)
+                                               takeMVar)
 import           Control.Exception            (bracket)
 import           Control.Exception.Safe       (MonadCatch, MonadMask,
                                                MonadThrow)
 import qualified Control.Exception.Safe       as E
 import           Control.Monad.Base           (MonadBase)
-import           Control.Monad.Managed        (Managed, managed, managed_,
+import           Control.Monad.Managed        (managed, managed_,
                                                runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
-import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Control
 import           Control.Monad.Trans.Resource
-import qualified Data.ByteString              as B
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import qualified Data.Vector                  as V
@@ -70,8 +68,6 @@ import           Foreign.C.Types              (CInt)
 import           Linear.Affine                (Point (..))
 import           Linear.V2
 import           Linear.V4
-import           System.Directory             (doesFileExist)
-import           System.Exit                  (exitSuccess)
 import           Text.Printf                  (printf)
 
 import           SDL                          (($=))

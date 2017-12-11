@@ -10,7 +10,6 @@ category: Game Engine
 ghc-options:
   - -Wall
   - -fno-warn-unused-do-bind
-  - -fno-warn-unused-imports
 
 flags:
   demo:

@@ -13,7 +13,6 @@ import           Data.ByteString
 import           Data.Int               (Int32)
 import           Data.Text              (Text)
 import           Foreign.C.Types        (CInt)
-import           Linear.V2
 
 import qualified SDL
 import qualified SDL.Font

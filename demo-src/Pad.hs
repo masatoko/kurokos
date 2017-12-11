@@ -1,7 +1,5 @@
 module Pad where
 
-import           Control.Monad.State
-
 import qualified SDL
 
 import qualified Kurokos             as K

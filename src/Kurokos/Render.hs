@@ -9,10 +9,8 @@ import           Control.Exception.Safe (MonadMask)
 import qualified Control.Exception.Safe as E
 import           Control.Monad.Managed  (managed, runManaged)
 import           Control.Monad.Reader
-import           Data.Maybe             (fromMaybe)
 import           Data.Text              (Text)
 import           Data.Word              (Word8)
-import           Foreign.C.Types        (CInt)
 import           Linear.Affine          (Point (..))
 import           Linear.V2
 import           Linear.V4

@@ -5,31 +5,25 @@
 {-# LANGUAGE TemplateHaskell   #-}
 module Scene where
 
-import           Debug.Trace           (traceM)
+-- import           Debug.Trace           (traceM)
 
 import           Control.Lens
 import           Control.Monad.Extra   (whenJust)
 import           Control.Monad.State
 import qualified Data.ByteString.Char8 as B
-import           Data.List.Extra       (firstJust)
-import           Data.Maybe            (fromMaybe, isJust, mapMaybe)
 import qualified Data.Text             as T
-import qualified Data.Text.IO          as T
 import qualified Data.Vector           as V
 import           Linear.V4
-import           Safe                  (headMay)
 
 import qualified SDL
-import qualified SDL.Font              as Font
 import qualified SDL.Primitive         as Gfx
 
 import qualified Kurokos               as K
 import qualified Kurokos.Asset         as Asset
 import qualified Kurokos.Asset.SDL     as Asset
-import           Kurokos.UI           (UExp (..), ctxAttrib, ctxWidgetState,
+import           Kurokos.UI           (UExp (..), ctxAttrib,
                                         visible)
 import qualified Kurokos.UI           as GUI
-import           Kurokos.UI.Event
 
 import           Import
 

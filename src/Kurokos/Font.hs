@@ -5,13 +5,7 @@ module Kurokos.Font
   ) where
 
 import qualified Control.Exception.Safe   as E
-import           Control.Monad.IO.Class   (MonadIO, liftIO)
-import           Data.ByteString          (ByteString)
-import qualified Data.ByteString          as B
-import           Data.ByteString.Internal (ByteString (..))
-import           Foreign.ForeignPtr       (withForeignPtr)
-import           Foreign.Ptr              (plusPtr)
-import           System.Directory         (doesFileExist)
+import           Control.Monad.IO.Class   (MonadIO)
 
 import qualified SDL.Font                 as Font
 

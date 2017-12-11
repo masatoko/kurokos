@@ -2,12 +2,9 @@
 
 module Main where
 
-import qualified Control.Exception.Safe as E
 import           Control.Monad          (void)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Managed  (Managed, managed, runManaged)
-import qualified Data.ByteString        as B
-import           Data.Int               (Int16, Int32)
+import           Control.Monad.Managed  (managed, runManaged)
 import           System.Environment     (getArgs)
 
 import           SDL                    (($=))
@@ -17,7 +14,6 @@ import qualified Kurokos                as K
 
 import           Import
 
-import           Pad
 import           Scene
 
 main :: IO ()
