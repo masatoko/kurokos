@@ -12,7 +12,7 @@ import           Linear.V2
 import           Safe                      (lastMay)
 
 import qualified SDL
-import SDL.Event
+import           SDL.Event
 
 import           Kurokos.UI.Control.Cursor
 import           Kurokos.UI.Core
@@ -41,6 +41,13 @@ defaultGuiHandler = GuiHandler click
             ButtonLeft  -> Just GuiActLeft
             ButtonRight -> Just GuiActRight
         else Nothing
+    click (KeyboardEvent KeyboardEventData{..})
+      | pressed && keycode == SDL.KeycodeSpace  = Just GuiActLeft
+      | pressed && keycode == SDL.KeycodeLShift = Just GuiActRight
+      | otherwise                               = Nothing
+      where
+        keycode = SDL.keysymKeycode keyboardEventKeysym
+        pressed = keyboardEventKeyMotion == Pressed
     click _ = Nothing
 
 handleGui :: [SDL.EventPayload] -> Cursor -> GUI -> GuiHandler a -> [(a, E.GuiEvent)]
