@@ -18,7 +18,6 @@ module Kurokos.UI.Import
   , Point (..)
   --
   , RenderEnv (..)
-  , HasEvent (..)
   -- Maybe
   , fromMaybe
   ) where

@@ -4,7 +4,6 @@ module Kurokos.UI
   , GuiEnv (..)
   -- Def
   , RenderEnv (..)
-  , HasEvent (..)
   --
   -- WContext (Lens)
   , ctxWidgetState

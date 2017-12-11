@@ -78,7 +78,7 @@ import           Kurokos.Font                 (withFont)
 import           Kurokos.Metapad
 import           Kurokos.Types
 
-import           Kurokos.UI                   (HasEvent (..), RenderEnv (..))
+import           Kurokos.UI                   (RenderEnv (..))
 
 data Config = Config
   { confWinTitle         :: Text
@@ -454,8 +454,8 @@ screenSize = SDL.get . SDL.windowSize =<< asks window
 -- getWindow :: (MonadReader KurokosEnv m, MonadIO m) => m SDL.Window
 -- getWindow = asks window
 
--- getEvents :: Monad m => KurokosT m [SDL.EventPayload]
--- getEvents = map SDL.eventPayload <$> gets kstEvents
+getEvents :: Monad m => KurokosT m [SDL.EventPayload]
+getEvents = map SDL.eventPayload <$> gets kstEvents
 
 getJoysticks :: Monad m => KurokosT m (V.Vector Joystick)
 getJoysticks = gets kstJoysticks
@@ -501,6 +501,3 @@ instance (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => RenderEnv m where
   renderTexture tex rect =
     withRenderer $ \r ->
       SDL.copy r tex Nothing (Just rect)
-
-instance MonadState KurokosState m => HasEvent m where
-  getEvents = map SDL.eventPayload <$> gets kstEvents

@@ -11,6 +11,3 @@ class RenderEnv m where
   getRenderer :: m SDL.Renderer
   withRenderer :: (SDL.Renderer -> IO a) -> m a
   renderTexture :: SDL.Texture -> SDL.Rectangle CInt -> m ()
-
-class HasEvent m where
-  getEvents :: m [SDL.EventPayload]
