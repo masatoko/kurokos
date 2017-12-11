@@ -186,6 +186,7 @@ setAllNeedsRender =
   where
     work = set (_1 . ctxNeedsRender) True
 
+-- | Ready for rendering. Call this at the end of Update
 readyRender :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m GUI
 readyRender g = do
   V2 w h <- getWindowSize

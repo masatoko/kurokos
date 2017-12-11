@@ -21,7 +21,7 @@ import qualified Kurokos.UI.WidgetTree as WT
 import qualified SDL
 import           SDL.Event
 
--- | Update Gui data by SDL Events
+-- | Update Gui data by SDL Events. Call this at the top of Update
 updateGui :: (RenderEnv m, MonadIO m, MonadMask m) => [SDL.EventPayload] -> GUI -> m GUI
 updateGui es g0 = foldM procEvent g es
   where
