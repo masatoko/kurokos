@@ -54,14 +54,14 @@ module Kurokos.UI
   , setGlobalPosition
   ) where
 
+import           Kurokos.UI.Control.Cursor as Import
 import           Kurokos.UI.Core
-import           Kurokos.UI.Update
-
 import           Kurokos.UI.Def
 import           Kurokos.UI.Event
-import           Kurokos.UI.File.Convert  (newWidgetTreeFromData)
+import           Kurokos.UI.File.Convert   (newWidgetTreeFromData)
 import           Kurokos.UI.Helper
 import           Kurokos.UI.Types
-import           Kurokos.UI.Widget.Make   as Import
-import           Kurokos.UI.Widget.Module as Import
+import           Kurokos.UI.Update
+import           Kurokos.UI.Widget.Make    as Import
+import           Kurokos.UI.Widget.Module  as Import
 import           Kurokos.UI.WidgetTree

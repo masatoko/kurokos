@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.UI.Cursor
+module Kurokos.UI.Control.Cursor
   ( Cursor (..)
   , newCursor
   , updateCursor

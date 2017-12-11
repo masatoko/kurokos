@@ -23,7 +23,6 @@ import qualified Kurokos.Asset         as Asset
 import qualified Kurokos.Asset.SDL     as Asset
 import           Kurokos.UI            (UExp (..), ctxAttrib, visible)
 import qualified Kurokos.UI            as UI
-import qualified Kurokos.UI.Cursor     as UI
 
 import           Import
 

@@ -46,7 +46,6 @@ library:
   exposed-modules:
     - Kurokos.UI
     - Kurokos.UI.Event
-    - Kurokos.UI.Cursor
 
 executables:
   kurokos-ui-exe:
