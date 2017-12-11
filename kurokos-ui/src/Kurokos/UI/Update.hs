@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.GUI.Update
+module Kurokos.UI.Update
   ( updateGui
   ) where
 
@@ -11,12 +11,12 @@ import           Data.Maybe             (catMaybes, mapMaybe, maybeToList)
 import           Linear.V2
 import           Safe                   (lastMay)
 
-import           Kurokos.GUI.Core
-import           Kurokos.GUI.Event
-import           Kurokos.GUI.Import
-import           Kurokos.GUI.Types
-import           Kurokos.GUI.Widget
-import qualified Kurokos.GUI.WidgetTree as WT
+import           Kurokos.UI.Core
+import           Kurokos.UI.Event
+import           Kurokos.UI.Import
+import           Kurokos.UI.Types
+import           Kurokos.UI.Widget
+import qualified Kurokos.UI.WidgetTree as WT
 
 import qualified SDL
 import           SDL.Event

@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.GUI.Widget where
+module Kurokos.UI.Widget where
 
 import           Control.Lens
 import           Data.Text          (Text)
@@ -8,8 +8,8 @@ import qualified Data.Text          as T
 import qualified SDL
 import           SDL.Font           (Font)
 
-import           Kurokos.GUI.Import
-import           Kurokos.GUI.Types
+import           Kurokos.UI.Import
+import           Kurokos.UI.Types
 
 data Widget
   = Transparent

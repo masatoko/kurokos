@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards  #-}
-module Kurokos.GUI.Helper where
+module Kurokos.UI.Helper where
 
 import           Debug.Trace         (traceM)
 
@@ -14,11 +14,11 @@ import           Safe                (headMay)
 import qualified SDL
 import           SDL.Event
 
-import           Kurokos.GUI.Core
-import           Kurokos.GUI.Event
-import           Kurokos.GUI.Import
-import           Kurokos.GUI.Types
-import           Kurokos.GUI.Widget  (Widget)
+import           Kurokos.UI.Core
+import           Kurokos.UI.Event
+import           Kurokos.UI.Import
+import           Kurokos.UI.Types
+import           Kurokos.UI.Widget  (Widget)
 
 clicked :: WidgetIdent -> GUI -> Maybe (GuiPos, SDL.MouseButton)
 clicked wid = firstJust isTarget . view gEvents

@@ -16,7 +16,6 @@ import           Data.Maybe            (fromMaybe, isJust, mapMaybe)
 import qualified Data.Text             as T
 import qualified Data.Text.IO          as T
 import qualified Data.Vector           as V
-import qualified Data.Yaml             as Y
 import           Linear.V4
 import           Safe                  (headMay)
 
@@ -26,10 +25,11 @@ import qualified SDL.Primitive         as Gfx
 
 import qualified Kurokos               as K
 import qualified Kurokos.Asset         as Asset
-import           Kurokos.GUI           (UExp (..), ctxAttrib, ctxWidgetState,
+import qualified Kurokos.Asset.SDL     as Asset
+import           Kurokos.UI           (UExp (..), ctxAttrib, ctxWidgetState,
                                         visible)
-import qualified Kurokos.GUI           as GUI
-import           Kurokos.GUI.Event
+import qualified Kurokos.UI           as GUI
+import           Kurokos.UI.Event
 
 import           Import
 

@@ -5,33 +5,35 @@
 {-# LANGUAGE Strict                     #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TemplateHaskell            #-}
-module Kurokos.GUI.Core where
+module Kurokos.UI.Core where
 
 import           Control.Concurrent.MVar
-import qualified Control.Exception.Safe    as E
+import qualified Control.Exception.Safe   as E
 import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
-import           Data.ByteString (ByteString)
-import qualified Data.Map                  as M
-import           Data.Maybe                (fromMaybe, isJust)
-import           Data.Monoid               ((<>))
-import           Data.Text                 (Text)
+import           Data.ByteString          (ByteString)
+import qualified Data.Map                 as M
+import           Data.Maybe               (fromMaybe, isJust)
+import           Data.Monoid              ((<>))
+import           Data.Text                (Text)
 import           Linear.V2
 
-import           SDL                       (($=))
+import           SDL                      (($=))
 import qualified SDL
-import qualified SDL.Font                  as Font
+import qualified SDL.Font                 as Font
 
-import           Kurokos.GUI.Event         (GuiEvent)
-import           Kurokos.GUI.Import
-import           Kurokos.GUI.Types
-import           Kurokos.GUI.Widget
-import           Kurokos.GUI.Widget.Render
-import           Kurokos.GUI.WidgetTree    (WidgetTree (..))
-import qualified Kurokos.GUI.WidgetTree    as WT
-import qualified Kurokos.RPN               as RPN
-import qualified Kurokos.Asset as Asset
+import qualified Kurokos.Asset            as Asset
+import qualified Kurokos.Asset.SDL        as Asset
+import qualified Kurokos.RPN              as RPN
+
+import           Kurokos.UI.Event         (GuiEvent)
+import           Kurokos.UI.Import
+import           Kurokos.UI.Types
+import           Kurokos.UI.Widget
+import           Kurokos.UI.Widget.Render
+import           Kurokos.UI.WidgetTree    (WidgetTree (..))
+import qualified Kurokos.UI.WidgetTree    as WT
 
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget

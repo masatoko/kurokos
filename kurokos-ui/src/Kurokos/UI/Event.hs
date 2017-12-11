@@ -1,8 +1,8 @@
-module Kurokos.GUI.Event where
+module Kurokos.UI.Event where
 
-import Kurokos.GUI.Import
-import Kurokos.GUI.Widget
-import Kurokos.GUI.Types
+import Kurokos.UI.Import
+import Kurokos.UI.Widget
+import Kurokos.UI.Types
 
 import qualified SDL
 

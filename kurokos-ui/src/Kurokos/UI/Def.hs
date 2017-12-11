@@ -1,4 +1,4 @@
-module Kurokos.GUI.Def where
+module Kurokos.UI.Def where
 
 import           Foreign.C.Types            (CInt)
 import           Linear.V2

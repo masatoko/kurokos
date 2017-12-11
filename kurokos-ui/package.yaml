@@ -1,0 +1,70 @@
+name:                kurokos-ui
+version:             0.1.0.0
+github:              masatoko/kurokos/kurokos-ui
+license:             BSD3
+author:              Masato Kobayashi
+maintainer:          masatokodo@gmail.com
+copyright:           2017 Masato Koabayashi
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/masatoko/kurokos/kurokos-ui#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- sdl2 >= 2.2.0
+- sdl2-ttf >= 2.0.0
+- sdl2-image
+- kurokos-sdl2-gfx
+- kurokos-asset
+- kurokos-asset-sdl2
+- kurokos-rpn
+- bytestring
+- text
+- containers
+- transformers
+- mtl
+- safe-exceptions
+- lens
+- linear
+- resourcet
+- yaml
+- safe
+- extra
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Kurokos.UI
+    - Kurokos.UI.Event
+
+executables:
+  kurokos-ui-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - kurokos-ui
+
+tests:
+  kurokos-ui-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - kurokos-ui

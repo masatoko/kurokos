@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Kurokos.GUI.File.Yaml where
+module Kurokos.UI.File.Yaml where
 
 import qualified Data.ByteString.Char8 as BS
 import           Data.List             (isPrefixOf)
@@ -13,9 +13,9 @@ import           Data.Yaml             (FromJSON (..), (.:), (.:?))
 import qualified Data.Yaml             as Y
 
 import qualified Kurokos.Asset         as Asset
-import           Kurokos.GUI.Core
-import           Kurokos.GUI.Import
-import           Kurokos.GUI.Types
+import           Kurokos.UI.Core
+import           Kurokos.UI.Import
+import           Kurokos.UI.Types
 import qualified Kurokos.RPN           as RPN
 
 decodeWidgets :: BS.ByteString -> Either Y.ParseException YWidgets

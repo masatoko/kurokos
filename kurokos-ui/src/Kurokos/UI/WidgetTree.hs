@@ -1,5 +1,5 @@
 {-# LANGUAGE TemplateHaskell   #-}
-module Kurokos.GUI.WidgetTree where
+module Kurokos.UI.WidgetTree where
 
 import           Control.Lens
 import           Data.Monoid ((<>))

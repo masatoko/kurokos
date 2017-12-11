@@ -1,4 +1,4 @@
-module Kurokos.GUI.Widget.Make where
+module Kurokos.UI.Widget.Make where
 
 import qualified Control.Exception.Safe as E
 import           Control.Lens
@@ -13,11 +13,12 @@ import qualified SDL
 import qualified SDL.Font               as Font
 import qualified SDL.Image              as Image
 
-import           Kurokos.GUI.Core
-import           Kurokos.GUI.Import
-import           Kurokos.GUI.Widget
-
 import qualified Kurokos.Asset          as Asset
+import qualified Kurokos.Asset.SDL      as Asset
+
+import           Kurokos.UI.Core
+import           Kurokos.UI.Import
+import           Kurokos.UI.Widget
 
 newTransparent :: Monad m => GuiT m Widget
 newTransparent = return Transparent

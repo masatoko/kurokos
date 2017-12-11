@@ -1,4 +1,4 @@
-module Kurokos.GUI
+module Kurokos.UI
   ( module Import
   , GUI
   , GuiEnv (..)
@@ -55,14 +55,14 @@ module Kurokos.GUI
   , setGlobalPosition
   ) where
 
-import           Kurokos.GUI.Core
-import           Kurokos.GUI.Update
+import           Kurokos.UI.Core
+import           Kurokos.UI.Update
 
-import           Kurokos.GUI.Def
-import           Kurokos.GUI.Event
-import           Kurokos.GUI.File.Convert  (newWidgetTreeFromData)
-import           Kurokos.GUI.Helper
-import           Kurokos.GUI.Types
-import           Kurokos.GUI.Widget.Make   as Import
-import           Kurokos.GUI.Widget.Module as Import
-import           Kurokos.GUI.WidgetTree
+import           Kurokos.UI.Def
+import           Kurokos.UI.Event
+import           Kurokos.UI.File.Convert  (newWidgetTreeFromData)
+import           Kurokos.UI.Helper
+import           Kurokos.UI.Types
+import           Kurokos.UI.Widget.Make   as Import
+import           Kurokos.UI.Widget.Module as Import
+import           Kurokos.UI.WidgetTree

@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.GUI.Widget.Render where
+module Kurokos.UI.Widget.Render where
 
 import qualified Control.Exception  as E
 
@@ -8,9 +8,9 @@ import qualified SDL
 import qualified SDL.Font           as Font
 import qualified SDL.Primitive      as Prim
 
-import           Kurokos.GUI.Import
-import           Kurokos.GUI.Types
-import           Kurokos.GUI.Widget
+import           Kurokos.UI.Import
+import           Kurokos.UI.Types
+import           Kurokos.UI.Widget
 
 renderWidget :: SDL.Renderer -> GuiSize -> WidgetColor -> Widget -> IO ()
 renderWidget _r _parentSize (WC WP{..}) Transparent = return ()

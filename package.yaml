@@ -23,7 +23,7 @@ dependencies:
   - sdl2 >= 2.2.0
   - sdl2-ttf >= 2.0.0
   - sdl2-image
-  # - sdl2-gfx >= 0.2
+  - kurokos-ui
   - kurokos-asset
   - kurokos-sdl2-gfx
   - kurokos-rpn
@@ -44,15 +44,11 @@ dependencies:
   - directory
   - safe
   - filepath
-  # For kurokos-gui
-  - yaml
 
 library:
   source-dirs: src
   exposed-modules:
     - Kurokos
-    - Kurokos.GUI
-    - Kurokos.GUI.Event
 
 executables:
   demo:
@@ -63,5 +59,7 @@ executables:
         then:
           dependencies:
             - kurokos
+            - kurokos-ui
+            - kurokos-asset-sdl2
         else:
           buildable: False

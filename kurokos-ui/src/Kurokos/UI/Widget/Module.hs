@@ -1,9 +1,9 @@
-module Kurokos.GUI.Widget.Module where
+module Kurokos.UI.Widget.Module where
 
 import           Data.Text          (Text)
 
-import           Kurokos.GUI.Import
-import           Kurokos.GUI.Widget
+import           Kurokos.UI.Import
+import           Kurokos.UI.Widget
 
 setTitle :: Text -> Widget -> Widget
 setTitle _     w@Transparent = w

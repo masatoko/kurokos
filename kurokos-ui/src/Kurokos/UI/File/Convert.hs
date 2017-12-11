@@ -1,20 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-module Kurokos.GUI.File.Convert where
+module Kurokos.UI.File.Convert where
 
 import           Control.Lens
 import qualified Control.Exception.Safe  as E
 import           Data.ByteString         (ByteString)
 import qualified Data.Yaml               as Y
 
-import           Kurokos.GUI.Core
-import           Kurokos.GUI.Def
-import           Kurokos.GUI.Types
-import           Kurokos.GUI.File.Yaml   (YWidget (..), decodeWidgets)
-import           Kurokos.GUI.Import
-import           Kurokos.GUI.Widget
-import           Kurokos.GUI.WidgetTree
-import           Kurokos.GUI.Widget.Make
+import           Kurokos.UI.Core
+import           Kurokos.UI.Def
+import           Kurokos.UI.Types
+import           Kurokos.UI.File.Yaml   (YWidget (..), decodeWidgets)
+import           Kurokos.UI.Import
+import           Kurokos.UI.Widget
+import           Kurokos.UI.WidgetTree
+import           Kurokos.UI.Widget.Make
 
 newWidgetTreeFromData :: (RenderEnv m, MonadIO m, MonadThrow m, MonadResource m)
   => ByteString -> GuiT m GuiWidgetTree

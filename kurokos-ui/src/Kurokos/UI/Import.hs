@@ -1,4 +1,4 @@
-module Kurokos.GUI.Import
+module Kurokos.UI.Import
   (
     MonadMask
   , MonadThrow
@@ -37,4 +37,4 @@ import           Linear.V4
 
 import           SDL
 
-import           Kurokos.GUI.Def
+import           Kurokos.UI.Def

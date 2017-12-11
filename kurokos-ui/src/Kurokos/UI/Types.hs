@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Kurokos.GUI.Types where
+module Kurokos.UI.Types where
 
 import           Control.Lens
 import           Data.Int        (Int64)

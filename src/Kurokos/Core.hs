@@ -82,7 +82,7 @@ import           Kurokos.Font                 (withFont)
 import           Kurokos.Metapad
 import           Kurokos.Types
 
-import           Kurokos.GUI                  (HasEvent (..), RenderEnv (..))
+import           Kurokos.UI                  (HasEvent (..), RenderEnv (..))
 
 data Config = Config
   { confWinTitle         :: Text
