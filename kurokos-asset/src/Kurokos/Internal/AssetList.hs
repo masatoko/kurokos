@@ -1,15 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-module Kurokos.Internal.Glob where
+module Kurokos.Internal.AssetList
+  ( decodeAssetList
+  ) where
 
 import qualified Control.Exception      as E
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import qualified Data.ByteString        as BS
 import           Data.Monoid            ((<>))
 import qualified Data.Set               as Set
 import qualified Data.Text              as T
+import qualified Data.Yaml              as Y
 import qualified System.FilePath.Glob   as Glob
 import           System.FilePath.Posix  (takeFileName)
 
 import           Kurokos.Internal.Types
+
+decodeAssetList :: MonadIO m => BS.ByteString -> m AssetList
+decodeAssetList bytes = liftIO $
+  case Y.decodeEither' bytes of
+    Left e          -> E.throwIO e
+    Right assetYaml -> fileToAssetList assetYaml
 
 fileToAssetList :: AssetFile -> IO AssetList
 fileToAssetList (AssetFile fs ds) = do

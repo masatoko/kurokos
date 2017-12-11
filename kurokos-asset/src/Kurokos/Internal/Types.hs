@@ -59,7 +59,7 @@ instance Monoid AssetList where
   mappend (AssetList xs) (AssetList ys) = AssetList $ xs ++ ys
 
 newtype AssetManager = AssetManager
-  { unAstMng :: M.Map Ident (FilePath, BS.ByteString)
+  { unAssetManager :: M.Map Ident (FilePath, BS.ByteString)
   }
 
 data SDLAssetManager = SDLAssetManager
