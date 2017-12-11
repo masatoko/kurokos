@@ -11,6 +11,7 @@ import           Control.Lens
 import           Control.Monad.Extra   (whenJust)
 import           Control.Monad.State
 import qualified Data.ByteString.Char8 as B
+import           Data.Maybe            (isJust)
 import qualified Data.Text             as T
 import qualified Data.Vector           as V
 import           Linear.V4
@@ -88,6 +89,7 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
 data Title = Title
   { _tGui    :: UI.GUI
   , _tCursor :: UI.Cursor
+  , _tEvents :: [(UI.GuiAction, UI.GuiEvent)]
   , _tCnt    :: Int
   }
 
@@ -150,7 +152,7 @@ titleScene =
       liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui
       liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui
       cursor <- UI.newCursor
-      return $ Title gui cursor 0
+      return $ Title gui cursor [] 0
       where
         colset = UI.ColorSet wcol wcmod
 
@@ -167,37 +169,40 @@ titleScene =
             toHover = over _xyz (fmap (+ (-10)))
 
     update :: Update Title IO Action
-    update _st _as title0 =
-      readyG . testOnClick =<< updateT title0 =<< K.getEvents
+    update _st _as title0 = do
+      es <- K.getEvents
+      readyG . testOnClick . updateEs es =<< updateT es title0
       where
-        updateT t0 es = do
+        updateT es t0 = do
           t1 <- t0 & tCursor %%~ UI.updateCursor es
           t1 & tGui %%~ UI.updateGui es (t1^.tCursor)
+        updateEs esSDL t = t & tEvents .~ es
+          where
+            es = UI.handleGui esSDL (t^.tCursor) (t^.tGui) UI.defaultGuiHandler
         readyG t = t & tGui %%~ UI.readyRender
 
         testOnClick t =
           flip execState t $ do
-            -- click
-            let modGui = modify' . over tGui
-            whenJust (UI.clicked "fill" gui0) $ \_ -> do
+            whenJust (UI.clickedOn UI.GuiActLeft "fill" es) $ \_ -> do
               modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) False
               modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) False
-            whenJust (UI.clicked "clickable" gui0) $ \(pos,btn) ->
-              when (btn == SDL.ButtonRight) $ do
-                modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) True
-                modGui $ UI.setGlobalPosition "menu" pos
-                modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) True
-            -- update title
-            whenJust (UI.clicked "button" gui0) $ \(_,btn) ->
-              when (btn == SDL.ButtonLeft) $ do
-                modify' $
-                  over tCnt (+1)
-                cnt <- gets $ view tCnt
-                let title = T.pack $ show cnt
-                modify' $
-                  over tGui $ UI.update "label" (over _2 (UI.setTitle title))
+
+            whenJust (UI.clickedOn UI.GuiActRight "clickable" es) $ \pos -> do -- TODO: Right click
+              modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) True
+              modGui $ UI.setGlobalPosition "menu" pos
+              modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) True
+
+            -- ** Update title
+            whenJust (UI.clickedOn UI.GuiActLeft "button" es) $ \_pos -> do
+              modify' $
+                over tCnt (+1)
+              cnt <- gets $ view tCnt
+              let title = T.pack $ show cnt
+              modify' $
+                over tGui $ UI.update "label" (over _2 (UI.setTitle title))
           where
-            gui0 = t^.tGui
+            es = t^.tEvents
+            modGui = modify' . over tGui
 
     render :: Render Title IO
     render _ t = do
@@ -217,16 +222,12 @@ titleScene =
         color = V4 50 50 50 255
 
     transit _ as t
-      | Exit `elem` as    = K.end
-      | onClick nameMain  = K.next mainScene
-      | onClick nameMouse = K.push mouseScene
-      | otherwise         = K.continue
+      | Exit `elem` as      = K.end
+      | isClicked nameMain  = K.next mainScene
+      | isClicked nameMouse = K.push mouseScene
+      | otherwise           = K.continue
       where
-        gui = t^.tGui
-        onClick ident =
-          case UI.clicked ident gui of
-            Nothing      -> False
-            Just (_,btn) -> btn == SDL.ButtonLeft
+        isClicked ident = isJust $ UI.clickedOn UI.GuiActLeft ident $ t^.tEvents
 
 mainScene :: Scene MyData IO Action
 mainScene = Scene defPad update render transit allocGame

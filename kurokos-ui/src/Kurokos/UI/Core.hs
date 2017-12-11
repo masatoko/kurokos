@@ -95,20 +95,15 @@ data GUI = GUI
   { _gKeyCnt         :: Key
   -- ^ Counter for WidgetTree ID
   , _gWTree          :: GuiWidgetTree
-  , _gEvents         :: [GuiEvent]
-  -- ^ Generated `GuiEvent`s on this frame
   }
 
 makeLenses ''GUI
 
 iniGui :: GUI
-iniGui = GUI 0 Null []
+iniGui = GUI 0 Null
 
 getWidgetTree :: GUI -> WidgetTree Widget
 getWidgetTree = fmap snd . view gWTree
-
-getGuiEvents :: GUI -> [GuiEvent]
-getGuiEvents = view gEvents
 
 newtype GuiT m a = GuiT {
     runGT :: ReaderT GuiEnv (StateT GUI m) a

@@ -1,5 +1,4 @@
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RecordWildCards  #-}
 module Kurokos.UI.Helper where
 
 import           Debug.Trace         (traceM)
@@ -19,19 +18,6 @@ import           Kurokos.UI.Event
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget  (Widget)
-
-clicked :: WidgetIdent -> GUI -> Maybe (GuiPos, SDL.MouseButton)
-clicked wid = firstJust isTarget . view gEvents
-  where
-    isTarget e
-      | geWidgetName e == Just wid = posFrom $ geType e
-      | otherwise                  = Nothing
-      where
-        posFrom (MouseClick MouseButtonEventData{..})
-          | cond      = Just (fromIntegral <$> mouseButtonEventPos, mouseButtonEventButton)
-          | otherwise = Nothing
-          where
-            cond = SDL.Pressed == mouseButtonEventMotion
 
 -- update by ident with function
 update :: WidgetIdent -> (CtxWidget -> CtxWidget) -> GUI -> GUI

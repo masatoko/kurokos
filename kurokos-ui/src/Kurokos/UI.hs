@@ -30,7 +30,7 @@ module Kurokos.UI
   , showTree
   , newGui
   , getWidgetTree
-  , getGuiEvents
+  -- , getGuiEvents
   , newWidgetTreeFromData
   , genSingle
   , genContainer
@@ -48,20 +48,22 @@ module Kurokos.UI
   -- Rendering
   , render
   -- Helper
-  , clicked
+  -- , clicked
   , update
   , glookup
   , setGlobalPosition
   ) where
 
-import           Kurokos.UI.Control.Cursor as Import
+import           Kurokos.UI.Control.Control as Import
+import           Kurokos.UI.Control.Cursor  as Import
+import           Kurokos.UI.Control.Helper  as Import
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
 import           Kurokos.UI.Event
-import           Kurokos.UI.File.Convert   (newWidgetTreeFromData)
+import           Kurokos.UI.File.Convert    (newWidgetTreeFromData)
 import           Kurokos.UI.Helper
 import           Kurokos.UI.Types
 import           Kurokos.UI.Update
-import           Kurokos.UI.Widget.Make    as Import
-import           Kurokos.UI.Widget.Module  as Import
+import           Kurokos.UI.Widget.Make     as Import
+import           Kurokos.UI.Widget.Module   as Import
 import           Kurokos.UI.WidgetTree

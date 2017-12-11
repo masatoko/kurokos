@@ -23,9 +23,7 @@ import           SDL.Event
 
 -- | Update Gui data by SDL Events. Call this at the top of Update
 updateGui :: (RenderEnv m, MonadIO m, MonadMask m) => [SDL.EventPayload] -> Cursor -> GUI -> m GUI
-updateGui es cursor g0 = foldM (procEvent cursor) g es
-  where
-    g = g0 & gEvents .~ []
+updateGui es cursor g0 = foldM (procEvent cursor) g0 es
 
 procEvent :: (RenderEnv m, MonadIO m, MonadMask m)
   => Cursor -> GUI -> SDL.EventPayload -> m GUI
@@ -60,41 +58,7 @@ procEvent cursor gui = work
             size = wst^.wstSize
             ColorSet{..} = ctx^.ctxColorSet
 
-    -- Make SelectEvent
-    work (MouseButtonEvent dt@MouseButtonEventData{..}) =
-      return $ gui & gEvents %~ (es ++)
-      where
-        es = maybeToList $ conv =<< topmostAt mouseButtonEventPos (gui^.gWTree)
-          where
-            conv (ctx,w)
-              | ctx^.ctxAttrib.clickable = Just $ GuiEvent et w k mn
-              | otherwise                = Nothing
-              where
-                et = MouseClick dt
-                k = ctx^.ctxKey
-                mn = ctx^.ctxIdent
-
     work _ = return gui
-
-topmostAt :: Point V2 Int32 -> GuiWidgetTree -> Maybe (WContext, Widget)
-topmostAt p = lastMay . filterAt p
-
-filterAt :: Point V2 Int32 -> GuiWidgetTree -> [(WContext, Widget)]
-filterAt aPos' = catMaybes . WT.toList . fmap work
-  where
-    aPos = fromIntegral <$> aPos'
-
-    work :: (WContext, Widget) -> Maybe (WContext, Widget)
-    work cw
-      | vis && within = Just cw
-      | otherwise     = Nothing
-      where
-        wst = cw^._1.ctxWidgetState
-        pos = wst^.wstGlobalPos
-        size = wst^.wstSize
-        --
-        vis = wst^.wstVisible
-        within = isWithinRect aPos pos size
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =

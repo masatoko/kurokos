@@ -1,19 +1,19 @@
 module Kurokos.UI.Event where
 
-import Kurokos.UI.Import
-import Kurokos.UI.Widget
-import Kurokos.UI.Types
+import           Kurokos.UI.Import
+import           Kurokos.UI.Types
+import           Kurokos.UI.Widget
 
 import qualified SDL
 
 data GuiEvent = GuiEvent
-  { geType :: EventType
+  { geType      :: EventType
   --
-  , geWidget :: Widget
+  , geWidget    :: Widget
   , geWidgetKey :: WTKey
-  , geWidgetName :: Maybe String
+  , geWidgetId  :: Maybe WidgetIdent
   } deriving Show
 
 data EventType
-  = MouseClick SDL.MouseButtonEventData
+  = Clicked GuiPos
   deriving (Eq, Show)
