@@ -16,7 +16,7 @@ import qualified Data.Vector           as V
 import           Linear.V4
 
 import qualified SDL
-import qualified SDL.Primitive         as Gfx
+import qualified SDL.Primitive         as Prim
 
 import qualified Kurokos               as K
 import qualified Kurokos.Asset         as Asset
@@ -74,13 +74,13 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
       P pos <- SDL.getAbsoluteMouseLocation
       let pos' = fromIntegral <$> pos
       K.withRenderer $ \r ->
-        Gfx.smoothCircle r pos' 5 (V4 255 255 255 255)
+        Prim.smoothCircle r pos' 5 (V4 255 255 255 255)
       --
       K.withRenderer $ \r -> do
         forM_ (s^.msLClicks) $ \p ->
-          Gfx.fillCircle r p 5 (V4 255 255 0 255)
+          Prim.fillCircle r p 5 (V4 255 255 0 255)
         forM_ (s^.msRClicks) $ \p ->
-          Gfx.fillCircle r p 5 (V4 255 0 255 255)
+          Prim.fillCircle r p 5 (V4 255 0 255 255)
 
     transit _ as _
       | Enter `elem` as = K.end
@@ -114,7 +114,7 @@ titleScene =
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- UI.genSingle (Just "title") pos size0 =<< UI.newLabel "robotoj-b" "Kurokos デモ"
+        label <- UI.genSingle (Just "title") pos size0 =<< UI.newLabel "robotoj-b" "Kurokos DEMO"
         -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
@@ -212,7 +212,7 @@ titleScene =
       UI.render $ t^.tGui
       K.withRenderer $ \r -> do
         let P pos = UI._cursorPos $ t^.tCursor
-        Gfx.smoothCircle r pos 5 (V4 0 0 0 255)
+        Prim.smoothCircle r pos 5 (V4 0 0 0 255)
       return ()
       where
         color = V4 50 50 50 255
@@ -272,7 +272,7 @@ mainScene = Scene defPad update render transit allocGame
                 dx :: Double
                 dx = cos $ fromIntegral t / 5
                 dy = sin $ fromIntegral t / 5
-        Gfx.thickLine r p0 p1 4 (V4 0 255 0 255)
+        Prim.thickLine r p0 p1 4 (V4 0 255 0 255)
 
       K.printTest (P (V2 10 100)) color "Press Enter key to pause"
       K.printTest (P (V2 10 120)) color "Press F key!"
