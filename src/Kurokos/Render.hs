@@ -5,34 +5,33 @@ module Kurokos.Render
   , printTest
   ) where
 
-import           Control.Exception.Safe (MonadMask)
-import qualified Control.Exception.Safe as E
-import           Control.Monad.Managed  (managed, runManaged)
+import qualified Control.Exception     as E
+import           Control.Monad.Managed (managed, runManaged)
 import           Control.Monad.Reader
-import           Data.Text              (Text)
-import           Data.Word              (Word8)
-import           Linear.Affine          (Point (..))
+import           Data.Text             (Text)
+import           Data.Word             (Word8)
+import           Linear.Affine         (Point (..))
 import           Linear.V2
 import           Linear.V4
 
-import           SDL                    (($=))
+import           SDL                   (($=))
 import qualified SDL
-import qualified SDL.Font               as Font
+import qualified SDL.Font              as Font
 
 import           Kurokos.Core
 
-setColor :: (MonadIO m, MonadMask m) => V4 Word8 -> KurokosT m ()
+setColor :: MonadIO m => V4 Word8 -> KurokosT m ()
 setColor color =
   withRenderer $ \r ->
     SDL.rendererDrawColor r $= color
 
-clearBy :: (MonadIO m, MonadMask m) => V4 Word8 -> KurokosT m ()
+clearBy :: MonadIO m => V4 Word8 -> KurokosT m ()
 clearBy color =
   withRenderer $ \r -> do
     SDL.rendererDrawColor r $= color
     SDL.clear r
 
-printTest :: (MonadIO m, MonadMask m) => Point V2 Int -> V4 Word8 -> Text -> KurokosT m ()
+printTest :: MonadIO m => Point V2 Int -> V4 Word8 -> Text -> KurokosT m ()
 printTest pos color text = do
   font <- asks envSystemFont
   withRenderer $ \r -> do

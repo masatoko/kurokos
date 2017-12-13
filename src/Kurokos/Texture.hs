@@ -1,5 +1,5 @@
-{-# LANGUAGE FlexibleContexts #-}
-
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Kurokos.Texture
   ( allocTexture
   , allocTextureB
@@ -9,29 +9,29 @@ module Kurokos.Texture
   , setColorMod
   ) where
 
-import           Control.Exception.Safe      (MonadMask)
-import           Control.Monad.Base          (MonadBase)
+import           Control.Monad.Base           (MonadBase)
 import           Control.Monad.Reader
-import           Data.ByteString      (ByteString)
-import           Data.Word            (Word8)
+import           Control.Monad.Trans.Resource (MonadThrow, ReleaseKey,
+                                               ResourceT, allocate)
+import           Data.ByteString              (ByteString)
+import           Data.Word                    (Word8)
 import           Linear.V3
-import           Control.Monad.Trans.Resource (ResourceT, ReleaseKey, allocate)
 
+import           SDL                          (($=))
 import qualified SDL
-import qualified SDL.Image            as Image
-import           SDL                  (($=))
+import qualified SDL.Image                    as Image
 
 import           Kurokos.Core
 
 -- Allocate
 
-allocTexture :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m, MonadBase IO m)
+allocTexture :: (MonadReader KurokosEnv m, MonadIO m, MonadThrow m, MonadBase IO m)
   => FilePath -> ResourceT m (ReleaseKey, SDL.Texture)
 allocTexture path = do
   r <- getRenderer
   allocate (Image.loadTexture r path) SDL.destroyTexture
 
-allocTextureB :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m, MonadBase IO m)
+allocTextureB :: (MonadReader KurokosEnv m, MonadIO m, MonadThrow m, MonadBase IO m)
   => ByteString -> ResourceT m (ReleaseKey, SDL.Texture)
 allocTextureB bytes = do
   r <- getRenderer

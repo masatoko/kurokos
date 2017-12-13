@@ -5,7 +5,7 @@ module Kurokos.Types
   , closeJoystick
   ) where
 
-import qualified Control.Exception.Safe as E
+import qualified Control.Exception      as E
 import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Data.Int               (Int32)
 import           Data.Text              (Text)
