@@ -36,7 +36,6 @@ module Kurokos.Core
   , getWindow
   , getEvents
   , getJoysticks
-  , averageTime
   , showMessageBox
   , getRenderer
   , withRenderer
@@ -58,7 +57,6 @@ import           Control.Monad.Trans.Resource
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import qualified Data.Vector                  as V
-import qualified Data.Vector.Unboxed          as VU
 import           Data.Word                    (Word32)
 import           Foreign.C.Types              (CInt)
 import           Linear.Affine                (Point (..))
@@ -111,7 +109,6 @@ data KurokosState = KurokosState
   , kstCount      :: !Int
   --
   , kstActualFps  :: !Double
-  , kstFrameTimes :: VU.Vector Time
   , kstShouldExit :: Bool
   }
 
@@ -166,7 +163,6 @@ withKurokos KurokosConfig{..} winConf go =
             , kstCount = 0
             --
             , kstActualFps = 0
-            , kstFrameTimes = VU.empty
             , kstShouldExit = False
             }
       go $ KurokosData (env, kst)
@@ -420,15 +416,6 @@ getEvents = map SDL.eventPayload <$> gets kstSdlEvents
 
 getJoysticks :: Monad m => KurokosT m (V.Vector Joystick)
 getJoysticks = gets kstJoysticks
-
-averageTime :: Monad m => KurokosT m Int
-averageTime = do
-  ts <- gets kstFrameTimes
-  let a = fromIntegral $ VU.sum ts
-      n = VU.length ts
-  return $ if n == 0
-             then 0
-             else a `div` n
 
 showMessageBox :: (MonadReader KurokosEnv m, MonadIO m) => Text -> Text -> m ()
 showMessageBox title message = do
