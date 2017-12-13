@@ -1,8 +1,6 @@
 module Kurokos.UI.Import
   (
-    MonadMask
-  , MonadThrow
-  , MonadIO
+    MonadIO
   , MonadResource
   , allocate
   , lift
@@ -22,7 +20,6 @@ module Kurokos.UI.Import
   , fromMaybe
   ) where
 
-import           Control.Exception.Safe     (MonadMask, MonadThrow)
 import           Control.Monad              (unless, when)
 import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import           Control.Monad.Reader.Class (asks)

@@ -33,7 +33,6 @@ dependencies:
 - containers
 - transformers
 - mtl
-- safe-exceptions
 - lens
 - linear
 - resourcet

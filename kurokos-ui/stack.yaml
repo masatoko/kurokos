@@ -45,6 +45,8 @@ packages:
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 extra-deps:
+  - sdl2-2.3.0
+  - sdl2-image-2.0.0
   - sdl2-ttf-2.0.2
   - Glob-0.9.1
 

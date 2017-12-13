@@ -22,10 +22,10 @@ import qualified SDL
 import           SDL.Event
 
 -- | Update Gui data by SDL Events. Call this at the top of Update
-updateGui :: (RenderEnv m, MonadIO m, MonadMask m) => [SDL.EventPayload] -> Cursor -> GUI -> m GUI
+updateGui :: (RenderEnv m, MonadIO m) => [SDL.EventPayload] -> Cursor -> GUI -> m GUI
 updateGui es cursor g0 = foldM (procEvent cursor) g0 es
 
-procEvent :: (RenderEnv m, MonadIO m, MonadMask m)
+procEvent :: (RenderEnv m, MonadIO m)
   => Cursor -> GUI -> SDL.EventPayload -> m GUI
 procEvent cursor gui = work
   where

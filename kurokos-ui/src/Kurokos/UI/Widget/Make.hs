@@ -1,20 +1,20 @@
 module Kurokos.UI.Widget.Make where
 
-import qualified Control.Exception.Safe as E
+import qualified Control.Exception   as E
 import           Control.Lens
 import           Control.Monad.State
-import qualified Data.ByteString        as BS
-import qualified Data.Map               as M
+import qualified Data.ByteString     as BS
+import qualified Data.Map            as M
 import           Data.Text
-import qualified Data.Text              as T
-import           System.IO              (IOMode (..), hClose, openFile)
+import qualified Data.Text           as T
+import           System.IO           (IOMode (..), hClose, openFile)
 
 import qualified SDL
-import qualified SDL.Font               as Font
-import qualified SDL.Image              as Image
+import qualified SDL.Font            as Font
+import qualified SDL.Image           as Image
 
-import qualified Kurokos.Asset          as Asset
-import qualified Kurokos.Asset.SDL      as Asset
+import qualified Kurokos.Asset       as Asset
+import qualified Kurokos.Asset.SDL   as Asset
 
 import           Kurokos.UI.Core
 import           Kurokos.UI.Import

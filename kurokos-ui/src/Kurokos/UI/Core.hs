@@ -8,7 +8,7 @@
 module Kurokos.UI.Core where
 
 import           Control.Concurrent.MVar
-import qualified Control.Exception.Safe   as E
+import qualified Control.Exception        as E
 import           Control.Lens
 import           Control.Monad.Reader
 import           Control.Monad.State
@@ -92,9 +92,9 @@ data GuiEnv = GuiEnv
   }
 
 data GUI = GUI
-  { _gKeyCnt         :: Key
+  { _gKeyCnt :: Key
   -- ^ Counter for WidgetTree ID
-  , _gWTree          :: GuiWidgetTree
+  , _gWTree  :: GuiWidgetTree
   }
 
 makeLenses ''GUI
@@ -107,7 +107,7 @@ getWidgetTree = fmap snd . view gWTree
 
 newtype GuiT m a = GuiT {
     runGT :: ReaderT GuiEnv (StateT GUI m) a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader GuiEnv, MonadState GUI, E.MonadThrow)
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader GuiEnv, MonadState GUI)
 
 runGuiT :: Monad m => GuiEnv -> GUI -> GuiT m a -> m GUI
 runGuiT env g k = execStateT (runReaderT (runGT k) env) g
@@ -115,7 +115,7 @@ runGuiT env g k = execStateT (runReaderT (runGT k) env) g
 instance MonadTrans GuiT where
   lift = GuiT . lift . lift
 
-newGui :: (RenderEnv m, MonadIO m, MonadMask m, MonadThrow m)
+newGui :: (RenderEnv m, MonadIO m)
   => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer =
   readyRender . over gWTree WT.balance =<< runGuiT env iniGui initializer
@@ -124,7 +124,7 @@ freeGui :: MonadIO m => GUI -> m ()
 freeGui g =
   mapM_ (freeWidget . snd) $ g^.gWTree
 
-genSingle :: (RenderEnv m, MonadIO m, E.MonadThrow m)
+genSingle :: (RenderEnv m, MonadIO m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
 genSingle mIdent pos size w = do
   key <- WTKey <$> use gKeyCnt
@@ -141,7 +141,7 @@ genSingle mIdent pos size w = do
   let ctx = WContext key mIdent Nothing (attribOf w) True True iniWidgetState colset (colorSetBasis colset) tex pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
-genContainer :: (RenderEnv m, MonadIO m, E.MonadThrow m)
+genContainer :: (RenderEnv m, MonadIO m)
   => Maybe WidgetIdent -> ContainerType -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
 genContainer mIdent ct pos size = do
   key <- WTKey <$> use gKeyCnt
@@ -180,7 +180,7 @@ setAllNeedsRender =
     work = set (_1 . ctxNeedsRender) True
 
 -- | Ready for rendering. Call this at the end of Update
-readyRender :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m GUI
+readyRender :: (RenderEnv m, MonadIO m) => GUI -> m GUI
 readyRender g = do
   V2 w h <- getWindowSize
   let vmap = M.fromList
@@ -251,7 +251,7 @@ readyRender g = do
           -- Render contents
           renderW r size wcol w
 
-render :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
+render :: (RenderEnv m, MonadIO m) => GUI -> m ()
 render = mapM_ go . view gWTree
   where
     go (ctx,_)
