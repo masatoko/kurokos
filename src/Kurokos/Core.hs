@@ -172,7 +172,6 @@ withKurokos KurokosConfig{..} winConf go =
             , kstFrameTimes = VU.empty
             , kstShouldExit = False
             }
-
       go $ KurokosData (env, kst)
   where
     withSDL = E.bracket_ SDL.initializeAll SDL.quit
@@ -216,9 +215,13 @@ withKurokos KurokosConfig{..} winConf go =
               let size = Just $ SDL.windowInitialSize winConf
               SDL.rendererLogicalSize r $= size
 
--- Scene
+-- * Scene
+
+-- | Scene function type for updating `g`.
 type Update m g  = SceneState -> g -> KurokosT m g
+-- | Scene function type for rendering `g`.
 type Render m g  = SceneState -> g -> KurokosT m ()
+-- | Scene function type for choosing scenes for next frame.
 type Transit m g = SceneState -> g -> KurokosT m (Maybe (Transition m))
 
 data Scene m g = Scene
@@ -239,17 +242,23 @@ data Transition m
   | forall g. Next (Scene m g)
   | forall g. Push (Scene m g)
 
+-- | Equivalent to `return Nothing`
 continue :: Monad m => m (Maybe (Transition base))
 continue = return Nothing
 
-end :: Monad m => m (Maybe (Transition base))
-end = return $ Just End
-
+-- | Transit to next scene.
 next :: Monad m => Scene m g -> KurokosT m (Maybe (Transition m))
 next = return . Just . Next
 
+-- | Abort this scene and transit to next scene.
 push :: Monad m => Scene m g -> KurokosT m (Maybe (Transition m))
 push = return . Just . Push
+
+-- | Finish this scene
+-- Equivalent to `return $ Just End`
+end :: Monad m => m (Maybe (Transition base))
+end = return $ Just End
+
 
 -- Start scene
 runScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene m g -> KurokosT m ()
