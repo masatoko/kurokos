@@ -1,0 +1,5 @@
+files:
+  -
+    id: sample-image
+    dir: _data/
+    file: img.png

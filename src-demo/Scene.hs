@@ -27,9 +27,8 @@ import qualified Kurokos.UI            as UI
 
 import           Import
 import           MyAction              (MyAction (..), eventsToMyActions)
-import           Pad
 
-data Dummy = Dummy
+data Dummy = Dummy [MyAction]
 
 data MyData = MyData
   { gTexture :: SDL.Texture
@@ -48,16 +47,18 @@ allocGame = do
 data MouseScene = MouseScene
   { _msLClicks :: [V2 CInt]
   , _msRClicks :: [V2 CInt]
+  , _msActions :: [MyAction]
   } deriving Show
 
 makeLenses ''MouseScene
 
-mouseScene :: Scene MouseScene IO Action
-mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
+mouseScene :: Scene IO MouseScene
+mouseScene = Scene update render transit (pure (MouseScene [] [] []))
   where
-    update _ _ s = do
+    update _ s = do
       es <- K.getEvents
-      execStateT (mapM_ go es) s
+      let as = eventsToMyActions es
+      execStateT (mapM_ go es) $ s&msActions .~ as
       where
         go (SDL.MouseButtonEvent dt) = do
           liftIO $ print dt
@@ -82,9 +83,12 @@ mouseScene = Scene defPad update render transit (pure (MouseScene [] []))
         forM_ (s^.msRClicks) $ \p ->
           Prim.fillCircle r p 5 (V4 255 0 255 255)
 
-    transit _ as _
-      | Enter `elem` as = K.end
-      | otherwise       = K.continue
+    transit _ s
+      | Select `elem` as = K.end
+      | Cancel `elem` as = K.end
+      | otherwise        = K.continue
+      where
+        as = s^.msActions
 
 data Title = Title
   { _tGui    :: UI.GUI
@@ -95,9 +99,9 @@ data Title = Title
 
 makeLenses ''Title
 
-titleScene :: Scene Title IO Action
+titleScene :: Scene IO Title
 titleScene =
-  Scene defPad update render transit alloc
+  Scene update render transit alloc
   where
     nameMain = "go-main"
     nameMouse = "go-mouse"
@@ -168,8 +172,8 @@ titleScene =
             toHover :: UI.Color -> UI.Color
             toHover = over _xyz (fmap (+ (-10)))
 
-    update :: Update Title IO Action
-    update _st _as title0 = do
+    update :: Update IO Title
+    update _ title0 = do
       es <- K.getEvents
       readyG . testOnClick . updateEs es =<< updateT es title0
       where
@@ -204,7 +208,7 @@ titleScene =
             es = t^.tEvents
             modGui = modify' . over tGui
 
-    render :: Render Title IO
+    render :: Render IO Title
     render _ t = do
       K.clearBy $ V4 250 250 250 255
       --
@@ -221,21 +225,20 @@ titleScene =
       where
         color = V4 50 50 50 255
 
-    transit _ as t
-      | Exit `elem` as      = K.end
+    transit _ t
       | isClicked nameMain  = K.next mainScene
       | isClicked nameMouse = K.push mouseScene
       | otherwise           = K.continue
       where
         isClicked ident = isJust $ UI.clickedOn UI.GuiActLeft ident $ t^.tEvents
 
-mainScene :: Scene MyData IO Action
-mainScene = Scene defPad update render transit allocGame
+mainScene :: Scene IO MyData
+mainScene = Scene update render transit allocGame
   where
-    update :: Update MyData IO Action
-    update stt as g0 = do
-      as' <- eventsToMyActions <$> K.getEvents
-      work $ g0 {gMyActions = as'}
+    update :: Update IO MyData
+    update stt g0 = do
+      as <- eventsToMyActions <$> K.getEvents
+      work $ g0 {gMyActions = as}
       where
         alpha = fromIntegral $ frameCount stt
         work g = do
@@ -253,7 +256,7 @@ mainScene = Scene defPad update render transit allocGame
 
         setDeg = modify (\g -> g {gDeg = fromIntegral (frameCount stt `mod` 360)})
 
-    render :: Render MyData IO
+    render :: Render IO MyData
     render sst (MyData tex deg cnt as) = do
       K.clearBy $ V4 0 0 0 255
 
@@ -279,37 +282,36 @@ mainScene = Scene defPad update render transit allocGame
         color = V4 255 255 255 255
         t = frameCount sst
 
-    transit _ as g
+    transit _ g
       | cnt > targetCount = K.next $ clearScene cnt
-      | Enter `elem` as   = K.push pauseScene
-      --
-      | PUp   `elem` as   = K.next mainScene
-      | PDown `elem` as   = K.push mainScene
-      | Exit  `elem` as   = K.end
-      --
+      | Select `elem` as  = K.push pauseScene
+      | Cancel `elem` as  = K.end
       | otherwise         = K.continue
       where
         cnt = gCount g
+        as = gMyActions g
 
     targetCount = 5 :: Int
 
-pauseScene :: Scene Dummy IO Action
-pauseScene = Scene defPad update render transit (pure Dummy)
+pauseScene :: Scene IO Dummy
+pauseScene = Scene update render transit (pure $ Dummy [])
   where
-    update _ _ = return
+    update _ _dummy =
+      Dummy . eventsToMyActions <$> K.getEvents
 
     render _ _ = do
       K.clearBy $ V4 50 50 0 255
       K.printTest (P (V2 10 100)) (V4 255 255 255 255) "PAUSE"
 
-    transit _ as _
-      | Enter `elem` as = K.end
-      | otherwise       = K.continue
+    transit _ (Dummy as)
+      | Select `elem` as = K.end
+      | otherwise        = K.continue
 
-clearScene :: Int -> Scene Dummy IO Action
-clearScene score = Scene defPad update render transit (pure Dummy)
+clearScene :: Int -> Scene IO Dummy
+clearScene score = Scene update render transit (pure $ Dummy [])
   where
-    update _ _ = return
+    update _ _dummy =
+      Dummy . eventsToMyActions <$> K.getEvents
 
     render _ _ = do
       K.clearBy $ V4 0 0 255 255
@@ -317,6 +319,6 @@ clearScene score = Scene defPad update render transit (pure Dummy)
       K.printTest (P (V2 10 120)) (V4 255 255 255 255) $ "Score: " <> T.pack (show score)
       K.printTest (P (V2 10 140)) (V4 255 255 255 255) "Enter - title"
 
-    transit _ as _g
-      | Enter `elem` as = K.next titleScene
-      | otherwise       = K.continue
+    transit _ (Dummy as)
+      | Select `elem` as = K.next titleScene
+      | otherwise        = K.continue

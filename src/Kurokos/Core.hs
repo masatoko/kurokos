@@ -73,7 +73,6 @@ import           SDL                          (($=))
 import qualified SDL
 import qualified SDL.Font                     as Font
 
-import           Kurokos.Metapad
 import           Kurokos.Types
 
 import qualified Kurokos.Asset                as Asset

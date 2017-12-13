@@ -14,7 +14,10 @@ module Kurokos
   , Scene (..)
   , SceneState (..)
   , Transition (..)
-  , continue, end, next, push
+  , continue
+  , next
+  , push
+  , end
   --
   , getEnv
   , screenSize
@@ -35,34 +38,12 @@ module Kurokos
   -- Sprite
   , allocTexture
   , allocTextureB
-  , setBlendMode, setAlphaMod, setColorMod
-  -- Metapad
-  , Metapad
-  , metapadFromList
-  , addAction
-  , Input
-  , MouseButton (..)
-  , InputMotion (..)
-  , HatDir (..)
-  , hold, pressed, released
-  , mousePosAct
-  , mouseMotionAct
-  , mouseButtonAct
-  , mouseWheelAct
-  , touchMotionAct
-  , numAxes, axisPosition
-  , joyHold, joyPressed, joyReleased
-  , joyAxis, joyAxis2
-  , joyAxisChanged, joyAxisChanged2
-  -- , joyAllButtons
-  -- , joyAllAxes
-  , joyHat
-  -- , joyAllHat
-  , rumble
+  , setBlendMode
+  , setAlphaMod
+  , setColorMod
   ) where
 
 import           Kurokos.Core
 import           Kurokos.Types
-import           Kurokos.Metapad
 import           Kurokos.Render
 import           Kurokos.Texture
