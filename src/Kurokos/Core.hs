@@ -93,28 +93,28 @@ data KurokosConfig = KurokosConfig
 type Time = Word32
 
 data KurokosEnv = KurokosEnv
-  { graphFPS         :: Int
-  , window           :: SDL.Window
+  { envGraphFps         :: Int
+  , envWindow           :: SDL.Window
   -- Resource
-  , renderer         :: MVar SDL.Renderer
-  , systemAssets     :: Asset.SDLAssetManager
-  , systemFont       :: Font.Font
+  , envMRenderer        :: MVar SDL.Renderer
+  , envSystemAssets     :: Asset.SDLAssetManager
+  , envSystemFont       :: Font.Font
   -- Debug
-  , debugPrintFPS    :: Bool
-  , debugPrintSystem :: Bool
+  , envDebugPrintFps    :: Bool
+  , envDebugPrintSystem :: Bool
   }
 
 data KurokosState = KurokosState
   {
-    messages      :: [Text]
-  , kstEvents     :: [SDL.Event]
+    kstMessages   :: [Text]
+  , kstSdlEvents  :: [SDL.Event]
   , kstJoysticks  :: V.Vector Joystick
   --
-  , psStart       :: !Time
-  , psCount       :: !Int
+  , kstStart      :: !Time
+  , kstCount      :: !Int
   --
-  , actualFPS     :: !Double
-  , frameTimes    :: VU.Vector Time
+  , kstActualFps  :: !Double
+  , kstFrameTimes :: VU.Vector Time
   , kstShouldExit :: Bool
   }
 
@@ -162,14 +162,14 @@ withKurokos KurokosConfig{..} winConf go =
       initOthers r
       env <- mkEnv sdlAssetManager win r
       let kst = KurokosState
-            { messages = []
-            , kstEvents = []
+            { kstMessages = []
+            , kstSdlEvents = []
             , kstJoysticks = V.empty
-            , psStart = 0
-            , psCount = 0
+            , kstStart = 0
+            , kstCount = 0
             --
-            , actualFPS = 0
-            , frameTimes = VU.empty
+            , kstActualFps = 0
+            , kstFrameTimes = VU.empty
             , kstShouldExit = False
             }
 
@@ -187,13 +187,13 @@ withKurokos KurokosConfig{..} winConf go =
       mvar <- newMVar r
       font <- Asset.getFont confSystemFontId 14 sdlAssetManager
       return KurokosEnv
-        { graphFPS = 60
-        , window = win
-        , renderer = mvar
-        , systemAssets = sdlAssetManager
-        , systemFont = font
-        , debugPrintFPS = confDebugPrintFPS
-        , debugPrintSystem = confDebugPrintSystem
+        { envGraphFps = 60
+        , envWindow = win
+        , envMRenderer = mvar
+        , envSystemAssets = sdlAssetManager
+        , envSystemFont = font
+        , envDebugPrintFps = confDebugPrintFPS
+        , envDebugPrintSystem = confDebugPrintSystem
         }
 
     withWinRenderer :: ((SDL.Window, SDL.Renderer) -> IO r) -> IO r
@@ -285,7 +285,7 @@ sceneLoop iniG iniS Scene{..} =
       -- Update
       events <- SDL.pollEvents
       procEvents events
-      modify' $ \kst -> kst {kstEvents = events}
+      modify' $ \kst -> kst {kstSdlEvents = events}
       g' <- sceneUpdate s0 g
       -- Rendering
       preRender
@@ -311,29 +311,29 @@ sceneLoop iniG iniS Scene{..} =
     -- TODO: Implement frame skip
     updateTime :: MonadIO m => KurokosT m ()
     updateTime = do
-      cnt <- gets psCount
-      t0 <- gets psStart
+      cnt <- gets kstCount
+      t0 <- gets kstStart
       t <- SDL.ticks
-      if | cnt == 0  -> modify' $ \a -> a {psStart = t}
+      if | cnt == 0  -> modify' $ \a -> a {kstStart = t}
          | cnt == 60 -> do
               let fps = (60 * 1000) / fromIntegral (t - t0)
-              modify' $ \a -> a {psCount = 0, psStart = t, actualFPS = fps}
+              modify' $ \a -> a {kstCount = 0, kstStart = t, kstActualFps = fps}
          | otherwise -> return ()
-      modify' $ \a -> a {psCount = psCount a + 1}
+      modify' $ \kst -> kst {kstCount = kstCount kst + 1}
 
     wait :: MonadIO m => KurokosT m ()
     wait = do
       t <- SDL.ticks
-      cnt <- gets psCount
-      t0 <- gets psStart
-      fps <- asks graphFPS
+      cnt <- gets kstCount
+      t0 <- gets kstStart
+      fps <- asks envGraphFps
       let lapse = t - t0
           tWait = fromIntegral (cnt * 1000) / fromIntegral fps - fromIntegral lapse
           tWait' = truncate (tWait :: Double)
       when (tWait > 0) $ SDL.delay tWait'
 
       -- Print meter
-      p <- asks debugPrintSystem
+      p <- asks envDebugPrintSystem
       when p $ printsys . T.pack $
         if tWait > 0
           then
@@ -349,9 +349,9 @@ sceneLoop iniG iniS Scene{..} =
 
     printSystemState :: MonadIO m => KurokosT m ()
     printSystemState = do
-      p2 <- asks debugPrintFPS
+      p2 <- asks envDebugPrintFps
       when p2 $ do
-        fps <- truncate <$> gets actualFPS
+        fps <- truncate <$> gets kstActualFps
         printsys . T.pack . show $ (fps :: Int)
 
     advance :: SceneState -> SceneState
@@ -360,9 +360,9 @@ sceneLoop iniG iniS Scene{..} =
 
     printMessages :: (MonadIO m, MonadMask m) => KurokosT m ()
     printMessages = do
-      font <- asks systemFont
-      ts <- gets messages
-      modify $ \s -> s {messages = []} -- Clear messages
+      font <- asks envSystemFont
+      ts <- gets kstMessages
+      modify $ \s -> s {kstMessages = []} -- Clear kstMessages
       withRenderer $ \r ->
         foldM_ (work r font) 8 ts
       where
@@ -378,7 +378,7 @@ sceneLoop iniG iniS Scene{..} =
 printsys :: Monad m => Text -> KurokosT m ()
 printsys text
   | T.null text = return ()
-  | otherwise   = modify $ \s -> s {messages = text : messages s}
+  | otherwise   = modify $ \s -> s {kstMessages = text : kstMessages s}
 
 -- | Process events about system
 procEvents :: MonadIO m => [SDL.Event] -> KurokosT m ()
@@ -404,20 +404,20 @@ getEnv :: (MonadReader KurokosEnv m) => m KurokosEnv
 getEnv = ask
 
 screenSize :: (MonadReader KurokosEnv m, MonadIO m) => m (V2 CInt)
-screenSize = SDL.get . SDL.windowSize =<< asks window
+screenSize = SDL.get . SDL.windowSize =<< asks envWindow
 
 -- getWindow :: (MonadReader KurokosEnv m, MonadIO m) => m SDL.Window
--- getWindow = asks window
+-- getWindow = asks envWindow
 
 getEvents :: Monad m => KurokosT m [SDL.EventPayload]
-getEvents = map SDL.eventPayload <$> gets kstEvents
+getEvents = map SDL.eventPayload <$> gets kstSdlEvents
 
 getJoysticks :: Monad m => KurokosT m (V.Vector Joystick)
 getJoysticks = gets kstJoysticks
 
 averageTime :: Monad m => KurokosT m Int
 averageTime = do
-  ts <- gets frameTimes
+  ts <- gets kstFrameTimes
   let a = fromIntegral $ VU.sum ts
       n = VU.length ts
   return $ if n == 0
@@ -426,7 +426,7 @@ averageTime = do
 
 showMessageBox :: (MonadReader KurokosEnv m, MonadIO m) => Text -> Text -> m ()
 showMessageBox title message = do
-  win <- Just <$> asks window
+  win <- Just <$> asks envWindow
   SDL.showSimpleMessageBox win SDL.Information title message
 
 --
@@ -440,14 +440,14 @@ setRendererDrawBlendMode mode =
 --
 
 instance (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => RenderEnv m where
-  getWindow = asks window
+  getWindow = asks envWindow
 
   getWindowSize = SDL.get . SDL.windowSize =<< getWindow
 
-  getRenderer = liftIO . readMVar =<< asks renderer
+  getRenderer = liftIO . readMVar =<< asks envMRenderer
 
   withRenderer act = do
-    mvar <- asks renderer
+    mvar <- asks envMRenderer
     liftIO $
       bracket (takeMVar mvar)
               (putMVar mvar)

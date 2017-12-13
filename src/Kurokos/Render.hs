@@ -34,8 +34,8 @@ clearBy color =
 
 printTest :: (MonadIO m, MonadMask m) => Point V2 Int -> V4 Word8 -> Text -> KurokosT m ()
 printTest pos color text = do
-  font <- asks systemFont
-  withRenderer $ \r -> liftIO $ do
+  font <- asks envSystemFont
+  withRenderer $ \r -> do
     (w,h) <- Font.size font text
     runManaged $ do
       surface <- managed $ E.bracket (Font.blended font color text) SDL.freeSurface
