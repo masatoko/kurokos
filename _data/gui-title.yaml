@@ -6,7 +6,7 @@
   y-rpn: $height 100 -
   w-rpn: $width 2 /
   h: 50
-  asset: sysfont
+  asset: font-r
 
 -
   type: fill
@@ -23,7 +23,7 @@
       type: label
       title: Label
       h: 20
-      asset: sysfont
+      asset: font-r
     - *test
     - *test
     -

@@ -60,8 +60,6 @@ sudo apt-get install libsdl2-gfx-dev
 
 ## 1. フォントファイルを用意する
 
-https://ipafont.ipa.go.jp/node26#jp の「IPAフォントライセンス」に同意をしてから、以下の方法でフォントを配置します。
-
 ### 自動
 
 ```
@@ -70,7 +68,7 @@ sh setup-font.sh
 
 ### マニュアル
 
-https://oscdl.ipa.go.jp/IPAexfont/ipaexg00301.zip
+https://ja.osdn.net/projects/mplus-fonts/downloads/62344/mplus-TESTFLIGHT-063.tar.xz/
 をダウンロードし、`_data/font/`内に解凍した全てのTTFファイルを配置する。
 
 ## 2. コンパイルと実行

@@ -1,20 +1,15 @@
 set -eu
 
-open https://ipafont.ipa.go.jp/node26#jp
-
-echo "IPAフォントライセンス をお読みください。"
-read -p "進みますか? (y/N): " yn
-case "$yn" in [yY]*) ;; *) echo "セットアップを中止しました。" ; exit ;; esac
-
-# Download
 mkdir -p __temp/
-curl https://oscdl.ipa.go.jp/IPAexfont/ipaexg00301.zip -o __temp/ipa.zip
+wget https://ja.osdn.net/projects/mplus-fonts/downloads/62344/mplus-TESTFLIGHT-063.tar.xz/ -O __temp/mplus.tar.xz
 
-# Unzip
 cd __temp
-unzip ipa.zip
+tar -Jxvf mplus.tar.xz
 cd ..
 
-# Move font file
 mkdir -p _data/font/
-mv __temp/ipaexg00301/ipaexg.ttf _data/font/ipaexg.ttf
+mv __temp/mplus-TESTFLIGHT-063/mplus-1p-regular.ttf _data/font/mplus-1p-regular.ttf
+mv __temp/mplus-TESTFLIGHT-063/mplus-1p-medium.ttf _data/font/mplus-1p-medium.ttf
+mv __temp/mplus-TESTFLIGHT-063/mplus-1p-bold.ttf _data/font/mplus-1p-bold.ttf
+
+echo "Remove __temp directory."
