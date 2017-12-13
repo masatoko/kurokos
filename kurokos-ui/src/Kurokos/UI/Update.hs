@@ -34,6 +34,11 @@ procEvent cursor gui = work
       if windowResizedEventWindow == win
         then return $ setAllNeedsRender gui
         else return gui
+    work (WindowMaximizedEvent WindowMaximizedEventData{..}) = do
+      win <- getWindow
+      if windowMaximizedEventWindow == win
+        then return $ setAllNeedsRender gui
+        else return gui
     work (MouseMotionEvent MouseMotionEventData{..}) =
       return . flip execState gui $
         modify $ over gWTree $ fmap $ modWhenHover pos
