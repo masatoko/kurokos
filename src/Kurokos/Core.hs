@@ -20,7 +20,7 @@ module Kurokos.Core
   , KurokosT
   , Render
   , Scene (..)
-  , SceneState
+  , SceneState (..)
   , Transit
   , Transition (..)
   , Update

@@ -14,7 +14,7 @@ module Kurokos
   , Update
   , Render
   , Transit
-  , SceneState (..)
+  , SceneState
   , runScene
   -- ** Transition
   , Transition (..)
