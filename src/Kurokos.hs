@@ -17,14 +17,13 @@ module Kurokos
   , push
   , end
   --
-  , screenSize
+  , getWindowSize
   , getWindow
   , getEvents
   , getJoysticks
   , showMessageBox
   , getRenderer
   , withRenderer
-  , setRendererDrawBlendMode
   -- Types
   , Joystick (..)
   -- Render

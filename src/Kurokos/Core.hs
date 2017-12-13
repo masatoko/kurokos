@@ -32,14 +32,13 @@ module Kurokos.Core
   , withKurokos
   --
   , printsys
-  , screenSize
+  , getWindowSize
   , getWindow
   , getEvents
   , getJoysticks
   , showMessageBox
   , getRenderer
   , withRenderer
-  , setRendererDrawBlendMode
   ) where
 
 import           Control.Concurrent.MVar      (MVar, newMVar, putMVar, readMVar,
@@ -405,12 +404,6 @@ resetJoysticks SDL.JoyDeviceEventData{} = do
 -- getEnv :: (MonadReader KurokosEnv m) => m KurokosEnv
 -- getEnv = ask
 
-screenSize :: (MonadReader KurokosEnv m, MonadIO m) => m (V2 CInt)
-screenSize = SDL.get . SDL.windowSize =<< asks envWindow
-
--- getWindow :: (MonadReader KurokosEnv m, MonadIO m) => m SDL.Window
--- getWindow = asks envWindow
-
 getEvents :: Monad m => KurokosT m [SDL.EventPayload]
 getEvents = map SDL.eventPayload <$> gets kstSdlEvents
 
@@ -421,14 +414,6 @@ showMessageBox :: (MonadReader KurokosEnv m, MonadIO m) => Text -> Text -> m ()
 showMessageBox title message = do
   win <- Just <$> asks envWindow
   SDL.showSimpleMessageBox win SDL.Information title message
-
---
-
-setRendererDrawBlendMode :: (MonadIO m, MonadMask m) => SDL.BlendMode -> KurokosT m ()
-setRendererDrawBlendMode mode =
-  withRenderer $ \r ->
-    SDL.rendererDrawBlendMode r $= mode
-
 
 --
 
