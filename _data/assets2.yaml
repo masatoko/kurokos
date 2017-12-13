@@ -1,19 +1,6 @@
-_common:
-  - &font-dir _data/font/
-
 files:
   -
-    id: robotoj-b
-    dir: *font-dir
-    file: RobotoJ-Bold.ttf
-    size: 20
-  -
-    id: robotoj-m
-    dir: *font-dir
-    file: RobotoJ-Medium.ttf
-    size: 16
-  -
-    id: robotoj-r
-    dir: *font-dir
-    file: RobotoJ-Regular.ttf
+    id: sysfont
+    dir: _data/font/
+    file: ipaexg.ttf
     size: 16

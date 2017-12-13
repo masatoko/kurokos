@@ -6,7 +6,7 @@
   y-rpn: $height 100 -
   w-rpn: $width 2 /
   h: 50
-  asset: robotoj-r
+  asset: sysfont
 
 -
   type: fill
@@ -23,7 +23,7 @@
       type: label
       title: Label
       h: 20
-      asset: robotoj-r
+      asset: sysfont
     - *test
     - *test
     -
