@@ -241,8 +241,15 @@ readyRender g = do
         SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
         E.bracket_ (SDL.rendererRenderTarget r $= Just tex)
                    (SDL.rendererRenderTarget r $= Nothing)
-                   (renderW r size wcol w)
+                   (renderContents r)
         return tex
+      where
+        renderContents r = do
+          -- Initialize background
+          SDL.rendererDrawColor r $= V4 0 0 0 0
+          SDL.clear r
+          -- Render contents
+          renderW r size wcol w
 
 render :: (RenderEnv m, MonadIO m, MonadMask m) => GUI -> m ()
 render = mapM_ go . view gWTree
