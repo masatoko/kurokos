@@ -1,20 +1,20 @@
 {-# LANGUAGE RecordWildCards #-}
-module MyAction where
+module Action where
 
 import           Data.Maybe (mapMaybe)
 
 import qualified SDL
 import           SDL.Event
 
-data MyAction
+data Action
   = Select
   | Cancel
   deriving (Eq, Show, Read)
 
-eventsToMyActions :: [SDL.EventPayload] -> [MyAction]
-eventsToMyActions = mapMaybe conv
+eventsToActions :: [SDL.EventPayload] -> [Action]
+eventsToActions = mapMaybe conv
   where
-    conv :: SDL.EventPayload -> Maybe MyAction
+    conv :: SDL.EventPayload -> Maybe Action
     conv (KeyboardEvent KeyboardEventData{..})
       | pPressed && not keyboardEventRepeat =
           case SDL.keysymScancode keyboardEventKeysym of

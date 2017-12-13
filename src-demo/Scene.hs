@@ -25,16 +25,16 @@ import qualified Kurokos.Asset.SDL     as Asset
 import           Kurokos.UI            (UExp (..), ctxAttrib, visible)
 import qualified Kurokos.UI            as UI
 
+import           Action                (Action (..), eventsToActions)
 import           Import
-import           MyAction              (MyAction (..), eventsToMyActions)
 
-data Dummy = Dummy [MyAction]
+data Dummy = Dummy [Action]
 
 data MyData = MyData
-  { gTexture :: SDL.Texture
-  , gDeg     :: !Double
-  , gCount   :: !Int
-  , gMyActions :: [MyAction]
+  { gTexture   :: SDL.Texture
+  , gDeg       :: !Double
+  , gCount     :: !Int
+  , gMyActions :: [Action]
   }
 
 allocGame :: ResourceT (KurokosT IO) MyData
@@ -47,7 +47,7 @@ allocGame = do
 data MouseScene = MouseScene
   { _msLClicks :: [V2 CInt]
   , _msRClicks :: [V2 CInt]
-  , _msActions :: [MyAction]
+  , _msActions :: [Action]
   } deriving Show
 
 makeLenses ''MouseScene
@@ -57,7 +57,7 @@ mouseScene = Scene update render transit (pure (MouseScene [] [] []))
   where
     update _ s = do
       es <- K.getEvents
-      let as = eventsToMyActions es
+      let as = eventsToActions es
       execStateT (mapM_ go es) $ s&msActions .~ as
       where
         go (SDL.MouseButtonEvent dt) = do
@@ -237,7 +237,7 @@ mainScene = Scene update render transit allocGame
   where
     update :: Update IO MyData
     update stt g0 = do
-      as <- eventsToMyActions <$> K.getEvents
+      as <- eventsToActions <$> K.getEvents
       work $ g0 {gMyActions = as}
       where
         alpha = fromIntegral $ frameCount stt
@@ -250,7 +250,7 @@ mainScene = Scene update render transit allocGame
               mapM_ count $ gMyActions g
               setDeg
 
-        count :: MyAction -> StateT MyData (KurokosT IO) ()
+        count :: Action -> StateT MyData (KurokosT IO) ()
         count Select = modify (\a -> let c = gCount a in a {gCount = c + 1})
         count _      = return ()
 
@@ -297,7 +297,7 @@ pauseScene :: Scene IO Dummy
 pauseScene = Scene update render transit (pure $ Dummy [])
   where
     update _ _dummy =
-      Dummy . eventsToMyActions <$> K.getEvents
+      Dummy . eventsToActions <$> K.getEvents
 
     render _ _ = do
       K.clearBy $ V4 50 50 0 255
@@ -311,7 +311,7 @@ clearScene :: Int -> Scene IO Dummy
 clearScene score = Scene update render transit (pure $ Dummy [])
   where
     update _ _dummy =
-      Dummy . eventsToMyActions <$> K.getEvents
+      Dummy . eventsToActions <$> K.getEvents
 
     render _ _ = do
       K.clearBy $ V4 0 0 255 255
