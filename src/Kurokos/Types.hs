@@ -1,10 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.Types
-  ( Font
-  , Joystick (..)
+  ( Joystick (..)
   , openJoystickFromDevice
   , closeJoystick
-  , FontSource (..)
   ) where
 
 import qualified Control.Exception.Safe as E
@@ -19,8 +17,6 @@ import qualified SDL.Font
 import           SDL.Internal.Types     (joystickPtr)
 import qualified SDL.Raw.Haptic         as HAP
 import           SDL.Raw.Types          (Haptic)
-
-type Font = SDL.Font.Font
 
 data Joystick = Joystick
   { jsJoystick   :: !SDL.Joystick
@@ -51,8 +47,3 @@ closeJoystick :: MonadIO m => Joystick -> m ()
 closeJoystick Joystick{..} = do
   mapM_ HAP.hapticClose jsHap
   SDL.closeJoystick jsJoystick
-
-data FontSource
-  = FontFile FilePath
-  | FontBinary ByteString
-  deriving Show

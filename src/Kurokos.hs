@@ -27,17 +27,11 @@ module Kurokos
   , withRenderer
   , setRendererDrawBlendMode
   -- Types
-  , Font
   , Joystick (..)
-  , FontSource (..)
   -- Render
   , setColor
   , clearBy
   , printTest
-  -- Font
-  , loadFont
-  , freeFont
-  , withFont
   -- Sprite
   , allocTexture
   , allocTextureB
@@ -69,7 +63,6 @@ module Kurokos
 
 import           Kurokos.Core
 import           Kurokos.Types
-import           Kurokos.Font
 import           Kurokos.Metapad
 import           Kurokos.Render
 import           Kurokos.Texture

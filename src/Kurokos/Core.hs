@@ -99,7 +99,7 @@ data KurokosEnv = KurokosEnv
   -- Resource
   , renderer         :: MVar SDL.Renderer
   , systemAssets     :: Asset.SDLAssetManager
-  , systemFont       :: Font
+  , systemFont       :: Font.Font
   -- Debug
   , debugPrintFPS    :: Bool
   , debugPrintSystem :: Bool
