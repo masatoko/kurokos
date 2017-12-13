@@ -53,7 +53,7 @@ library:
 executables:
   demo:
     main: Main.hs
-    source-dirs: demo-src
+    source-dirs: src-demo
     when:
       - condition: flag(demo)
         then:
