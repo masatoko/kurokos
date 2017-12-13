@@ -3,9 +3,7 @@ module Kurokos
     KurokosData
   , KurokosEnv
   , KurokosT
-  , KurokosEnvT
   , runKurokos
-  , runKurokosEnvT
   , withKurokos
   , runScene
   , Update, Render, Transit
@@ -19,7 +17,6 @@ module Kurokos
   , push
   , end
   --
-  , getEnv
   , screenSize
   , getWindow
   , getEvents

@@ -18,7 +18,6 @@ module Kurokos.Core
   , KurokosState
   , KurokosData
   , KurokosT
-  , KurokosEnvT
   , Render
   , Scene (..)
   , SceneState (..)
@@ -30,11 +29,9 @@ module Kurokos.Core
   , runScene
   --
   , runKurokos
-  , runKurokosEnvT
   , withKurokos
   --
   , printsys
-  , getEnv
   , screenSize
   , getWindow
   , getEvents
@@ -143,12 +140,12 @@ instance MonadBaseControl base m => MonadBaseControl base (KurokosT m) where
   liftBaseWith            = defaultLiftBaseWith
   restoreM                = defaultRestoreM
 
-newtype KurokosEnvT a = KurokosEnvT {
-    runKET :: ReaderT KurokosEnv IO a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadThrow, MonadCatch, MonadMask)
-
-runKurokosEnvT :: KurokosEnv -> KurokosEnvT a -> IO a
-runKurokosEnvT conf k = runReaderT (runKET k) conf
+-- newtype KurokosEnvT a = KurokosEnvT {
+--     runKET :: ReaderT KurokosEnv IO a
+--   } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadThrow, MonadCatch, MonadMask)
+--
+-- runKurokosEnvT :: KurokosEnv -> KurokosEnvT a -> IO a
+-- runKurokosEnvT conf k = runReaderT (runKET k) conf
 
 withKurokos :: KurokosConfig -> SDL.WindowConfig -> (KurokosData -> IO ()) -> IO ()
 withKurokos KurokosConfig{..} winConf go =
@@ -409,8 +406,8 @@ resetJoysticks SDL.JoyDeviceEventData{} = do
 
 --
 
-getEnv :: (MonadReader KurokosEnv m) => m KurokosEnv
-getEnv = ask
+-- getEnv :: (MonadReader KurokosEnv m) => m KurokosEnv
+-- getEnv = ask
 
 screenSize :: (MonadReader KurokosEnv m, MonadIO m) => m (V2 CInt)
 screenSize = SDL.get . SDL.windowSize =<< asks envWindow
