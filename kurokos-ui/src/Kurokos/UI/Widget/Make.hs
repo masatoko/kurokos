@@ -61,23 +61,3 @@ getFont :: MonadIO m => Asset.Ident -> Font.PointSize -> GuiT m Font.Font
 getFont ident size = do
   ast <- asks geAssetManager
   lift $ Asset.getFont ident size ast
-
--- allocTexture :: (RenderEnv m, MonadIO m, MonadResource m) => FilePath -> GuiT m SDL.Texture
--- allocTexture path = do
---   r <- lift getRenderer
---   asks geFileLoader >>= \case
---     Nothing   -> snd <$> lift (allocate (Image.loadTexture r path) SDL.destroyTexture)
---     Just load ->
---       case load path of
---         Nothing -> E.throw $ userError $ "missing file by file loader: " ++ path
---         Just bs -> snd <$> lift (allocate (Image.decodeTexture r bs) SDL.destroyTexture)
-
--- allocFont :: (MonadIO m, MonadResource m) => FilePath -> GuiT m Font.Font
--- allocFont path = do
---   mLoad <- asks geFileLoader
---   case mLoad of
---     Nothing   -> snd <$> lift (allocate (Font.load path 16) Font.free)
---     Just load ->
---       case load path of
---         Nothing -> E.throw $ userError $ "missing file by file loader: " ++ path
---         Just bs -> snd <$> lift (allocate (Font.decode bs 16) Font.free)
