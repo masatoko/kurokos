@@ -61,5 +61,6 @@ executables:
             - kurokos-ui
             - kurokos-asset
             - kurokos-asset-sdl2
+            - safe-exceptions
         else:
           buildable: False

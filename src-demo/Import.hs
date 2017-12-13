@@ -17,7 +17,7 @@ module Import
   , Update
   , Render
   , Scene (..)
-  , SceneState (..)
+  , SceneState
   , withKurokos
   , runKurokos
   , runScene
@@ -32,8 +32,8 @@ import           Linear.V4                    (V4 (..))
 import           Linear.Vector                ((^*))
 
 import           Kurokos                      (Joystick, KurokosT, Render,
-                                               Scene (..), SceneState (..),
-                                               Update, runKurokos, runScene,
+                                               Scene (..), SceneState, Update,
+                                               runKurokos, runScene,
                                                withKurokos)
 
 import           SDL                          (Point (..))

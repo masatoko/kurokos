@@ -1,19 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
-
 module Main where
 
-import           Control.Monad          (void)
-import           Control.Monad.IO.Class (liftIO)
--- import           Control.Monad.Managed  (runManaged)
-import qualified Data.ByteString        as BS
+import           Control.Monad     (void)
+import qualified Data.ByteString   as BS
 
-import           SDL                    (($=))
+import           SDL               (($=))
 import qualified SDL
 
-import           Kurokos                (KurokosConfig (..))
-import qualified Kurokos                as K
-import qualified Kurokos.Asset          as Asset
+import           Kurokos           (KurokosConfig (..))
+import qualified Kurokos           as K
+import qualified Kurokos.Asset     as Asset
+import qualified Kurokos.Asset.SDL as Asset
 
+import           Game
 import           Import
 import           Scene
 
@@ -27,16 +26,17 @@ main = do
         , confSystemAsset      = astMgr
         , confSystemFontId     = "_system-font"
         }
-  withKurokos conf winConf $ \kuro ->
+  withKurokos conf winConf $ \kuro -> do
     -- Allocate original data here
-      liftIO $ void $
-        runKurokos kuro $ do
-          -- === SDL Settings
-          SDL.setMouseLocationMode SDL.AbsoluteLocation
-          -- SDL.setMouseLocationMode SDL.RelativeLocation
-          SDL.cursorVisible $= True
-          -- ===
-          runScene titleScene
+    r <- runKurokos kuro K.getRenderer
+    globalAssets <- Asset.newSDLAssetManager r =<< Asset.loadAssetManager =<< Asset.decodeAssetList =<< BS.readFile "_data/assets-global.yaml"
+    void $ runGameT (GameEnv globalAssets) GameState $
+      runKurokos kuro $ do
+        SDL.setMouseLocationMode SDL.AbsoluteLocation
+        -- SDL.setMouseLocationMode SDL.RelativeLocation
+        SDL.cursorVisible $= True
+        -- ===
+        runScene titleScene
   where
     winConf = SDL.defaultWindow
       { SDL.windowInitialSize = V2 640 480

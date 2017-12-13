@@ -26,6 +26,7 @@ import           Kurokos.UI            (UExp (..), ctxAttrib, visible)
 import qualified Kurokos.UI            as UI
 
 import           Action                (Action (..), eventsToActions)
+import           Game
 import           Import
 
 data Dummy = Dummy [Action]
@@ -37,7 +38,7 @@ data MyData = MyData
   , gMyActions :: [Action]
   }
 
-allocGame :: ResourceT (KurokosT IO) MyData
+allocGame :: ResourceT (KurokosT (GameT IO)) MyData
 allocGame = do
   (_, tex) <- K.allocTexture "_data/img.png"
   return $ MyData tex 0 0 []
@@ -52,7 +53,7 @@ data MouseScene = MouseScene
 
 makeLenses ''MouseScene
 
-mouseScene :: Scene IO MouseScene
+mouseScene :: Scene (GameT IO) MouseScene
 mouseScene = Scene update render transit (pure (MouseScene [] [] []))
   where
     update s = do
@@ -99,7 +100,7 @@ data Title = Title
 
 makeLenses ''Title
 
-titleScene :: Scene IO Title
+titleScene :: Scene (GameT IO) Title
 titleScene =
   Scene update render transit alloc
   where
@@ -172,7 +173,7 @@ titleScene =
             toHover :: UI.Color -> UI.Color
             toHover = over _xyz (fmap (+ (-10)))
 
-    update :: Update IO Title
+    update :: Update (GameT IO) Title
     update title0 = do
       es <- K.getEvents
       readyG . testOnClick . updateEs es =<< updateT es title0
@@ -208,7 +209,7 @@ titleScene =
             es = t^.tEvents
             modGui = modify' . over tGui
 
-    render :: Render IO Title
+    render :: Render (GameT IO) Title
     render t = do
       K.clearBy $ V4 250 250 250 255
       --
@@ -232,10 +233,10 @@ titleScene =
       where
         isClicked ident = isJust $ UI.clickedOn UI.GuiActLeft ident $ t^.tEvents
 
-mainScene :: Scene IO MyData
+mainScene :: Scene (GameT IO) MyData
 mainScene = Scene update render transit allocGame
   where
-    update :: Update IO MyData
+    update :: Update (GameT IO) MyData
     update g0 = do
       as <- eventsToActions <$> K.getEvents
       frame <- K.getFrame
@@ -246,17 +247,17 @@ mainScene = Scene update render transit allocGame
           execStateT go g0
           where
             alpha = fromIntegral t
-            go :: StateT MyData (KurokosT IO) ()
+            go :: StateT MyData (KurokosT (GameT IO)) ()
             go = do
               mapM_ count $ gMyActions g
               modify $ \g' -> g' { gDeg = fromIntegral (t `mod` 360) }
 
-        count :: Action -> StateT MyData (KurokosT IO) ()
+        count :: Action -> StateT MyData (KurokosT (GameT IO)) ()
         count Select = modify (\a -> let c = gCount a in a {gCount = c + 1})
-        count _      = return ()
+        count Cancel = modify (\a -> let c = gCount a in a {gCount = c - 1})
 
 
-    render :: Render IO MyData
+    render :: Render (GameT IO) MyData
     render (MyData tex deg cnt as) = do
       t <- K.getFrame
       K.clearBy $ V4 0 0 0 255
@@ -283,7 +284,7 @@ mainScene = Scene update render transit allocGame
         color = V4 255 255 255 255
 
     transit g
-      | cnt > targetCount = K.next $ clearScene cnt
+      | cnt > targetCount = K.next titleScene
       | Select `elem` as  = K.push pauseScene
       | Cancel `elem` as  = K.end
       | otherwise         = K.continue
@@ -293,7 +294,7 @@ mainScene = Scene update render transit allocGame
 
     targetCount = 5 :: Int
 
-pauseScene :: Scene IO Dummy
+pauseScene :: Scene (GameT IO) Dummy
 pauseScene = Scene update render transit (pure $ Dummy [])
   where
     update _ =
@@ -305,20 +306,4 @@ pauseScene = Scene update render transit (pure $ Dummy [])
 
     transit (Dummy as)
       | Select `elem` as = K.end
-      | otherwise        = K.continue
-
-clearScene :: Int -> Scene IO Dummy
-clearScene score = Scene update render transit (pure $ Dummy [])
-  where
-    update _ =
-      Dummy . eventsToActions <$> K.getEvents
-
-    render _ = do
-      K.clearBy $ V4 0 0 255 255
-      K.printTest (P (V2 10 100)) (V4 255 255 255 255) "CLEAR!"
-      K.printTest (P (V2 10 120)) (V4 255 255 255 255) $ "Score: " <> T.pack (show score)
-      K.printTest (P (V2 10 140)) (V4 255 255 255 255) "Enter - title"
-
-    transit (Dummy as)
-      | Select `elem` as = K.next titleScene
       | otherwise        = K.continue
