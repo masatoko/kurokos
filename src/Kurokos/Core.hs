@@ -57,7 +57,6 @@ import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import qualified Data.Vector                  as V
 import           Data.Word                    (Word32)
-import           Foreign.C.Types              (CInt)
 import           Linear.Affine                (Point (..))
 import           Linear.V2
 import           Linear.V4
@@ -84,7 +83,7 @@ data KurokosConfig = KurokosConfig
   , confSystemFontId     :: Asset.Ident
   }
 
-type Time = Word32
+type Frame = Word32
 
 data KurokosEnv = KurokosEnv
   { envGraphFps         :: Int
@@ -104,7 +103,7 @@ data KurokosState = KurokosState
   , kstSdlEvents  :: [SDL.Event]
   , kstJoysticks  :: V.Vector Joystick
   --
-  , kstStart      :: !Time
+  , kstStart      :: !Frame
   , kstCount      :: !Int
   --
   , kstActualFps  :: !Double
