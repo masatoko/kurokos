@@ -7,13 +7,11 @@ module Kurokos.Types
 
 import qualified Control.Exception.Safe as E
 import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Data.ByteString
 import           Data.Int               (Int32)
 import           Data.Text              (Text)
 import           Foreign.C.Types        (CInt)
 
 import qualified SDL
-import qualified SDL.Font
 import           SDL.Internal.Types     (joystickPtr)
 import qualified SDL.Raw.Haptic         as HAP
 import           SDL.Raw.Types          (Haptic)

@@ -26,7 +26,7 @@ import           Kurokos.UI            (UExp (..), ctxAttrib, visible)
 import qualified Kurokos.UI            as UI
 
 import           Import
-
+import           MyAction              (MyAction (..), eventsToMyActions)
 import           Pad
 
 data Dummy = Dummy
@@ -35,7 +35,7 @@ data MyData = MyData
   { gTexture :: SDL.Texture
   , gDeg     :: !Double
   , gCount   :: !Int
-  , gActions :: [Action]
+  , gMyActions :: [MyAction]
   }
 
 allocGame :: ResourceT (KurokosT IO) MyData
@@ -234,26 +234,22 @@ mainScene = Scene defPad update render transit allocGame
   where
     update :: Update MyData IO Action
     update stt as g0 = do
-      -- when (frameCount stt `mod` 60 == 0) $ K.averageTime >>= liftIO . print
-      let alpha = fromIntegral $ frameCount stt
-      K.setAlphaMod (gTexture g0) alpha
-      execStateT go g0
+      as' <- eventsToMyActions <$> K.getEvents
+      work $ g0 {gMyActions = as'}
       where
-        go :: StateT MyData (KurokosT IO) ()
-        go = do
-          mapM_ count as
-          setDeg
-          unless (null as) $ modify $ \g -> g {gActions = as}
+        alpha = fromIntegral $ frameCount stt
+        work g = do
+          K.setAlphaMod (gTexture g0) alpha
+          execStateT go g0
+          where
+            go :: StateT MyData (KurokosT IO) ()
+            go = do
+              mapM_ count $ gMyActions g
+              setDeg
 
-        count :: Action -> StateT MyData (KurokosT IO) ()
-        count Go = do
-          modify (\a -> let c = gCount a in a {gCount = c + 1})
-          -- c <- gets gCount
-          -- let strength = fromIntegral c * 0.2
-          --     len = fromIntegral c * 100
-          -- mapM_ (\joy -> K.rumble joy strength len) mjs
-          return ()
-        count _  = return ()
+        count :: MyAction -> StateT MyData (KurokosT IO) ()
+        count Select = modify (\a -> let c = gCount a in a {gCount = c + 1})
+        count _      = return ()
 
         setDeg = modify (\g -> g {gDeg = fromIntegral (frameCount stt `mod` 360)})
 
