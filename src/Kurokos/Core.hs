@@ -12,11 +12,10 @@
 {-# LANGUAGE UndecidableInstances       #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Kurokos.Core
-  ( Config (..)
+  ( KurokosConfig (..)
   , defaultConfig
   , KurokosEnv (..)
   , KurokosState
-  , DebugJoystick (..)
   , KurokosData
   , KurokosT
   , KurokosEnvT
@@ -80,28 +79,21 @@ import           Kurokos.Types
 
 import           Kurokos.UI                   (RenderEnv (..))
 
-data Config = Config
+data KurokosConfig = KurokosConfig
   { confWinTitle         :: Text
+  -- ^ Tile on the title bar of the window
   , confDebugPrintFPS    :: Bool
+  -- ^ Print FPS for debugging
   , confDebugPrintSystem :: Bool
-  , confDebugJoystick    :: DebugJoystick
-  , confNumAverageTime   :: Int
+  -- ^ Print system information for debugging
   , confFont             :: FontSource
   }
 
-data DebugJoystick = DebugJoystick
-  { djVisButton :: Bool
-  , djVisAxis   :: Bool
-  , djVisHat    :: Bool
-  }
-
-defaultConfig :: Config
-defaultConfig = Config
+defaultConfig :: KurokosConfig
+defaultConfig = KurokosConfig
   { confWinTitle = "Kurokos"
   , confDebugPrintFPS = False
   , confDebugPrintSystem = False
-  , confDebugJoystick = DebugJoystick False False False
-  , confNumAverageTime = 60
   , confFont = FontFile "data/font/system.ttf"
   }
 
@@ -116,8 +108,6 @@ data KurokosEnv = KurokosEnv
   -- Debug
   , debugPrintFPS    :: Bool
   , debugPrintSystem :: Bool
-  , debugJoystick    :: DebugJoystick
-  , numAverateTime   :: Int
   }
 
 data KurokosState = KurokosState
@@ -166,7 +156,7 @@ newtype KurokosEnvT a = KurokosEnvT {
 runKurokosEnvT :: KurokosEnv -> KurokosEnvT a -> IO a
 runKurokosEnvT conf k = runReaderT (runKET k) conf
 
-withKurokos :: Config -> SDL.WindowConfig -> (KurokosData -> IO ()) -> IO ()
+withKurokos :: KurokosConfig -> SDL.WindowConfig -> (KurokosData -> IO ()) -> IO ()
 withKurokos config winConf go =
   runManaged $ do
     managed_ withSDL
@@ -214,8 +204,6 @@ withKurokos config winConf go =
         , systemFont = font
         , debugPrintFPS = confDebugPrintFPS config
         , debugPrintSystem = confDebugPrintSystem config
-        , debugJoystick = confDebugJoystick config
-        , numAverateTime = confNumAverageTime config
         }
 
     withWinRenderer :: ((SDL.Window, SDL.Renderer) -> IO r) -> IO r
@@ -413,27 +401,13 @@ printsys text
 
 -- | Process events about system
 procEvents :: MonadIO m => [SDL.Event] -> KurokosT m ()
-procEvents es = go =<< asks debugJoystick
+procEvents = mapM_ (work . SDL.eventPayload)
   where
-    go dj = mapM_ (work . SDL.eventPayload) es
-      where
-        work :: MonadIO m => SDL.EventPayload -> KurokosT m ()
-        work (SDL.WindowClosedEvent _) = modify' $ \kst -> kst {kstShouldExit = True}
-        work SDL.QuitEvent             = modify' $ \kst -> kst {kstShouldExit = True}
-        work (SDL.JoyDeviceEvent dt)   = resetJoysticks dt
-        work (SDL.JoyButtonEvent d)    =
-          when (djVisButton dj) $ liftIO . print $ d
-        work (SDL.JoyAxisEvent d)      =
-          when (djVisAxis dj) $ liftIO . putStrLn . showJoyAxisEventData $ d
-        work (SDL.JoyHatEvent d)       =
-          when (djVisHat dj) $ liftIO . putStrLn . showJoyHatEventData $ d
-        work _ = return ()
-
-    showJoyAxisEventData (SDL.JoyAxisEventData jid axis value) =
-      "Axis: " ++ show jid ++ " @ " ++ show axis ++ " - " ++ show value
-
-    showJoyHatEventData (SDL.JoyHatEventData jid hat value) =
-      "Hat: " ++ show jid ++ " @ " ++ show hat ++ " - " ++ show value
+    work :: MonadIO m => SDL.EventPayload -> KurokosT m ()
+    work (SDL.WindowClosedEvent _) = modify' $ \kst -> kst {kstShouldExit = True}
+    work SDL.QuitEvent             = modify' $ \kst -> kst {kstShouldExit = True}
+    work (SDL.JoyDeviceEvent dt)   = resetJoysticks dt
+    work _ = return ()
 
 -- TODO: Shold check joyDeviceEventConnction
 resetJoysticks :: MonadIO m => SDL.JoyDeviceEventData -> KurokosT m ()

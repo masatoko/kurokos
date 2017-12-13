@@ -9,7 +9,7 @@ module Kurokos
   , withKurokos
   , runScene
   , Update, Render, Transit
-  , Config (..), DebugJoystick (..)
+  , KurokosConfig (..)
   , defaultConfig
   , printsys
   , Scene (..)

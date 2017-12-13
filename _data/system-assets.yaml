@@ -1,0 +1,5 @@
+files:
+  -
+    id: _system-font
+    dir: _data/font/
+    file: mplus-1p-regular.ttf
