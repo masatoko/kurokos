@@ -118,8 +118,9 @@ newtype KurokosT m a = KurokosT {
     runKT :: ReaderT KurokosEnv (StateT KurokosState m) a
   } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadState KurokosState, MonadThrow, MonadCatch, MonadMask, MonadBase base)
 
-runKurokos :: KurokosData -> KurokosT m a -> m (a, KurokosState)
-runKurokos (KurokosData (conf, stt)) k = runStateT (runReaderT (runKT k) conf) stt
+runKurokos :: Monad m => KurokosData -> KurokosT m a -> m a
+runKurokos (KurokosData (conf, stt)) k =
+  evalStateT (runReaderT (runKT k) conf) stt
 
 instance MonadTrans KurokosT where
   lift = KurokosT . lift . lift
