@@ -55,7 +55,7 @@ makeLenses ''MouseScene
 mouseScene :: Scene IO MouseScene
 mouseScene = Scene update render transit (pure (MouseScene [] [] []))
   where
-    update _ s = do
+    update s = do
       es <- K.getEvents
       let as = eventsToActions es
       execStateT (mapM_ go es) $ s&msActions .~ as
@@ -71,7 +71,7 @@ mouseScene = Scene update render transit (pure (MouseScene [] [] []))
               _               -> return ()
         go _ = return ()
 
-    render _ s = do
+    render s = do
       P pos <- SDL.getAbsoluteMouseLocation
       let pos' = fromIntegral <$> pos
       K.withRenderer $ \r ->
@@ -83,7 +83,7 @@ mouseScene = Scene update render transit (pure (MouseScene [] [] []))
         forM_ (s^.msRClicks) $ \p ->
           Prim.fillCircle r p 5 (V4 255 0 255 255)
 
-    transit _ s
+    transit s
       | Select `elem` as = K.end
       | Cancel `elem` as = K.end
       | otherwise        = K.continue
@@ -173,7 +173,7 @@ titleScene =
             toHover = over _xyz (fmap (+ (-10)))
 
     update :: Update IO Title
-    update _ title0 = do
+    update title0 = do
       es <- K.getEvents
       readyG . testOnClick . updateEs es =<< updateT es title0
       where
@@ -209,7 +209,7 @@ titleScene =
             modGui = modify' . over tGui
 
     render :: Render IO Title
-    render _ t = do
+    render t = do
       K.clearBy $ V4 250 250 250 255
       --
       K.printTest (P (V2 10 200)) color "- Joysticks"
@@ -225,7 +225,7 @@ titleScene =
       where
         color = V4 50 50 50 255
 
-    transit _ t
+    transit t
       | isClicked nameMain  = K.next mainScene
       | isClicked nameMouse = K.push mouseScene
       | otherwise           = K.continue
@@ -236,28 +236,29 @@ mainScene :: Scene IO MyData
 mainScene = Scene update render transit allocGame
   where
     update :: Update IO MyData
-    update stt g0 = do
+    update g0 = do
       as <- eventsToActions <$> K.getEvents
-      work $ g0 {gMyActions = as}
+      frame <- K.getFrame
+      work frame $ g0 {gMyActions = as}
       where
-        alpha = fromIntegral $ frameCount stt
-        work g = do
+        work t g = do
           K.setAlphaMod (gTexture g0) alpha
           execStateT go g0
           where
+            alpha = fromIntegral t
             go :: StateT MyData (KurokosT IO) ()
             go = do
               mapM_ count $ gMyActions g
-              setDeg
+              modify $ \g' -> g' { gDeg = fromIntegral (t `mod` 360) }
 
         count :: Action -> StateT MyData (KurokosT IO) ()
         count Select = modify (\a -> let c = gCount a in a {gCount = c + 1})
         count _      = return ()
 
-        setDeg = modify (\g -> g {gDeg = fromIntegral (frameCount stt `mod` 360)})
 
     render :: Render IO MyData
-    render sst (MyData tex deg cnt as) = do
+    render (MyData tex deg cnt as) = do
+      t <- K.getFrame
       K.clearBy $ V4 0 0 0 255
 
       K.withRenderer $ \r -> do
@@ -280,9 +281,8 @@ mainScene = Scene update render transit allocGame
       K.printTest (P (V2 10 160)) color $ T.pack $ show as
       where
         color = V4 255 255 255 255
-        t = frameCount sst
 
-    transit _ g
+    transit g
       | cnt > targetCount = K.next $ clearScene cnt
       | Select `elem` as  = K.push pauseScene
       | Cancel `elem` as  = K.end
@@ -296,29 +296,29 @@ mainScene = Scene update render transit allocGame
 pauseScene :: Scene IO Dummy
 pauseScene = Scene update render transit (pure $ Dummy [])
   where
-    update _ _dummy =
+    update _ =
       Dummy . eventsToActions <$> K.getEvents
 
-    render _ _ = do
+    render _ = do
       K.clearBy $ V4 50 50 0 255
       K.printTest (P (V2 10 100)) (V4 255 255 255 255) "PAUSE"
 
-    transit _ (Dummy as)
+    transit (Dummy as)
       | Select `elem` as = K.end
       | otherwise        = K.continue
 
 clearScene :: Int -> Scene IO Dummy
 clearScene score = Scene update render transit (pure $ Dummy [])
   where
-    update _ _dummy =
+    update _ =
       Dummy . eventsToActions <$> K.getEvents
 
-    render _ _ = do
+    render _ = do
       K.clearBy $ V4 0 0 255 255
       K.printTest (P (V2 10 100)) (V4 255 255 255 255) "CLEAR!"
       K.printTest (P (V2 10 120)) (V4 255 255 255 255) $ "Score: " <> T.pack (show score)
       K.printTest (P (V2 10 140)) (V4 255 255 255 255) "Enter - title"
 
-    transit _ (Dummy as)
+    transit (Dummy as)
       | Select `elem` as = K.next titleScene
       | otherwise        = K.continue

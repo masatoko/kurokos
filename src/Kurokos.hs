@@ -28,6 +28,7 @@ module Kurokos
   , getRenderer
   , withRenderer
   , getEvents
+  , getFrame
   , getJoysticks
   , showMessageBox
   -- ** Rendering Helper

@@ -35,6 +35,7 @@ module Kurokos.Core
   , getWindowSize
   , getWindow
   , getEvents
+  , getFrame
   , getJoysticks
   , showMessageBox
   , getRenderer
@@ -101,6 +102,7 @@ data KurokosState = KurokosState
   {
     kstMessages   :: [Text]
   , kstSdlEvents  :: [SDL.Event]
+  , kstSceneState :: SceneState
   , kstJoysticks  :: V.Vector Joystick
   --
   , kstStart      :: !Frame
@@ -156,6 +158,7 @@ withKurokos KurokosConfig{..} winConf go =
       let kst = KurokosState
             { kstMessages = []
             , kstSdlEvents = []
+            , kstSceneState = SceneState 0
             , kstJoysticks = V.empty
             , kstStart = 0
             , kstCount = 0
@@ -209,11 +212,11 @@ withKurokos KurokosConfig{..} winConf go =
 -- * Scene
 
 -- | Scene function type for updating `g`.
-type Update m g  = SceneState -> g -> KurokosT m g
+type Update m g  = g -> KurokosT m g
 -- | Scene function type for rendering `g`.
-type Render m g  = SceneState -> g -> KurokosT m ()
+type Render m g  = g -> KurokosT m ()
 -- | Scene function type for choosing scenes for next frame.
-type Transit m g = SceneState -> g -> KurokosT m (Maybe (Transition m))
+type Transit m g = g -> KurokosT m (Maybe (Transition m))
 
 data Scene m g = Scene
   { sceneUpdate  :: Update m g
@@ -253,8 +256,8 @@ end = return $ Just End
 
 -- Start scene
 runScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene m g -> KurokosT m ()
-runScene scn0 =
-  goScene scn0 >>= \case
+runScene scene0 =
+  goScene scene0 >>= \case
     Nothing   -> return ()
     Just exec -> exec
 
@@ -265,48 +268,49 @@ goScene scene_ =
     lift $ go (SceneState 0) scene_ g
   where
     go :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => SceneState -> Scene m g -> g -> KurokosT m (Maybe (Exec m))
-    go s0 scene0 g0 = do
-      (g', s', trans) <- sceneLoop g0 s0 scene0
+    go sst0 scene0 g0 = do
+      (g', sst', trans) <- sceneLoop g0 sst0 scene0
       case trans of
-        End       -> return Nothing
-        Next s -> return $ Just (runScene s)
-        Push s -> do
-          mExec <- goScene s
+        End        -> return Nothing
+        Next scene -> return $ Just (runScene scene)
+        Push scene -> do
+          mExec <- goScene scene
           case mExec of
             Just _  -> return mExec
-            Nothing -> go s' scene0 g'
+            Nothing -> go sst' scene0 g'
 
 sceneLoop :: (MonadIO m, MonadMask m) => g -> SceneState -> Scene m g -> KurokosT m (g, SceneState, Transition m)
 sceneLoop iniG iniS Scene{..} =
   loop iniG iniS
   where
-    loop g s0 = do
+    loop g sst0 = do
       updateTime
       -- Update
       events <- SDL.pollEvents
       procEvents events
-      modify' $ \kst -> kst {kstSdlEvents = events}
-      g' <- sceneUpdate s0 g
+      modify' $ \kst -> kst { kstSdlEvents = events
+                            , kstSceneState = sst0 } -- For getFrame
+      g' <- sceneUpdate g
       -- Rendering
       preRender
-      sceneRender s0 g'
+      sceneRender g'
       -- updateFPS
       printSystemState
       printMessages
       withRenderer SDL.present
       -- Transition
-      mTrans <- sceneTransit s0 g'
+      mTrans <- sceneTransit g'
       -- Advance State
       wait
-      let s1 = advance s0
+      let sst1 = advance sst0
       -- Go next loop
       shouldExit <- gets kstShouldExit
       if shouldExit
-        then return (g', s1, End)
+        then return (g', sst1, End)
         else
           case mTrans of
-            Nothing    -> loop g' s1
-            Just trans -> return (g', s1, trans)
+            Nothing    -> loop g' sst1
+            Just trans -> return (g', sst1, trans)
 
     -- TODO: Implement frame skip
     updateTime :: MonadIO m => KurokosT m ()
@@ -405,6 +409,9 @@ resetJoysticks SDL.JoyDeviceEventData{} = do
 
 getEvents :: Monad m => KurokosT m [SDL.EventPayload]
 getEvents = map SDL.eventPayload <$> gets kstSdlEvents
+
+getFrame :: Monad m => KurokosT m Integer
+getFrame = frameCount <$> gets kstSceneState
 
 getJoysticks :: Monad m => KurokosT m (V.Vector Joystick)
 getJoysticks = gets kstJoysticks
