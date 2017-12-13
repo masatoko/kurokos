@@ -4,22 +4,31 @@ module Main where
 
 import           Control.Monad          (void)
 import           Control.Monad.IO.Class (liftIO)
-import           Control.Monad.Managed  (runManaged) -- managed
+-- import           Control.Monad.Managed  (runManaged)
+import qualified Data.ByteString        as BS
 
 import           SDL                    (($=))
 import qualified SDL
 
+import           Kurokos                (KurokosConfig (..))
 import qualified Kurokos                as K
+import qualified Kurokos.Asset          as Asset
 
 import           Import
 import           Scene
 
 main :: IO ()
-main =
+main = do
+  astMgr <- Asset.loadAssetManager =<< Asset.decodeAssetList =<< BS.readFile "_data/system-assets.yaml"
+  let conf = K.KurokosConfig
+        { confWinTitle         = "Kurokos Demo"
+        , confDebugPrintFPS    = True
+        , confDebugPrintSystem = True
+        , confSystemAsset      = astMgr
+        , confSystemFontId     = "_system-font"
+        }
   withKurokos conf winConf $ \kuro ->
     -- Allocate original data here
-    runManaged $
-      -- _font <- managed $ K.withFont (K.FontFile "_data/font/system.ttf") 20 -- Example
       liftIO $ void $
         runKurokos kuro $ do
           -- === SDL Settings
@@ -29,7 +38,6 @@ main =
           -- ===
           runScene titleScene
   where
-    conf = K.defaultConfig {K.confFont = K.FontFile "_data/font/system.ttf"}
     winConf = SDL.defaultWindow
       { SDL.windowInitialSize = V2 640 480
       , SDL.windowMode = SDL.Windowed

@@ -10,7 +10,6 @@ module Kurokos
   , runScene
   , Update, Render, Transit
   , KurokosConfig (..)
-  , defaultConfig
   , printsys
   , Scene (..)
   , SceneState (..)

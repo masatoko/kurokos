@@ -18,6 +18,8 @@ digraph {
   "your game" -> SDL2
 
   kurokos -> SDL2
+  kurokos -> "kurokos-asset"
+  kurokos -> "kurokos-asset-sdl2"
   "kurokos-asset-sdl2" -> "kurokos-asset"
   "kurokos-asset-sdl2" -> SDL2
   "kurokos-ui" -> "kurokos-rpn"

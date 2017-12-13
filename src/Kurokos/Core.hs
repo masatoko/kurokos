@@ -13,7 +13,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Kurokos.Core
   ( KurokosConfig (..)
-  , defaultConfig
   , KurokosEnv (..)
   , KurokosState
   , KurokosData
@@ -73,10 +72,11 @@ import           SDL                          (($=))
 import qualified SDL
 import qualified SDL.Font                     as Font
 
-import           Kurokos.Font                 (withFont)
 import           Kurokos.Metapad
 import           Kurokos.Types
 
+import qualified Kurokos.Asset                as Asset
+import qualified Kurokos.Asset.SDL            as Asset
 import           Kurokos.UI                   (RenderEnv (..))
 
 data KurokosConfig = KurokosConfig
@@ -86,15 +86,8 @@ data KurokosConfig = KurokosConfig
   -- ^ Print FPS for debugging
   , confDebugPrintSystem :: Bool
   -- ^ Print system information for debugging
-  , confFont             :: FontSource
-  }
-
-defaultConfig :: KurokosConfig
-defaultConfig = KurokosConfig
-  { confWinTitle = "Kurokos"
-  , confDebugPrintFPS = False
-  , confDebugPrintSystem = False
-  , confFont = FontFile "data/font/system.ttf"
+  , confSystemAsset      :: Asset.AssetManager
+  , confSystemFontId     :: Asset.Ident
   }
 
 type Time = Word32
@@ -161,9 +154,12 @@ withKurokos config winConf go =
   runManaged $ do
     managed_ withSDL
     managed_ withFontInit
-    font <- managed withSystemFont
     (win, r) <- managed withWinRenderer
-    --
+    -- Load system font
+    sdlAstMgr <- managed $ E.bracket
+                            (Asset.genSDLAssetManager r (confSystemAsset config))
+                            Asset.freeSDLAssetManager
+    font <- Asset.getFont (confSystemFontId config) 16 sdlAstMgr
     liftIO $ do
       initOthers r
       env <- mkEnv font win r
@@ -189,11 +185,11 @@ withKurokos config winConf go =
 
     withFontInit = E.bracket_ Font.initialize Font.quit
 
-    withSystemFont :: (Font -> IO r) -> IO r
-    withSystemFont = withFont (confFont config) size
-      where
-        size = max 18 (fromIntegral h `div` 50)
-        V2 _ h = SDL.windowInitialSize winConf
+    -- withSystemFont :: (Font -> IO r) -> IO r
+    -- withSystemFont = withFont (confFont config) size
+    --   where
+    --     size = max 18 (fromIntegral h `div` 50)
+    --     V2 _ h = SDL.windowInitialSize winConf
 
     mkEnv font win r = do
       mvar <- newMVar r
