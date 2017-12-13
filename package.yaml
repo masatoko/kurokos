@@ -34,7 +34,6 @@ dependencies:
   - containers
   - lens
   - bytestring
-  - safe-exceptions
   - extra
   - text
   - vector
