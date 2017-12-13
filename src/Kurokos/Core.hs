@@ -6,6 +6,7 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE MultiWayIf                 #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE Strict                     #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TypeFamilies               #-}
@@ -97,6 +98,7 @@ data KurokosEnv = KurokosEnv
   , window           :: SDL.Window
   -- Resource
   , renderer         :: MVar SDL.Renderer
+  , systemAssets     :: Asset.SDLAssetManager
   , systemFont       :: Font
   -- Debug
   , debugPrintFPS    :: Bool
@@ -150,19 +152,16 @@ runKurokosEnvT :: KurokosEnv -> KurokosEnvT a -> IO a
 runKurokosEnvT conf k = runReaderT (runKET k) conf
 
 withKurokos :: KurokosConfig -> SDL.WindowConfig -> (KurokosData -> IO ()) -> IO ()
-withKurokos config winConf go =
+withKurokos KurokosConfig{..} winConf go =
   runManaged $ do
     managed_ withSDL
     managed_ withFontInit
     (win, r) <- managed withWinRenderer
-    -- Load system font
-    sdlAstMgr <- managed $ E.bracket
-                            (Asset.genSDLAssetManager r (confSystemAsset config))
-                            Asset.freeSDLAssetManager
-    font <- Asset.getFont (confSystemFontId config) 16 sdlAstMgr
+    sdlAssetManager <- managed $ E.bracket (Asset.newSDLAssetManager r confSystemAsset)
+                                           Asset.freeSDLAssetManager
     liftIO $ do
       initOthers r
-      env <- mkEnv font win r
+      env <- mkEnv sdlAssetManager win r
       let kst = KurokosState
             { messages = []
             , kstEvents = []
@@ -185,29 +184,23 @@ withKurokos config winConf go =
 
     withFontInit = E.bracket_ Font.initialize Font.quit
 
-    -- withSystemFont :: (Font -> IO r) -> IO r
-    -- withSystemFont = withFont (confFont config) size
-    --   where
-    --     size = max 18 (fromIntegral h `div` 50)
-    --     V2 _ h = SDL.windowInitialSize winConf
-
-    mkEnv font win r = do
+    mkEnv sdlAssetManager win r = do
       mvar <- newMVar r
+      font <- Asset.getFont confSystemFontId 14 sdlAssetManager
       return KurokosEnv
         { graphFPS = 60
         , window = win
         , renderer = mvar
+        , systemAssets = sdlAssetManager
         , systemFont = font
-        , debugPrintFPS = confDebugPrintFPS config
-        , debugPrintSystem = confDebugPrintSystem config
+        , debugPrintFPS = confDebugPrintFPS
+        , debugPrintSystem = confDebugPrintSystem
         }
 
     withWinRenderer :: ((SDL.Window, SDL.Renderer) -> IO r) -> IO r
     withWinRenderer act = withW $ withR act
       where
-        title = confWinTitle config
-
-        withW = E.bracket (SDL.createWindow title winConf)
+        withW = E.bracket (SDL.createWindow confWinTitle winConf)
                           SDL.destroyWindow
 
         withR func win = E.bracket (SDL.createRenderer win (-1) SDL.defaultRenderer)

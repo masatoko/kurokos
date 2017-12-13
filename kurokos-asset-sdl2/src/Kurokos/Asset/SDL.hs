@@ -4,7 +4,7 @@ module Kurokos.Asset.SDL
   -- ** Types
     SDLAssetManager
   -- ** Generate
-  , genSDLAssetManager
+  , newSDLAssetManager
   , freeSDLAssetManager
   -- ** Get
   , getFont
@@ -39,8 +39,8 @@ data SDLAssetManager = SDLAssetManager
   , amFontHolder :: MVar (M.Map (Ident, Font.PointSize) Font.Font)
   }
 
-genSDLAssetManager :: MonadIO m => SDL.Renderer -> AssetManager -> m SDLAssetManager
-genSDLAssetManager r (AssetManager bmap) = do
+newSDLAssetManager :: MonadIO m => SDL.Renderer -> AssetManager -> m SDLAssetManager
+newSDLAssetManager r (AssetManager bmap) = do
   mvFontHolder <- liftIO $ newMVar M.empty
   let empty = SDLAssetManager M.empty M.empty M.empty mvFontHolder
   foldM work empty $ M.toList bmap

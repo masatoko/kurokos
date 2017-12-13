@@ -110,7 +110,7 @@ titleScene =
         return $ assets1 <> assets2
       astMng <- Asset.loadAssetManager assetList
       r <- K.getRenderer
-      (_,sdlAssets) <- allocate (Asset.genSDLAssetManager r astMng) Asset.freeSDLAssetManager
+      (_,sdlAssets) <- allocate (Asset.newSDLAssetManager r astMng) Asset.freeSDLAssetManager
       gui <- UI.newGui (UI.GuiEnv colset sdlAssets) $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
