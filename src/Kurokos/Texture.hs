@@ -9,7 +9,7 @@ module Kurokos.Texture
   , setColorMod
   ) where
 
-import           Control.Exception.Safe      (MonadMask, MonadThrow)
+import           Control.Exception.Safe      (MonadMask)
 import           Control.Monad.Base          (MonadBase)
 import           Control.Monad.Reader
 import           Data.ByteString      (ByteString)
@@ -28,22 +28,14 @@ import           Kurokos.Core
 allocTexture :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m, MonadBase IO m)
   => FilePath -> ResourceT m (ReleaseKey, SDL.Texture)
 allocTexture path = do
-  env <- lift getEnv
-  allocate (load env) SDL.destroyTexture
-  where
-    load env =
-      runKurokosEnvT env $
-        withRenderer $ \r -> Image.loadTexture r path
+  r <- getRenderer
+  allocate (Image.loadTexture r path) SDL.destroyTexture
 
-allocTextureB :: (MonadReader KurokosEnv m, MonadIO m, MonadThrow m, MonadBase IO m)
+allocTextureB :: (MonadReader KurokosEnv m, MonadIO m, MonadMask m, MonadBase IO m)
   => ByteString -> ResourceT m (ReleaseKey, SDL.Texture)
-allocTextureB byte = do
-  env <- lift getEnv
-  allocate (load env) SDL.destroyTexture
-  where
-    load env =
-      runKurokosEnvT env $
-        withRenderer $ \r -> Image.decodeTexture r byte
+allocTextureB bytes = do
+  r <- getRenderer
+  allocate (Image.decodeTexture r bytes) SDL.destroyTexture
 
 -- State
 
