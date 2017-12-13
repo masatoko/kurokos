@@ -44,10 +44,7 @@ module Kurokos.Core
 
 import           Control.Concurrent.MVar      (MVar, newMVar, putMVar, readMVar,
                                                takeMVar)
-import           Control.Exception            (bracket)
-import           Control.Exception.Safe       (MonadCatch, MonadMask,
-                                               MonadThrow)
-import qualified Control.Exception.Safe       as E
+import qualified Control.Exception            as E
 import           Control.Monad.Base           (MonadBase)
 import           Control.Monad.Managed        (managed, managed_, runManaged)
 import           Control.Monad.Reader
@@ -116,7 +113,7 @@ newtype KurokosData = KurokosData (KurokosEnv, KurokosState)
 
 newtype KurokosT m a = KurokosT {
     runKT :: ReaderT KurokosEnv (StateT KurokosState m) a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadState KurokosState, MonadThrow, MonadCatch, MonadMask, MonadBase base)
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader KurokosEnv, MonadState KurokosState, MonadBase base)
 
 runKurokos :: Monad m => KurokosData -> KurokosT m a -> m a
 runKurokos (KurokosData (conf, stt)) k =
@@ -256,19 +253,19 @@ end = return $ Just End
 
 
 -- Start scene
-runScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene m g -> KurokosT m ()
+runScene :: (MonadBaseControl IO m, MonadIO m) => Scene m g -> KurokosT m ()
 runScene scene0 =
   goScene scene0 >>= \case
     Nothing   -> return ()
     Just exec -> exec
 
-goScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene m g -> KurokosT m (Maybe (Exec m))
+goScene :: (MonadBaseControl IO m, MonadIO m) => Scene m g -> KurokosT m (Maybe (Exec m))
 goScene scene_ =
   runResourceT $ do
     g <- sceneAlloca scene_
     lift $ go (SceneState 0) scene_ g
   where
-    go :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => SceneState -> Scene m g -> g -> KurokosT m (Maybe (Exec m))
+    go :: (MonadBaseControl IO m, MonadIO m) => SceneState -> Scene m g -> g -> KurokosT m (Maybe (Exec m))
     go sst0 scene0 g0 = do
       (g', sst', trans) <- sceneLoop g0 sst0 scene0
       case trans of
@@ -280,7 +277,7 @@ goScene scene_ =
             Just _  -> return mExec
             Nothing -> go sst' scene0 g'
 
-sceneLoop :: (MonadIO m, MonadMask m) => g -> SceneState -> Scene m g -> KurokosT m (g, SceneState, Transition m)
+sceneLoop :: (MonadIO m) => g -> SceneState -> Scene m g -> KurokosT m (g, SceneState, Transition m)
 sceneLoop iniG iniS Scene{..} =
   loop iniG iniS
   where
@@ -346,7 +343,7 @@ sceneLoop iniG iniS Scene{..} =
             in printf "%02d" n ++ " " ++ replicate n '.'
           else "NO WAIT"
 
-    preRender :: (MonadIO m, MonadMask m) => KurokosT m ()
+    preRender :: MonadIO m => KurokosT m ()
     preRender =
       withRenderer $ \r -> do
         SDL.rendererDrawColor r $= V4 0 0 0 255
@@ -363,7 +360,7 @@ sceneLoop iniG iniS Scene{..} =
     advance s = s {frameCount = c + 1}
       where c = frameCount s
 
-    printMessages :: (MonadIO m, MonadMask m) => KurokosT m ()
+    printMessages :: MonadIO m => KurokosT m ()
     printMessages = do
       font <- asks envSystemFont
       ts <- gets kstMessages
@@ -424,7 +421,7 @@ showMessageBox title message = do
 
 --
 
-instance (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => RenderEnv m where
+instance (MonadReader KurokosEnv m, MonadIO m) => RenderEnv m where
   getWindow = asks envWindow
 
   getWindowSize = SDL.get . SDL.windowSize =<< getWindow
@@ -434,9 +431,9 @@ instance (MonadReader KurokosEnv m, MonadIO m, MonadMask m) => RenderEnv m where
   withRenderer act = do
     mvar <- asks envMRenderer
     liftIO $
-      bracket (takeMVar mvar)
-              (putMVar mvar)
-              act
+      E.bracket (takeMVar mvar)
+                (putMVar mvar)
+                act
 
   renderTexture tex rect =
     withRenderer $ \r ->
