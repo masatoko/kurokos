@@ -3,14 +3,11 @@ files:
     id: font-r
     dir: _data/font/
     file: mplus-1p-regular.ttf
-    size: 16
   -
     id: font-m
     dir: _data/font/
     file: mplus-1p-medium.ttf
-    size: 16
   -
     id: font-b
     dir: _data/font/
     file: mplus-1p-bold.ttf
-    size: 16
