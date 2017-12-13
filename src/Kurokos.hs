@@ -1,41 +1,47 @@
 module Kurokos
   (
+  -- ** Core
     KurokosData
+  , KurokosConfig (..)
   , KurokosEnv
   , KurokosT
   , runKurokos
   , withKurokos
-  , runScene
-  , Update, Render, Transit
-  , KurokosConfig (..)
-  , printsys
+  -- ** Types
+  , Joystick (..)
+  -- ** Scene
   , Scene (..)
+  , Update
+  , Render
+  , Transit
   , SceneState (..)
+  , runScene
+  -- ** Transition
   , Transition (..)
   , continue
   , next
   , push
   , end
-  --
+  -- ** Get state
   , getWindowSize
   , getWindow
+  , getRenderer
+  , withRenderer
   , getEvents
   , getJoysticks
   , showMessageBox
-  , getRenderer
-  , withRenderer
-  -- Types
-  , Joystick (..)
-  -- Render
+  -- ** Rendering Helper
   , setColor
   , clearBy
   , printTest
-  -- Sprite
+  -- ** Sprite Helper
   , allocTexture
   , allocTextureB
   , setBlendMode
   , setAlphaMod
   , setColorMod
+  -- ** Debug
+  , printsys
   ) where
 
 import           Kurokos.Core
