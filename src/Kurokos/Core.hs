@@ -218,15 +218,14 @@ withKurokos KurokosConfig{..} winConf go =
               SDL.rendererLogicalSize r $= size
 
 -- Scene
-type Update g m a  = SceneState -> [a] -> g -> KurokosT m g
-type Render g m    = SceneState -> g -> KurokosT m ()
-type Transit g m a = SceneState -> [a] -> g -> KurokosT m (Maybe (Transition m))
+type Update m g  = SceneState -> g -> KurokosT m g
+type Render m g  = SceneState -> g -> KurokosT m ()
+type Transit m g = SceneState -> g -> KurokosT m (Maybe (Transition m))
 
-data Scene g m a = Scene
-  { scenePad     :: Metapad a
-  , sceneUpdate  :: Update g m a
-  , sceneRender  :: Render g m
-  , sceneTransit :: Transit g m a
+data Scene m g = Scene
+  { sceneUpdate  :: Update m g
+  , sceneRender  :: Render m g
+  , sceneTransit :: Transit m g
   , sceneAlloca  :: ResourceT (KurokosT m) g
   }
 
@@ -238,8 +237,8 @@ type Exec m = KurokosT m ()
 
 data Transition m
   = End
-  | forall g a. Next (Scene g m a)
-  | forall g a. Push (Scene g m a)
+  | forall g. Next (Scene m g)
+  | forall g. Push (Scene m g)
 
 continue :: Monad m => m (Maybe (Transition base))
 continue = return Nothing
@@ -247,26 +246,26 @@ continue = return Nothing
 end :: Monad m => m (Maybe (Transition base))
 end = return $ Just End
 
-next :: Monad m => Scene g m a -> KurokosT m (Maybe (Transition m))
+next :: Monad m => Scene m g -> KurokosT m (Maybe (Transition m))
 next = return . Just . Next
 
-push :: Monad m => Scene g m a -> KurokosT m (Maybe (Transition m))
+push :: Monad m => Scene m g -> KurokosT m (Maybe (Transition m))
 push = return . Just . Push
 
 -- Start scene
-runScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene g m a -> KurokosT m ()
+runScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene m g -> KurokosT m ()
 runScene scn0 =
   goScene scn0 >>= \case
     Nothing   -> return ()
     Just exec -> exec
 
-goScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene g m a -> KurokosT m (Maybe (Exec m))
+goScene :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => Scene m g -> KurokosT m (Maybe (Exec m))
 goScene scene_ =
   runResourceT $ do
     g <- sceneAlloca scene_
     lift $ go (SceneState 0) scene_ g
   where
-    go :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => SceneState -> Scene g m a -> g -> KurokosT m (Maybe (Exec m))
+    go :: (MonadBaseControl IO m, MonadMask m, MonadIO m) => SceneState -> Scene m g -> g -> KurokosT m (Maybe (Exec m))
     go s0 scene0 g0 = do
       (g', s', trans) <- sceneLoop g0 s0 scene0
       case trans of
@@ -278,32 +277,26 @@ goScene scene_ =
             Just _  -> return mExec
             Nothing -> go s' scene0 g'
 
-sceneLoop :: (MonadIO m, MonadMask m) => g -> SceneState -> Scene g m a -> KurokosT m (g, SceneState, Transition m)
-sceneLoop iniG iniS scene =
-  loop Nothing iniG iniS
+sceneLoop :: (MonadIO m, MonadMask m) => g -> SceneState -> Scene m g -> KurokosT m (g, SceneState, Transition m)
+sceneLoop iniG iniS Scene{..} =
+  loop iniG iniS
   where
-    pad = scenePad scene
-    update = sceneUpdate scene
-    render = sceneRender scene
-    transit = sceneTransit scene
-    --
-    loop mPreInput g s0 = do
+    loop g s0 = do
       updateTime
       -- Update
       events <- SDL.pollEvents
       procEvents events
-      (actions, curInput) <- makeActions mPreInput events pad
       modify' $ \kst -> kst {kstEvents = events}
-      g' <- update s0 actions g
+      g' <- sceneUpdate s0 g
       -- Rendering
       preRender
-      render s0 g'
+      sceneRender s0 g'
       -- updateFPS
       printSystemState
       printMessages
       withRenderer SDL.present
       -- Transition
-      mTrans <- transit s0 actions g'
+      mTrans <- sceneTransit s0 g'
       -- Advance State
       wait
       let s1 = advance s0
@@ -313,7 +306,7 @@ sceneLoop iniG iniS scene =
         then return (g', s1, End)
         else
           case mTrans of
-            Nothing    -> loop (Just curInput) g' s1
+            Nothing    -> loop g' s1
             Just trans -> return (g', s1, trans)
 
     -- TODO: Implement frame skip
