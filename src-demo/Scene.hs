@@ -9,17 +9,17 @@ module Scene where
 
 import           Control.Lens
 import           Control.Monad.Extra          (whenJust)
-import           Control.Monad.State
 import           Control.Monad.Reader
+import           Control.Monad.State
 import           Control.Monad.Trans.Resource
 import qualified Data.ByteString.Char8        as B
 import           Data.Maybe                   (isJust)
 import qualified Data.Text                    as T
 import qualified Data.Vector                  as V
-import           Linear.V4
 
 import qualified SDL
 import qualified SDL.Primitive                as Prim
+import           SDL.Vect
 
 import qualified Kurokos                      as K
 import qualified Kurokos.Asset                as Asset
