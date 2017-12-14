@@ -10,6 +10,7 @@ module Scene where
 import           Control.Lens
 import           Control.Monad.Extra          (whenJust)
 import           Control.Monad.State
+import           Control.Monad.Reader
 import           Control.Monad.Trans.Resource
 import qualified Data.ByteString.Char8        as B
 import           Data.Maybe                   (isJust)
@@ -18,7 +19,6 @@ import qualified Data.Vector                  as V
 import           Linear.V4
 
 import qualified SDL
-import qualified SDL.Image                    as Image
 import qualified SDL.Primitive                as Prim
 
 import qualified Kurokos                      as K
@@ -34,20 +34,12 @@ import           Import
 
 data Dummy = Dummy [Action]
 
---
 data MyData = MyData
   { gTexture   :: SDL.Texture
   , gDeg       :: !Double
   , gCount     :: !Int
   , gMyActions :: [Action]
   }
-
-allocGame :: ResourceT (KurokosT (GameT IO)) MyData
-allocGame = do
-  r <- K.getRenderer
-  (_, tex) <- allocate (Image.loadTexture r "_data/img.png") SDL.destroyTexture
-  return $ MyData tex 0 0 []
-
 
 data MouseScene = MouseScene
   { _msLClicks :: [V2 CInt]
@@ -251,10 +243,15 @@ runTitleScene =
 
 runMainScene :: KurokosT (GameT IO) ()
 runMainScene =
-  runResourceT $
-    lift . K.runScene scene =<< allocGame
+  K.runScene scene =<< allocGame
   where
     scene = Scene update render transit
+
+    allocGame :: KurokosT (GameT IO) MyData
+    allocGame = do
+      ast <- lift $ asks envAssets
+      let Just img = Asset.lookupTexture "sample-image" ast
+      return $ MyData img 0 0 []
 
     update :: Update (GameT IO) MyData
     update g0 = do
