@@ -19,8 +19,6 @@ module Kurokos
   , Transition (..)
   , continue
   , end
-  -- , next
-  -- , push
   -- ** Get state
   , getWindowSize
   , getWindow
