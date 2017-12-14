@@ -43,26 +43,30 @@ module Kurokos.Core
   , withRenderer
   ) where
 
-import           Control.Concurrent.MVar     (MVar, newMVar, putMVar, readMVar,
-                                              takeMVar)
+import qualified Control.Concurrent.MVar     as MVar
 import qualified Control.Exception           as E
+import           Control.Monad               (foldM_, when)
 import           Control.Monad.Base          (MonadBase)
+import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Managed       (managed, managed_, runManaged)
-import           Control.Monad.Reader
-import           Control.Monad.State
-import           Control.Monad.Trans.Control
+import           Control.Monad.Reader        (MonadReader, MonadTrans (..),
+                                              ReaderT, asks, runReaderT)
+import           Control.Monad.State         (MonadState, StateT, evalStateT,
+                                              gets, modify, modify')
+import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
+                                              MonadTransControl (..),
+                                              defaultLiftBaseWith,
+                                              defaultRestoreM)
 import           Data.Text                   (Text)
 import qualified Data.Text                   as T
 import qualified Data.Vector                 as V
 import           Data.Word                   (Word32)
-import           Linear.Affine               (Point (..))
-import           Linear.V2
-import           Linear.V4
 import           Text.Printf                 (printf)
 
 import           SDL                         (($=))
 import qualified SDL
 import qualified SDL.Font                    as Font
+import           SDL.Vect                    (Point (..), V2 (..), V4 (..))
 
 import qualified Kurokos.Asset               as Asset
 import qualified Kurokos.Asset.SDL           as Asset
@@ -87,7 +91,7 @@ data KurokosEnv = KurokosEnv
   { envGraphFps         :: Int
   , envWindow           :: SDL.Window
   -- Resource
-  , envMRenderer        :: MVar SDL.Renderer
+  , envMRenderer        :: MVar.MVar SDL.Renderer
   , envSystemAssets     :: Asset.SDLAssetManager
   , envSystemFont       :: Font.Font
   -- Debug
@@ -173,7 +177,7 @@ withKurokos KurokosConfig{..} winConf go =
     withFontInit = E.bracket_ Font.initialize Font.quit
 
     mkEnv sdlAssetManager win r = do
-      mvar <- newMVar r
+      mvar <- MVar.newMVar r
       font <- Asset.getFont confSystemFontId 14 sdlAssetManager
       return KurokosEnv
         { envGraphFps = 60
@@ -327,8 +331,10 @@ runScene Scene{..} =
         work r font y text = liftIO $ do
           (w,h) <- Font.size font text
           runManaged $ do
-            surface <- managed $ E.bracket (Font.blended font (V4 0 255 0 255) text) SDL.freeSurface
-            texture <- managed $ E.bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
+            surface <- managed $ E.bracket (Font.blended font (V4 0 255 0 255) text)
+                                 SDL.freeSurface
+            texture <- managed $ E.bracket (SDL.createTextureFromSurface r surface)
+                                 SDL.destroyTexture
             let rect = Just $ SDL.Rectangle (P (V2 8 y)) (fromIntegral <$> V2 w h)
             SDL.copy r texture Nothing rect
           return $ y + fromIntegral h
@@ -382,13 +388,13 @@ instance (MonadReader KurokosEnv m, MonadIO m) => RenderEnv m where
 
   getWindowSize = SDL.get . SDL.windowSize =<< getWindow
 
-  getRenderer = liftIO . readMVar =<< asks envMRenderer
+  getRenderer = liftIO . MVar.readMVar =<< asks envMRenderer
 
   withRenderer act = do
     mvar <- asks envMRenderer
     liftIO $
-      E.bracket (takeMVar mvar)
-                (putMVar mvar)
+      E.bracket (MVar.takeMVar mvar)
+                (MVar.putMVar mvar)
                 act
 
   renderTexture tex rect =
