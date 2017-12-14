@@ -18,19 +18,17 @@ module Kurokos.Core
   , KurokosState
   , KurokosData
   , KurokosT
-  , Render
-  , Scene (..)
-  , SceneState (..)
-  , Transit
-  , Transition (..)
-  , Update
-  --
-  , continue
-  , end
-  , runScene
-  --
   , runKurokos
   , withKurokos
+  , Scene (..)
+  , runScene
+  , SceneState
+  , Update
+  , Render
+  , Transit
+  , Transition (..)
+  , continue
+  , end
   --
   , printDebug
   , getWindowSize
