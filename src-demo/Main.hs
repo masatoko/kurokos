@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import qualified Control.Exception as E
 import           Control.Monad     (void)
 import qualified Data.ByteString   as BS
 
@@ -14,7 +15,7 @@ import qualified Kurokos.Asset.SDL as Asset
 
 import           Game
 import           Import
-import           Scene
+import           Scene             (startScene)
 
 main :: IO ()
 main = do
@@ -30,16 +31,20 @@ main = do
     -- Allocate original data here
     r <- runKurokos kuro K.getRenderer
     globalAssets <- Asset.newSDLAssetManager r =<< Asset.loadAssetManager =<< Asset.decodeAssetList =<< BS.readFile "_data/assets-global.yaml"
-    void $ runGameT (GameEnv globalAssets) GameState $
-      runKurokos kuro $ do
-        SDL.setMouseLocationMode SDL.AbsoluteLocation
-        -- SDL.setMouseLocationMode SDL.RelativeLocation
-        SDL.cursorVisible $= True
-        -- ===
-        runScene titleScene
+    E.handle handler $
+      void $ runGameT (GameEnv globalAssets) GameState $
+        runKurokos kuro $ do
+          SDL.setMouseLocationMode SDL.AbsoluteLocation
+          -- SDL.setMouseLocationMode SDL.RelativeLocation
+          SDL.cursorVisible $= True
+          -- ===
+          startScene
   where
     winConf = SDL.defaultWindow
       { SDL.windowInitialSize = V2 640 480
       , SDL.windowMode = SDL.Windowed
       , SDL.windowResizable = True
       }
+
+    handler :: K.KurokosException -> IO ()
+    handler e = putStrLn $ "Caught exception: " ++ show e

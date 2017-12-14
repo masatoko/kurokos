@@ -32,17 +32,13 @@ dependencies:
   - mtl
   - monad-control
   - containers
-  - lens
   - bytestring
-  - extra
   - text
   - vector
   - managed
-  - resourcet
   - linear
-  - directory
+  - extra
   - safe
-  - filepath
 
 library:
   source-dirs: src
@@ -62,5 +58,7 @@ executables:
             - kurokos-asset
             - kurokos-asset-sdl2
             - safe-exceptions
+            - lens
+            - resourcet
         else:
           buildable: False

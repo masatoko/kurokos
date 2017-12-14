@@ -16,11 +16,8 @@ module Kurokos
   , Transit
   , SceneState
   , runScene
-  -- ** Transition
   , Transition (..)
   , continue
-  , next
-  , push
   , end
   -- ** Get state
   , getWindowSize
@@ -35,17 +32,18 @@ module Kurokos
   , setColor
   , clearBy
   , printTest
-  -- ** Sprite Helper
-  , allocTexture
-  , allocTextureB
+  -- ** Texture Helper
   , setBlendMode
   , setAlphaMod
   , setColorMod
+  -- ** Exceptions
+  , KurokosException (..)
   -- ** Debug
-  , printsys
+  , printDebug
   ) where
 
 import           Kurokos.Core
-import           Kurokos.Types
+import           Kurokos.Exception
 import           Kurokos.Render
 import           Kurokos.Texture
+import           Kurokos.Types

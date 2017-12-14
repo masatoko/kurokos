@@ -8,26 +8,29 @@ module Scene where
 -- import           Debug.Trace           (traceM)
 
 import           Control.Lens
-import           Control.Monad.Extra   (whenJust)
+import           Control.Monad.Extra          (whenJust)
 import           Control.Monad.State
-import qualified Data.ByteString.Char8 as B
-import           Data.Maybe            (isJust)
-import qualified Data.Text             as T
-import qualified Data.Vector           as V
+import           Control.Monad.Reader
+import           Control.Monad.Trans.Resource
+import qualified Data.ByteString.Char8        as B
+import           Data.Maybe                   (isJust)
+import qualified Data.Text                    as T
+import qualified Data.Vector                  as V
 import           Linear.V4
 
 import qualified SDL
-import qualified SDL.Primitive         as Prim
+import qualified SDL.Primitive                as Prim
 
-import qualified Kurokos               as K
-import qualified Kurokos.Asset         as Asset
-import qualified Kurokos.Asset.SDL     as Asset
-import           Kurokos.UI            (UExp (..), ctxAttrib, visible)
-import qualified Kurokos.UI            as UI
+import qualified Kurokos                      as K
+import qualified Kurokos.Asset                as Asset
+import qualified Kurokos.Asset.SDL            as Asset
+import           Kurokos.UI                   (UExp (..), ctxAttrib, visible)
+import qualified Kurokos.UI                   as UI
 
-import           Action                (Action (..), eventsToActions)
+import           Action                       (Action (..), eventsToActions)
 import           Game
 import           Import
+
 
 data Dummy = Dummy [Action]
 
@@ -38,23 +41,19 @@ data MyData = MyData
   , gMyActions :: [Action]
   }
 
-allocGame :: ResourceT (KurokosT (GameT IO)) MyData
-allocGame = do
-  (_, tex) <- K.allocTexture "_data/img.png"
-  return $ MyData tex 0 0 []
-
---
-
 data MouseScene = MouseScene
   { _msLClicks :: [V2 CInt]
   , _msRClicks :: [V2 CInt]
   , _msActions :: [Action]
   } deriving Show
 
+iniMouseSceneData :: MouseScene
+iniMouseSceneData = MouseScene [] [] []
+
 makeLenses ''MouseScene
 
-mouseScene :: Scene (GameT IO) MouseScene
-mouseScene = Scene update render transit (pure (MouseScene [] [] []))
+mouseScene :: Scene MouseScene (GameT IO) (Maybe Int)
+mouseScene = Scene update render transit
   where
     update s = do
       es <- K.getEvents
@@ -85,11 +84,12 @@ mouseScene = Scene update render transit (pure (MouseScene [] [] []))
           Prim.fillCircle r p 5 (V4 255 0 255 255)
 
     transit s
-      | Select `elem` as = K.end
-      | Cancel `elem` as = K.end
-      | otherwise        = K.continue
+      | Select `elem` as = K.end (Just n)
+      | Cancel `elem` as = K.end Nothing
+      | otherwise        = K.continue s
       where
         as = s^.msActions
+        n = length (s^.msLClicks) + length (s^.msRClicks)
 
 data Title = Title
   { _tGui    :: UI.GUI
@@ -100,10 +100,14 @@ data Title = Title
 
 makeLenses ''Title
 
-titleScene :: Scene (GameT IO) Title
-titleScene =
-  Scene update render transit alloc
+runTitleScene :: KurokosT (GameT IO) ()
+runTitleScene =
+  runResourceT $ do
+    t <- alloc
+    lift $ runScene scene t
   where
+    scene = Scene update render transit
+
     nameMain = "go-main"
     nameMouse = "go-mouse"
 
@@ -226,16 +230,29 @@ titleScene =
       where
         color = V4 50 50 50 255
 
-    transit t
-      | isClicked nameMain  = K.next mainScene
-      | isClicked nameMouse = K.push mouseScene
-      | otherwise           = K.continue
+    transit t = do
+      when (isClicked nameMain) runMainScene
+      when (isClicked nameMouse) $ do
+        mNum <- K.runScene mouseScene iniMouseSceneData
+        liftIO $ case mNum of
+                  Nothing -> putStrLn "Cancel on mouse scene"
+                  Just n  -> putStrLn $ "Clicked " ++ show n ++ " times!"
+      K.continue t
       where
         isClicked ident = isJust $ UI.clickedOn UI.GuiActLeft ident $ t^.tEvents
 
-mainScene :: Scene (GameT IO) MyData
-mainScene = Scene update render transit allocGame
+runMainScene :: KurokosT (GameT IO) ()
+runMainScene =
+  K.runScene scene =<< allocGame
   where
+    scene = Scene update render transit
+
+    allocGame :: KurokosT (GameT IO) MyData
+    allocGame = do
+      ast <- lift $ asks envAssets
+      let Just img = Asset.lookupTexture "sample-image" ast
+      return $ MyData img 0 0 []
+
     update :: Update (GameT IO) MyData
     update g0 = do
       as <- eventsToActions <$> K.getEvents
@@ -276,27 +293,32 @@ mainScene = Scene update render transit allocGame
         Prim.thickLine r p0 p1 4 (V4 0 255 0 255)
 
       K.printTest (P (V2 10 100)) color "Press Enter key to pause"
-      K.printTest (P (V2 10 120)) color "Press F key!"
+      K.printTest (P (V2 10 120)) color "Press (Space|Shift) key!"
       let progress = replicate cnt '>' ++ replicate (targetCount - cnt) '-'
       K.printTest (P (V2 10 140)) color $ T.pack progress
       K.printTest (P (V2 10 160)) color $ T.pack $ show as
       where
         color = V4 255 255 255 255
 
+    transit :: K.Transit (GameT IO) MyData ()
     transit g
-      | cnt > targetCount = K.next titleScene
-      | Select `elem` as  = K.push pauseScene
-      | Cancel `elem` as  = K.end
-      | otherwise         = K.continue
+      | cnt > targetCount = runTitleScene >> K.end ()
+      | Select `elem` as  = runPauseScene >> K.end ()
+      | Cancel `elem` as  = K.end ()
+      | otherwise         = K.continue g
       where
         cnt = gCount g
         as = gMyActions g
 
     targetCount = 5 :: Int
 
-pauseScene :: Scene (GameT IO) Dummy
-pauseScene = Scene update render transit (pure $ Dummy [])
+
+runPauseScene :: KurokosT (GameT IO) ()
+runPauseScene = K.runScene scene (Dummy [])
   where
+    scene :: Scene Dummy (GameT IO) ()
+    scene = Scene update render transit
+
     update _ =
       Dummy . eventsToActions <$> K.getEvents
 
@@ -304,6 +326,10 @@ pauseScene = Scene update render transit (pure $ Dummy [])
       K.clearBy $ V4 50 50 0 255
       K.printTest (P (V2 10 100)) (V4 255 255 255 255) "PAUSE"
 
-    transit (Dummy as)
-      | Select `elem` as = K.end
-      | otherwise        = K.continue
+    transit d@(Dummy as)
+      | Select `elem` as = K.end ()
+      | otherwise        = K.continue d
+
+startScene :: KurokosT (GameT IO) ()
+startScene =
+  runTitleScene

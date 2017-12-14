@@ -25,13 +25,14 @@ module Kurokos.Core
   , Transition (..)
   , Update
   --
-  , continue, end, next, push
+  , continue
+  , end
   , runScene
   --
   , runKurokos
   , withKurokos
   --
-  , printsys
+  , printDebug
   , getWindowSize
   , getWindow
   , getEvents
@@ -42,33 +43,32 @@ module Kurokos.Core
   , withRenderer
   ) where
 
-import           Control.Concurrent.MVar      (MVar, newMVar, putMVar, readMVar,
-                                               takeMVar)
-import qualified Control.Exception            as E
-import           Control.Monad.Base           (MonadBase)
-import           Control.Monad.Managed        (managed, managed_, runManaged)
+import           Control.Concurrent.MVar     (MVar, newMVar, putMVar, readMVar,
+                                              takeMVar)
+import qualified Control.Exception           as E
+import           Control.Monad.Base          (MonadBase)
+import           Control.Monad.Managed       (managed, managed_, runManaged)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Control.Monad.Trans.Control
-import           Control.Monad.Trans.Resource
-import           Data.Text                    (Text)
-import qualified Data.Text                    as T
-import qualified Data.Vector                  as V
-import           Data.Word                    (Word32)
-import           Linear.Affine                (Point (..))
+import           Data.Text                   (Text)
+import qualified Data.Text                   as T
+import qualified Data.Vector                 as V
+import           Data.Word                   (Word32)
+import           Linear.Affine               (Point (..))
 import           Linear.V2
 import           Linear.V4
-import           Text.Printf                  (printf)
+import           Text.Printf                 (printf)
 
-import           SDL                          (($=))
+import           SDL                         (($=))
 import qualified SDL
-import qualified SDL.Font                     as Font
+import qualified SDL.Font                    as Font
 
+import qualified Kurokos.Asset               as Asset
+import qualified Kurokos.Asset.SDL           as Asset
+import           Kurokos.Exception           (KurokosException (..))
 import           Kurokos.Types
-
-import qualified Kurokos.Asset                as Asset
-import qualified Kurokos.Asset.SDL            as Asset
-import           Kurokos.UI                   (RenderEnv (..))
+import           Kurokos.UI                  (RenderEnv (..))
 
 data KurokosConfig = KurokosConfig
   { confWinTitle         :: Text
@@ -106,7 +106,6 @@ data KurokosState = KurokosState
   , kstCount      :: !Int
   --
   , kstActualFps  :: !Double
-  , kstShouldExit :: Bool
   }
 
 newtype KurokosData = KurokosData (KurokosEnv, KurokosState)
@@ -162,7 +161,6 @@ withKurokos KurokosConfig{..} winConf go =
             , kstCount = 0
             --
             , kstActualFps = 0
-            , kstShouldExit = False
             }
       go $ KurokosData (env, kst)
   where
@@ -210,105 +208,62 @@ withKurokos KurokosConfig{..} winConf go =
 -- * Scene
 
 -- | Scene function type for updating `g`.
-type Update m g  = g -> KurokosT m g
+type Update m a = a -> KurokosT m a
 -- | Scene function type for rendering `g`.
-type Render m g  = g -> KurokosT m ()
+type Render m a = a -> KurokosT m ()
 -- | Scene function type for choosing scenes for next frame.
-type Transit m g = g -> KurokosT m (Maybe (Transition m))
+type Transit m a b = a -> KurokosT m (Transition a b)
 
-data Scene m g = Scene
-  { sceneUpdate  :: Update m g
-  , sceneRender  :: Render m g
-  , sceneTransit :: Transit m g
-  , sceneAlloca  :: ResourceT (KurokosT m) g
+data Scene a m b = Scene
+  { sceneUpdate  :: Update m a
+  , sceneRender  :: Render m a
+  , sceneTransit :: Transit m a b
   }
 
 newtype SceneState = SceneState
   { frameCount  :: Integer
   }
 
-type Exec m = KurokosT m ()
+data Transition a b
+  = Continue a
+  | End b
 
-data Transition m
-  = End
-  | forall g. Next (Scene m g)
-  | forall g. Push (Scene m g)
+-- | Equivalent to `return . Continue`
+continue :: Monad m => a -> m (Transition a b)
+continue = return . Continue
 
--- | Equivalent to `return Nothing`
-continue :: Monad m => m (Maybe (Transition base))
-continue = return Nothing
+-- | Equivalent to `return . End`
+end :: Monad m => b -> m (Transition a b)
+end = return . End
 
--- | Transit to next scene.
-next :: Monad m => Scene m g -> KurokosT m (Maybe (Transition m))
-next = return . Just . Next
-
--- | Abort this scene and transit to next scene.
-push :: Monad m => Scene m g -> KurokosT m (Maybe (Transition m))
-push = return . Just . Push
-
--- | Finish this scene
--- Equivalent to `return $ Just End`
-end :: Monad m => m (Maybe (Transition base))
-end = return $ Just End
-
-
--- Start scene
-runScene :: (MonadBaseControl IO m, MonadIO m) => Scene m g -> KurokosT m ()
-runScene scene0 =
-  goScene scene0 >>= \case
-    Nothing   -> return ()
-    Just exec -> exec
-
-goScene :: (MonadBaseControl IO m, MonadIO m) => Scene m g -> KurokosT m (Maybe (Exec m))
-goScene scene_ =
-  runResourceT $ do
-    g <- sceneAlloca scene_
-    lift $ go (SceneState 0) scene_ g
+runScene :: (MonadBaseControl IO m, MonadIO m) => Scene a m b -> a -> KurokosT m b
+runScene Scene{..} =
+  loop (SceneState 0)
   where
-    go :: (MonadBaseControl IO m, MonadIO m) => SceneState -> Scene m g -> g -> KurokosT m (Maybe (Exec m))
-    go sst0 scene0 g0 = do
-      (g', sst', trans) <- sceneLoop g0 sst0 scene0
-      case trans of
-        End        -> return Nothing
-        Next scene -> return $ Just (runScene scene)
-        Push scene -> do
-          mExec <- goScene scene
-          case mExec of
-            Just _  -> return mExec
-            Nothing -> go sst' scene0 g'
-
-sceneLoop :: (MonadIO m) => g -> SceneState -> Scene m g -> KurokosT m (g, SceneState, Transition m)
-sceneLoop iniG iniS Scene{..} =
-  loop iniG iniS
-  where
-    loop g sst0 = do
+    loop sst0 a0 = do
       updateTime
       -- Update
       events <- SDL.pollEvents
       procEvents events
       modify' $ \kst -> kst { kstSdlEvents = events
                             , kstSceneState = sst0 } -- For getFrame
-      g' <- sceneUpdate g
+      a1 <- sceneUpdate a0
       -- Rendering
       preRender
-      sceneRender g'
+      sceneRender a1
       -- updateFPS
       printSystemState
       printMessages
       withRenderer SDL.present
       -- Transition
-      mTrans <- sceneTransit g'
+      trans <- sceneTransit a1
       -- Advance State
       wait
       let sst1 = advance sst0
-      -- Go next loop
-      shouldExit <- gets kstShouldExit
-      if shouldExit
-        then return (g', sst1, End)
-        else
-          case mTrans of
-            Nothing    -> loop g' sst1
-            Just trans -> return (g', sst1, trans)
+      -- Go to next loop
+      case trans of
+        Continue a2 -> loop sst1 a2
+        End b       -> return b
 
     -- TODO: Implement frame skip
     updateTime :: MonadIO m => KurokosT m ()
@@ -336,12 +291,12 @@ sceneLoop iniG iniS Scene{..} =
 
       -- Print meter
       p <- asks envDebugPrintSystem
-      when p $ printsys . T.pack $
+      when p $ printDebug . T.pack $
         if tWait > 0
           then
             let n = fromIntegral tWait'
             in printf "%02d" n ++ " " ++ replicate n '.'
-          else "NO WAIT"
+          else "No Wait"
 
     preRender :: MonadIO m => KurokosT m ()
     preRender =
@@ -354,11 +309,12 @@ sceneLoop iniG iniS Scene{..} =
       p2 <- asks envDebugPrintFps
       when p2 $ do
         fps <- truncate <$> gets kstActualFps
-        printsys . T.pack . show $ (fps :: Int)
+        printDebug . T.pack . show $ (fps :: Int)
 
     advance :: SceneState -> SceneState
     advance s = s {frameCount = c + 1}
-      where c = frameCount s
+      where
+        c = frameCount s
 
     printMessages :: MonadIO m => KurokosT m ()
     printMessages = do
@@ -377,8 +333,8 @@ sceneLoop iniG iniS Scene{..} =
             SDL.copy r texture Nothing rect
           return $ y + fromIntegral h
 
-printsys :: Monad m => Text -> KurokosT m ()
-printsys text
+printDebug :: Monad m => Text -> KurokosT m ()
+printDebug text
   | T.null text = return ()
   | otherwise   = modify $ \s -> s {kstMessages = text : kstMessages s}
 
@@ -387,10 +343,10 @@ procEvents :: MonadIO m => [SDL.Event] -> KurokosT m ()
 procEvents = mapM_ (work . SDL.eventPayload)
   where
     work :: MonadIO m => SDL.EventPayload -> KurokosT m ()
-    work (SDL.WindowClosedEvent _) = modify' $ \kst -> kst {kstShouldExit = True}
-    work SDL.QuitEvent             = modify' $ \kst -> kst {kstShouldExit = True}
+    work (SDL.WindowClosedEvent _) = liftIO $ E.throwIO UserExitException
+    work SDL.QuitEvent             = liftIO $ E.throwIO UserExitException
     work (SDL.JoyDeviceEvent dt)   = resetJoysticks dt
-    work _ = return ()
+    work _                         = return ()
 
 -- TODO: Shold check joyDeviceEventConnction
 resetJoysticks :: MonadIO m => SDL.JoyDeviceEventData -> KurokosT m ()
