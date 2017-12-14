@@ -18,6 +18,7 @@ import qualified Data.Vector                  as V
 import           Linear.V4
 
 import qualified SDL
+import qualified SDL.Image                    as Image
 import qualified SDL.Primitive                as Prim
 
 import qualified Kurokos                      as K
@@ -43,7 +44,8 @@ data MyData = MyData
 
 allocGame :: ResourceT (KurokosT (GameT IO)) MyData
 allocGame = do
-  (_, tex) <- K.allocTexture "_data/img.png"
+  r <- K.getRenderer
+  (_, tex) <- allocate (Image.loadTexture r "_data/img.png") SDL.destroyTexture
   return $ MyData tex 0 0 []
 
 

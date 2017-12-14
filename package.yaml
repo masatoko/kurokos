@@ -38,7 +38,6 @@ dependencies:
   - text
   - vector
   - managed
-  - resourcet
   - linear
   - directory
   - safe
@@ -62,5 +61,6 @@ executables:
             - kurokos-asset
             - kurokos-asset-sdl2
             - safe-exceptions
+            - resourcet
         else:
           buildable: False

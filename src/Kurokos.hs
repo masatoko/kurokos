@@ -34,9 +34,7 @@ module Kurokos
   , setColor
   , clearBy
   , printTest
-  -- ** Sprite Helper
-  , allocTexture
-  , allocTextureB
+  -- ** Texture Helper
   , setBlendMode
   , setAlphaMod
   , setColorMod
