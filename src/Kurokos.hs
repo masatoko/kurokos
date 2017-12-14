@@ -41,7 +41,7 @@ module Kurokos
   -- ** Exceptions
   , KurokosException (..)
   -- ** Debug
-  , printsys
+  , printDebug
   ) where
 
 import           Kurokos.Core

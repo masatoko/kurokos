@@ -32,7 +32,7 @@ module Kurokos.Core
   , runKurokos
   , withKurokos
   --
-  , printsys
+  , printDebug
   , getWindowSize
   , getWindow
   , getEvents
@@ -291,7 +291,7 @@ runScene Scene{..} =
 
       -- Print meter
       p <- asks envDebugPrintSystem
-      when p $ printsys . T.pack $
+      when p $ printDebug . T.pack $
         if tWait > 0
           then
             let n = fromIntegral tWait'
@@ -309,7 +309,7 @@ runScene Scene{..} =
       p2 <- asks envDebugPrintFps
       when p2 $ do
         fps <- truncate <$> gets kstActualFps
-        printsys . T.pack . show $ (fps :: Int)
+        printDebug . T.pack . show $ (fps :: Int)
 
     advance :: SceneState -> SceneState
     advance s = s {frameCount = c + 1}
@@ -333,8 +333,8 @@ runScene Scene{..} =
             SDL.copy r texture Nothing rect
           return $ y + fromIntegral h
 
-printsys :: Monad m => Text -> KurokosT m ()
-printsys text
+printDebug :: Monad m => Text -> KurokosT m ()
+printDebug text
   | T.null text = return ()
   | otherwise   = modify $ \s -> s {kstMessages = text : kstMessages s}
 
