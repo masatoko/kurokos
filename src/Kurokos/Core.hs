@@ -352,7 +352,7 @@ procEvents = mapM_ (work . SDL.eventPayload)
     work (SDL.JoyDeviceEvent dt)   = resetJoysticks dt
     work _                         = return ()
 
--- TODO: Shold check joyDeviceEventConnction
+-- TODO: Should check joyDeviceEventConnction
 resetJoysticks :: MonadIO m => SDL.JoyDeviceEventData -> KurokosT m ()
 resetJoysticks SDL.JoyDeviceEventData{} = do
   vjs <- getJoysticks

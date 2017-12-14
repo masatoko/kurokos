@@ -26,7 +26,7 @@ newTransparent = return Transparent
 newFill :: Monad m => GuiT m Widget
 newFill = return Fill
 
-newLabel :: (RenderEnv m, MonadIO m, MonadResource m)
+newLabel :: (RenderEnv m, MonadIO m)
   => Asset.Ident -> Text -> GuiT m Widget
 newLabel ident title = do
   font <- getFont ident 16
@@ -35,13 +35,13 @@ newLabel ident title = do
     , wFont = font
     }
 
-newImageView :: (RenderEnv m, MonadIO m, MonadResource m)
+newImageView :: (RenderEnv m, MonadIO m)
   => Asset.Ident -> GuiT m Widget
 newImageView ident = do
   tex <- getTexture ident
   return $ ImageView tex
 
-newButton :: (RenderEnv m, MonadIO m, MonadResource m)
+newButton :: (RenderEnv m, MonadIO m)
   => Asset.Ident -> Text -> GuiT m Widget
 newButton ident title = do
   font <- getFont ident 16
