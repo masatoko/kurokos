@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE MultiWayIf        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
@@ -7,6 +8,7 @@ module Scene where
 
 -- import           Debug.Trace           (traceM)
 
+import           Control.Exception            as E
 import           Control.Lens
 import           Control.Monad.Extra          (whenJust)
 import           Control.Monad.Reader
@@ -16,6 +18,7 @@ import qualified Data.ByteString.Char8        as B
 import           Data.Maybe                   (isJust)
 import qualified Data.Text                    as T
 import qualified Data.Vector                  as V
+import qualified Data.Yaml                    as Y
 
 import qualified SDL
 import qualified SDL.Primitive                as Prim
@@ -120,7 +123,16 @@ runTitleScene =
       astMng <- Asset.loadAssetManager assetList
       r <- K.getRenderer
       (_,sdlAssets) <- allocate (Asset.newSDLAssetManager r astMng) Asset.freeSDLAssetManager
-      gui <- UI.newGui (UI.GuiEnv sdlAssets) $ do
+      colorScheme <- liftIO $
+        UI.readColorScheme "_data/gui-color-scheme.yaml" >>= \case
+          Left e       -> do
+            putStrLn $ Y.prettyPrintParseException e
+            E.throwIO e
+          Right scheme -> do
+            print scheme
+            return scheme
+
+      gui <- UI.newGui (UI.GuiEnv sdlAssets colorScheme) $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)

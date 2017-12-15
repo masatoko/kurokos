@@ -17,6 +17,7 @@ import qualified Data.Map                 as M
 import           Data.Maybe               (fromMaybe, isJust)
 import           Data.Monoid              ((<>))
 import           Data.Text                (Text)
+import qualified Data.Text                as T
 import           Linear.V2
 
 import           SDL                      (($=))
@@ -28,10 +29,12 @@ import qualified Kurokos.Asset.SDL        as Asset
 import qualified Kurokos.RPN              as RPN
 
 import           Kurokos.UI.Color
+import           Kurokos.UI.Color.Scheme  (ColorScheme, lookupColorOfWidget)
 import           Kurokos.UI.Event         (GuiEvent)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
+import           Kurokos.UI.Widget.Names  (widgetNameOf)
 import           Kurokos.UI.Widget.Render
 import           Kurokos.UI.WidgetTree    (WidgetTree (..))
 import qualified Kurokos.UI.WidgetTree    as WT
@@ -89,6 +92,7 @@ updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
 
 data GuiEnv = GuiEnv
   { geAssetManager :: Asset.SDLAssetManager
+  , geColorScheme  :: ColorScheme
   }
 
 data GUI = GUI
@@ -124,6 +128,13 @@ freeGui :: MonadIO m => GUI -> m ()
 freeGui g =
   mapM_ (freeWidget . snd) $ g^.gWTree
 
+getContextColorOfWidget :: (MonadReader GuiEnv m, MonadIO m) => Widget -> m ContextColor
+getContextColorOfWidget w = do
+  schemeMap <- asks geColorScheme
+  liftIO $ case lookupColorOfWidget w schemeMap of
+    Left err -> E.throwIO $ userError err
+    Right a  -> return a
+
 genSingle :: (RenderEnv m, MonadIO m)
   => Maybe WidgetIdent -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
 genSingle mIdent pos size w = do
@@ -137,7 +148,8 @@ genSingle mIdent pos size w = do
             Right v  -> return v
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  let ctx = WContext key mIdent Nothing (attribOf w) True True iniWidgetState defaultContextColor tex pos' size'
+  ctxCol <- getContextColorOfWidget w
+  let ctx = WContext key mIdent Nothing (attribOf w) True True iniWidgetState ctxCol tex pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 genContainer :: (RenderEnv m, MonadIO m)
@@ -154,7 +166,8 @@ genContainer mIdent ct pos size = do
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let w = Transparent
-      ctx = WContext key mIdent (Just ct) (attribOf w) True True iniWidgetState defaultContextColor tex pos' size'
+  ctxCol <- getContextColorOfWidget w
+  let ctx = WContext key mIdent (Just ct) (attribOf w) True True iniWidgetState ctxCol tex pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()

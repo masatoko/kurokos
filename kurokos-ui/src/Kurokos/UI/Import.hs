@@ -1,7 +1,7 @@
 module Kurokos.UI.Import
   (
     MonadIO
-  , Identity (..)
+  , (<>)
   , MonadResource
   , allocate
   , lift
@@ -22,13 +22,13 @@ module Kurokos.UI.Import
   ) where
 
 import           Control.Monad                (unless, when)
-import           Control.Monad.Identity
 import           Control.Monad.IO.Class       (MonadIO, liftIO)
 import           Control.Monad.Reader.Class   (asks)
 import           Control.Monad.Trans.Class    (lift)
 import           Control.Monad.Trans.Resource (MonadResource, allocate)
 import           Data.Int                     (Int32)
 import           Data.Maybe
+import           Data.Monoid                  ((<>))
 import           Foreign.C.Types              (CInt)
 import           Linear.V2
 import           Linear.V4

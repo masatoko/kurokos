@@ -33,6 +33,7 @@ dependencies:
 - containers
 - transformers
 - mtl
+- split
 - lens
 - linear
 - resourcet

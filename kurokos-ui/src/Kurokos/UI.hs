@@ -21,7 +21,11 @@ module Kurokos.UI
   , Color
   , WidgetColor (..)
   , ContextColor (..)
-  -- Type
+  -- ** ColorScheme
+  , ColorScheme
+  , readColorScheme
+  , parseColorScheme
+  -- ** Type
   , GuiEvent (..)
   , EventType (..)
   --
@@ -54,6 +58,8 @@ module Kurokos.UI
   ) where
 
 import           Kurokos.UI.Color
+import           Kurokos.UI.Color.Scheme    (ColorScheme, parseColorScheme,
+                                             readColorScheme)
 import           Kurokos.UI.Control.Control as Import
 import           Kurokos.UI.Control.Cursor  as Import
 import           Kurokos.UI.Control.Helper  as Import
