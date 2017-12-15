@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 module Kurokos.Asset.Internal.AssetList
-  ( decodeAssetList
+  ( readAssetList
+  , decodeAssetList
   ) where
 
 import qualified Control.Exception      as E
@@ -15,6 +16,10 @@ import qualified System.FilePath.Glob   as Glob
 import           System.FilePath.Posix  (takeFileName)
 
 import           Kurokos.Asset.Internal.Types
+
+readAssetList :: MonadIO m => FilePath -> m AssetList
+readAssetList path = liftIO $
+  decodeAssetList =<< BS.readFile path
 
 decodeAssetList :: MonadIO m => BS.ByteString -> m AssetList
 decodeAssetList bytes = liftIO $
