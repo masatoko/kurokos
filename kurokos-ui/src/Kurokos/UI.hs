@@ -6,6 +6,8 @@ module Kurokos.UI
   , RenderEnv (..)
   --
   -- WContext (Lens)
+  , WContext
+  , ctxIdent
   , ctxWidgetState
   , ctxAttrib
   -- WidgetState (Lens)
@@ -58,8 +60,13 @@ module Kurokos.UI
   , clickByCursor
   , topmostAt
   , filterAt
+  -- ** Cursor
+  , Cursor
+  , cursorPos
+  , cursorArea
+  , newCursor
+  , updateCursor
   -- ** Helper
-  -- , clicked
   , update
   , glookup
   , setGlobalPosition
@@ -69,8 +76,8 @@ import           Kurokos.UI.Color
 import           Kurokos.UI.Color.Scheme    (ColorScheme, parseColorScheme,
                                              readColorScheme)
 import           Kurokos.UI.Control.Control
-import           Kurokos.UI.Control.Cursor  as Import
-import           Kurokos.UI.Control.Helper  as Import
+import           Kurokos.UI.Control.Cursor
+import           Kurokos.UI.Control.Helper
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
 import           Kurokos.UI.Event
