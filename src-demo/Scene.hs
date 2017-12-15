@@ -126,25 +126,25 @@ runTitleScene =
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- UI.genSingle (Just "title") Nothing pos size0 =<< UI.newLabel "font-m" "Kurokos DEMO"
+        label <- UI.genSingle (Just "title") Nothing pos size0 =<< UI.newLabel "font-m" "Kurokos DEMO" 30
         -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
-        button1 <- UI.genSingle (Just nameMain) Nothing pos1 size =<< UI.newButton "font-m" "Next: Main Scene"
-        button2 <- UI.genSingle (Just nameMouse) Nothing pos2 size =<< UI.newButton "font-m" "Push: Mouse Scene"
+        button1 <- UI.genSingle (Just nameMain) Nothing pos1 size =<< UI.newButton "font-m" "Next: Main Scene" 16
+        button2 <- UI.genSingle (Just nameMouse) Nothing pos2 size =<< UI.newButton "font-m" "Push: Mouse Scene" 16
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
         img <- UI.genSingle (Just "image") Nothing imgPos imgSize =<< UI.newImageView "sample-image"
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
-        lbl' <- UI.genSingle (Just "label") Nothing (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" "---"
-        btn' <- UI.genSingle (Just "button") Nothing (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" "Button in Container"
+        lbl' <- UI.genSingle (Just "label") Nothing (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" "---" 16
+        btn' <- UI.genSingle (Just "button") Nothing (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" "Button in Container" 16
         ctn1 <- UI.genContainer Nothing UI.Unordered Nothing (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
         let Just ctn1' = UI.appendChild (mconcat [lbl', btn']) ctn1
         --
-        btns <- mconcat <$> mapM (UI.genSingle Nothing Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< UI.newButton "font-m" . T.pack . show) [1..(5::Int)]
+        btns <- mconcat <$> mapM (UI.genSingle Nothing Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< flip (UI.newButton "font-m") 16 . T.pack . show) [1..(5::Int)]
         ctn2 <- UI.genContainer (Just "menu") UI.VerticalStack Nothing (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
         let Just ctn2' = UI.appendChild btns ctn2
         --

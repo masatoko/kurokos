@@ -9,7 +9,8 @@ import qualified Data.Yaml               as Y
 
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
-import           Kurokos.UI.File.Yaml    (YWidget (..), decodeWidgets)
+import           Kurokos.UI.File.Yaml    (Title (..), YWidget (..),
+                                          decodeWidgets)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
@@ -34,11 +35,11 @@ convert s@Single{..} = do
   wt <- genSingle wIdent wColor (V2 wX wY) (V2 wWidth wHeight) =<< generate
   return $ wt & wtElement._1 %~ setContext
   where
-    title = fromMaybe " " wTitle
+    Title titleText titleSize titleAssetIdent = fromMaybe (error "Missing title") wTitle
     generate
       | wType == N.wnameFill      = newFill
-      | wType == N.wnameLabel     = getAssetId >>= \ident -> newLabel ident title
-      | wType == N.wnameButton    = getAssetId >>= \ident -> newButton ident title
+      | wType == N.wnameLabel     = newLabel titleAssetIdent titleText titleSize
+      | wType == N.wnameButton    = newButton titleAssetIdent titleText titleSize
       | wType == N.wnameImageView = newImageView =<< getAssetId
       | otherwise                 = liftIO $ E.throwIO $ userError $ "unkown widget type: " ++ wType
 

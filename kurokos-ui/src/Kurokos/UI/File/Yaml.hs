@@ -12,6 +12,8 @@ import           Safe                  (readMay)
 import           Data.Yaml             (FromJSON (..), (.:), (.:?))
 import qualified Data.Yaml             as Y
 
+import SDL.Font as Font
+
 import qualified Kurokos.Asset         as Asset
 import qualified Kurokos.RPN           as RPN
 import           Kurokos.UI.Color      (ContextColor)
@@ -38,7 +40,8 @@ data YWidget
     , wClickable :: Maybe Bool
     --
     , wAsset     :: Maybe Asset.Ident
-    , wTitle     :: Maybe Text
+    --
+    , wTitle     :: Maybe Title
     }
   | Container
     { wIdent         :: Maybe String
@@ -104,3 +107,15 @@ parseContainerType (Just ct) = work ct
     work "horizontal" = HorizontalStack
     work "vertical"   = VerticalStack
     work _            = Unordered -- fail $ "unkown container type: " ++ ct
+
+
+data Title
+  = Title Text Font.PointSize Asset.Ident
+  deriving (Eq, Show)
+
+instance FromJSON Title where
+  parseJSON (Y.Object v) = Title
+    <$> v .: "text"
+    <*> v .: "size"
+    <*> v .: "asset"
+  parseJSON _ = fail "Expected Object for Title"

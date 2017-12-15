@@ -1,12 +1,14 @@
 -
   id: btn-ident
   type: label
-  title: Label From Yaml
+  title:
+    text: Label From Yaml
+    asset: font-r
+    size: 14
   x: 20
   y-rpn: $height 100 -
   w-rpn: $width 2 /
   h: 50
-  asset: font-r
 
 -
   type: fill
@@ -27,9 +29,11 @@
   children:
     - &test
       type: label
-      title: Label
+      title:
+        text: Label
+        asset: font-r
+        size: 14
       h: 20
-      asset: font-r
     - *test
     - *test
     -

@@ -27,9 +27,9 @@ newFill :: Monad m => GuiT m Widget
 newFill = return Fill
 
 newLabel :: (RenderEnv m, MonadIO m)
-  => Asset.Ident -> Text -> GuiT m Widget
-newLabel ident title = do
-  font <- getFont ident 16
+  => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
+newLabel ident title size = do
+  font <- getFont ident size
   return Label
     { wTitle = title
     , wFont = font
@@ -42,9 +42,9 @@ newImageView ident = do
   return $ ImageView tex
 
 newButton :: (RenderEnv m, MonadIO m)
-  => Asset.Ident -> Text -> GuiT m Widget
-newButton ident title = do
-  font <- getFont ident 16
+  => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
+newButton ident title size = do
+  font <- getFont ident size
   return Button
     { wTitle = title
     , wFont = font
