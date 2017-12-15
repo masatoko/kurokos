@@ -12,6 +12,12 @@
   type: fill
   x-rpn: "$width $width 5 / -"
   w-rpn: "$width 5 /"
+  color:
+    default:
+      back: 0 0 0 50
+      border: 220 220 220 255
+      title: 54 20 171 255
+      tint: 220 220 220 255
 
 -
   type: container

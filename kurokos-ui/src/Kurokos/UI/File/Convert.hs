@@ -31,7 +31,7 @@ newWidgetTreeFromData bs =
 convert :: (RenderEnv m, MonadIO m)
   => YWidget -> GuiT m GuiWidgetTree
 convert s@Single{..} = do
-  wt <- genSingle wIdent (V2 wX wY) (V2 wWidth wHeight) =<< generate
+  wt <- genSingle wIdent wColor (V2 wX wY) (V2 wWidth wHeight) =<< generate
   return $ wt & wtElement._1 %~ setContext
   where
     title = fromMaybe " " wTitle
@@ -51,7 +51,7 @@ convert s@Single{..} = do
           & ctxAttrib . clickable %~ flip fromMaybe wClickable
 
 convert Container{..} = do
-  cnt <- genContainer wIdent wContainerType (V2 wX wY) (V2 wWidth wHeight)
+  cnt <- genContainer wIdent wContainerType wColor (V2 wX wY) (V2 wWidth wHeight)
   let cnt' = cnt & wtElement._1 %~ setContext
   ws <- mapM convert wChildren
   let w = mconcat ws

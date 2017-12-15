@@ -13,10 +13,11 @@ import           Data.Yaml             (FromJSON (..), (.:), (.:?))
 import qualified Data.Yaml             as Y
 
 import qualified Kurokos.Asset         as Asset
+import qualified Kurokos.RPN           as RPN
+import           Kurokos.UI.Color      (ContextColor)
 import           Kurokos.UI.Core
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
-import qualified Kurokos.RPN           as RPN
 
 decodeWidgets :: BS.ByteString -> Either Y.ParseException YWidgets
 decodeWidgets = Y.decodeEither'
@@ -27,6 +28,7 @@ data YWidget
   = Single
     { wType      :: String
     , wIdent     :: Maybe String
+    , wColor     :: Maybe ContextColor
     , wX         :: UExp
     , wY         :: UExp
     , wWidth     :: UExp
@@ -40,6 +42,7 @@ data YWidget
     }
   | Container
     { wIdent         :: Maybe String
+    , wColor         :: Maybe ContextColor
     , wX             :: UExp
     , wY             :: UExp
     , wWidth         :: UExp
@@ -59,6 +62,7 @@ instance FromJSON YWidget where
       "container" -> makeContainer v
       _           -> Single wtype
         <$> v .:? "id"
+        <*> v .:? "color"
         <*> getUExp "x" (C 0) v
         <*> getUExp "y" (C 0) v
         <*> getUExp "w" (Rpn "$width") v
@@ -73,7 +77,8 @@ instance FromJSON YWidget where
 
 makeContainer :: Y.Object -> Y.Parser YWidget
 makeContainer v = Container
-  <$> v .:? "ident"
+  <$> v .:? "id"
+  <*> v .:? "color"
   <*> getUExp "x" (C 0) v
   <*> getUExp "y" (C 0) v
   <*> getUExp "w" (Rpn "$width") v
