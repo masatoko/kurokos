@@ -59,32 +59,6 @@ defAttrib = WidgetAttrib
   , _visible = True
   }
 
--- Color
-
--- type Color = V4 Word8
---
--- data WidgetPart a = WP
---   { wpBack :: a
---   , wpTint :: a
---   , wpFont :: a
---   }
---
--- instance Functor WidgetPart where
---   fmap f WP{..} = WP (f wpBack) (f wpTint) (f wpFont)
---
--- newtype WidgetColor = WC { unWC :: WidgetPart Color }
--- newtype WidgetColorModifier = WCM { unWCM :: WidgetPart (Color -> Color) }
--- data ColorSet = ColorSet
---   { colorSetBasis :: WidgetColor
---   , colorSetHover :: WidgetColorModifier
---   }
---
--- modColor :: WidgetColorModifier -> WidgetColor -> WidgetColor
--- modColor (WCM m) (WC a) =
---   WC $ WP (work wpBack wpBack) (work wpTint wpTint) (work wpFont wpFont)
---   where
---     work f f' = f m (f' a)
-
 -- Expression
 
 data Exp
@@ -118,8 +92,6 @@ data WContext = WContext
   , _ctxNeedsLayout   :: Bool
   , _ctxNeedsRender   :: Bool
   , _ctxWidgetState   :: WidgetState
-  -- , _ctxColorSet      :: ColorSet
-  -- , _ctxColor         :: WidgetColor
   , _ctxContextColor  :: ContextColor
   , _ctxTexture       :: SDL.Texture
   , _ctxUPos          :: V2 Exp
