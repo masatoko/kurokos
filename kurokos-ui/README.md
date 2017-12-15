@@ -1,7 +1,5 @@
 # kurokos-ui
 
-##
-
 ## Widget Name
 
 [Defined in 'src/Kurokos/Widget/Names.hs'](src/Kurokos/Widget/Names.hs)
@@ -10,9 +8,11 @@
 
 ### Format
 
+Yaml format
+
 ```yaml
-{widget-name}:
-  {context}:
+{widget-name}: # `_default` or '_'+widget-name
+  {context}:   # `default` or (normal|hover|click)
     back:   Red(0-255) Green(0-255) Blue(0-255) Alpha(0-255)
     border: Red Green Blue Alpha
     title:  Red Green Blue Alpha
