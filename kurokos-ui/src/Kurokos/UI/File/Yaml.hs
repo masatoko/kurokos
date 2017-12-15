@@ -62,7 +62,7 @@ instance FromJSON YWidget where
     case (wtype :: String) of
       "container" -> makeContainer v
       _           -> Single wtype
-        <$> v .:? "ident"
+        <$> v .:? "id"
         <*> getUExp "x" (C 0) v
         <*> getUExp "y" (C 0) v
         <*> getUExp "w" (Rpn "$width") v
