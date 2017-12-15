@@ -1,11 +1,11 @@
-_common:
+_default:
   normal:
     back: 255 255 255 255
     border: 220 220 220 255
     title: 54 20 171 255
     tint: 220 220 220 255
   hover:
-    back: 255 255 255 255
+    back: 240 240 240 255
     border: 220 220 220 255
     title: 54 20 171 255
     tint: 220 220 220 255

@@ -31,6 +31,7 @@ dependencies:
 - bytestring
 - text
 - containers
+- unordered-containers
 - transformers
 - mtl
 - split
