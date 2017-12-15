@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Kurokos.UI.Color
@@ -7,20 +8,20 @@ module Kurokos.UI.Color
   -- ** WidgetColor
   , WidgetColor (..)
   , wcBack, wcBorder, wcTitle, wcTint
-  -- , defaultWidgetColor
   -- ** ContextColor
   , ContextColor (..)
-  -- , defaultContextColor
   ) where
 
 import           Control.Lens
-import           Data.ByteString         as BS
-import           Data.List.Split         (splitOn)
-import qualified Data.Map                as M
-import           Data.Maybe              (catMaybes)
-import           Data.Word               (Word8)
-import           Data.Yaml               (FromJSON (..), (.:), (.:?))
-import qualified Data.Yaml               as Y
+import           Control.Monad.Extra (firstJustM)
+import           Data.ByteString     as BS
+import           Data.List.Split     (splitOn)
+import qualified Data.Map            as M
+import           Data.Maybe          (catMaybes)
+import qualified Data.Text           as T
+import           Data.Word           (Word8)
+import           Data.Yaml           (FromJSON (..), (.:), (.:?))
+import qualified Data.Yaml           as Y
 
 import           SDL.Vect
 
@@ -34,14 +35,6 @@ data WidgetColor = WidgetColor
   } deriving (Eq, Show, Read)
 
 makeLenses ''WidgetColor
-
--- defaultWidgetColor :: WidgetColor
--- defaultWidgetColor = WidgetColor
---   { _wcBack   = V4 255 255 255 255
---   , _wcBorder = V4 220 220 220 255
---   , _wcTitle  = V4 54 20 171 255
---   , _wcTint   = V4 220 220 220 255
---   }
 
 instance FromJSON WidgetColor where
   parseJSON (Y.Object v) = WidgetColor
@@ -62,16 +55,14 @@ data ContextColor = ContextColor
   , ctxcolClick  :: WidgetColor
   } deriving (Eq, Show, Read)
 
--- defaultContextColor :: ContextColor
--- defaultContextColor = ContextColor
---   { ctxcolNormal = defaultWidgetColor
---   , ctxcolHover  = defaultWidgetColor & wcBack . _xyz %~ (+ (-10))
---   , ctxcolClick  = defaultWidgetColor
---   }
-
 instance FromJSON ContextColor where
   parseJSON (Y.Object v) = ContextColor
-    <$> v .: "normal"
-    <*> v .: "hover"
-    <*> v .: "click"
+    <$> get "normal"
+    <*> get "hover"
+    <*> get "click"
+    where
+      get key =
+        firstJustM (v .:?) [key, "default"] >>= \case
+          Nothing -> fail $ "Missing context color of '" ++ T.unpack key ++ "' nor 'default'"
+          Just v  -> return v
   parseJSON _ = fail "Expected Object for ContextColor"
