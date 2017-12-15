@@ -59,7 +59,6 @@ module Kurokos.UI
   , handleGui
   , clickByCursor
   , topmostAt
-  , filterAt
   -- ** Cursor
   , Cursor
   , cursorPos

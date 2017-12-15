@@ -7,7 +7,6 @@ module Kurokos.UI.Control.Control
   --
   , clickByCursor
   , topmostAt
-  , filterAt
   ) where
 
 import           Control.Lens
@@ -68,7 +67,7 @@ clickByCursor :: Cursor -> GUI -> Maybe E.GuiEvent
 clickByCursor cursor gui = me
   where
     pos = cursor^.cursorPos
-    me = conv =<< topmostAt pos (gui^.gWTree)
+    me = conv =<< wtTopmostAt pos (gui^.gWTree)
       where
         conv (ctx,w)
           | ctx^.ctxAttrib.clickable = Just $ E.GuiEvent et w k mn
@@ -78,11 +77,16 @@ clickByCursor cursor gui = me
             k = ctx^.ctxKey
             mn = ctx^.ctxIdent
 
-topmostAt :: Point V2 CInt -> GuiWidgetTree -> Maybe (WContext, Widget)
-topmostAt p = lastMay . filterAt p
+topmostAt :: Point V2 CInt -> GUI -> Maybe (WContext, Widget)
+topmostAt p gui = wtTopmostAt p (gui^.gWTree)
 
-filterAt :: Point V2 CInt -> GuiWidgetTree -> [(WContext, Widget)]
-filterAt aPos' = catMaybes . WT.toList . fmap work
+-- Internal
+
+wtTopmostAt :: Point V2 CInt -> GuiWidgetTree -> Maybe (WContext, Widget)
+wtTopmostAt p = lastMay . wtFilterAt p
+
+wtFilterAt :: Point V2 CInt -> GuiWidgetTree -> [(WContext, Widget)]
+wtFilterAt aPos' = catMaybes . WT.toList . fmap work
   where
     aPos = fromIntegral <$> aPos'
 
