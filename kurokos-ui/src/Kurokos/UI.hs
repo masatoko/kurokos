@@ -66,6 +66,8 @@ module Kurokos.UI
   , cursorArea
   , newCursor
   , updateCursor
+  -- ** Control.Helper
+  , clickedOn
   -- ** Helper
   , update
   , glookup
@@ -77,7 +79,7 @@ import           Kurokos.UI.Color.Scheme    (ColorScheme, parseColorScheme,
                                              readColorScheme)
 import           Kurokos.UI.Control.Control
 import           Kurokos.UI.Control.Cursor
-import           Kurokos.UI.Control.Helper
+import           Kurokos.UI.Control.Helper  (clickedOn)
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
 import           Kurokos.UI.Event

@@ -25,7 +25,8 @@ import           SDL.Vect
 import qualified Kurokos                      as K
 import qualified Kurokos.Asset                as Asset
 import qualified Kurokos.Asset.SDL            as Asset
-import           Kurokos.UI                   (UExp (..), ctxAttrib, visible)
+import           Kurokos.UI                   (UExp (..), ctxAttrib, cursorPos,
+                                               visible)
 import qualified Kurokos.UI                   as UI
 
 import           Action                       (Action (..), eventsToActions)
@@ -212,7 +213,7 @@ runTitleScene =
       --
       UI.render $ t^.tGui
       K.withRenderer $ \r -> do
-        let P pos = UI._cursorPos $ t^.tCursor
+        let P pos = t^.tCursor.cursorPos
         Prim.smoothCircle r pos 5 (V4 0 0 0 255)
       return ()
       where
