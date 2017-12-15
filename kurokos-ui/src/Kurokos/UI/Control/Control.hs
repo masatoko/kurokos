@@ -4,6 +4,10 @@ module Kurokos.UI.Control.Control
   , GuiAction (..)
   , defaultGuiHandler
   , handleGui
+  --
+  , clickByCursor
+  , topmostAt
+  , filterAt
   ) where
 
 import           Control.Lens

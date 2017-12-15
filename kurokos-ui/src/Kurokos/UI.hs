@@ -50,7 +50,15 @@ module Kurokos.UI
   , readyRender
   -- Rendering
   , render
-  -- Helper
+  -- ** Control
+  , GuiHandler (..)
+  , GuiAction (..)
+  , defaultGuiHandler
+  , handleGui
+  , clickByCursor
+  , topmostAt
+  , filterAt
+  -- ** Helper
   -- , clicked
   , update
   , glookup
@@ -60,7 +68,7 @@ module Kurokos.UI
 import           Kurokos.UI.Color
 import           Kurokos.UI.Color.Scheme    (ColorScheme, parseColorScheme,
                                              readColorScheme)
-import           Kurokos.UI.Control.Control as Import
+import           Kurokos.UI.Control.Control
 import           Kurokos.UI.Control.Cursor  as Import
 import           Kurokos.UI.Control.Helper  as Import
 import           Kurokos.UI.Core
