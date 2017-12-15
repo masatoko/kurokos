@@ -13,6 +13,8 @@ import qualified SDL
 
 import qualified Kurokos.RPN     as RPN
 
+import Kurokos.UI.Color
+
 type Key = Int64
 newtype WTKey = WTKey Key deriving Show
 
@@ -59,29 +61,29 @@ defAttrib = WidgetAttrib
 
 -- Color
 
-type Color = V4 Word8
-
-data WidgetPart a = WP
-  { wpBack :: a
-  , wpTint :: a
-  , wpFont :: a
-  }
-
-instance Functor WidgetPart where
-  fmap f WP{..} = WP (f wpBack) (f wpTint) (f wpFont)
-
-newtype WidgetColor = WC { unWC :: WidgetPart Color }
-newtype WidgetColorModifier = WCM { unWCM :: WidgetPart (Color -> Color) }
-data ColorSet = ColorSet
-  { colorSetBasis :: WidgetColor
-  , colorSetHover :: WidgetColorModifier
-  }
-
-modColor :: WidgetColorModifier -> WidgetColor -> WidgetColor
-modColor (WCM m) (WC a) =
-  WC $ WP (work wpBack wpBack) (work wpTint wpTint) (work wpFont wpFont)
-  where
-    work f f' = f m (f' a)
+-- type Color = V4 Word8
+--
+-- data WidgetPart a = WP
+--   { wpBack :: a
+--   , wpTint :: a
+--   , wpFont :: a
+--   }
+--
+-- instance Functor WidgetPart where
+--   fmap f WP{..} = WP (f wpBack) (f wpTint) (f wpFont)
+--
+-- newtype WidgetColor = WC { unWC :: WidgetPart Color }
+-- newtype WidgetColorModifier = WCM { unWCM :: WidgetPart (Color -> Color) }
+-- data ColorSet = ColorSet
+--   { colorSetBasis :: WidgetColor
+--   , colorSetHover :: WidgetColorModifier
+--   }
+--
+-- modColor :: WidgetColorModifier -> WidgetColor -> WidgetColor
+-- modColor (WCM m) (WC a) =
+--   WC $ WP (work wpBack wpBack) (work wpTint wpTint) (work wpFont wpFont)
+--   where
+--     work f f' = f m (f' a)
 
 -- Expression
 
@@ -116,14 +118,24 @@ data WContext = WContext
   , _ctxNeedsLayout   :: Bool
   , _ctxNeedsRender   :: Bool
   , _ctxWidgetState   :: WidgetState
-  , _ctxColorSet      :: ColorSet
-  , _ctxColor         :: WidgetColor
+  -- , _ctxColorSet      :: ColorSet
+  -- , _ctxColor         :: WidgetColor
+  , _ctxContextColor  :: ContextColor
   , _ctxTexture       :: SDL.Texture
   , _ctxUPos          :: V2 Exp
   , _ctxUSize         :: V2 Exp
   }
 
 makeLenses ''WContext
+
+optimumColor :: WContext -> WidgetColor
+optimumColor WContext{..}
+  | _wstHover = ctxcolHover
+  -- | _wstClick = ctxcolClick -- TODO: Implement color when clicked.
+  | otherwise = ctxcolNormal
+  where
+    ContextColor{..} = _ctxContextColor
+    WidgetState{..} = _ctxWidgetState
 
 data Cursor = Cursor
   { _cursorPos  :: GuiPos

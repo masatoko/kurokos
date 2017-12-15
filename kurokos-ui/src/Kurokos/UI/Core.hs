@@ -27,6 +27,7 @@ import qualified Kurokos.Asset            as Asset
 import qualified Kurokos.Asset.SDL        as Asset
 import qualified Kurokos.RPN              as RPN
 
+import           Kurokos.UI.Color
 import           Kurokos.UI.Event         (GuiEvent)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
@@ -87,8 +88,7 @@ updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
           return $ Fork u' a' mc' o'
 
 data GuiEnv = GuiEnv
-  { geDefaultColorSet :: ColorSet
-  , geAssetManager    :: Asset.SDLAssetManager
+  { geAssetManager :: Asset.SDLAssetManager
   }
 
 data GUI = GUI
@@ -135,10 +135,9 @@ genSingle mIdent pos size w = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  colset <- asks geDefaultColorSet
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
-  let ctx = WContext key mIdent Nothing (attribOf w) True True iniWidgetState colset (colorSetBasis colset) tex pos' size'
+  let ctx = WContext key mIdent Nothing (attribOf w) True True iniWidgetState defaultContextColor tex pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 genContainer :: (RenderEnv m, MonadIO m)
@@ -152,11 +151,10 @@ genContainer mIdent ct pos size = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  colset <- asks geDefaultColorSet
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let w = Transparent
-      ctx = WContext key mIdent (Just ct) (attribOf w) True True iniWidgetState colset (colorSetBasis colset) tex pos' size'
+      ctx = WContext key mIdent (Just ct) (attribOf w) True True iniWidgetState defaultContextColor tex pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
@@ -218,7 +216,7 @@ readyRender g = do
       size <- case evalExp2 vmap' usize of
               Left err -> E.throw $ userError err
               Right v  -> return v
-      tex <- createTexture' size wcol widget renderWidget
+      tex <- createTexture' size ctx widget renderWidget
       let ctx' = ctx & ctxNeedsRender .~ False
                      & ctxTexture .~ tex
                      & ctxWidgetState . wstPos .~ pos
@@ -227,7 +225,7 @@ readyRender g = do
       where
         upos = ctx^.ctxUPos
         usize = ctx^.ctxUSize
-        wcol = ctx^.ctxColor
+
 
     evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)
     evalExp2 vmap (V2 x y) = V2 <$> evalExp x <*> evalExp y
@@ -235,7 +233,7 @@ readyRender g = do
         evalExp (ERPN expr) = truncate <$> RPN.eval vmap expr
         evalExp (EConst v)  = return v
 
-    createTexture' size wcol w renderW =
+    createTexture' size ctx w renderW =
       withRenderer $ \r -> do
         tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget size
         SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
@@ -244,6 +242,7 @@ readyRender g = do
                    (renderContents r)
         return tex
       where
+        wcol = optimumColor ctx
         renderContents r = do
           -- Initialize background
           SDL.rendererDrawColor r $= V4 0 0 0 0

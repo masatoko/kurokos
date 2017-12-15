@@ -120,7 +120,7 @@ runTitleScene =
       astMng <- Asset.loadAssetManager assetList
       r <- K.getRenderer
       (_,sdlAssets) <- allocate (Asset.newSDLAssetManager r astMng) Asset.freeSDLAssetManager
-      gui <- UI.newGui (UI.GuiEnv colset sdlAssets) $ do
+      gui <- UI.newGui (UI.GuiEnv sdlAssets) $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
@@ -162,20 +162,6 @@ runTitleScene =
       liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui
       cursor <- UI.newCursor
       return $ Title gui cursor [] 0
-      where
-        colset = UI.ColorSet wcol wcmod
-
-        wcol =
-          UI.WC UI.WP
-            { UI.wpBack = V4 255 255 255 255
-            , UI.wpTint = V4 220 220 220 255
-            , UI.wpFont = V4 54 20 171 255
-            }
-
-        wcmod = UI.WCM $ UI.WP toHover toHover id
-          where
-            toHover :: UI.Color -> UI.Color
-            toHover = over _xyz (fmap (+ (-10)))
 
     update :: Update (GameT IO) Title
     update title0 = do

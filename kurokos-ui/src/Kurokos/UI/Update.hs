@@ -48,12 +48,10 @@ procEvent cursor gui = work
           | isHoverable && not (wst^.wstHover) && isWithinRect curPos pos size =
             let ctx' = ctx & ctxWidgetState . wstHover .~ True
                            & ctxNeedsRender .~ True
-                           & ctxColor .~ (colorSetHover `modColor` colorSetBasis)
             in (ctx',w)
           | isHoverable && wst^.wstHover && not (isWithinRect curPos pos size) =
             let ctx' = ctx & ctxWidgetState . wstHover .~ False
                            & ctxNeedsRender .~ True
-                           & ctxColor .~ colorSetBasis
             in (ctx',w)
           | otherwise = a
           where
@@ -61,7 +59,6 @@ procEvent cursor gui = work
             isHoverable = ctx^.ctxAttrib.hoverable
             wst = ctx^.ctxWidgetState
             size = wst^.wstSize
-            ColorSet{..} = ctx^.ctxColorSet
 
     work _ = return gui
 

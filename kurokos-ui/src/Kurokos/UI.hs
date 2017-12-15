@@ -17,11 +17,10 @@ module Kurokos.UI
   -- Types
   , ContainerType (..)
   , UExp (..)
+  -- ** Color
   , Color
-  , ColorSet (..)
-  , WidgetPart (..)
   , WidgetColor (..)
-  , WidgetColorModifier (..)
+  , ContextColor (..)
   -- Type
   , GuiEvent (..)
   , EventType (..)
@@ -54,6 +53,7 @@ module Kurokos.UI
   , setGlobalPosition
   ) where
 
+import           Kurokos.UI.Color
 import           Kurokos.UI.Control.Control as Import
 import           Kurokos.UI.Control.Cursor  as Import
 import           Kurokos.UI.Control.Helper  as Import
