@@ -7,6 +7,7 @@ module Kurokos.UI.Color.Scheme
   , lookupColorOfWidget
   ) where
 
+import qualified Control.Exception       as E
 import           Control.Lens
 import           Data.ByteString         as BS
 import qualified Data.HashMap.Lazy       as HM
@@ -28,8 +29,9 @@ import           Kurokos.UI.Widget.Names (WidgetName, widgetNameOf)
 
 type ColorScheme = M.Map WidgetName ContextColor
 
-readColorScheme :: FilePath -> IO (Either Y.ParseException ColorScheme)
-readColorScheme = fmap parseColorScheme . BS.readFile
+readColorScheme :: FilePath -> IO ColorScheme
+readColorScheme path =
+  either E.throwIO return =<< (parseColorScheme <$> BS.readFile path)
 
 parseColorScheme :: BS.ByteString -> Either Y.ParseException ColorScheme
 parseColorScheme bytes =

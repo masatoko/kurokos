@@ -60,6 +60,5 @@ executables:
             - safe-exceptions
             - lens
             - resourcet
-            - yaml
         else:
           buildable: False
