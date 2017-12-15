@@ -28,6 +28,11 @@ renderWidget r parentSize WidgetColor{..} Label{..} = do
     (Font.blended wFont _wcTitle wTitle)
     SDL.freeSurface
     (SDL.createTextureFromSurface r)
+  --
+  let size' = (+ (-1)) <$> parentSize
+  Prim.fillRoundRectangle r (pure 0) size' 3 _wcBack
+  Prim.roundRectangle r (pure 0) size' 5 _wcBorder
+  --
   let pos = P $ (`div` 2) <$> parentSize - size
   SDL.copy r tex Nothing $ Just (Rectangle pos size)
 

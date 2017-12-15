@@ -17,7 +17,13 @@ _default:
 
 _fill:
   default:
-    back: 0 0 0 255
+    back: 0 0 0 30
     border: 220 220 220 255
     title: 54 20 171 255
+    tint: 220 220 220 255
+_label:
+  default:
+    back: 255 255 255 0
+    border: 255 255 255 0
+    title: 100 100 100 255
     tint: 220 220 220 255
