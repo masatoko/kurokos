@@ -21,10 +21,6 @@ import qualified Kurokos.RPN           as RPN
 decodeWidgets :: BS.ByteString -> Either Y.ParseException YWidgets
 decodeWidgets = Y.decodeEither'
 
-data GuiConf = GuiConf
-  { defaultFontPath :: FilePath
-  } deriving (Eq, Show)
-
 type YWidgets = [YWidget]
 
 data YWidget
@@ -103,18 +99,3 @@ parseContainerType (Just ct) = work ct
     work "horizontal" = HorizontalStack
     work "vertical"   = VerticalStack
     work _            = Unordered -- fail $ "unkown container type: " ++ ct
-
--- validateUExp :: UExp -> Either String Double
--- validateUExp uexp =
---   case fromUExp uexp of
---     Left err -> Left err
---     Right e  ->
---       case evalExp e of
---         Left err -> Left err
---         Right e' -> e' `deepseq` Right e'
---   where
---     vmap = M.fromList [(k,0) | k <- keys]
---     keys = ["width", "height", "x", "y"]
---
---     evalExp (ERPN expr) = RPN.eval vmap expr
---     evalExp (EConst v)  = return $ fromIntegral v
