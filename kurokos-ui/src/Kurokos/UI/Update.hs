@@ -31,14 +31,14 @@ procEvent cursor gui = work
   where
     work (WindowResizedEvent WindowResizedEventData{..}) = do
       win <- getWindow
-      if windowResizedEventWindow == win
-        then return $ setAllNeedsRender gui
-        else return gui
+      return $ if windowResizedEventWindow == win
+                then setAllNeedsLayout . setAllNeedsRender $ gui
+                else gui
     work (WindowMaximizedEvent WindowMaximizedEventData{..}) = do
       win <- getWindow
-      if windowMaximizedEventWindow == win
-        then return $ setAllNeedsRender gui
-        else return gui
+      return $ if windowMaximizedEventWindow == win
+                then setAllNeedsLayout . setAllNeedsRender $ gui
+                else gui
     work (MouseMotionEvent MouseMotionEventData{..}) =
       return . flip execState gui $
         modify $ over gWTree $ fmap $ modWhenHover pos
