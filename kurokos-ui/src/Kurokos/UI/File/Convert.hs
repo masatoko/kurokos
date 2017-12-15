@@ -50,6 +50,7 @@ convert s@Single{..} = do
     setContext ctx =
       ctx & ctxAttrib . visible %~ flip fromMaybe wVisible
           & ctxAttrib . clickable %~ flip fromMaybe wClickable
+          & ctxAttrib . hoverable %~ flip fromMaybe wHoverable
 
 convert Container{..} = do
   cnt <- genContainer wIdent wContainerType wColor (V2 wX wY) (V2 wWidth wHeight)
@@ -61,3 +62,4 @@ convert Container{..} = do
     setContext ctx =
       ctx & ctxAttrib . visible %~ flip fromMaybe wVisible
           & ctxAttrib . clickable %~ flip fromMaybe wClickable
+          & ctxAttrib . hoverable %~ flip fromMaybe wHoverable

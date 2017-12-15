@@ -1,5 +1,4 @@
 -
-  id: btn-ident
   type: label
   title:
     text: Label From Yaml
@@ -9,6 +8,7 @@
   y-rpn: $height 100 -
   w-rpn: $width 2 /
   h: 50
+  hoverable: true
 
 -
   type: fill

@@ -38,6 +38,7 @@ data YWidget
     -- Attribute
     , wVisible   :: Maybe Bool
     , wClickable :: Maybe Bool
+    , wHoverable :: Maybe Bool
     --
     , wAsset     :: Maybe Asset.Ident
     --
@@ -55,6 +56,7 @@ data YWidget
     -- Attribute
     , wVisible       :: Maybe Bool
     , wClickable     :: Maybe Bool
+    , wHoverable     :: Maybe Bool
     }
   deriving (Eq, Show)
 
@@ -73,6 +75,7 @@ instance FromJSON YWidget where
         -- Attribute
         <*> v .:? "visible"
         <*> v .:? "clickable"
+        <*> v .:? "hoverable"
         --
         <*> v .:? "asset"
         <*> v .:? "title"
@@ -91,6 +94,7 @@ makeContainer v = Container
   -- Attribute
   <*> v .:? "visible"
   <*> v .:? "clickable"
+  <*> v .:? "hoverable"
 
 getUExp :: Text -> UExp -> Y.Object -> Y.Parser UExp
 getUExp label def v = do
