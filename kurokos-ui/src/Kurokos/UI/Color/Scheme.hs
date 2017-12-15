@@ -24,8 +24,7 @@ import           SDL.Vect
 import           Kurokos.UI.Color        (ContextColor)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget       (Widget)
-import           Kurokos.UI.Widget.Names (WidgetName, widgetNameList,
-                                          widgetNameOf)
+import           Kurokos.UI.Widget.Names (WidgetName, widgetNameOf)
 
 type ColorScheme = M.Map WidgetName ContextColor
 
@@ -39,10 +38,10 @@ parseColorScheme bytes =
 lookupColorOfWidget :: Widget -> ColorScheme -> Either String ContextColor
 lookupColorOfWidget w scheme =
   case firstJust (`M.lookup` scheme) [key, def] of
-    Nothing  -> Left . T.unpack $ "Missing '" <> key <> "' in color scheme. Or set '" <> def <> "' context color."
+    Nothing  -> Left $ "Missing '" ++ key ++ "' in color scheme. Or set '" ++ def ++ "' context color."
     Just col -> Right col
   where
-    key = "_" <> widgetNameOf w
+    key = "_" ++ widgetNameOf w
     def = "_default"
 
 -- Internal
@@ -53,7 +52,7 @@ instance FromJSON ColorScheme_ where
   parseJSON (Y.Object v) =
     ColorScheme_ . M.fromList . catMaybes <$> mapM parseOne (HM.keys v)
     where
-      parseOne :: WidgetName -> Y.Parser (Maybe (WidgetName, ContextColor))
-      parseOne wname = fmap ((,) wname) <$> v .:? wname
+      parseOne :: T.Text -> Y.Parser (Maybe (WidgetName, ContextColor))
+      parseOne wname = fmap ((,) (T.unpack wname)) <$> v .:? wname
 
   parseJSON _ = fail "Expected Object for ColorScheme"

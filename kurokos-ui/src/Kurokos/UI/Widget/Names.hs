@@ -1,24 +1,10 @@
-{-# LANGUAGE OverloadedStrings #-}
-module Kurokos.UI.Widget.Names
-  ( WidgetName
-  , widgetNameList
-  , widgetNameOf
-  ) where
+module Kurokos.UI.Widget.Names where
 
 import qualified Data.Text         as T
 
 import           Kurokos.UI.Widget (Widget (..))
 
-type WidgetName = T.Text
-
-widgetNameList :: [WidgetName]
-widgetNameList =
-  [ wnameTransparent
-  , wnameFill
-  , wnameLabel
-  , wnameImageView
-  , wnameButton
-  ]
+type WidgetName = String
 
 widgetNameOf :: Widget -> WidgetName
 widgetNameOf Transparent{} = wnameTransparent
