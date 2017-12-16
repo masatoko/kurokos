@@ -48,17 +48,6 @@ library:
     - Kurokos.UI
     - Kurokos.UI.Event
 
-executables:
-  kurokos-ui-exe:
-    main:                Main.hs
-    source-dirs:         app
-    ghc-options:
-    - -threaded
-    - -rtsopts
-    - -with-rtsopts=-N
-    dependencies:
-    - kurokos-ui
-
 tests:
   kurokos-ui-test:
     main:                Spec.hs

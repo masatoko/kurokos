@@ -29,8 +29,8 @@ import           Kurokos.UI.Widget.Names (WidgetName, widgetNameOf)
 
 type ColorScheme = M.Map WidgetName ContextColor
 
-readColorScheme :: FilePath -> IO ColorScheme
-readColorScheme path =
+readColorScheme :: MonadIO m => FilePath -> m ColorScheme
+readColorScheme path = liftIO $
   either E.throwIO return =<< (parseColorScheme <$> BS.readFile path)
 
 parseColorScheme :: BS.ByteString -> Either Y.ParseException ColorScheme
