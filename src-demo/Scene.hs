@@ -176,7 +176,7 @@ runTitleScene =
           t1 & tGui %%~ UI.updateGui es (t1^.tCursor)
         updateEs esSDL t = t & tEvents .~ es
           where
-            es = UI.handleGui esSDL (t^.tCursor) (t^.tGui) UI.defaultGuiHandler
+            es = UI.handleGui esSDL (t^.tCursor) UI.defaultGuiHandler (t^.tGui)
         readyG t = t & tGui %%~ UI.readyRender
 
         testOnClick t =

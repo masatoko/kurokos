@@ -53,8 +53,8 @@ defaultGuiHandler = GuiHandler click
         pressed = keyboardEventKeyMotion == Pressed
     click _ = Nothing
 
-handleGui :: [SDL.EventPayload] -> Cursor -> GUI -> GuiHandler a -> [(a, E.GuiEvent)]
-handleGui esSDL cursor gui GuiHandler{..} =
+handleGui :: [SDL.EventPayload] -> Cursor -> GuiHandler a -> GUI -> [(a, E.GuiEvent)]
+handleGui esSDL cursor GuiHandler{..} gui =
   case clickByCursor cursor gui of
     Just e  -> [(act, e) | act <- as]
     Nothing -> []
