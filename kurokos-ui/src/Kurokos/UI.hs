@@ -42,6 +42,13 @@ module Kurokos.UI
   , GuiEvent (..)
   , EventType (..)
   , UExp (..)
+  -- ** Widget
+  , Widget (UserWidget)
+  , newTransparent
+  , newFill
+  , newLabel
+  , newImageView
+  , newButton
   -- ** WidgetTree
   , WidgetTree
   , ContainerType (..)
@@ -97,6 +104,7 @@ import           Kurokos.UI.File.Convert    (parseWidgetTree, readWidgetTree)
 import           Kurokos.UI.Helper
 import           Kurokos.UI.Types
 import           Kurokos.UI.Update
-import           Kurokos.UI.Widget.Make     as Import
+import           Kurokos.UI.Widget
+import           Kurokos.UI.Widget.Make
 import           Kurokos.UI.Widget.Module   as Import
 import           Kurokos.UI.WidgetTree
