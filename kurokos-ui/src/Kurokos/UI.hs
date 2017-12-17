@@ -9,7 +9,6 @@ module Kurokos.UI
   , getWidgetTree
   -- ** GuiT Monad
   , GuiT
-  , modifyGui
   -- ** Def
   , RenderEnv (..)
   , Renderable (..)

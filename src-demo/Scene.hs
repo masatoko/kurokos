@@ -29,7 +29,7 @@ import qualified Kurokos                      as K
 import qualified Kurokos.Asset                as Asset
 import qualified Kurokos.Asset.SDL            as Asset
 import           Kurokos.UI                   (UExp (..), ctxAttrib, cursorPos,
-                                               visible)
+                                               visible, clickable)
 import qualified Kurokos.UI                   as UI
 
 import           Action                       (Action (..), eventsToActions)
@@ -185,18 +185,18 @@ runTitleScene =
         fill <- UI.mkSingle (Just "fill") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
         --
         UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, userWidget, ctn1', fill, ctn2']
-
-        -- Modify attribute
-        UI.modifyGui $ \gui -> UI.update "clickable" (set (_1 . UI.ctxAttrib . UI.clickable) True) gui
-        UI.modifyGui $ UI.update "fill" (set (_1 . UI.ctxAttrib . UI.visible) False)
-
         -- From file
         UI.appendRoot =<< UI.parseWidgetTree guiYaml
 
-      liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui
-      liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui
+      let gui' = flip execState gui $ do
+                   -- Modify attribute
+                   modify' $ UI.update "clickable" (set (_1.ctxAttrib.clickable) True)
+                   modify' $ UI.update "fill" (set (_1.ctxAttrib.visible) False)
+
+      liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui'
+      liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui'
       cursor <- UI.newCursor
-      return $ Title gui cursor userVal [] 0
+      return $ Title gui' cursor userVal [] 0
 
     update :: Update (GameT IO) Title
     update title0 = do

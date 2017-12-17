@@ -135,10 +135,10 @@ freeGui g = mapM_ work $ g^.unGui._2.gstWTree
   where
     work = SDL.destroyTexture . view (_1.ctxTexture)
 
-modifyGui :: (Monad m, Functor m) => (GUI -> GUI) -> GuiT m ()
-modifyGui f = do
-  GUI (_,stt) <- f . GUI <$> ((,) <$> ask <*> get)
-  put stt
+-- modifyGui :: (Monad m, Functor m) => (GUI -> GUI) -> GuiT m ()
+-- modifyGui f = do
+--   GUI (_,stt) <- f . GUI <$> ((,) <$> ask <*> get)
+--   put stt
 
 getContextColorOfWidget :: (MonadReader GuiEnv m, MonadIO m) => Widget -> m ContextColor
 getContextColorOfWidget w = do
