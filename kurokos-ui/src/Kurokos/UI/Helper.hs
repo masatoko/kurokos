@@ -1,4 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
 module Kurokos.UI.Helper where
 
 import           Debug.Trace         (traceM)
@@ -21,7 +20,7 @@ import           Kurokos.UI.Widget  (Widget)
 
 -- update by ident with function
 update :: WidgetIdent -> (CtxWidget -> CtxWidget) -> GUI -> GUI
-update wid f = over gWTree (fmap work)
+update wid f = over (unGui._2.gstWTree) (fmap work)
   where
     work a@(ctx,_)
       | ctx^.ctxIdent == Just wid =
@@ -30,12 +29,12 @@ update wid f = over gWTree (fmap work)
       | otherwise = a
 
 glookup :: WidgetIdent -> GUI -> Maybe CtxWidget
-glookup wid = find isTarget . view gWTree
+glookup wid = find isTarget . view (unGui._2.gstWTree)
   where
     isTarget = (== Just wid) . view (_1 . ctxIdent)
 
 setGlobalPosition :: WidgetIdent -> GuiPos -> GUI -> GUI
-setGlobalPosition wid g' = over gWTree (fmap work)
+setGlobalPosition wid g' = over (unGui._2.gstWTree) (fmap work)
   where
     work :: CtxWidget -> CtxWidget
     work a@(ctx, w)

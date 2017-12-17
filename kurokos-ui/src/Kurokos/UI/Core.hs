@@ -95,38 +95,50 @@ data GuiEnv = GuiEnv
   , geColorScheme  :: ColorScheme
   }
 
-data GUI = GUI
-  { _gKeyCnt :: Key
+data GuiState = GuiState
+  { _gstKeyCnt :: Key
   -- ^ Counter for WidgetTree ID
-  , _gWTree  :: GuiWidgetTree
+  , _gstWTree  :: GuiWidgetTree
   }
+
+makeLenses ''GuiState
+
+newtype GUI = GUI { _unGui :: (GuiEnv, GuiState) }
 
 makeLenses ''GUI
 
-iniGui :: GUI
-iniGui = GUI 0 Null
-
 getWidgetTree :: GUI -> WidgetTree Widget
-getWidgetTree = fmap snd . view gWTree
+getWidgetTree = fmap snd . view gstWTree . snd . _unGui
 
 newtype GuiT m a = GuiT {
-    runGT :: ReaderT GuiEnv (StateT GUI m) a
-  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader GuiEnv, MonadState GUI)
+    runGT :: ReaderT GuiEnv (StateT GuiState m) a
+  } deriving (Functor, Applicative, Monad, MonadIO, MonadReader GuiEnv, MonadState GuiState)
 
-runGuiT :: Monad m => GuiEnv -> GUI -> GuiT m a -> m GUI
-runGuiT env g k = execStateT (runReaderT (runGT k) env) g
+runGuiT :: Monad m => GUI -> GuiT m a -> m GUI
+runGuiT (GUI (env, gst)) k = do
+  gst' <- execStateT (runReaderT (runGT k) env) gst
+  return $ GUI (env, gst')
 
 instance MonadTrans GuiT where
   lift = GuiT . lift . lift
 
 newGui :: (RenderEnv m, MonadIO m)
   => GuiEnv -> GuiT m () -> m GUI
-newGui env initializer =
-  readyRender . over gWTree WT.balance =<< runGuiT env iniGui initializer
+newGui env initializer = do
+  g1 <- runGuiT g0 initializer
+  readyRender $ g1 & unGui._2.gstWTree %~ WT.balance
+  where
+    g0 = GUI (env, gst0)
+    gst0 = GuiState 0 Null
 
 freeGui :: MonadIO m => GUI -> m ()
 freeGui g =
-  mapM_ (freeWidget . snd) $ g^.gWTree
+  mapM_ (freeWidget . snd) $ g^.unGui._2.gstWTree
+
+modifyGui :: (Monad m, Functor m) => (GUI -> GUI) -> GuiT m ()
+modifyGui f = do
+  GUI (_,stt) <- f . GUI <$> ((,) <$> ask <*> get)
+  put stt
 
 getContextColorOfWidget :: (MonadReader GuiEnv m, MonadIO m) => Widget -> m ContextColor
 getContextColorOfWidget w = do
@@ -138,8 +150,8 @@ getContextColorOfWidget w = do
 genSingle :: (RenderEnv m, MonadIO m)
   => Maybe WidgetIdent -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
 genSingle mIdent mColor pos size w = do
-  key <- WTKey <$> use gKeyCnt
-  gKeyCnt += 1
+  key <- WTKey <$> use gstKeyCnt
+  gstKeyCnt += 1
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err
             Right v  -> return v
@@ -155,8 +167,8 @@ genSingle mIdent mColor pos size w = do
 genContainer :: (RenderEnv m, MonadIO m)
   => Maybe WidgetIdent -> ContainerType -> Maybe ContextColor -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
 genContainer mIdent ct mColor pos size = do
-  key <- WTKey <$> use gKeyCnt
-  gKeyCnt += 1
+  key <- WTKey <$> use gstKeyCnt
+  gstKeyCnt += 1
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err
             Right v  -> return v
@@ -171,22 +183,22 @@ genContainer mIdent ct mColor pos size = do
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
-appendRoot wt = modify $ over gWTree (wt <>)
+appendRoot wt = modify $ over gstWTree (wt <>)
 
 prependRoot :: Monad m => GuiWidgetTree -> GuiT m ()
-prependRoot wt = modify $ over gWTree (<> wt)
+prependRoot wt = modify $ over gstWTree (<> wt)
 
 -- Rendering GUI
 
 setAllNeedsLayout :: GUI -> GUI
 setAllNeedsLayout =
-  over gWTree (fmap work)
+  over (unGui._2.gstWTree) (fmap work)
   where
     work = set (_1 . ctxNeedsLayout) True
 
 setAllNeedsRender :: GUI -> GUI
 setAllNeedsRender =
-  over gWTree (fmap work)
+  over (unGui._2.gstWTree) (fmap work)
   where
     work = set (_1 . ctxNeedsRender) True
 
@@ -199,8 +211,8 @@ readyRender g = do
         , (keyHeight, h)
         , (keyWinWidth, w)
         , (keyWinHeight, h)]
-  wt <- go vmap $ g^.gWTree
-  return $ g & gWTree .~ (updateLayout . updateVisibility) wt
+  wt <- go vmap $ g^.unGui._2.gstWTree
+  return $ g & unGui._2.gstWTree .~ (updateLayout . updateVisibility) wt
   where
     go _ Null = return Null
     go vmap (Fork u a mc o) = do
@@ -264,7 +276,7 @@ readyRender g = do
           renderW r size wcol w
 
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
-render = mapM_ go . view gWTree
+render = mapM_ go . view (unGui._2.gstWTree)
   where
     go (ctx,_)
       | ctx^.ctxNeedsRender            = E.throw $ userError "Call GUI.readyRender before GUI.render!"

@@ -34,7 +34,11 @@ module Kurokos.UI
   , pretty
   , showTree
   , newGui
+  , freeGui
   , getWidgetTree
+  -- GuiT
+  , GuiT
+  , modifyGui
   -- , getGuiEvents
   , newWidgetTreeFromData
   , genSingle

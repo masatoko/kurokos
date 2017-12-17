@@ -41,7 +41,7 @@ procEvent cursor gui = work
                 else gui
     work (MouseMotionEvent MouseMotionEventData{..}) =
       return . flip execState gui $
-        modify $ over gWTree $ fmap $ modWhenHover pos
+        modify $ over (unGui._2.gstWTree) (fmap $ modWhenHover pos)
       where
         pos = cursor^.cursorPos
         modWhenHover curPos a@(ctx,w)

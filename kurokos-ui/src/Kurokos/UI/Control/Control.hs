@@ -67,7 +67,7 @@ clickByCursor :: Cursor -> GUI -> Maybe E.GuiEvent
 clickByCursor cursor gui = me
   where
     pos = cursor^.cursorPos
-    me = conv =<< wtTopmostAt pos (gui^.gWTree)
+    me = conv =<< wtTopmostAt pos (gui^.unGui._2.gstWTree)
       where
         conv (ctx,w)
           | ctx^.ctxAttrib.clickable = Just $ E.GuiEvent et w k mn
@@ -78,7 +78,7 @@ clickByCursor cursor gui = me
             mn = ctx^.ctxIdent
 
 topmostAt :: Point V2 CInt -> GUI -> Maybe (WContext, Widget)
-topmostAt p gui = wtTopmostAt p (gui^.gWTree)
+topmostAt p gui = wtTopmostAt p (gui^.unGui._2.gstWTree)
 
 -- Internal
 

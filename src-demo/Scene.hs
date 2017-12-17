@@ -155,8 +155,8 @@ runTitleScene =
         UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', fill, ctn2']
 
         -- Modify attribute
-        modify' $ UI.update "clickable" (set (_1 . UI.ctxAttrib . UI.clickable) True)
-        modify' $ UI.update "fill" (set (_1 . UI.ctxAttrib . UI.visible) False)
+        UI.modifyGui $ \gui -> UI.update "clickable" (set (_1 . UI.ctxAttrib . UI.clickable) True) gui
+        UI.modifyGui $ UI.update "fill" (set (_1 . UI.ctxAttrib . UI.visible) False)
 
         -- From file
         UI.appendRoot =<< UI.newWidgetTreeFromData guiYaml
