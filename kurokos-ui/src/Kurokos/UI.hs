@@ -67,6 +67,9 @@ module Kurokos.UI
   , appendChild
   , prependChild
   , wtFromList
+  -- ** WidgetTree (WContext, Widget)
+  , WTIdent
+  , WidgetName
   -- ** Update GUI
   , updateGui
   , readyRender

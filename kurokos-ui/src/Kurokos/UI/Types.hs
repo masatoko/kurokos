@@ -16,8 +16,10 @@ import qualified Kurokos.RPN     as RPN
 import Kurokos.UI.Color
 
 type WidgetIdent = Int64
+-- | Identity of WidgetTree. It's unique in a GUI.
 newtype WTIdent = WTIdent WidgetIdent deriving (Eq, Show)
 
+-- | Name of WidgetTree defined by a user. It's not always unique.
 type WidgetName = String
 
 -- Size

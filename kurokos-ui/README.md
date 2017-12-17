@@ -24,10 +24,6 @@ makeGui = do
         fontSize = 18
 ```
 
-## Widget Name
-
-[Defined in 'src/Kurokos/UI/Widget/Names.hs'](src/Kurokos/UI/Widget/Names.hs)
-
 ## Color Scheme
 
 ### Format
