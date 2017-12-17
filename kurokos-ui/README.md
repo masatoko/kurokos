@@ -21,7 +21,7 @@ Yaml format
 
 - widget-name
   - _default
-  - _{[Names defined in 'src/Kurokos/Widget/Names.hs'](src/Kurokos/Widget/Names.hs)}
+  - _{[Names defined in 'src/Kurokos/UI.Widget/Names.hs'](src/Kurokos/UI.Widget/Names.hs)}
 
 
 - context
