@@ -75,7 +75,7 @@ clickByCursor cursor gui = me
           where
             et = E.Clicked pos
             k = ctx^.ctxKey
-            mn = ctx^.ctxIdent
+            mn = ctx^.ctxName
 
 topmostAt :: Point V2 CInt -> GUI -> Maybe (WContext, Widget)
 topmostAt p gui = wtTopmostAt p (gui^.unGui._2.gstWTree)

@@ -260,7 +260,7 @@ runTitleScene =
                   Just n  -> putStrLn $ "Clicked " ++ show n ++ " times!"
       K.continue t
       where
-        isClicked ident = isJust $ UI.clickedOn UI.GuiActLeft ident $ t^.tEvents
+        isClicked name = isJust $ UI.clickedOn UI.GuiActLeft name $ t^.tEvents
 
 runMainScene :: KurokosT (GameT IO) ()
 runMainScene =

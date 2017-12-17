@@ -29,7 +29,7 @@ type YWidgets = [YWidget]
 data YWidget
   = Single
     { wType      :: String
-    , wIdent     :: Maybe String
+    , wName      :: Maybe String
     , wColor     :: Maybe ContextColor
     , wX         :: UExp
     , wY         :: UExp
@@ -45,7 +45,7 @@ data YWidget
     , wTitle     :: Maybe Title
     }
   | Container
-    { wIdent         :: Maybe String
+    { wName          :: Maybe String
     , wColor         :: Maybe ContextColor
     , wX             :: UExp
     , wY             :: UExp
@@ -66,7 +66,7 @@ instance FromJSON YWidget where
     case (wtype :: String) of
       "container" -> makeContainer v
       _           -> Single wtype
-        <$> v .:? "id"
+        <$> v .:? "name"
         <*> v .:? "color"
         <*> getUExp "x" (C 0) v
         <*> getUExp "y" (C 0) v
@@ -83,7 +83,7 @@ instance FromJSON YWidget where
 
 makeContainer :: Y.Object -> Y.Parser YWidget
 makeContainer v = Container
-  <$> v .:? "id"
+  <$> v .:? "name"
   <*> v .:? "color"
   <*> getUExp "x" (C 0) v
   <*> getUExp "y" (C 0) v

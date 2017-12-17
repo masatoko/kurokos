@@ -17,8 +17,8 @@ makeGui = do
   return gui
   where
     initGui = do
-      label = UI.newLabel "fonr-ident" "Label Text" fontSize
-      wt <- UI.mkSingle (Just "ident") ctxColor pos size
+      label = UI.newLabel "font-ident" "Label Text" fontSize
+      wt <- UI.mkSingle (Just "name") ctxColor pos size
       UI.prependRoot wt
       where
         fontSize = 18
@@ -91,5 +91,5 @@ Or you can have Widget rerender by hand (Not using needsRender of Renderable).
 ```haskell
 import Control.Lens
 
-let gui' = UI.update "ident" (set (_1.ctxNeedsRender) True) gui
+let gui' = UI.update "name" (set (_1.ctxNeedsRender) True) gui
 ```

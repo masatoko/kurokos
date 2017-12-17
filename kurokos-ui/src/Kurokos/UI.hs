@@ -15,7 +15,7 @@ module Kurokos.UI
   -- ** WContext
   , WContext
   , ctxKey
-  , ctxIdent
+  , ctxName
   , ctxAttrib
   , ctxWidgetState
   , ctxNeedsLayout

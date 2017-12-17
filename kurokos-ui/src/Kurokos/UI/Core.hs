@@ -148,8 +148,8 @@ getContextColorOfWidget w = do
     Right a  -> return a
 
 mkSingle :: (RenderEnv m, MonadIO m)
-  => Maybe WidgetIdent -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
-mkSingle mIdent mColor pos size w = do
+  => Maybe WidgetName -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
+mkSingle mName mColor pos size w = do
   key <- WTKey <$> use gstKeyCnt
   gstKeyCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -161,12 +161,12 @@ mkSingle mIdent mColor pos size w = do
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
-  let ctx = WContext key mIdent Nothing (attribOf w) True True iniWidgetState ctxCol tex pos' size'
+  let ctx = WContext key mName Nothing (attribOf w) True True iniWidgetState ctxCol tex pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
-  => Maybe WidgetIdent -> ContainerType -> Maybe ContextColor -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
-mkContainer mIdent ct mColor pos size = do
+  => Maybe WidgetName -> ContainerType -> Maybe ContextColor -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
+mkContainer mName ct mColor pos size = do
   key <- WTKey <$> use gstKeyCnt
   gstKeyCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -179,7 +179,7 @@ mkContainer mIdent ct mColor pos size = do
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let w = Transparent
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
-  let ctx = WContext key mIdent (Just ct) (attribOf w) True True iniWidgetState ctxCol tex pos' size'
+  let ctx = WContext key mName (Just ct) (attribOf w) True True iniWidgetState ctxCol tex pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()

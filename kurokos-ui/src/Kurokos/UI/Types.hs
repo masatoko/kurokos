@@ -18,7 +18,7 @@ import Kurokos.UI.Color
 type Key = Int64
 newtype WTKey = WTKey Key deriving Show
 
-type WidgetIdent = String
+type WidgetName = String
 
 -- Size
 type GuiPos = SDL.Point V2 CInt
@@ -86,7 +86,7 @@ keyWinHeight = "winheight"
 
 data WContext = WContext
   { _ctxKey           :: WTKey
-  , _ctxIdent         :: Maybe WidgetIdent
+  , _ctxName          :: Maybe WidgetName
   , _ctxContainerType :: Maybe ContainerType
   , _ctxAttrib        :: WidgetAttrib
   , _ctxNeedsLayout   :: Bool

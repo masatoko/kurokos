@@ -18,28 +18,28 @@ import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget  (Widget)
 
--- update by ident with function
-update :: WidgetIdent -> (CtxWidget -> CtxWidget) -> GUI -> GUI
-update wid f = over (unGui._2.gstWTree) (fmap work)
+-- update by name with function
+update :: WidgetName -> (CtxWidget -> CtxWidget) -> GUI -> GUI
+update name f = over (unGui._2.gstWTree) (fmap work)
   where
     work a@(ctx,_)
-      | ctx^.ctxIdent == Just wid =
+      | ctx^.ctxName == Just name =
           let (ctx', w') = f a
           in (ctx' & ctxNeedsRender .~ True, w')
       | otherwise = a
 
-glookup :: WidgetIdent -> GUI -> Maybe CtxWidget
-glookup wid = find isTarget . view (unGui._2.gstWTree)
+glookup :: WidgetName -> GUI -> Maybe CtxWidget
+glookup name = find isTarget . view (unGui._2.gstWTree)
   where
-    isTarget = (== Just wid) . view (_1 . ctxIdent)
+    isTarget = (== Just name) . view (_1 . ctxName)
 
-setGlobalPosition :: WidgetIdent -> GuiPos -> GUI -> GUI
-setGlobalPosition wid g' = over (unGui._2.gstWTree) (fmap work)
+setGlobalPosition :: WidgetName -> GuiPos -> GUI -> GUI
+setGlobalPosition name g' = over (unGui._2.gstWTree) (fmap work)
   where
     work :: CtxWidget -> CtxWidget
     work a@(ctx, w)
-      | ctx^.ctxIdent == Just wid = (ctx', w)
-      | otherwise                 = a
+      | ctx^.ctxName == Just name = (ctx', w)
+      | otherwise                  = a
       where
         parent = g - l
           where

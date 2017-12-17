@@ -14,11 +14,11 @@ import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
 import qualified Kurokos.UI.WidgetTree     as WT
 
-clickedOn :: Eq act => act -> WidgetIdent -> [(act, E.GuiEvent)] -> Maybe GuiPos
-clickedOn act wid = firstJust isTarget
+clickedOn :: Eq act => act -> WidgetName -> [(act, E.GuiEvent)] -> Maybe GuiPos
+clickedOn act name = firstJust isTarget
   where
     isTarget (a,e)
-      | a == act && E.geWidgetId e == Just wid =
+      | a == act && E.geWidgetName e == Just name =
         case E.geType e of
           E.Clicked pos -> Just pos
       | otherwise = Nothing

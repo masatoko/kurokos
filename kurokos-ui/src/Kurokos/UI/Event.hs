@@ -7,11 +7,11 @@ import           Kurokos.UI.Widget
 import qualified SDL
 
 data GuiEvent = GuiEvent
-  { geType      :: EventType
+  { geType       :: EventType
   --
-  , geWidget    :: Widget
-  , geWidgetKey :: WTKey
-  , geWidgetId  :: Maybe WidgetIdent
+  , geWidget     :: Widget
+  , geWidgetKey  :: WTKey
+  , geWidgetName :: Maybe WidgetName
   } deriving Show
 
 data EventType
