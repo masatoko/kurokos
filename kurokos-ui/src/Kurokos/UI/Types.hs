@@ -15,8 +15,8 @@ import qualified Kurokos.RPN     as RPN
 
 import Kurokos.UI.Color
 
-type Key = Int64
-newtype WTKey = WTKey Key deriving Show
+type WidgetIdent = Int64
+newtype WTIdent = WTIdent WidgetIdent deriving Show
 
 type WidgetName = String
 
@@ -85,7 +85,7 @@ keyWinWidth  = "winwidth"
 keyWinHeight = "winheight"
 
 data WContext = WContext
-  { _ctxKey           :: WTKey
+  { _ctxIdent         :: WTIdent
   , _ctxName          :: Maybe WidgetName
   , _ctxContainerType :: Maybe ContainerType
   , _ctxAttrib        :: WidgetAttrib

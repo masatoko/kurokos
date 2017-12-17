@@ -14,7 +14,7 @@ module Kurokos.UI
   , Renderable (..)
   -- ** WContext
   , WContext
-  , ctxKey
+  , ctxIdent
   , ctxName
   , ctxAttrib
   , ctxWidgetState

@@ -95,9 +95,9 @@ data GuiEnv = GuiEnv
   }
 
 data GuiState = GuiState
-  { _gstKeyCnt :: Key
+  { _gstIdCnt :: WidgetIdent
   -- ^ Counter for WidgetTree ID
-  , _gstWTree  :: GuiWidgetTree
+  , _gstWTree :: GuiWidgetTree
   }
 
 makeLenses ''GuiState
@@ -150,8 +150,8 @@ getContextColorOfWidget w = do
 mkSingle :: (RenderEnv m, MonadIO m)
   => Maybe WidgetName -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
 mkSingle mName mColor pos size w = do
-  key <- WTKey <$> use gstKeyCnt
-  gstKeyCnt += 1
+  ident <- WTIdent <$> use gstIdCnt
+  gstIdCnt += 1
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err
             Right v  -> return v
@@ -161,14 +161,14 @@ mkSingle mName mColor pos size w = do
   tex <- lift $ withRenderer $ \r ->
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
-  let ctx = WContext key mName Nothing (attribOf w) True True iniWidgetState ctxCol tex pos' size'
+  let ctx = WContext ident mName Nothing (attribOf w) True True iniWidgetState ctxCol tex pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
   => Maybe WidgetName -> ContainerType -> Maybe ContextColor -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
 mkContainer mName ct mColor pos size = do
-  key <- WTKey <$> use gstKeyCnt
-  gstKeyCnt += 1
+  ident <- WTIdent <$> use gstIdCnt
+  gstIdCnt += 1
   pos' <- case fromUExpV2 pos of
             Left err -> E.throw $ userError err
             Right v  -> return v
@@ -179,7 +179,7 @@ mkContainer mName ct mColor pos size = do
     SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let w = Transparent
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
-  let ctx = WContext key mName (Just ct) (attribOf w) True True iniWidgetState ctxCol tex pos' size'
+  let ctx = WContext ident mName (Just ct) (attribOf w) True True iniWidgetState ctxCol tex pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()

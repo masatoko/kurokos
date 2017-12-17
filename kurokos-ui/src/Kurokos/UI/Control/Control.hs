@@ -64,18 +64,15 @@ handleGui GuiHandler{..} esSDL cursor gui =
 -----
 
 clickByCursor :: Cursor -> GUI -> Maybe E.GuiEvent
-clickByCursor cursor gui = me
+clickByCursor Cursor{..} gui = me
   where
-    pos = cursor^.cursorPos
-    me = conv =<< wtTopmostAt pos (gui^.unGui._2.gstWTree)
+    me = conv =<< wtTopmostAt _cursorPos (gui^.unGui._2.gstWTree)
       where
-        conv (ctx,w)
-          | ctx^.ctxAttrib.clickable = Just $ E.GuiEvent et w k mn
-          | otherwise                = Nothing
+        conv (WContext{..}, w)
+          | _ctxAttrib^.clickable = Just $ E.GuiEvent et w _ctxIdent _ctxName
+          | otherwise             = Nothing
           where
-            et = E.Clicked pos
-            k = ctx^.ctxKey
-            mn = ctx^.ctxName
+            et = E.Clicked _cursorPos
 
 topmostAt :: Point V2 CInt -> GUI -> Maybe (WContext, Widget)
 topmostAt p gui = wtTopmostAt p (gui^.unGui._2.gstWTree)
