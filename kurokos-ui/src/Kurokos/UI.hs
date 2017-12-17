@@ -1,27 +1,38 @@
 module Kurokos.UI
   ( module Import
+  -- ** GUI
   , GUI
   , GuiEnv (..)
-  -- Def
+  , GuiState
+  , newGui
+  , freeGui
+  , getWidgetTree
+  -- ** GuiT Monad
+  , GuiT
+  , modifyGui
+  -- ** Classes
   , RenderEnv (..)
-  --
-  -- WContext (Lens)
+  -- ** WContext
   , WContext
+  , ctxKey
   , ctxIdent
-  , ctxWidgetState
   , ctxAttrib
-  -- WidgetState (Lens)
+  , ctxWidgetState
+  -- WidgetState
+  , WidgetState
   , wstHover
-  -- WidgetAttrib (Lens)
+  -- WidgetAttrib
+  , WidgetAttrib
   , hoverable
   , clickable
   , visible
-  -- Types
-  , ContainerType (..)
-  , UExp (..)
   -- ** Color
   , Color
   , WidgetColor (..)
+  , wcBack
+  , wcBorder
+  , wcTitle
+  , wcTint
   , ContextColor (..)
   -- ** ColorScheme
   , ColorScheme
@@ -30,31 +41,26 @@ module Kurokos.UI
   -- ** Type
   , GuiEvent (..)
   , EventType (..)
-  --
+  , UExp (..)
+  -- ** WidgetTree
+  , WidgetTree
+  , ContainerType (..)
   , pretty
   , showTree
-  , newGui
-  , freeGui
-  , getWidgetTree
-  -- GuiT
-  , GuiT
-  , modifyGui
-  -- , getGuiEvents
-  , newWidgetTreeFromData
-  , genSingle
-  , genContainer
+  , parseWidgetTree
+  , mkSingle
+  , mkContainer
   , appendRoot
   , prependRoot
-  -- WidgetTree
   , append
   , prepend
   , appendChild
   , prependChild
   , wtFromList
-  -- Update
+  -- ** Update GUI
   , updateGui
   , readyRender
-  -- Rendering
+  -- ** Rendering GUI
   , render
   -- ** Control
   , GuiHandler (..)
@@ -86,7 +92,7 @@ import           Kurokos.UI.Control.Helper  (clickedOn)
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
 import           Kurokos.UI.Event
-import           Kurokos.UI.File.Convert    (newWidgetTreeFromData)
+import           Kurokos.UI.File.Convert    (parseWidgetTree)
 import           Kurokos.UI.Helper
 import           Kurokos.UI.Types
 import           Kurokos.UI.Update

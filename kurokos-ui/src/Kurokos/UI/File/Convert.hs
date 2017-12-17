@@ -4,7 +4,7 @@ module Kurokos.UI.File.Convert where
 
 import qualified Control.Exception       as E
 import           Control.Lens
-import           Data.ByteString         (ByteString)
+import qualified Data.ByteString         as BS
 import qualified Data.Yaml               as Y
 
 import           Kurokos.UI.Core
@@ -18,9 +18,13 @@ import           Kurokos.UI.Widget.Make
 import qualified Kurokos.UI.Widget.Names as N
 import           Kurokos.UI.WidgetTree
 
-newWidgetTreeFromData :: (RenderEnv m, MonadIO m)
-  => ByteString -> GuiT m GuiWidgetTree
-newWidgetTreeFromData bs =
+readWidgetTree :: (RenderEnv m, MonadIO m) => FilePath -> GuiT m GuiWidgetTree
+readWidgetTree path =
+  parseWidgetTree =<< liftIO (BS.readFile path)
+
+parseWidgetTree :: (RenderEnv m, MonadIO m)
+  => BS.ByteString -> GuiT m GuiWidgetTree
+parseWidgetTree bs =
   case decodeWidgets bs of
     Left e   -> liftIO $ E.throwIO e
     Right ys -> work ys
@@ -32,7 +36,7 @@ newWidgetTreeFromData bs =
 convert :: (RenderEnv m, MonadIO m)
   => YWidget -> GuiT m GuiWidgetTree
 convert s@Single{..} = do
-  wt <- genSingle wIdent wColor (V2 wX wY) (V2 wWidth wHeight) =<< generate
+  wt <- mkSingle wIdent wColor (V2 wX wY) (V2 wWidth wHeight) =<< generate
   return $ wt & wtElement._1 %~ setContext
   where
     Title titleText titleSize titleAssetIdent = fromMaybe (error "Missing title") wTitle
@@ -53,7 +57,7 @@ convert s@Single{..} = do
           & ctxAttrib . hoverable %~ flip fromMaybe wHoverable
 
 convert Container{..} = do
-  cnt <- genContainer wIdent wContainerType wColor (V2 wX wY) (V2 wWidth wHeight)
+  cnt <- mkContainer wIdent wContainerType wColor (V2 wX wY) (V2 wWidth wHeight)
   let cnt' = cnt & wtElement._1 %~ setContext
   ws <- mapM convert wChildren
   let w = mconcat ws

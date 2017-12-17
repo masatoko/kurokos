@@ -147,9 +147,9 @@ getContextColorOfWidget w = do
     Left err -> E.throwIO $ userError err
     Right a  -> return a
 
-genSingle :: (RenderEnv m, MonadIO m)
+mkSingle :: (RenderEnv m, MonadIO m)
   => Maybe WidgetIdent -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
-genSingle mIdent mColor pos size w = do
+mkSingle mIdent mColor pos size w = do
   key <- WTKey <$> use gstKeyCnt
   gstKeyCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -164,9 +164,9 @@ genSingle mIdent mColor pos size w = do
   let ctx = WContext key mIdent Nothing (attribOf w) True True iniWidgetState ctxCol tex pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
-genContainer :: (RenderEnv m, MonadIO m)
+mkContainer :: (RenderEnv m, MonadIO m)
   => Maybe WidgetIdent -> ContainerType -> Maybe ContextColor -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
-genContainer mIdent ct mColor pos size = do
+mkContainer mIdent ct mColor pos size = do
   key <- WTKey <$> use gstKeyCnt
   gstKeyCnt += 1
   pos' <- case fromUExpV2 pos of

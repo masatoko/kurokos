@@ -127,30 +127,30 @@ runTitleScene =
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- UI.genSingle (Just "title") Nothing pos size0 =<< UI.newLabel "font-m" "Kurokos DEMO" 30
+        label <- UI.mkSingle (Just "title") Nothing pos size0 =<< UI.newLabel "font-m" "Kurokos DEMO" 30
         -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
-        button1 <- UI.genSingle (Just nameMain) Nothing pos1 size =<< UI.newButton "font-m" "Next: Main Scene" 16
-        button2 <- UI.genSingle (Just nameMouse) Nothing pos2 size =<< UI.newButton "font-m" "Push: Mouse Scene" 16
+        button1 <- UI.mkSingle (Just nameMain) Nothing pos1 size =<< UI.newButton "font-m" "Next: Main Scene" 16
+        button2 <- UI.mkSingle (Just nameMouse) Nothing pos2 size =<< UI.newButton "font-m" "Push: Mouse Scene" 16
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
-        img <- UI.genSingle (Just "image") Nothing imgPos imgSize =<< UI.newImageView "sample-image"
+        img <- UI.mkSingle (Just "image") Nothing imgPos imgSize =<< UI.newImageView "sample-image"
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
-        lbl' <- UI.genSingle (Just "label") Nothing (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" "---" 16
-        btn' <- UI.genSingle (Just "button") Nothing (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" "Button in Container" 16
-        ctn1 <- UI.genContainer Nothing UI.Unordered Nothing (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
+        lbl' <- UI.mkSingle (Just "label") Nothing (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" "---" 16
+        btn' <- UI.mkSingle (Just "button") Nothing (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" "Button in Container" 16
+        ctn1 <- UI.mkContainer Nothing UI.Unordered Nothing (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
         let Just ctn1' = UI.appendChild (mconcat [lbl', btn']) ctn1
         --
-        btns <- mconcat <$> mapM (UI.genSingle Nothing Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< flip (UI.newButton "font-m") 16 . T.pack . show) [1..(5::Int)]
-        ctn2 <- UI.genContainer (Just "menu") UI.VerticalStack Nothing (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
+        btns <- mconcat <$> mapM (UI.mkSingle Nothing Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< flip (UI.newButton "font-m") 16 . T.pack . show) [1..(5::Int)]
+        ctn2 <- UI.mkContainer (Just "menu") UI.VerticalStack Nothing (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
         let Just ctn2' = UI.appendChild btns ctn2
         --
-        clickableArea <- UI.genSingle (Just "clickable") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
-        fill <- UI.genSingle (Just "fill") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
+        clickableArea <- UI.mkSingle (Just "clickable") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
+        fill <- UI.mkSingle (Just "fill") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
         --
         UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', fill, ctn2']
 
@@ -159,7 +159,7 @@ runTitleScene =
         UI.modifyGui $ UI.update "fill" (set (_1 . UI.ctxAttrib . UI.visible) False)
 
         -- From file
-        UI.appendRoot =<< UI.newWidgetTreeFromData guiYaml
+        UI.appendRoot =<< UI.parseWidgetTree guiYaml
 
       liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui
       liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui

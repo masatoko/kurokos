@@ -26,7 +26,7 @@ digraph {
 
   // GUI
   "gui.yaml" -> "ByteString(gui)" [label = "ByteString.readFile"];
-  "ByteString(gui)" -> "WidgetTree" [label = "GUI.newWidgetTreeFromData"];
+  "ByteString(gui)" -> "WidgetTree" [label = "GUI.parseWidgetTree"];
   "WidgetTree" -> "GuiT monad" [label = "GUI.appendRoot"];
 
 }
