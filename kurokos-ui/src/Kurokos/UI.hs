@@ -47,6 +47,7 @@ module Kurokos.UI
   , ContainerType (..)
   , pretty
   , showTree
+  , readWidgetTree
   , parseWidgetTree
   , mkSingle
   , mkContainer
@@ -92,7 +93,7 @@ import           Kurokos.UI.Control.Helper  (clickedOn)
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
 import           Kurokos.UI.Event
-import           Kurokos.UI.File.Convert    (parseWidgetTree)
+import           Kurokos.UI.File.Convert    (parseWidgetTree, readWidgetTree)
 import           Kurokos.UI.Helper
 import           Kurokos.UI.Types
 import           Kurokos.UI.Update

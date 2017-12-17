@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
-module Kurokos.UI.File.Convert where
+module Kurokos.UI.File.Convert
+  ( readWidgetTree
+  , parseWidgetTree
+  ) where
 
 import qualified Control.Exception       as E
 import           Control.Lens
