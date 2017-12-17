@@ -33,3 +33,30 @@ Yaml format
 ### Example
 
 [../_data/gui-color-scheme.yaml](../_data/gui-color-scheme.yaml)
+
+## User Definable Widget
+
+```haskell
+import           Control.Concurrent.MVar
+import qualified Kurokos.UI              as UI
+
+data UserVal = UserVal (MVar Int)
+
+instance Renderable UserVal where
+  -- | Render UserVal using renderer
+  renderW renderer size (UserVal n) = do
+    -- Rendering UserVal code here
+
+  -- | Rerender when it returns True
+  needsRender (UserVal mvar) = do
+    n <- readMVar mvar
+    return $ n `mod` 10 == 0
+
+-- Making WidgetTree
+
+mvar <- newMVar 0
+let widget = UserWidget (UserVal mvar)
+UI.newGui guiEnv $ do
+  widgetTree <- UI.mkSingle Nothing Nothing pos size widget
+  --
+```
