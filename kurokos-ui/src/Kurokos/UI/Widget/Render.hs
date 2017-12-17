@@ -40,8 +40,8 @@ renderWidget r parentSize wc@WidgetColor{..} (Button title font) = do
   let pos = P $ (`div` 2) <$> parentSize - size
   SDL.copy r tex Nothing $ Just (Rectangle pos size)
 
--- renderWidget r parentSize wcol (UserWidget a) =
---   renderW r parentSize wcol a
+renderWidget r parentSize wcol (UserWidget a) =
+  renderW r parentSize wcol a
 
 -- Internal
 

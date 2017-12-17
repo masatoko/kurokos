@@ -10,14 +10,17 @@ module Kurokos.UI
   -- ** GuiT Monad
   , GuiT
   , modifyGui
-  -- ** Classes
+  -- ** Def
   , RenderEnv (..)
+  , Renderable (..)
   -- ** WContext
   , WContext
   , ctxKey
   , ctxIdent
   , ctxAttrib
   , ctxWidgetState
+  , ctxNeedsLayout
+  , ctxNeedsRender
   -- WidgetState
   , WidgetState
   , wstHover

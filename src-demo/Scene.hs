@@ -8,6 +8,8 @@ module Scene where
 
 -- import           Debug.Trace           (traceM)
 
+import qualified Control.Concurrent.MVar      as MVar
+import qualified Control.Exception            as E
 import           Control.Lens
 import           Control.Monad.Extra          (whenJust)
 import           Control.Monad.Reader
@@ -19,13 +21,15 @@ import qualified Data.Text                    as T
 import qualified Data.Vector                  as V
 
 import qualified SDL
+import qualified SDL.Font                     as Font
 import qualified SDL.Primitive                as Prim
 import           SDL.Vect
 
 import qualified Kurokos                      as K
 import qualified Kurokos.Asset                as Asset
 import qualified Kurokos.Asset.SDL            as Asset
-import           Kurokos.UI                   (UExp (..), ctxAttrib, cursorPos,
+import           Kurokos.UI                   (UExp (..), ctxAttrib,
+                                               ctxNeedsRender, cursorPos,
                                                visible)
 import qualified Kurokos.UI                   as UI
 
@@ -93,11 +97,31 @@ mouseScene = Scene update render transit
         as = s^.msActions
         n = length (s^.msLClicks) + length (s^.msRClicks)
 
+data UserVal = UserVal
+  { _uvMVar :: MVar.MVar Int
+  , _uvFont :: Font.Font
+  }
+
+makeLenses ''UserVal
+
+instance UI.Renderable UserVal where
+  renderW r _sz wcol (UserVal mvar font) = do
+    cnt <- MVar.readMVar mvar
+    let text = T.pack $ show cnt
+    (w,h) <- Font.size font text
+    let size = fromIntegral <$> V2 w h
+    tex <- E.bracket
+      (Font.blended font (UI._wcTitle wcol) text)
+      SDL.freeSurface
+      (SDL.createTextureFromSurface r)
+    SDL.copy r tex Nothing (Just $ SDL.Rectangle (pure 0) size)
+
 data Title = Title
-  { _tGui    :: UI.GUI
-  , _tCursor :: UI.Cursor
-  , _tEvents :: [(UI.GuiAction, UI.GuiEvent)]
-  , _tCnt    :: Int
+  { _tGui     :: UI.GUI
+  , _tCursor  :: UI.Cursor
+  , _tUserVal :: UserVal
+  , _tEvents  :: [(UI.GuiAction, UI.GuiEvent)]
+  , _tCnt     :: Int
   }
 
 makeLenses ''Title
@@ -122,6 +146,9 @@ runTitleScene =
       astMng <- Asset.loadAssetManager assetList
       r <- K.getRenderer
       (_,sdlAssets) <- allocate (Asset.newSDLAssetManager r astMng) Asset.freeSDLAssetManager
+      --
+      userVal <- liftIO $ UserVal <$> MVar.newMVar 0 <*> Asset.getFont "font-r" 16 sdlAssets
+      --
       colorScheme <- liftIO $ UI.readColorScheme "_data/gui-color-scheme.yaml"
       gui <- UI.newGui (UI.GuiEnv sdlAssets colorScheme) $ do
         -- Label
@@ -138,6 +165,8 @@ runTitleScene =
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
         img <- UI.mkSingle (Just "image") Nothing imgPos imgSize =<< UI.newImageView "sample-image"
+        -- UserWidget
+        userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
         lbl' <- UI.mkSingle (Just "label") Nothing (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" "---" 16
@@ -152,7 +181,7 @@ runTitleScene =
         clickableArea <- UI.mkSingle (Just "clickable") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
         fill <- UI.mkSingle (Just "fill") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
         --
-        UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', fill, ctn2']
+        UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, userWidget, ctn1', fill, ctn2']
 
         -- Modify attribute
         UI.modifyGui $ \gui -> UI.update "clickable" (set (_1 . UI.ctxAttrib . UI.clickable) True) gui
@@ -164,12 +193,13 @@ runTitleScene =
       liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui
       liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui
       cursor <- UI.newCursor
-      return $ Title gui cursor [] 0
+      return $ Title gui cursor userVal [] 0
 
     update :: Update (GameT IO) Title
     update title0 = do
       es <- K.getEvents
-      readyG . testOnClick . updateEs es =<< updateT es title0
+      liftIO $ MVar.modifyMVar_ (title0^.tUserVal.uvMVar) (return . (+1)) -- Update UserVal
+      readyG . work . updateEs es =<< updateT es title0
       where
         updateT es t0 = do
           t1 <- t0 & tCursor %%~ UI.updateCursor es
@@ -179,7 +209,7 @@ runTitleScene =
             es = UI.handleGui UI.defaultGuiHandler esSDL (t^.tCursor) (t^.tGui)
         readyG t = t & tGui %%~ UI.readyRender
 
-        testOnClick t =
+        work t =
           flip execState t $ do
             whenJust (UI.clickedOn UI.GuiActLeft "fill" es) $ \_ -> do
               modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) False
@@ -196,8 +226,10 @@ runTitleScene =
                 over tCnt (+1)
               cnt <- gets $ view tCnt
               let title = T.pack $ show cnt
-              modify' $
-                over tGui $ UI.update "label" (over _2 (UI.setTitle title))
+              modGui $ UI.update "label" (over _2 (UI.setTitle title))
+
+            -- ** Set NeedsRender
+            modGui $ UI.update "user_widget" $ set (_1.ctxNeedsRender) True
           where
             es = t^.tEvents
             modGui = modify' . over tGui
