@@ -132,8 +132,9 @@ newGui env initializer = do
     gst0 = GuiState 0 Null
 
 freeGui :: MonadIO m => GUI -> m ()
-freeGui g =
-  mapM_ (freeWidget . snd) $ g^.unGui._2.gstWTree
+freeGui g = mapM_ work $ g^.unGui._2.gstWTree
+  where
+    work = SDL.destroyTexture . view (_1.ctxTexture)
 
 modifyGui :: (Monad m, Functor m) => (GUI -> GUI) -> GuiT m ()
 modifyGui f = do

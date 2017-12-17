@@ -2,11 +2,11 @@
 module Kurokos.UI.Widget where
 
 import           Control.Lens
-import           Data.Text          (Text)
-import qualified Data.Text          as T
+import           Data.Text         (Text)
+import qualified Data.Text         as T
 
 import qualified SDL
-import           SDL.Font           (Font)
+import           SDL.Font          (Font)
 
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
@@ -58,8 +58,3 @@ attribOf Button{} =
   defAttrib
     & hoverable .~ True
     & clickable .~ True
-
-freeWidget :: MonadIO m => Widget -> m ()
-freeWidget ImageView{..} =
-  SDL.destroyTexture wImage
-freeWidget _ = return ()
