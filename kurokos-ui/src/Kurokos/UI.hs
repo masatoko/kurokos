@@ -89,7 +89,8 @@ module Kurokos.UI
   , clickedOn
   -- ** Helper
   , update
-  , glookup
+  , findByIdent
+  , findByName
   , setGlobalPosition
   ) where
 

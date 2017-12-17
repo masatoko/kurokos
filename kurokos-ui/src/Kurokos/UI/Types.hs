@@ -16,7 +16,7 @@ import qualified Kurokos.RPN     as RPN
 import Kurokos.UI.Color
 
 type WidgetIdent = Int64
-newtype WTIdent = WTIdent WidgetIdent deriving Show
+newtype WTIdent = WTIdent WidgetIdent deriving (Eq, Show)
 
 type WidgetName = String
 

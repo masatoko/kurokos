@@ -28,10 +28,15 @@ update name f = over (unGui._2.gstWTree) (fmap work)
           in (ctx' & ctxNeedsRender .~ True, w')
       | otherwise = a
 
-glookup :: WidgetName -> GUI -> Maybe CtxWidget
-glookup name = find isTarget . view (unGui._2.gstWTree)
+findByIdent :: WTIdent -> GUI -> Maybe CtxWidget
+findByIdent ident g = find isTarget $ g^.unGui._2.gstWTree
   where
-    isTarget = (== Just name) . view (_1 . ctxName)
+    isTarget (ctx,_) = ctx^.ctxIdent == ident
+
+findByName :: WidgetName -> GUI -> Maybe CtxWidget
+findByName name g = find isTarget $ g^.unGui._2.gstWTree
+  where
+    isTarget (ctx,_) = ctx^.ctxName == Just name
 
 setGlobalPosition :: WidgetName -> GuiPos -> GUI -> GUI
 setGlobalPosition name g' = over (unGui._2.gstWTree) (fmap work)
