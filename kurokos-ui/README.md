@@ -40,14 +40,15 @@ Yaml format
 import           Control.Concurrent.MVar
 import qualified Kurokos.UI              as UI
 
-data UserVal = UserVal (MVar Int)
+newtype UserVal = UserVal (MVar Int)
 
 instance Renderable UserVal where
   -- | Render UserVal using renderer
-  renderW renderer size (UserVal n) = do
+  renderW renderer size (UserVal n) =
     -- Rendering UserVal code here
 
   -- | Rerender when it returns True
+  -- It will be rerendered in `UI.readyRender`
   needsRender (UserVal mvar) = do
     n <- readMVar mvar
     return $ n `mod` 10 == 0
