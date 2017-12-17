@@ -17,3 +17,6 @@ class RenderEnv m where
 
 class Renderable a where
   renderW :: SDL.Renderer -> GuiSize -> WidgetColor -> a -> IO ()
+  -- ^ Rerender user data
+  needsRender :: a -> IO Bool
+  -- ^ Returns whether this content shold be rerendered or not. It's called in `readyRender`.

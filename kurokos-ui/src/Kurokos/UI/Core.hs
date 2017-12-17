@@ -217,7 +217,10 @@ readyRender g = do
     go _ Null = return Null
     go vmap (Fork u a mc o) = do
       u' <- go vmap u
-      a' <- if ctx^.ctxNeedsRender
+      needsRenderByItself <- case a of
+                               (_,UserWidget c) -> liftIO $ needsRender c
+                               _                -> return False
+      a' <- if ctx^.ctxNeedsRender || needsRenderByItself
               then do
                 SDL.destroyTexture $ ctx^.ctxTexture
                 renderOnTexture vmap a

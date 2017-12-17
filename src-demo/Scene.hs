@@ -28,8 +28,7 @@ import           SDL.Vect
 import qualified Kurokos                      as K
 import qualified Kurokos.Asset                as Asset
 import qualified Kurokos.Asset.SDL            as Asset
-import           Kurokos.UI                   (UExp (..), ctxAttrib,
-                                               ctxNeedsRender, cursorPos,
+import           Kurokos.UI                   (UExp (..), ctxAttrib, cursorPos,
                                                visible)
 import qualified Kurokos.UI                   as UI
 
@@ -115,6 +114,10 @@ instance UI.Renderable UserVal where
       SDL.freeSurface
       (SDL.createTextureFromSurface r)
     SDL.copy r tex Nothing (Just $ SDL.Rectangle (pure 0) size)
+
+  needsRender (UserVal mvar _) = do
+    cnt <- MVar.readMVar mvar
+    return $ cnt `mod` 10 == 0
 
 data Title = Title
   { _tGui     :: UI.GUI
@@ -227,9 +230,6 @@ runTitleScene =
               cnt <- gets $ view tCnt
               let title = T.pack $ show cnt
               modGui $ UI.update "label" (over _2 (UI.setTitle title))
-
-            -- ** Set NeedsRender
-            modGui $ UI.update "user_widget" $ set (_1.ctxNeedsRender) True
           where
             es = t^.tEvents
             modGui = modify' . over tGui
