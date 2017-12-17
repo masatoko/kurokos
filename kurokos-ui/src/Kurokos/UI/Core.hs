@@ -148,7 +148,7 @@ getContextColorOfWidget w = do
     Right a  -> return a
 
 mkSingle :: (RenderEnv m, MonadIO m)
-  => Maybe WidgetName -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
+  => Maybe WTName -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
 mkSingle mName mColor pos size w = do
   ident <- WTIdent <$> use gstIdCnt
   gstIdCnt += 1
@@ -165,7 +165,7 @@ mkSingle mName mColor pos size w = do
   return $ Fork Null (ctx, w) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
-  => Maybe WidgetName -> ContainerType -> Maybe ContextColor -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
+  => Maybe WTName -> ContainerType -> Maybe ContextColor -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
 mkContainer mName ct mColor pos size = do
   ident <- WTIdent <$> use gstIdCnt
   gstIdCnt += 1

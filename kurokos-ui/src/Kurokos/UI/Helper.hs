@@ -19,7 +19,7 @@ import           Kurokos.UI.Types
 import           Kurokos.UI.Widget  (Widget)
 
 -- update by name with function
-update :: WidgetName -> (CtxWidget -> CtxWidget) -> GUI -> GUI
+update :: WTName -> (CtxWidget -> CtxWidget) -> GUI -> GUI
 update name f = over (unGui._2.gstWTree) (fmap work)
   where
     work a@(ctx,_)
@@ -33,12 +33,12 @@ findByIdent ident g = find isTarget $ g^.unGui._2.gstWTree
   where
     isTarget (ctx,_) = ctx^.ctxIdent == ident
 
-findByName :: WidgetName -> GUI -> Maybe CtxWidget
+findByName :: WTName -> GUI -> Maybe CtxWidget
 findByName name g = find isTarget $ g^.unGui._2.gstWTree
   where
     isTarget (ctx,_) = ctx^.ctxName == Just name
 
-setGlobalPosition :: WidgetName -> GuiPos -> GUI -> GUI
+setGlobalPosition :: WTName -> GuiPos -> GUI -> GUI
 setGlobalPosition name g' = over (unGui._2.gstWTree) (fmap work)
   where
     work :: CtxWidget -> CtxWidget

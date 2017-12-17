@@ -20,7 +20,7 @@ type WidgetIdent = Int64
 newtype WTIdent = WTIdent WidgetIdent deriving (Eq, Show)
 
 -- | Name of WidgetTree defined by a user. It's not always unique.
-type WidgetName = String
+type WTName = String
 
 -- Size
 type GuiPos = SDL.Point V2 CInt
@@ -88,7 +88,7 @@ keyWinHeight = "winheight"
 
 data WContext = WContext
   { _ctxIdent         :: WTIdent
-  , _ctxName          :: Maybe WidgetName
+  , _ctxName          :: Maybe WTName
   , _ctxContainerType :: Maybe ContainerType
   , _ctxAttrib        :: WidgetAttrib
   , _ctxNeedsLayout   :: Bool
