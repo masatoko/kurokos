@@ -60,4 +60,10 @@ let widget = UserWidget (UserVal mvar)
 UI.newGui guiEnv $ do
   widgetTree <- UI.mkSingle Nothing Nothing pos size widget
   --
+
+-- Or you can have Widget rerender by hand (Not using needsRender).
+
+import Control.Lens
+
+UI.update "ident" (set (_1.ctxNeedsRender) True) gui
 ```
