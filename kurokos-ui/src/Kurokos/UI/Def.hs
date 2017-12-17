@@ -1,9 +1,12 @@
 module Kurokos.UI.Def where
 
-import           Foreign.C.Types            (CInt)
+import           Foreign.C.Types  (CInt)
 import           Linear.V2
 
 import qualified SDL
+
+import           Kurokos.UI.Color (WidgetColor)
+import           Kurokos.UI.Types (GuiSize)
 
 class RenderEnv m where
   getWindow :: m SDL.Window
@@ -11,3 +14,6 @@ class RenderEnv m where
   getRenderer :: m SDL.Renderer
   withRenderer :: (SDL.Renderer -> IO a) -> m a
   renderTexture :: SDL.Texture -> SDL.Rectangle CInt -> m ()
+
+class Renderable a where
+  renderW :: SDL.Renderer -> GuiSize -> WidgetColor -> a -> IO ()

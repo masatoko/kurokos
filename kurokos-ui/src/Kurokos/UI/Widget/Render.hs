@@ -11,6 +11,7 @@ import qualified SDL.Font            as Font
 import qualified SDL.Primitive       as Prim
 
 import           Kurokos.UI.Color
+import           Kurokos.UI.Def      (Renderable (..))
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Util
@@ -22,22 +23,25 @@ renderWidget _r _parentSize _ Transparent = return ()
 renderWidget r _parentSize WidgetColor{..} Fill =
   clearBy r _wcBack
 
-renderWidget r parentSize wc@WidgetColor{..} Label{..} = do
-  (tex, size) <- makeTextTexture r wc wFont wTitle
+renderWidget r parentSize wc@WidgetColor{..} (Label title font) = do
+  (tex, size) <- makeTextTexture r wc font title
   renderBackAndBorder r parentSize wc
   --
   let pos = P $ (`div` 2) <$> parentSize - size
   SDL.copy r tex Nothing $ Just (Rectangle pos size)
 
-renderWidget r _parentSize WidgetColor{..} ImageView{..} = do
+renderWidget r _parentSize WidgetColor{..} (ImageView image) = do
   clearBy r _wcBack
-  SDL.copy r wImage Nothing Nothing
+  SDL.copy r image Nothing Nothing
 
-renderWidget r parentSize wc@WidgetColor{..} Button{..} = do
-  (tex, size) <- makeTextTexture r wc wFont wTitle
+renderWidget r parentSize wc@WidgetColor{..} (Button title font) = do
+  (tex, size) <- makeTextTexture r wc font title
   renderBackAndBorder r parentSize wc
   let pos = P $ (`div` 2) <$> parentSize - size
   SDL.copy r tex Nothing $ Just (Rectangle pos size)
+
+-- renderWidget r parentSize wcol (UserWidget a) =
+--   renderW r parentSize wcol a
 
 -- Internal
 

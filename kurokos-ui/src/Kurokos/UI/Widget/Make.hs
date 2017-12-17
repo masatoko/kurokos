@@ -30,10 +30,7 @@ newLabel :: MonadIO m
   => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
 newLabel ident title size = do
   font <- getFont ident size
-  return Label
-    { wTitle = title
-    , wFont = font
-    }
+  return $ Label title font
 
 newImageView :: MonadIO m
   => Asset.Ident -> GuiT m Widget
@@ -45,10 +42,9 @@ newButton :: MonadIO m
   => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
 newButton ident title size = do
   font <- getFont ident size
-  return Button
-    { wTitle = title
-    , wFont = font
-    }
+  return $ Button title font
+
+-- Internal
 
 getTexture :: MonadIO m => Asset.Ident -> GuiT m SDL.Texture
 getTexture ident = do

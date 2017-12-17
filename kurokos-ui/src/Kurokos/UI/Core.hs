@@ -34,7 +34,6 @@ import           Kurokos.UI.Event         (GuiEvent)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
-import           Kurokos.UI.Widget.Names  (widgetNameOf)
 import           Kurokos.UI.Widget.Render
 import           Kurokos.UI.WidgetTree    (WidgetTree (..))
 import qualified Kurokos.UI.WidgetTree    as WT
