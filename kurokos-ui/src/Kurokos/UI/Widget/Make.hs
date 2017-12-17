@@ -26,23 +26,14 @@ newTransparent = return Transparent
 newFill :: Monad m => GuiT m Widget
 newFill = return Fill
 
-newLabel :: MonadIO m
-  => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
-newLabel ident title size = do
-  font <- getFont ident size
-  return $ Label title font
+newLabel :: MonadIO m => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
+newLabel ident title size = Label title <$> getFont ident size
 
-newImageView :: MonadIO m
-  => Asset.Ident -> GuiT m Widget
-newImageView ident = do
-  tex <- getTexture ident
-  return $ ImageView tex
+newImageView :: MonadIO m => Asset.Ident -> GuiT m Widget
+newImageView ident = ImageView <$> getTexture ident
 
-newButton :: MonadIO m
-  => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
-newButton ident title size = do
-  font <- getFont ident size
-  return $ Button title font
+newButton :: MonadIO m => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
+newButton ident title size = Button title <$> getFont ident size
 
 -- Internal
 
