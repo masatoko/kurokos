@@ -1,5 +1,29 @@
 # kurokos-ui
 
+## Usage
+
+```haskell
+import qualified Kurokos.UI              as UI
+
+makeGui = do
+  guiYaml <- liftIO $ B.readFile "gui.yaml"
+  Asset.readAssetList "asset-list.yaml"
+  ast <- Asset.loadAssetManager assetList
+  r <- K.getRenderer
+  (_,sdlAssets) <- allocate (Asset.newSDLAssetManager r ast)
+                            Asset.freeSDLAssetManager
+  colorScheme <- liftIO $ UI.readColorScheme "color-scheme.yaml"
+  gui <- alloc (UI.newGui (UI.GuiEnv sdlAssets colorScheme) initGui) UI.freeGui
+  return gui
+  where
+    initGui = do
+      label = UI.newLabel "fonr-ident" "Label Text" fontSize
+      wt <- UI.mkSingle (Just "ident") ctxColor pos size
+      UI.prependRoot wt
+      where
+        fontSize = 18
+```
+
 ## Widget Name
 
 [Defined in 'src/Kurokos/UI/Widget/Names.hs'](src/Kurokos/UI/Widget/Names.hs)
