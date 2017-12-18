@@ -57,6 +57,7 @@ executables:
             - kurokos-ui
             - kurokos-asset
             - kurokos-asset-sdl2
+            - OpenGL
             - safe-exceptions
             - lens
             - resourcet

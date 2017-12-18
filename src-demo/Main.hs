@@ -44,6 +44,7 @@ main = do
       { SDL.windowInitialSize = V2 640 480
       , SDL.windowMode = SDL.Windowed
       , SDL.windowResizable = True
+      , SDL.windowOpenGL = Just SDL.defaultOpenGL
       }
 
     handler :: K.KurokosException -> IO ()
