@@ -55,7 +55,6 @@ import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
                                               MonadTransControl (..),
                                               defaultLiftBaseWith,
                                               defaultRestoreM)
-import           Data.Maybe                  (isJust)
 import           Data.Text                   (Text)
 import qualified Data.Text                   as T
 import qualified Data.Vector                 as V
@@ -90,7 +89,7 @@ data KurokosEnv = KurokosEnv
   { envGraphFps         :: Int
   , envWindow           :: SDL.Window
   , envMRenderer        :: MVar.MVar SDL.Renderer
-  , envGLContext        :: Maybe SDL.GLContext
+  , envGLContext        :: SDL.GLContext
   -- Resource
   , envSystemAssets     :: Asset.SDLAssetManager
   , envSystemFont       :: Font.Font
@@ -150,12 +149,12 @@ withKurokos KurokosConfig{..} winConf go =
   runManaged $ do
     managed_ withSDL
     managed_ withFontInit
-    (win, r, mGLCtx) <- managed withWinRenderer
+    (win, r, glContext) <- managed withWinRenderer
     sdlAssetManager <- managed $ E.bracket (Asset.newSDLAssetManager r confSystemAsset)
                                            Asset.freeSDLAssetManager
     liftIO $ do
       initOthers r
-      env <- mkEnv sdlAssetManager win r mGLCtx
+      env <- mkEnv sdlAssetManager win r glContext
       let kst = KurokosState
             { kstMessages = []
             , kstSdlEvents = []
@@ -176,27 +175,27 @@ withKurokos KurokosConfig{..} winConf go =
 
     withFontInit = E.bracket_ Font.initialize Font.quit
 
-    mkEnv sdlAssetManager win r mGLCtx = do
+    mkEnv sdlAssetManager win r glContext = do
       mvar <- MVar.newMVar r
       font <- Asset.getFont confSystemFontId 14 sdlAssetManager
       return KurokosEnv
         { envGraphFps = 60
         , envWindow = win
         , envMRenderer = mvar
-        , envGLContext = mGLCtx
+        , envGLContext = glContext
         , envSystemAssets = sdlAssetManager
         , envSystemFont = font
         , envDebugPrintFps = confDebugPrintFPS
         , envDebugPrintSystem = confDebugPrintSystem
         }
 
-    withWinRenderer :: ((SDL.Window, SDL.Renderer, Maybe SDL.GLContext) -> IO r) -> IO r
+    withWinRenderer :: ((SDL.Window, SDL.Renderer, SDL.GLContext) -> IO r) -> IO r
     withWinRenderer act =
       withW $ \win ->
         withR win $ \renderer -> do
           setLogicalSize renderer
-          withGLContext win $ \mGLCtx ->
-            act (win, renderer, mGLCtx)
+          withGLContext win $ \goContext ->
+            act (win, renderer, goContext)
       where
         withW =
           E.bracket (SDL.createWindow confWinTitle winConf)
@@ -206,12 +205,9 @@ withKurokos KurokosConfig{..} winConf go =
           E.bracket (SDL.createRenderer win (-1) SDL.defaultRenderer)
                     SDL.destroyRenderer
 
-        withGLContext win f =
-          if isJust $ SDL.windowOpenGL winConf
-            then E.bracket (SDL.glCreateContext win)
-                            SDL.glDeleteContext
-                            (f . Just)
-            else f Nothing
+        withGLContext win =
+          E.bracket (SDL.glCreateContext win)
+                    SDL.glDeleteContext
 
         setLogicalSize r =
           case SDL.windowMode winConf of
