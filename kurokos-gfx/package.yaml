@@ -24,12 +24,17 @@ library:
   source-dirs: src
   exposed-modules:
     - Kurokos.Graphics
+    - Kurokos.Graphics.Texture
 
 executables:
   test-gfx:
     source-dirs:      src-test
     main:             Main.hs
     dependencies:
+      - kurokos-gfx
       - sdl2 >= 2.2.0
       - linear
+      - filepath
+      - extra
       - managed
+      - binary
