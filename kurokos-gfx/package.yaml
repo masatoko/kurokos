@@ -1,0 +1,31 @@
+name:                kurokos-gfx
+version:             0.1.0.0
+#synopsis:
+#description:
+homepage:            https://github.com/githubuser/kurokos-gfx#readme
+license:             BSD3
+author:              Masato Kobayashi
+maintainer:          masatokodo@gmail.com
+copyright:           2017 Masato Kobayashi
+category:            Graphics
+extra-source-files:
+- README.md
+
+dependencies:
+  - base >= 4.7 && < 5
+  - OpenGL
+  - OpenGLRaw
+  - GLUtil
+  - JuicyPixels
+  - JuicyPixels-extra
+  - bytestring
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Kurokos.Graphics
+
+executables:
+  test-gfx:
+    source-dirs:      src-test
+    main:             Main.hs
