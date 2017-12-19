@@ -29,3 +29,5 @@ executables:
   test-gfx:
     source-dirs:      src-test
     main:             Main.hs
+    dependencies:
+      - sdl2 >= 2.2.0
