@@ -31,3 +31,5 @@ executables:
     main:             Main.hs
     dependencies:
       - sdl2 >= 2.2.0
+      - linear
+      - managed

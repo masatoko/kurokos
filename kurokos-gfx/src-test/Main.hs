@@ -2,9 +2,20 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Main where
 
+import qualified Control.Exception         as E
 import           Control.Monad             (unless)
 import qualified SDL
 import           SDL.Event
+
+-- import           Control.Monad.IO.Class    (liftIO)
+-- import           Control.Monad.Managed     (Managed, managed, runManaged)
+-- import           Data.Maybe                (isNothing)
+-- import           Foreign.Marshal.Utils     (with)
+-- import           Foreign.Ptr               (Ptr, castPtr)
+-- import           Foreign.Storable          (sizeOf)
+-- import           Linear.Matrix
+-- import           Linear.Quaternion
+-- import           Linear.V3
 
 import qualified Graphics.GL               as GLRaw
 import qualified Graphics.GLUtil           as GLU
@@ -32,16 +43,18 @@ main = do
       where
         go = do
           events <- SDL.pollEvent
-          --
           GL.clear [GL.ColorBuffer]
-          SDL.glSwapWindow w
           --
+          --
+          SDL.glSwapWindow w
           unless (any shouldExit events) go
 
     shouldExit e =
       case SDL.eventPayload e of
         KeyboardEvent KeyboardEventData{..} ->
-          keyboardEventKeyMotion == Pressed &&
-            SDL.keysymKeycode keyboardEventKeysym == SDL.KeycodeQ
+          if keyboardEventKeyMotion == Pressed
+            then let code = SDL.keysymKeycode keyboardEventKeysym
+                 in code `elem` [SDL.KeycodeQ, SDL.KeycodeEscape]
+            else False
         WindowClosedEvent WindowClosedEventData{} -> True
         _ -> False
