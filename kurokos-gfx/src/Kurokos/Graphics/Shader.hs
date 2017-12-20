@@ -1,24 +1,27 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.Graphics.Shader where
 
+import           Data.Maybe                (fromMaybe)
+import           Foreign.C.Types           (CInt)
 import           Foreign.Storable          (sizeOf)
-import Linear
+import           Linear
 
 import qualified Graphics.GLUtil           as GLU
-import           Graphics.Rendering.OpenGL (($=), get)
+import           Graphics.Rendering.OpenGL (get, ($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
+import           Kurokos.Graphics.Texture  (Texture (..))
 import           Kurokos.Graphics.Types
 
 -- class IsProgram a where
 --   programOf :: a -> GL.Program
 
 data BasicTextureShader = BasicTextureShader
-  { btsProgram  :: GL.Program
-  , btsCoordVar :: AttribVar TagVec2
+  { btsProgram     :: GL.Program
+  , btsCoordVar    :: AttribVar TagVec2
   , btsTexCoordVar :: AttribVar TagVec2
-  , btsMVPVar   :: UniformVar TagMat4
-  , btsTexVar   :: UniformVar TagSampler2D
+  , btsMVPVar      :: UniformVar TagMat4
+  , btsTexVar      :: UniformVar TagSampler2D
   }
 
 -- instance IsProgram BasicTextureShader where
@@ -37,17 +40,29 @@ newBasicShaderProgram = do
 -- | Renderable texture
 data RTexture = RTexture BasicTextureShader GLU.VAO GL.TextureObject
 
-renderRTexture :: Float -> V2 Float -> V2 Float -> RTexture -> IO ()
-renderRTexture a (V2 x y) (V2 scaleX scaleY) (RTexture BasicTextureShader{..} vao tex) =
+-- | Rendering context
+data RContext = RContext
+  { rctxWinSize   :: V2 CInt
+  , rctxCoord     :: V2 Float
+  , rctxScale     :: Maybe (V2 Float)
+  , rctxRot       :: Maybe Float
+  , rctxRotCenter :: Maybe (V2 Float)
+  }
+
+renderRTexture :: RContext -> RTexture -> IO ()
+renderRTexture rctx (RTexture BasicTextureShader{..} vao tex) =
   withProgram btsProgram $ do
     setUniformMat4 btsMVPVar mvpMat
     setUniformSampler2D btsTexVar tex
     GLU.withVAO vao $
       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
   where
+    RContext (V2 winW winH) (V2 x y) mScale mRad mRotCenter = rctx
+    V2 scaleX scaleY = fromMaybe (pure 1) mScale
+
     mvpMat = projection !*! view !*! model
 
-    projection = ortho 0 640 0 480 1 (-1)
+    projection = ortho 0 (fromIntegral winW) 0 (fromIntegral winH) 1 (-1)
 
     view = lookAt eye center up
       where
@@ -55,26 +70,33 @@ renderRTexture a (V2 x y) (V2 scaleX scaleY) (RTexture BasicTextureShader{..} va
         center = V3 0 0 0
         up     = V3 0 1 0
 
-    model = transRot !*! scale
+    model = case mScale of
+              Nothing -> transRot
+              Just (V2 scaleX scaleY) ->
+                let scale = V4 (V4 scaleX 0 0 0)
+                               (V4 0 scaleY 0 0)
+                               (V4 0 0      1 0)
+                               (V4 0 0      0 1)
+                in transRot !*! scale
       where
-        scale = V4
-          (V4 scaleX 0 0 0)
-          (V4 0 scaleY 0 0)
-          (V4 0 0 1 0)
-          (V4 0 0 0 1)
-        transRot = mkTransformationMat (rot (a/20)) trans
+        transRot = mkTransformationMat rot trans
         trans = V3 x y 0
         -- rot = axisAngle (V3 0 0 1) theta -- Quaternion
-        rot t = V3
-          (V3 c (-s) 0)
-          (V3 s c    0)
-          (V3 0 0    1)
+        rot = case mRad of
+                Nothing  -> unit3
+                Just rad -> mat rad
           where
-            s = sin t
-            c = cos t
+            unit3 = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1)
+            mat rad = V3
+              (V3 c (-s) 0)
+              (V3 s c    0)
+              (V3 0 0    1)
+              where
+                s = sin rad
+                c = cos rad
 
-makeBasicRTexture :: BasicTextureShader -> GL.TextureObject -> IO RTexture
-makeBasicRTexture bts tex = do
+makeBasicRTexture :: BasicTextureShader -> Texture -> IO RTexture
+makeBasicRTexture bts (Texture tex w h) = do
   setupSampler2D (btsTexVar bts) tex
   vao <- GLU.makeVAO $ do
           setupVec2 (btsCoordVar bts) vtxPs
@@ -84,11 +106,11 @@ makeBasicRTexture bts tex = do
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
   return $ RTexture bts vao tex
   where
-    w = 48
-    h = 48
+    w' = fromIntegral w
+    h' = fromIntegral h
 
     vtxPs :: [GL.GLfloat]
-    vtxPs = [0, 0, w, 0, 0, h, w, h]
+    vtxPs = [0, 0, w', 0, 0, h', w', h']
 
     texPs :: [GL.GLfloat]
     texPs = [0, 1, 1, 1, 0, 0, 1, 0]

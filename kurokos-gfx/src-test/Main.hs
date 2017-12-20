@@ -35,7 +35,8 @@ main = do
     rtex1 <- KG.makeBasicRTexture bts tex1
     Right tex2 <- KG.readTexture "_data/panorama.png"
     rtex2 <- KG.makeBasicRTexture bts tex2
-    loop window rtex1 rtex2
+    winSize <- get $ SDL.windowSize window
+    loop window winSize rtex1 rtex2
   where
     winConf =
       SDL.defaultWindow
@@ -51,14 +52,15 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 3 0
         }
 
-    loop win rtex1 rtex2 = go 0
+    loop win winSize rtex1 rtex2 = go 0
       where
         go i = do
           GLU.printError
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          KG.renderRTexture (fromIntegral i) (V2 320 240) (pure $ fromIntegral i / 100) $
+          let rctx = KG.RContext winSize (V2 320 240) (Just (pure $ fromIntegral i / 100)) (Just $ fromIntegral i / 10) Nothing
+          KG.renderRTexture rctx $
             if i `mod` 60 < 30
               then rtex1
               else rtex2
