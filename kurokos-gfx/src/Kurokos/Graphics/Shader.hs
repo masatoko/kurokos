@@ -38,66 +38,72 @@ newBasicShaderProgram = do
     (UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture"))
 
 -- | Renderable texture
-data RTexture = RTexture BasicTextureShader GLU.VAO GL.TextureObject
+data RTexture = RTexture BasicTextureShader GLU.VAO Texture
 
 -- | Rendering context
 data RContext = RContext
-  { rctxWinSize   :: V2 CInt
+  { rctxViewSize   :: V2 CInt
+  -- ^ View size
   , rctxCoord     :: V2 Float
+  -- ^ Left bottom coord
   , rctxScale     :: Maybe (V2 Float)
+  -- ^ Scale
   , rctxRot       :: Maybe Float
+  -- ^ Rotation angle [rad]
   , rctxRotCenter :: Maybe (V2 Float)
+  -- ^ Rotation center coord
   }
 
 renderRTexture :: RContext -> RTexture -> IO ()
-renderRTexture rctx (RTexture BasicTextureShader{..} vao tex) =
+renderRTexture rctx (RTexture BasicTextureShader{..} vao (Texture tex texW texH)) =
   withProgram btsProgram $ do
     setUniformMat4 btsMVPVar mvpMat
     setUniformSampler2D btsTexVar tex
     GLU.withVAO vao $
       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
   where
+    texW' = fromIntegral texW
+    texH' = fromIntegral texH
     RContext (V2 winW winH) (V2 x y) mScale mRad mRotCenter = rctx
     V2 scaleX scaleY = fromMaybe (pure 1) mScale
+    V2 rotX0 rotY0 = fromMaybe (V2 (texW' / 2) (texH' / 2)) mRotCenter
 
-    mvpMat = projection !*! view !*! model
+    mvpMat = projection !*! model
 
     projection = ortho 0 (fromIntegral winW) 0 (fromIntegral winH) 1 (-1)
 
-    view = lookAt eye center up
-      where
-        eye    = V3 0 0 1
-        center = V3 0 0 0
-        up     = V3 0 1 0
+    -- view = lookAt eye center up
+    --   where
+    --     eye    = V3 0 0 1
+    --     center = V3 0 0 0
+    --     up     = V3 0 1 0
 
     model = case mScale of
-              Nothing -> transRot
+              Nothing -> transRot 1 1
               Just (V2 scaleX scaleY) ->
                 let scale = V4 (V4 scaleX 0 0 0)
                                (V4 0 scaleY 0 0)
                                (V4 0 0      1 0)
                                (V4 0 0      0 1)
-                in transRot !*! scale
+                in transRot scaleX scaleY !*! scale
       where
-        transRot = mkTransformationMat rot trans
-        trans = V3 x y 0
-        -- rot = axisAngle (V3 0 0 1) theta -- Quaternion
-        rot = case mRad of
-                Nothing  -> unit3
-                Just rad -> mat rad
+        transRot scaleX scaleY = trans !*! rot
           where
-            unit3 = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1)
-            mat rad = V3
-              (V3 c (-s) 0)
-              (V3 s c    0)
-              (V3 0 0    1)
+            trans = mkTransformationMat identity $ V3 x y 0
+            rot = case mRad of
+                    Nothing  -> identity
+                    Just rad -> back !*! mkRot rad !*! go
               where
-                s = sin rad
-                c = cos rad
+                mkRot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1)
+
+        k = V3 (scaleX * rotX0) (scaleY * rotY0) 0
+        go = mkTransformationMat identity (k ^* (-1))
+        back = mkTransformationMat identity k
+
 
 makeBasicRTexture :: BasicTextureShader -> Texture -> IO RTexture
-makeBasicRTexture bts (Texture tex w h) = do
-  setupSampler2D (btsTexVar bts) tex
+makeBasicRTexture bts tex@(Texture _ w h) = do
+  setupSampler2D (btsTexVar bts)
   vao <- GLU.makeVAO $ do
           setupVec2 (btsCoordVar bts) vtxPs
           setupVec2 (btsTexCoordVar bts) texPs
@@ -125,8 +131,8 @@ makeBasicRTexture bts (Texture tex w h) = do
         stride =  fromIntegral $ sizeOf (undefined :: GL.GLfloat) * 2
         vad = GL.VertexArrayDescriptor 2 GL.Float stride GLU.offset0
 
-    setupSampler2D :: UniformVar TagSampler2D -> GL.TextureObject -> IO ()
-    setupSampler2D (UniformVar (TagSampler2D num) loc) tex =
+    setupSampler2D :: UniformVar TagSampler2D -> IO ()
+    setupSampler2D (UniformVar (TagSampler2D num) loc) =
       GL.activeTexture $= GL.TextureUnit num
 
 setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
