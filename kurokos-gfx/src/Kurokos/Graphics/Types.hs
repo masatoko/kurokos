@@ -14,7 +14,8 @@ data TagMat3 = TagMat3 deriving Show
 data TagMat4 = TagMat4 deriving Show
 data TagSampler2D = TagSampler2D ActiveTextureIndex deriving Show
 
-data ShaderVar tag loc
-  = ShaderVar tag loc
+data AttribVar tag = AttribVar tag GL.AttribLocation
+
+data UniformVar tag = UniformVar tag GL.UniformLocation
 
 type Vec2 = V2 Float
