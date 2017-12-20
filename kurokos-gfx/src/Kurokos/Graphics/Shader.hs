@@ -59,8 +59,11 @@ renderRTexture rctx (RTexture BasicTextureShader{..} vao (Texture tex texW texH)
   withProgram btsProgram $ do
     setUniformMat4 btsMVPVar mvpMat
     setUniformSampler2D btsTexVar tex
+    GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
+    GL.blend $= GL.Enabled
     GLU.withVAO vao $
       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
+    GL.blend $= GL.Disabled
   where
     texW' = fromIntegral texW
     texH' = fromIntegral texH
