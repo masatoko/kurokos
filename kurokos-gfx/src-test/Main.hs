@@ -31,9 +31,11 @@ main = do
     GL.clearColor $= GL.Color4 0 1 0 1
     --
     bts <- KG.newBasicShaderProgram
-    Right tex <- KG.readTexture "_data/in_transit.png"
-    mytex <- KG.makeBasicTexture bts tex
-    loop window bts mytex
+    Right tex1 <- KG.readTexture "_data/in_transit.png"
+    rtex1 <- KG.makeBasicRTexture bts tex1
+    Right tex2 <- KG.readTexture "_data/panorama.png"
+    rtex2 <- KG.makeBasicRTexture bts tex2
+    loop window rtex1 rtex2
   where
     winConf = SDL.defaultWindow {SDL.windowOpenGL = Just glConf}
 
@@ -46,17 +48,20 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 3 0
         }
 
-    loop win bts mytex = go
+    loop win rtex1 rtex2 = go 0
       where
-        go = do
+        go i = do
           GLU.printError
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          KG.renderWith bts mytex
+          KG.renderRTexture $
+            if i `mod` 60 < 30
+              then rtex1
+              else rtex2
           --
           SDL.glSwapWindow win
-          unless (any shouldExit events) go
+          unless (any shouldExit events) $ go (i + 1)
 
     shouldExit e =
       case SDL.eventPayload e of
