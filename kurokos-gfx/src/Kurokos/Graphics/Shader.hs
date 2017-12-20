@@ -63,27 +63,19 @@ renderTexByBasicRenderer BasicRenderer{..} rctx (Texture tex texW texH) =
 
     projection = ortho 0 (fromIntegral winW) 0 (fromIntegral winH) 1 (-1)
 
-    -- view = lookAt eye center up
-    --   where
-    --     eye    = V3 0 0 1
-    --     center = V3 0 0 0
-    --     up     = V3 0 1 0
-
     model =
-      mkTransRot !*! scaleMat
+      trans !*! rot !*! scaleMat
       where
-        mkTransRot = trans !*! rot
-          where
-            trans = mkTransformationMat identity $ V3 x y 0
-            rot = case mRad of
-                    Nothing  -> identity
-                    Just rad -> let
-                      rot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1) $ rad
-                      in back !*! rot !*! go
+        trans = mkTransformationMat identity $ V3 x y 0
+        rot = case mRad of
+                Nothing  -> identity
+                Just rad -> let
+                  rot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1) $ rad
+                  in back !*! rot !*! go
 
-            k = V3 rotX0 rotY0 0
-            go = mkTransformationMat identity (k ^* (-1))
-            back = mkTransformationMat identity k
+        k = V3 rotX0 rotY0 0
+        go = mkTransformationMat identity (k ^* (-1))
+        back = mkTransformationMat identity k
 
         scaleMat = V4 (V4 sizeX 0 0 0)
                       (V4 0 sizeY 0 0)
