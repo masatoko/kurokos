@@ -24,18 +24,18 @@ main :: IO ()
 main = do
   SDL.initializeAll
   window <- SDL.createWindow "Test kurokos-gfx" winConf
-  -- SDL.V2 w h <- get $ SDL.windowSize window
   withGL window $ \glContext -> do
     -- GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral w) (fromIntegral h))
     SDL.swapInterval $= SDL.SynchronizedUpdates
     GL.clearColor $= GL.Color4 0 1 0 1
     --
     br <- KG.newBasicRenderer
+    winSize <- get $ SDL.windowSize window
+    KG.updateBasicRenderer KG.Ortho winSize br
     --
     Right tex1 <- KG.readTexture "_data/in_transit.png"
     Right tex2 <- KG.readTexture "_data/panorama.png"
-    winSize <- get $ SDL.windowSize window
-    loop window winSize br tex1 tex2
+    loop window br tex1 tex2
   where
     winConf =
       SDL.defaultWindow
@@ -51,14 +51,14 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 4 0
         }
 
-    loop win winSize br tex1 tex2 = go 0
+    loop win br tex1 tex2 = go 0
       where
         go i = do
           GLU.printError
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          let ctx = KG.RContext winSize (V2 320 240) (Just (pure $ fromIntegral i)) (Just $ fromIntegral i / 10) Nothing
+          let ctx = KG.RContext (V2 320 240) (Just (pure $ fromIntegral i)) (Just $ fromIntegral i / 10) Nothing
           KG.renderTexByBasicRenderer_ br ctx $ if i `mod` 60 < 30 then tex1 else tex2
           --
           SDL.glSwapWindow win

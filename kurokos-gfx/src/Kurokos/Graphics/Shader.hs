@@ -18,12 +18,13 @@ import           Kurokos.Graphics.Types
 --   programOf :: a -> GL.Program
 
 data BasicRenderer = BasicRenderer
-  { brProgram     :: GL.Program
-  , brCoordVar    :: AttribVar TagVec2
-  , brTexCoordVar :: AttribVar TagVec2
-  , brMVPVar      :: UniformVar TagMat4
-  , brTexVar      :: UniformVar TagSampler2D
-  , brVao         :: GLU.VAO
+  { brProgram      :: GL.Program
+  , brCoordVar     :: AttribVar TagVec2
+  , brTexCoordVar  :: AttribVar TagVec2
+  , brModelViewVar :: UniformVar TagMat4
+  , brProjVar      :: UniformVar TagMat4
+  , brTexVar       :: UniformVar TagSampler2D
+  , brVao          :: GLU.VAO
   }
 
 -- instance IsProgram BasicRenderer where
@@ -31,9 +32,7 @@ data BasicRenderer = BasicRenderer
 
 -- | Rendering context
 data RContext = RContext
-  { rctxViewSize  :: V2 CInt
-  -- ^ View size
-  , rctxCoord     :: V2 Float
+  { rctxCoord     :: V2 Float
   -- ^ Left bottom coord
   , rctxSize      :: Maybe (V2 Float)
   -- ^ Size
@@ -50,7 +49,7 @@ renderTexByBasicRenderer_ r =
 renderTexByBasicRenderer :: BasicRenderer -> Cam.Camera -> RContext -> Texture -> IO ()
 renderTexByBasicRenderer BasicRenderer{..} cam rctx (Texture tex texW texH) =
   withProgram brProgram $ do
-    setUniformMat4 brMVPVar mvpMat
+    setUniformMat4 brModelViewVar (view !*! model)
     setUniformSampler2D brTexVar tex
     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
     GL.blend $= GL.Enabled
@@ -60,16 +59,11 @@ renderTexByBasicRenderer BasicRenderer{..} cam rctx (Texture tex texW texH) =
   where
     texW' = fromIntegral texW
     texH' = fromIntegral texH
-    RContext (V2 winW winH) (V2 x y) mSize mRad mRotCenter = rctx
+    RContext (V2 x y) mSize mRad mRotCenter = rctx
     V2 sizeX sizeY = fromMaybe (V2 texW' texH') mSize
     V2 rotX0 rotY0 = fromMaybe (V2 (sizeX / 2) (sizeY / 2)) mRotCenter
 
-    mvpMat = projection !*! view !*! model
-
-    projection = ortho 0 (fromIntegral winW) 0 (fromIntegral winH) 1 (-1)
-
     view = Cam.viewMatFromCam cam
-
     model =
       trans !*! rot !*! scaleMat
       where
@@ -89,12 +83,30 @@ renderTexByBasicRenderer BasicRenderer{..} cam rctx (Texture tex texW texH) =
                       (V4 0 0     1 0)
                       (V4 0 0     0 1)
 
+data ProjectionType
+  = Ortho
+  | Frustum Float Float -- Near Far
+  deriving (Eq, Show)
+
+-- | Update projection matrix of BasicRenderer
+updateBasicRenderer :: ProjectionType -> V2 CInt -> BasicRenderer -> IO ()
+updateBasicRenderer ptype (V2 winW winH) BasicRenderer{..} =
+  withProgram brProgram $
+    setUniformMat4 brProjVar $ projMat ptype
+  where
+    w = fromIntegral winW
+    h = fromIntegral winH
+
+    projMat Ortho              = ortho 0 w 0 h 1 (-1)
+    projMat (Frustum near far) = frustum 0 w 0 h near far
+
 newBasicRenderer :: IO BasicRenderer
 newBasicRenderer = do
   sp <- GLU.simpleShaderProgram "_data/tex.vert" "_data/tex.frag"
   let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
       texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
-      mvpUniform = UniformVar TagMat4 $ GLU.getUniform sp "MVP"
+      modelViewUniform = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
+      projUniform = UniformVar TagMat4 $ GLU.getUniform sp "Projection"
       texUniform = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
   -- * Setup
   setupSampler2D texUniform
@@ -108,7 +120,8 @@ newBasicRenderer = do
     (GLU.program sp)
     vtxCoordVar
     texCoordVar
-    mvpUniform
+    modelViewUniform
+    projUniform
     texUniform
     vao
   where
