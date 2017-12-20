@@ -30,12 +30,12 @@ main = do
     SDL.swapInterval $= SDL.SynchronizedUpdates
     GL.clearColor $= GL.Color4 0 1 0 1
     --
-    bts <- KG.newBasicShaderProgram
+    br <- KG.newBasicRenderer
     --
     Right tex1 <- KG.readTexture "_data/in_transit.png"
     Right tex2 <- KG.readTexture "_data/panorama.png"
     winSize <- get $ SDL.windowSize window
-    loop window winSize bts tex1 tex2
+    loop window winSize br tex1 tex2
   where
     winConf =
       SDL.defaultWindow
@@ -51,7 +51,7 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 3 0
         }
 
-    loop win winSize bts tex1 tex2 = go 0
+    loop win winSize br tex1 tex2 = go 0
       where
         go i = do
           GLU.printError
@@ -59,7 +59,7 @@ main = do
           GL.clear [GL.ColorBuffer]
           --
           let ctx = KG.RContext winSize (V2 320 240) (Just (pure $ fromIntegral i)) (Just $ fromIntegral i / 10) Nothing
-          KG.renderRTexture bts ctx $ if i `mod` 60 < 30 then tex1 else tex2
+          KG.renderTexByBasicRenderer br ctx $ if i `mod` 60 < 30 then tex1 else tex2
           --
           SDL.glSwapWindow win
           unless (any shouldExit events) $ go (i + 1)

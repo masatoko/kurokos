@@ -16,21 +16,17 @@ import           Kurokos.Graphics.Types
 -- class IsProgram a where
 --   programOf :: a -> GL.Program
 
-data BasicTextureShader = BasicTextureShader
-  { btsProgram     :: GL.Program
-  , btsCoordVar    :: AttribVar TagVec2
-  , btsTexCoordVar :: AttribVar TagVec2
-  , btsMVPVar      :: UniformVar TagMat4
-  , btsTexVar      :: UniformVar TagSampler2D
-  , btsVao         :: GLU.VAO
+data BasicRenderer = BasicRenderer
+  { brProgram     :: GL.Program
+  , brCoordVar    :: AttribVar TagVec2
+  , brTexCoordVar :: AttribVar TagVec2
+  , brMVPVar      :: UniformVar TagMat4
+  , brTexVar      :: UniformVar TagSampler2D
+  , brVao         :: GLU.VAO
   }
 
--- instance IsProgram BasicTextureShader where
---   programOf = btsProgram
-
-
--- | Renderable texture
-data RTexture = RTexture BasicTextureShader GLU.VAO Texture
+-- instance IsProgram BasicRenderer where
+--   programOf = brProgram
 
 -- | Rendering context
 data RContext = RContext
@@ -46,14 +42,14 @@ data RContext = RContext
   -- ^ Rotation center coord
   }
 
-renderRTexture :: BasicTextureShader -> RContext -> Texture -> IO ()
-renderRTexture BasicTextureShader{..} rctx (Texture tex texW texH) =
-  withProgram btsProgram  $ do
-    setUniformMat4 btsMVPVar  mvpMat
-    setUniformSampler2D btsTexVar tex
+renderTexByBasicRenderer :: BasicRenderer -> RContext -> Texture -> IO ()
+renderTexByBasicRenderer BasicRenderer{..} rctx (Texture tex texW texH) =
+  withProgram brProgram $ do
+    setUniformMat4 brMVPVar  mvpMat
+    setUniformSampler2D brTexVar tex
     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
     GL.blend $= GL.Enabled
-    GLU.withVAO btsVao $
+    GLU.withVAO brVao $
       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
     GL.blend $= GL.Disabled
   where
@@ -94,8 +90,8 @@ renderRTexture BasicTextureShader{..} rctx (Texture tex texW texH) =
                       (V4 0 0     1 0)
                       (V4 0 0     0 1)
 
-newBasicShaderProgram :: IO BasicTextureShader
-newBasicShaderProgram = do
+newBasicRenderer :: IO BasicRenderer
+newBasicRenderer = do
   sp <- GLU.simpleShaderProgram "_data/tex.vert" "_data/tex.frag"
   let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
       texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
@@ -109,7 +105,7 @@ newBasicShaderProgram = do
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
-  return $ BasicTextureShader
+  return $ BasicRenderer
     (GLU.program sp)
     vtxCoordVar
     texCoordVar
