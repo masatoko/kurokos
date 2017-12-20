@@ -7,6 +7,7 @@ import           Control.Monad             (unless)
 import           Data.Either.Extra         (fromRight)
 import           Foreign.Storable          (sizeOf)
 import           System.FilePath.Posix
+import Linear.V2
 
 import qualified SDL
 import           SDL.Event
@@ -27,7 +28,6 @@ main = do
   withGL window $ \glContext -> do
     -- GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral w) (fromIntegral h))
     SDL.swapInterval $= SDL.SynchronizedUpdates
-    -- GL.doubleBuffer
     GL.clearColor $= GL.Color4 0 1 0 1
     --
     bts <- KG.newBasicShaderProgram
@@ -37,7 +37,10 @@ main = do
     rtex2 <- KG.makeBasicRTexture bts tex2
     loop window rtex1 rtex2
   where
-    winConf = SDL.defaultWindow {SDL.windowOpenGL = Just glConf}
+    winConf =
+      SDL.defaultWindow
+        { SDL.windowOpenGL = Just glConf
+        , SDL.windowInitialSize = V2 640 480}
 
     withGL win =
       E.bracket (SDL.glCreateContext win)
@@ -55,7 +58,7 @@ main = do
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          KG.renderRTexture (fromIntegral i) $
+          KG.renderRTexture (fromIntegral i) (V2 320 240) (pure $ fromIntegral i / 100) $
             if i `mod` 60 < 30
               then rtex1
               else rtex2

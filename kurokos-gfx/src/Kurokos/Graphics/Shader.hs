@@ -37,28 +37,41 @@ newBasicShaderProgram = do
 -- | Renderable texture
 data RTexture = RTexture BasicTextureShader GLU.VAO GL.TextureObject
 
-renderRTexture :: Float -> RTexture -> IO ()
-renderRTexture a (RTexture BasicTextureShader{..} vao tex) =
+renderRTexture :: Float -> V2 Float -> V2 Float -> RTexture -> IO ()
+renderRTexture a (V2 x y) (V2 scaleX scaleY) (RTexture BasicTextureShader{..} vao tex) =
   withProgram btsProgram $ do
-    setUniformMat4 btsMVPVar mat
+    setUniformMat4 btsMVPVar mvpMat
     setUniformSampler2D btsTexVar tex
     GLU.withVAO vao $
       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
   where
-    mat = transpose $ projection * view * model
+    mvpMat = projection !*! view !*! model
+
+    projection = ortho 0 640 0 480 1 (-1)
+
+    view = lookAt eye center up
       where
-        projection =
-          ortho 0 640 0 480 (-1) 1
+        eye    = V3 0 0 1
+        center = V3 0 0 0
+        up     = V3 0 1 0
 
-        view = lookAt eye center up
+    model = transRot !*! scale
+      where
+        scale = V4
+          (V4 scaleX 0 0 0)
+          (V4 0 scaleY 0 0)
+          (V4 0 0 1 0)
+          (V4 0 0 0 1)
+        transRot = mkTransformationMat (rot (a/20)) trans
+        trans = V3 x y 0
+        -- rot = axisAngle (V3 0 0 1) theta -- Quaternion
+        rot t = V3
+          (V3 c (-s) 0)
+          (V3 s c    0)
+          (V3 0 0    1)
           where
-            eye = V3 0 0 (-1)
-            center = V3 0 0 1 
-            up = V3 0 1 0
-
-        model = mkTransformation rot (V3 0 0 0)
-          where
-            rot = Quaternion 0 (V3 0 0 1)
+            s = sin t
+            c = cos t
 
 makeBasicRTexture :: BasicTextureShader -> GL.TextureObject -> IO RTexture
 makeBasicRTexture bts tex = do
@@ -78,7 +91,7 @@ makeBasicRTexture bts tex = do
     vtxPs = [0, 0, w, 0, 0, h, w, h]
 
     texPs :: [GL.GLfloat]
-    texPs = [0, 0, 1, 0, 0, 1, 1, 1]
+    texPs = [0, 1, 1, 1, 0, 0, 1, 0]
 
     setupVec2 :: AttribVar TagVec2 -> [GL.GLfloat] -> IO ()
     setupVec2 (AttribVar TagVec2 loc) ps = do
