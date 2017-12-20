@@ -2,6 +2,7 @@
 module Kurokos.Graphics.Shader where
 
 import           Foreign.Storable          (sizeOf)
+import Linear
 
 import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (($=), get)
@@ -9,11 +10,19 @@ import qualified Graphics.Rendering.OpenGL as GL
 
 import           Kurokos.Graphics.Types
 
+-- class IsProgram a where
+--   programOf :: a -> GL.Program
+
 data BasicTextureShader = BasicTextureShader
   { btsProgram  :: GL.Program
   , btsCoordVar :: AttribVar TagVec2
+  , btsTexCoordVar :: AttribVar TagVec2
+  , btsMVPVar   :: UniformVar TagMat4
   , btsTexVar   :: UniformVar TagSampler2D
   }
+
+-- instance IsProgram BasicTextureShader where
+--   programOf = btsProgram
 
 newBasicShaderProgram :: IO BasicTextureShader
 newBasicShaderProgram = do
@@ -21,36 +30,62 @@ newBasicShaderProgram = do
   return $ BasicTextureShader
     (GLU.program sp)
     (AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord")
+    (AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord")
+    (UniformVar TagMat4 $ GLU.getUniform sp "MVP")
     (UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture"))
 
 -- | Renderable texture
 data RTexture = RTexture BasicTextureShader GLU.VAO GL.TextureObject
 
-renderRTexture :: RTexture -> IO ()
-renderRTexture (RTexture BasicTextureShader{..} vao tex) =
+renderRTexture :: Float -> RTexture -> IO ()
+renderRTexture a (RTexture BasicTextureShader{..} vao tex) =
   withProgram btsProgram $ do
-    bindSampler2D btsTexVar tex
+    setUniformMat4 btsMVPVar mat
+    setUniformSampler2D btsTexVar tex
     GLU.withVAO vao $
       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
+  where
+    mat = transpose $ projection * view * model
+      where
+        projection =
+          ortho 0 640 0 480 (-1) 1
+
+        view = lookAt eye center up
+          where
+            eye = V3 0 0 (-1)
+            center = V3 0 0 1 
+            up = V3 0 1 0
+
+        model = mkTransformation rot (V3 0 0 0)
+          where
+            rot = Quaternion 0 (V3 0 0 1)
 
 makeBasicRTexture :: BasicTextureShader -> GL.TextureObject -> IO RTexture
 makeBasicRTexture bts tex = do
   setupSampler2D (btsTexVar bts) tex
-  vao <- GLU.makeVAO $ setupVec2 $ btsCoordVar bts
+  vao <- GLU.makeVAO $ do
+          setupVec2 (btsCoordVar bts) vtxPs
+          setupVec2 (btsTexCoordVar bts) texPs
+          -- Element
+          elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
+          GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
   return $ RTexture bts vao tex
   where
-    ps :: [GL.GLfloat]
-    ps = [-1, -1, 1, -1, -1, 1, 1, 1]
+    w = 48
+    h = 48
 
-    setupVec2 :: AttribVar TagVec2 -> IO ()
-    setupVec2 (AttribVar TagVec2 loc) = do
+    vtxPs :: [GL.GLfloat]
+    vtxPs = [0, 0, w, 0, 0, h, w, h]
+
+    texPs :: [GL.GLfloat]
+    texPs = [0, 0, 1, 0, 0, 1, 1, 1]
+
+    setupVec2 :: AttribVar TagVec2 -> [GL.GLfloat] -> IO ()
+    setupVec2 (AttribVar TagVec2 loc) ps = do
       buf <- GLU.makeBuffer GL.ArrayBuffer ps
       GL.bindBuffer GL.ArrayBuffer $= Just buf
       GL.vertexAttribPointer loc $= (GL.ToFloat, vad)
       GL.vertexAttribArray loc $= GL.Enabled
-      --
-      elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
-      GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
       where
         stride =  fromIntegral $ sizeOf (undefined :: GL.GLfloat) * 2
         vad = GL.VertexArrayDescriptor 2 GL.Float stride GLU.offset0
@@ -59,10 +94,14 @@ makeBasicRTexture bts tex = do
     setupSampler2D (UniformVar (TagSampler2D num) loc) tex =
       GL.activeTexture $= GL.TextureUnit num
 
-bindSampler2D :: UniformVar TagSampler2D -> GL.TextureObject -> IO ()
-bindSampler2D (UniformVar (TagSampler2D num) loc) tex = do
+setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
+setUniformMat4 (UniformVar TagMat4 loc) mat =
+  GLU.asUniform mat loc
+
+setUniformSampler2D :: UniformVar TagSampler2D -> GL.TextureObject -> IO ()
+setUniformSampler2D (UniformVar (TagSampler2D num) loc) tex = do
   GL.textureBinding GL.Texture2D $= Just tex -- glBindTexture
-  GLU.asUniform (GL.TextureUnit num) loc
+  GLU.asUniform (GL.TextureUnit num) loc -- TODO: Move to setup
 
 withProgram :: GL.Program -> IO a -> IO a
 withProgram p act = do

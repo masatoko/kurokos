@@ -55,7 +55,7 @@ main = do
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          KG.renderRTexture $
+          KG.renderRTexture (fromIntegral i) $
             if i `mod` 60 < 30
               then rtex1
               else rtex2

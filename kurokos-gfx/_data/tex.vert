@@ -1,10 +1,13 @@
 #version 400
 
 in vec2 VertexCoord;
-out vec2 TexCoord;
+in vec2 TexCoord;
+out vec2 OTexCoord;
+
+uniform mat4 MVP;
 
 void main()
 {
-  gl_Position = vec4( VertexCoord, 0, 1 );
-  TexCoord = VertexCoord * vec2(0.5) + vec2(0.5);
+  gl_Position = MVP * vec4( VertexCoord, 0, 1 );
+  OTexCoord = TexCoord;
 }
