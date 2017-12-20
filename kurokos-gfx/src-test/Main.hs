@@ -48,7 +48,7 @@ main = do
 
     glConf =
       SDL.defaultOpenGL
-        { SDL.glProfile = SDL.Core SDL.Debug 3 0
+        { SDL.glProfile = SDL.Core SDL.Debug 4 0
         }
 
     loop win winSize br tex1 tex2 = go 0
@@ -59,7 +59,7 @@ main = do
           GL.clear [GL.ColorBuffer]
           --
           let ctx = KG.RContext winSize (V2 320 240) (Just (pure $ fromIntegral i)) (Just $ fromIntegral i / 10) Nothing
-          KG.renderTexByBasicRenderer br ctx $ if i `mod` 60 < 30 then tex1 else tex2
+          KG.renderTexByBasicRenderer_ br ctx $ if i `mod` 60 < 30 then tex1 else tex2
           --
           SDL.glSwapWindow win
           unless (any shouldExit events) $ go (i + 1)

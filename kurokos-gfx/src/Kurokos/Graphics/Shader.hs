@@ -10,6 +10,7 @@ import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (get, ($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
+import qualified Kurokos.Graphics.Camera   as Cam
 import           Kurokos.Graphics.Texture  (Texture (..))
 import           Kurokos.Graphics.Types
 
@@ -42,10 +43,14 @@ data RContext = RContext
   -- ^ Rotation center coord
   }
 
-renderTexByBasicRenderer :: BasicRenderer -> RContext -> Texture -> IO ()
-renderTexByBasicRenderer BasicRenderer{..} rctx (Texture tex texW texH) =
+renderTexByBasicRenderer_ :: BasicRenderer -> RContext -> Texture -> IO ()
+renderTexByBasicRenderer_ r =
+  renderTexByBasicRenderer r Cam.mkCamera
+
+renderTexByBasicRenderer :: BasicRenderer -> Cam.Camera -> RContext -> Texture -> IO ()
+renderTexByBasicRenderer BasicRenderer{..} cam rctx (Texture tex texW texH) =
   withProgram brProgram $ do
-    setUniformMat4 brMVPVar  mvpMat
+    setUniformMat4 brMVPVar mvpMat
     setUniformSampler2D brTexVar tex
     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
     GL.blend $= GL.Enabled
@@ -59,9 +64,11 @@ renderTexByBasicRenderer BasicRenderer{..} rctx (Texture tex texW texH) =
     V2 sizeX sizeY = fromMaybe (V2 texW' texH') mSize
     V2 rotX0 rotY0 = fromMaybe (V2 (sizeX / 2) (sizeY / 2)) mRotCenter
 
-    mvpMat = projection !*! model
+    mvpMat = projection !*! view !*! model
 
     projection = ortho 0 (fromIntegral winW) 0 (fromIntegral winH) 1 (-1)
+
+    view = Cam.viewMatFromCam cam
 
     model =
       trans !*! rot !*! scaleMat
