@@ -65,7 +65,6 @@ renderRTexture rctx (RTexture BasicTextureShader{..} vao (Texture tex texW texH)
     texW' = fromIntegral texW
     texH' = fromIntegral texH
     RContext (V2 winW winH) (V2 x y) mScale mRad mRotCenter = rctx
-    V2 scaleX scaleY = fromMaybe (pure 1) mScale
     V2 rotX0 rotY0 = fromMaybe (V2 (texW' / 2) (texH' / 2)) mRotCenter
 
     mvpMat = projection !*! model
@@ -79,15 +78,17 @@ renderRTexture rctx (RTexture BasicTextureShader{..} vao (Texture tex texW texH)
     --     up     = V3 0 1 0
 
     model = case mScale of
-              Nothing -> transRot 1 1
-              Just (V2 scaleX scaleY) ->
-                let scale = V4 (V4 scaleX 0 0 0)
-                               (V4 0 scaleY 0 0)
-                               (V4 0 0      1 0)
-                               (V4 0 0      0 1)
-                in transRot scaleX scaleY !*! scale
+              Nothing -> transRot (pure 1)
+              Just scale ->
+                transRot scale !*! mkScaleMat scale
       where
-        transRot scaleX scaleY = trans !*! rot
+        mkScaleMat (V2 scaleX scaleY) =
+          V4 (V4 scaleX 0 0 0)
+             (V4 0 scaleY 0 0)
+             (V4 0 0      1 0)
+             (V4 0 0      0 1)
+
+        transRot (V2 scaleX scaleY) = trans !*! rot
           where
             trans = mkTransformationMat identity $ V3 x y 0
             rot = case mRad of
@@ -96,9 +97,9 @@ renderRTexture rctx (RTexture BasicTextureShader{..} vao (Texture tex texW texH)
               where
                 mkRot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1)
 
-        k = V3 (scaleX * rotX0) (scaleY * rotY0) 0
-        go = mkTransformationMat identity (k ^* (-1))
-        back = mkTransformationMat identity k
+            k = V3 (scaleX * rotX0) (scaleY * rotY0) 0
+            go = mkTransformationMat identity (k ^* (-1))
+            back = mkTransformationMat identity k
 
 
 makeBasicRTexture :: BasicTextureShader -> Texture -> IO RTexture
