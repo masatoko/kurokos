@@ -19,12 +19,14 @@ dependencies:
   - JuicyPixels
   - JuicyPixels-extra
   - bytestring
+  - linear
 
 library:
   source-dirs: src
   exposed-modules:
     - Kurokos.Graphics
     - Kurokos.Graphics.Texture
+    - Kurokos.Graphics.Shader
 
 executables:
   test-gfx:
