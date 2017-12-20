@@ -16,63 +16,52 @@ import           Kurokos.Graphics.Types
 -- class IsProgram a where
 --   programOf :: a -> GL.Program
 
-data ReadiedBasicTextureShader = ReadiedBasicTextureShader
-  BasicTextureShader
-  GLU.VAO
-
 data BasicTextureShader = BasicTextureShader
   { btsProgram     :: GL.Program
   , btsCoordVar    :: AttribVar TagVec2
   , btsTexCoordVar :: AttribVar TagVec2
   , btsMVPVar      :: UniformVar TagMat4
   , btsTexVar      :: UniformVar TagSampler2D
+  , btsVao         :: GLU.VAO
   }
 
 -- instance IsProgram BasicTextureShader where
 --   programOf = btsProgram
 
-newBasicShaderProgram :: IO BasicTextureShader
-newBasicShaderProgram = do
-  sp <- GLU.simpleShaderProgram "_data/tex.vert" "_data/tex.frag"
-  return $ BasicTextureShader
-    (GLU.program sp)
-    (AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord")
-    (AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord")
-    (UniformVar TagMat4 $ GLU.getUniform sp "MVP")
-    (UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture"))
 
 -- | Renderable texture
 data RTexture = RTexture BasicTextureShader GLU.VAO Texture
 
 -- | Rendering context
 data RContext = RContext
-  { rctxViewSize   :: V2 CInt
+  { rctxViewSize  :: V2 CInt
   -- ^ View size
   , rctxCoord     :: V2 Float
   -- ^ Left bottom coord
-  , rctxScale     :: Maybe (V2 Float)
-  -- ^ Scale
+  , rctxSize      :: Maybe (V2 Float)
+  -- ^ Size
   , rctxRot       :: Maybe Float
   -- ^ Rotation angle [rad]
   , rctxRotCenter :: Maybe (V2 Float)
   -- ^ Rotation center coord
   }
 
-renderRTexture :: ReadiedBasicTextureShader -> RContext -> Texture -> IO ()
-renderRTexture (ReadiedBasicTextureShader bts vao) rctx (Texture tex texW texH) =
-  withProgram (btsProgram bts) $ do
-    setUniformMat4 (btsMVPVar bts) mvpMat
-    setUniformSampler2D (btsTexVar bts) tex
+renderRTexture :: BasicTextureShader -> RContext -> Texture -> IO ()
+renderRTexture BasicTextureShader{..} rctx (Texture tex texW texH) =
+  withProgram btsProgram  $ do
+    setUniformMat4 btsMVPVar  mvpMat
+    setUniformSampler2D btsTexVar tex
     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
     GL.blend $= GL.Enabled
-    GLU.withVAO vao $
+    GLU.withVAO btsVao $
       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
     GL.blend $= GL.Disabled
   where
     texW' = fromIntegral texW
     texH' = fromIntegral texH
-    RContext (V2 winW winH) (V2 x y) mScale mRad mRotCenter = rctx
-    V2 rotX0 rotY0 = fromMaybe (V2 (texW' / 2) (texH' / 2)) mRotCenter
+    RContext (V2 winW winH) (V2 x y) mSize mRad mRotCenter = rctx
+    V2 sizeX sizeY = fromMaybe (V2 texW' texH') mSize
+    V2 rotX0 rotY0 = fromMaybe (V2 (sizeX / 2) (sizeY / 2)) mRotCenter
 
     mvpMat = projection !*! model
 
@@ -85,44 +74,48 @@ renderRTexture (ReadiedBasicTextureShader bts vao) rctx (Texture tex texW texH) 
     --     up     = V3 0 1 0
 
     model =
-      let mat = case mScale of
-                  Nothing -> mkTransRot (pure 1)
-                  Just scale ->
-                    mkTransRot scale !*! mkScaleMat scale
-      in mat !*! toOrigin
+      mkTransRot !*! scaleMat
       where
-        toOrigin = mkScaleMat (V2 texW' texH')
-
-        mkScaleMat (V2 scaleX scaleY) =
-          V4 (V4 scaleX 0 0 0)
-             (V4 0 scaleY 0 0)
-             (V4 0 0      1 0)
-             (V4 0 0      0 1)
-
-        mkTransRot (V2 scaleX scaleY) = trans !*! rot
+        mkTransRot = trans !*! rot
           where
             trans = mkTransformationMat identity $ V3 x y 0
             rot = case mRad of
                     Nothing  -> identity
-                    Just rad -> back !*! mkRot rad !*! go
-              where
-                mkRot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1)
+                    Just rad -> let
+                      rot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1) $ rad
+                      in back !*! rot !*! go
 
-            k = V3 (scaleX * rotX0) (scaleY * rotY0) 0
+            k = V3 rotX0 rotY0 0
             go = mkTransformationMat identity (k ^* (-1))
             back = mkTransformationMat identity k
 
+        scaleMat = V4 (V4 sizeX 0 0 0)
+                      (V4 0 sizeY 0 0)
+                      (V4 0 0     1 0)
+                      (V4 0 0     0 1)
 
-setupBasicShader :: BasicTextureShader -> IO ReadiedBasicTextureShader
-setupBasicShader bts = do
-  setupSampler2D (btsTexVar bts)
+newBasicShaderProgram :: IO BasicTextureShader
+newBasicShaderProgram = do
+  sp <- GLU.simpleShaderProgram "_data/tex.vert" "_data/tex.frag"
+  let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
+      texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
+      mvpUniform = UniformVar TagMat4 $ GLU.getUniform sp "MVP"
+      texUniform = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
+  -- * Setup
+  setupSampler2D texUniform
   vao <- GLU.makeVAO $ do
-          setupVec2 (btsCoordVar bts) vtxPs
-          setupVec2 (btsTexCoordVar bts) texPs
+          setupVec2 vtxCoordVar vtxPs
+          setupVec2 texCoordVar texPs
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
-  return $ ReadiedBasicTextureShader bts vao
+  return $ BasicTextureShader
+    (GLU.program sp)
+    vtxCoordVar
+    texCoordVar
+    mvpUniform
+    texUniform
+    vao
   where
     vtxPs :: [GL.GLfloat]
     vtxPs = [0, 0, 1, 0, 0, 1, 1, 1]
