@@ -16,6 +16,10 @@ import           Kurokos.Graphics.Types
 -- class IsProgram a where
 --   programOf :: a -> GL.Program
 
+data ReadiedBasicTextureShader = ReadiedBasicTextureShader
+  BasicTextureShader
+  GLU.VAO
+
 data BasicTextureShader = BasicTextureShader
   { btsProgram     :: GL.Program
   , btsCoordVar    :: AttribVar TagVec2
@@ -54,11 +58,11 @@ data RContext = RContext
   -- ^ Rotation center coord
   }
 
-renderRTexture :: RContext -> RTexture -> IO ()
-renderRTexture rctx (RTexture BasicTextureShader{..} vao (Texture tex texW texH)) =
-  withProgram btsProgram $ do
-    setUniformMat4 btsMVPVar mvpMat
-    setUniformSampler2D btsTexVar tex
+renderRTexture :: ReadiedBasicTextureShader -> RContext -> Texture -> IO ()
+renderRTexture (ReadiedBasicTextureShader bts vao) rctx (Texture tex texW texH) =
+  withProgram (btsProgram bts) $ do
+    setUniformMat4 (btsMVPVar bts) mvpMat
+    setUniformSampler2D (btsTexVar bts) tex
     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
     GL.blend $= GL.Enabled
     GLU.withVAO vao $
@@ -80,18 +84,22 @@ renderRTexture rctx (RTexture BasicTextureShader{..} vao (Texture tex texW texH)
     --     center = V3 0 0 0
     --     up     = V3 0 1 0
 
-    model = case mScale of
-              Nothing -> transRot (pure 1)
-              Just scale ->
-                transRot scale !*! mkScaleMat scale
+    model =
+      let mat = case mScale of
+                  Nothing -> mkTransRot (pure 1)
+                  Just scale ->
+                    mkTransRot scale !*! mkScaleMat scale
+      in mat !*! toOrigin
       where
+        toOrigin = mkScaleMat (V2 texW' texH')
+
         mkScaleMat (V2 scaleX scaleY) =
           V4 (V4 scaleX 0 0 0)
              (V4 0 scaleY 0 0)
              (V4 0 0      1 0)
              (V4 0 0      0 1)
 
-        transRot (V2 scaleX scaleY) = trans !*! rot
+        mkTransRot (V2 scaleX scaleY) = trans !*! rot
           where
             trans = mkTransformationMat identity $ V3 x y 0
             rot = case mRad of
@@ -105,8 +113,8 @@ renderRTexture rctx (RTexture BasicTextureShader{..} vao (Texture tex texW texH)
             back = mkTransformationMat identity k
 
 
-makeBasicRTexture :: BasicTextureShader -> Texture -> IO RTexture
-makeBasicRTexture bts tex@(Texture _ w h) = do
+setupBasicShader :: BasicTextureShader -> IO ReadiedBasicTextureShader
+setupBasicShader bts = do
   setupSampler2D (btsTexVar bts)
   vao <- GLU.makeVAO $ do
           setupVec2 (btsCoordVar bts) vtxPs
@@ -114,13 +122,10 @@ makeBasicRTexture bts tex@(Texture _ w h) = do
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
-  return $ RTexture bts vao tex
+  return $ ReadiedBasicTextureShader bts vao
   where
-    w' = fromIntegral w
-    h' = fromIntegral h
-
     vtxPs :: [GL.GLfloat]
-    vtxPs = [0, 0, w', 0, 0, h', w', h']
+    vtxPs = [0, 0, 1, 0, 0, 1, 1, 1]
 
     texPs :: [GL.GLfloat]
     texPs = [0, 1, 1, 1, 0, 0, 1, 0]
