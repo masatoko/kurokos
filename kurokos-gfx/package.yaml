@@ -22,6 +22,8 @@ dependencies:
   - bytestring
   - linear
   - lens
+  - vector
+  - text
 
 library:
   source-dirs: src

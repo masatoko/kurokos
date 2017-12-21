@@ -6,6 +6,8 @@ import           Control.Monad                                       (foldM,
                                                                       forM,
                                                                       unless)
 import           Data.ByteString.Internal                            (ByteString (..))
+import qualified Data.Text                                           as T
+import qualified Data.Vector                                         as V
 import           Foreign.ForeignPtr                                  (withForeignPtr)
 import           Foreign.Ptr                                         (plusPtr)
 import           Foreign.Storable                                    (peek,
@@ -39,11 +41,13 @@ import qualified Graphics.Rendering.FreeType.Internal.GlyphSlot      as FT
 import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 
-import Kurokos.Graphics.Texture (Texture (..))
+import           Kurokos.Graphics.Texture                            (Texture (..))
 
 -- Reffered this article [http://zyghost.com/articles/Haskell-font-rendering-with-freetype2-and-opengl.html].
 -- Original code is [https://github.com/schell/editor/blob/glyph-rendering/src/Graphics/Text/Font.hs].
 -- Thanks to schell.
+
+type TextTexture = V.Vector CharTexture
 
 data CharTexture = CharTexture
   { ctTexture :: Texture
@@ -51,11 +55,17 @@ data CharTexture = CharTexture
   , ctTop     :: Int
   }
 
+createTextTexture :: FT.FT_Face -> V3 Word8 -> T.Text -> IO TextTexture
+createTextTexture face color =
+  fmap V.fromList . mapM work . T.unpack
+  where
+    work = createCharTexture face color
+
 createCharTexture :: FT.FT_Face -> V3 Word8 -> Char -> IO CharTexture
-createCharTexture ff color char = do
-  charInd <- FT.ft_Get_Char_Index ff $ fromIntegral $ fromEnum char -- Get the unicode char index.
-  throwIfNot0 $ FT.ft_Load_Glyph ff charInd FT.ft_LOAD_DEFAULT -- Load the glyph into freetype memory.
-  slot <- peek $ FT.glyph ff -- GlyphSlot
+createCharTexture face color char = do
+  charInd <- FT.ft_Get_Char_Index face $ fromIntegral $ fromEnum char -- Get the unicode char index.
+  throwIfNot0 $ FT.ft_Load_Glyph face charInd FT.ft_LOAD_DEFAULT -- Load the glyph into freetype memory.
+  slot <- peek $ FT.glyph face -- GlyphSlot
 
   throwIfNot0 $ FT.ft_Render_Glyph slot FT.ft_RENDER_MODE_NORMAL
 
@@ -197,8 +207,8 @@ doneFace face = throwIfNot0 $ FT.ft_Done_Face face
 --
 
 setPixelSize :: FT.FT_Face -> Int -> IO ()
-setPixelSize ff size =
-  throwIfNot0 $ FT.ft_Set_Pixel_Sizes ff (fromIntegral size) 0
+setPixelSize face size =
+  throwIfNot0 $ FT.ft_Set_Pixel_Sizes face (fromIntegral size) 0
 
 throwIfNot0 :: IO FT.FT_Error -> IO ()
 throwIfNot0 m = do
