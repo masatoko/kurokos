@@ -7,6 +7,7 @@ import           Control.Monad             (unless)
 import           Data.Either.Extra         (fromRight)
 import           Foreign.Storable          (sizeOf)
 import           Linear.V2
+import           Linear.V3
 import           System.FilePath.Posix
 
 import qualified SDL
@@ -31,7 +32,10 @@ main = do
     SDL.swapInterval $= SDL.SynchronizedUpdates
     GL.clearColor $= GL.Color4 0 1 0 1
     --
-    charTexObj <- Font.loadCharacter "_test/mplus-1p-medium.ttf" 'A' 128
+    ft <- Font.initFreeType
+    face <- Font.newFace ft "_test/mplus-1p-medium.ttf"
+    Font.setPixelSize face 128
+    charTexObj <- Font.createCharTexture face (V3 255 0 0) 'A'
     let charTex = Kurokos.Graphics.Texture.Texture charTexObj 128 128
 
     br <- KG.newBasicRenderer
@@ -41,6 +45,9 @@ main = do
     Right tex1 <- KG.readTexture "_data/in_transit.png"
     Right tex2 <- KG.readTexture "_data/panorama.png"
     loop window br charTex tex2
+    --
+    Font.doneFace face
+    Font.doneFreeType ft
   where
     winConf =
       SDL.defaultWindow

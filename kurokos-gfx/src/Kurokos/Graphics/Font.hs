@@ -23,11 +23,12 @@ import           Foreign                                             (Ptr,
                                                                       Word8,
                                                                       alloca,
                                                                       allocaBytes,
+                                                                      peekArray,
                                                                       realloc,
-                                                                      reallocBytes,
-                                                                      peekArray)
+                                                                      reallocBytes)
 import           Foreign.C.String                                    (withCString)
-import           Foreign.C.Types                                     (CChar (..), CUChar (..))
+import           Foreign.C.Types                                     (CChar (..),
+                                                                      CUChar (..))
 import qualified Graphics.GLUtil                                     as GLU
 import qualified Graphics.Rendering.FreeType.Internal                as FT
 import qualified Graphics.Rendering.FreeType.Internal.Bitmap         as FT
@@ -42,67 +43,29 @@ import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 -- Original code is [https://github.com/schell/editor/blob/glyph-rendering/src/Graphics/Text/Font.hs].
 -- Thanks to schell.
 
-loadCharacter :: FilePath -> Char -> Int -> IO GL.TextureObject
-loadCharacter path char px = do
-  -- FreeType (http://freetype.org/freetype2/docs/tutorial/step1.html)
-  ft <- initFreeType
-
-  -- Get the Ubuntu Mono fontface.
-  -- ff <- newFace ft path
-  ff <- newFaceBS ft =<< BS.readFile path
-  throwIfNot0 $ FT.ft_Set_Pixel_Sizes ff (fromIntegral px) 0
-
-  -- Get the unicode char index.
-  chNdx <- FT.ft_Get_Char_Index ff $ fromIntegral $ fromEnum char
-
-  -- Load the glyph into freetype memory.
-  throwIfNot0 $ FT.ft_Load_Glyph ff chNdx FT.ft_LOAD_DEFAULT
-
-  -- Get the GlyphSlot.
-  slot <- peek $ FT.glyph ff
-
-  -- Number of glyphs
-  n <- peek $ FT.num_glyphs ff
-  putStrLn $ "glyphs:" ++ show n
-
-  fmt <- peek $ FT.format slot
-  putStrLn $ "glyph format:" ++ glyphFormatString fmt
-
-  -- This is [] for Ubuntu Mono, but I'm guessing for bitmap
-  -- fonts this would be populated with the different font
-  -- sizes.
-  putStr "Sizes:"
-  numSizes <- peek $ FT.num_fixed_sizes ff
-  sizesPtr <- peek $ FT.available_sizes ff
-  sizes <- forM [0 .. numSizes-1] $ \i ->
-      peek $ sizesPtr `plusPtr` fromIntegral i :: IO FTS.FT_Bitmap_Size
-  print sizes
-
-  l <- peek $ FT.bitmap_left slot
-  t <- peek $ FT.bitmap_top slot
-  putStrLn $ concat [ "left:"
-                    , show l
-                    , "\ntop:"
-                    , show t
-                    ]
+createCharTexture :: FT.FT_Face -> V3 Word8 -> Char -> IO GL.TextureObject
+createCharTexture ff color char = do
+  charInd <- FT.ft_Get_Char_Index ff $ fromIntegral $ fromEnum char -- Get the unicode char index.
+  throwIfNot0 $ FT.ft_Load_Glyph ff charInd FT.ft_LOAD_DEFAULT -- Load the glyph into freetype memory.
+  slot <- peek $ FT.glyph ff -- GlyphSlot
 
   throwIfNot0 $ FT.ft_Render_Glyph slot FT.ft_RENDER_MODE_NORMAL
 
   -- Get the char bitmap.
   bmp <- peek $ FT.bitmap slot
-  putStrLn $ concat ["width:"
-                    , show $ FT.width bmp
-                    , " rows:"
-                    , show $ FT.rows bmp
-                    , " pitch:"
-                    , show $ FT.pitch bmp
-                    , " num_grays:"
-                    , show $ FT.num_grays bmp
-                    , " pixel_mode:"
-                    , show $ FT.pixel_mode bmp
-                    , " palette_mode:"
-                    , show $ FT.palette_mode bmp
-                    ]
+  -- putStrLn $ concat ["width:"
+  --                   , show $ FT.width bmp
+  --                   , " rows:"
+  --                   , show $ FT.rows bmp
+  --                   , " pitch:"
+  --                   , show $ FT.pitch bmp
+  --                   , " num_grays:"
+  --                   , show $ FT.num_grays bmp
+  --                   , " pixel_mode:"
+  --                   , show $ FT.pixel_mode bmp
+  --                   , " palette_mode:"
+  --                   , show $ FT.palette_mode bmp
+  --                   ]
 
   let w  = fromIntegral $ FT.width bmp
       h  = fromIntegral $ FT.rows bmp
@@ -111,14 +74,12 @@ loadCharacter path char px = do
       p  = 4 - w `mod` 4
       nw = p + fromIntegral w'
 
-  putStrLn $ "padding by " ++ show p
+  -- putStrLn $ "padding by " ++ show p
 
   -- Get the raw bitmap data.
   bmpData <- peekArray (w*h) $ FT.buffer bmp
 
-  let data' = addPadding p w 0 bmpData
-      -- data'' = concat $ map toRGBA data'
-  data'' <- makeRGBABytes (V3 255 0 255) data'
+  bytes <- makeRGBABytes color $ addPadding p w 0 bmpData
 
   -- Set the texture params on our bound texture.
   GL.texture GL.Texture2D $= GL.Enabled
@@ -128,8 +89,8 @@ loadCharacter path char px = do
   GLU.printError
   --
   putStrLn "Buffering glyph bitmap into texture."
-  let (PS fptr off len) = data''
-  let pokeColor ptr _ = do
+  let (PS fptr off len) = bytes
+      pokeColor ptr _ = do
         GL.texImage2D
           GL.Texture2D
           GL.NoProxy
@@ -141,10 +102,9 @@ loadCharacter path char px = do
         return $ ptr `plusPtr` off
   withForeignPtr fptr $ \ptr0 ->
     foldM_ pokeColor ptr0 $ take len [0..]
-
   GLU.printError
 
-  putStrLn "Texture loaded."
+  -- putStrLn "Texture loaded."
   GL.textureFilter   GL.Texture2D   $= ((GL.Linear', Nothing), GL.Linear')
   GL.textureWrapMode GL.Texture2D GL.S $= (GL.Repeated, GL.ClampToEdge)
   GL.textureWrapMode GL.Texture2D GL.T $= (GL.Repeated, GL.ClampToEdge)
@@ -230,6 +190,10 @@ newFaceBS ft bytes@(PS fptr off len) =
 doneFace :: FT.FT_Face -> IO ()
 doneFace face = throwIfNot0 $ FT.ft_Done_Face face
 --
+
+setPixelSize :: FT.FT_Face -> Int -> IO ()
+setPixelSize ff size =
+  throwIfNot0 $ FT.ft_Set_Pixel_Sizes ff (fromIntegral size) 0
 
 throwIfNot0 :: IO FT.FT_Error -> IO ()
 throwIfNot0 m = do
