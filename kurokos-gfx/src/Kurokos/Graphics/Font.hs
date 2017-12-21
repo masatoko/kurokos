@@ -83,19 +83,16 @@ createCharTexture face color char = do
 
   let w  = fromIntegral $ FT.width bmp
       h  = fromIntegral $ FT.rows bmp
-      w' = fromIntegral w :: Integer
-      h' = fromIntegral h
 
   bmpData <- peekArray (w * h) $ FT.buffer bmp
   bytes <- makeRGBABytes color bmpData
 
-  -- Set the texture params on our bound texture.
 
   -- Generate an opengl texture.
   tex <- newBoundTexUnit 0
   GLU.printError
   --
-  putStrLn "Buffering glyph bitmap into texture."
+  -- Buffering glyph bitmap into texture.
   let (PS fptr off len) = bytes
       pokeColor ptr _ = do
         GL.texImage2D
@@ -103,7 +100,7 @@ createCharTexture face color char = do
           GL.NoProxy
           0
           GL.RGBA8 -- PixelInternalFormat
-          (GL.TextureSize2D (fromIntegral w) h')
+          (GL.TextureSize2D (fromIntegral w) (fromIntegral h))
           0
           (GL.PixelData GL.RGBA GL.UnsignedByte ptr) -- PixelFormat
         return $ ptr `plusPtr` off
@@ -111,20 +108,18 @@ createCharTexture face color char = do
     foldM_ pokeColor ptr0 $ take len [0..]
   GLU.printError
 
-  GL.textureFilter   GL.Texture2D   $= ((GL.Linear', Nothing), GL.Linear')
+  GL.textureFilter   GL.Texture2D $= ((GL.Linear', Nothing), GL.Linear')
   GL.textureWrapMode GL.Texture2D GL.S $= (GL.Repeated, GL.ClampToEdge)
   GL.textureWrapMode GL.Texture2D GL.T $= (GL.Repeated, GL.ClampToEdge)
-
+  --
   left <- fromIntegral <$> peek (FT.bitmap_left slot)
-  top <- fromIntegral <$> peek (FT.bitmap_top slot)
-  FT.FT_Vector x y <- peek $ FT.advance slot
+  top  <- fromIntegral <$> peek (FT.bitmap_top slot)
+  FT.FT_Vector advanceX advanceY <- peek $ FT.advance slot
   gm <- peek $ FT.metrics slot -- FT_Glyph_Metrics
   return $ CharTexture
-    (Texture tex w h)
-    left
-    top
-    (fromIntegral x / 64)
-    (fromIntegral y / 64)
+    (Texture tex w h) left top
+    (fromIntegral advanceX / 64)
+    (fromIntegral advanceY / 64)
     (top - h)
 
 newBoundTexUnit :: Int -> IO GL.TextureObject
@@ -152,14 +147,6 @@ makeRGBABytes (V3 r g b) cs =
       fp <- mallocPlainForeignPtrBytes l
       withForeignPtr fp $ \p -> f p
       return $! PS fp 0 l
-
-glyphFormatString :: FT.FT_Glyph_Format -> String
-glyphFormatString fmt
-  | fmt == FT.ft_GLYPH_FORMAT_COMPOSITE = "ft_GLYPH_FORMAT_COMPOSITE"
-  | fmt == FT.ft_GLYPH_FORMAT_OUTLINE   = "ft_GLYPH_FORMAT_OUTLINE"
-  | fmt == FT.ft_GLYPH_FORMAT_PLOTTER   = "ft_GLYPH_FORMAT_PLOTTER"
-  | fmt == FT.ft_GLYPH_FORMAT_BITMAP    = "ft_GLYPH_FORMAT_BITMAP"
-  | otherwise                           = "ft_GLYPH_FORMAT_NONE"
 
 --
 withFreeType :: (FT.FT_Library -> IO a) -> IO a
