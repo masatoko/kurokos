@@ -3,6 +3,7 @@ module Kurokos.Graphics.Texture
   ( Texture (..)
   , readTexture
   , decodeTexture
+  , deleteTexture
   ) where
 
 import qualified Codec.Picture             as Pic
@@ -15,14 +16,14 @@ import qualified Graphics.Rendering.OpenGL as GL
 
 import           Kurokos.Graphics.Types    (Texture (..))
 
-readTexture :: FilePath -> IO (Either String Texture)
+readTexture :: FilePath -> IO Texture
 readTexture fpath =
   decodeTexture =<< BS.readFile fpath
 
-decodeTexture :: BS.ByteString -> IO (Either String Texture)
+decodeTexture :: BS.ByteString -> IO Texture
 decodeTexture bytes =
   case Pic.decodeImage bytes of
-    Left err -> return $ Left err
+    Left err -> E.throwIO $ userError err
     Right dynamicImage -> do
       let image = Pic.convertRGBA8 dynamicImage
           w = Pic.imageWidth image
@@ -30,8 +31,13 @@ decodeTexture bytes =
           p = Pic.imageData image
       tex <- GLU.loadTexture $ GLU.texInfo w h GLU.TexRGBA p
       initTexture tex
-      return $ Right $ Texture tex w h
+      return $ Texture tex w h
 
+deleteTexture :: Texture -> IO ()
+deleteTexture =
+  GL.deleteObjectName . texObject
+
+initTexture :: GL.TextureObject -> IO ()
 initTexture tex = do
   GL.textureBinding GL.Texture2D $= Just tex -- glBindTexture
   GL.textureFilter GL.Texture2D $= ((GL.Nearest, Nothing), GL.Nearest)

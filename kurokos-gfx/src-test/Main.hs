@@ -4,6 +4,8 @@ module Main where
 
 import qualified Control.Exception         as E
 import           Control.Monad             (unless)
+import           Control.Monad.IO.Class    (liftIO)
+import           Control.Monad.Managed     (managed, runManaged)
 import           Data.Either.Extra         (fromRight)
 import qualified Data.Vector               as V
 import           Foreign.Storable          (sizeOf)
@@ -34,23 +36,22 @@ main = do
     SDL.swapInterval $= SDL.SynchronizedUpdates
     GL.clearColor $= GL.Color4 0 1 0 1
     --
-    ft <- Font.initFreeType
-    face <- Font.newFace ft "_test/mplus-1p-medium.ttf"
-    Font.setPixelSize face 32
-    -- chartex <- Font.createCharTexture face (V3 255 0 0) 'A'
+    runManaged $ do
+      ft <- managed Font.withFreeType
+      face <- managed $ E.bracket (Font.newFace ft "_test/mplus-1p-medium.ttf") Font.doneFace
+      liftIO $ Font.setPixelSize face 32
     --
-    texttex <- Font.createTextTexture face (V3 0 0 255) "Hello, World! こんにちは世界"
-
-    br <- KG.newBasicRenderer
-    winSize <- get $ SDL.windowSize window
-    KG.updateBasicRenderer KG.Ortho winSize br
-    --
-    Right tex1 <- KG.readTexture "_data/in_transit.png"
-    Right tex2 <- KG.readTexture "_data/panorama.png"
-    loop window br tex1 tex2 texttex
-    --
-    Font.doneFace face
-    Font.doneFreeType ft
+      texttex <- managed $
+                  E.bracket (Font.createTextTexture face (V3 0 0 255) "Hello, World!")
+                            Font.deleteTextTexture
+      liftIO $ do
+        br <- KG.newBasicRenderer
+        winSize <- get $ SDL.windowSize window
+        KG.updateBasicRenderer KG.Ortho winSize br
+        --
+        tex1 <- KG.readTexture "_data/in_transit.png"
+        tex2 <- KG.readTexture "_data/panorama.png"
+        loop window br tex1 tex2 texttex
   where
     winConf =
       SDL.defaultWindow

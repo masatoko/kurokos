@@ -10,8 +10,10 @@ module Kurokos.Graphics.Font
   , doneFace
   , setPixelSize
   -- ** Texture
-  , createTextTexture
   , createCharTexture
+  , deleteCharTexture
+  , createTextTexture
+  , deleteTextTexture
   ) where
 
 import qualified Control.Exception                                   as E
@@ -57,6 +59,7 @@ import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 import qualified Graphics.Rendering.FreeType.Internal.Vector         as FT
 
+import           Kurokos.Graphics.Texture                            (deleteTexture)
 import           Kurokos.Graphics.Types                              (CharTexture (..),
                                                                       TextTexture,
                                                                       Texture (..))
@@ -64,6 +67,12 @@ import           Kurokos.Graphics.Types                              (CharTextur
 -- Reffered this article [http://zyghost.com/articles/Haskell-font-rendering-with-freetype2-and-opengl.html].
 -- Original code is [https://github.com/schell/editor/blob/glyph-rendering/src/Graphics/Text/Font.hs].
 -- Thanks to schell.
+
+deleteCharTexture :: CharTexture -> IO ()
+deleteCharTexture = deleteTexture . ctTexture
+
+deleteTextTexture :: TextTexture -> IO ()
+deleteTextTexture = mapM_ deleteCharTexture
 
 createTextTexture :: FT.FT_Face -> V3 Word8 -> T.Text -> IO TextTexture
 createTextTexture face color =
@@ -138,7 +147,7 @@ createCharTexture face color char = do
 
 newBoundTexUnit :: Int -> IO GL.TextureObject
 newBoundTexUnit u = do
-  [tex] <- GL.genObjectNames 1
+  tex <- GL.genObjectName
   -- GL.texture GL.Texture2D $= GL.Enabled
   GL.activeTexture $= GL.TextureUnit (fromIntegral u)
   GL.textureBinding GL.Texture2D $= Just tex
