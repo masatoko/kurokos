@@ -41,19 +41,13 @@ import qualified Graphics.Rendering.FreeType.Internal.GlyphSlot      as FT
 import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 
-import           Kurokos.Graphics.Texture                            (Texture (..))
+import           Kurokos.Graphics.Types                              (CharTexture (..),
+                                                                      TextTexture,
+                                                                      Texture (..))
 
 -- Reffered this article [http://zyghost.com/articles/Haskell-font-rendering-with-freetype2-and-opengl.html].
 -- Original code is [https://github.com/schell/editor/blob/glyph-rendering/src/Graphics/Text/Font.hs].
 -- Thanks to schell.
-
-type TextTexture = V.Vector CharTexture
-
-data CharTexture = CharTexture
-  { ctTexture :: Texture
-  , ctLeft    :: Int
-  , ctTop     :: Int
-  }
 
 createTextTexture :: FT.FT_Face -> V3 Word8 -> T.Text -> IO TextTexture
 createTextTexture face color =

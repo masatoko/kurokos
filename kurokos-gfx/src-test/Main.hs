@@ -22,6 +22,7 @@ import qualified Kurokos.Graphics.Font     as Font
 import qualified Kurokos.Graphics.Shader   as KG
 import qualified Kurokos.Graphics.Texture  as KG
 import qualified Kurokos.Graphics.Texture
+import qualified Kurokos.Graphics.Types    as KG
 
 main :: IO ()
 main = do
@@ -43,7 +44,7 @@ main = do
     --
     Right tex1 <- KG.readTexture "_data/in_transit.png"
     Right tex2 <- KG.readTexture "_data/panorama.png"
-    loop window br (Font.ctTexture chartex) tex2
+    loop window br (KG.ctTexture chartex) tex2
     --
     Font.doneFace face
     Font.doneFreeType ft

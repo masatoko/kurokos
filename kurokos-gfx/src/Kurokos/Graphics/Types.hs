@@ -1,6 +1,7 @@
 module Kurokos.Graphics.Types where
 
-import Linear
+import qualified Data.Vector               as V
+import           Linear
 
 import qualified Graphics.Rendering.OpenGL as GL
 
@@ -19,3 +20,21 @@ data AttribVar tag = AttribVar tag GL.AttribLocation
 data UniformVar tag = UniformVar tag GL.UniformLocation
 
 type Vec2 = V2 Float
+
+-- Texture
+
+data Texture = Texture
+  { texObject :: GL.TextureObject
+  , texWidth  :: Int
+  , texHeight :: Int
+  }
+
+-- Font
+
+type TextTexture = V.Vector CharTexture
+
+data CharTexture = CharTexture
+  { ctTexture :: Texture
+  , ctLeft    :: Int
+  , ctTop     :: Int
+  }

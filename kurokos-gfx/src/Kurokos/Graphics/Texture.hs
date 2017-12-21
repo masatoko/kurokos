@@ -13,11 +13,7 @@ import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
-data Texture = Texture
-  { texObject :: GL.TextureObject
-  , texWidth :: Int
-  , texHeight :: Int
-  }
+import           Kurokos.Graphics.Types    (Texture (..))
 
 readTexture :: FilePath -> IO (Either String Texture)
 readTexture fpath =
