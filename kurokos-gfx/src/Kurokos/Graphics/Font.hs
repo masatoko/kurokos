@@ -1,5 +1,6 @@
 module Kurokos.Graphics.Font where
 
+import qualified Control.Exception                                   as E
 import           Control.Monad                                       (foldM,
                                                                       foldM_,
                                                                       forM,
@@ -18,9 +19,13 @@ import qualified Data.ByteString                                     as BS
 import           Graphics.Rendering.OpenGL                           (get, ($=))
 import qualified Graphics.Rendering.OpenGL                           as GL
 
-import           Foreign
-import           Foreign.C.String
+import           Foreign                                             (Ptr,
+                                                                      Word8,
+                                                                      alloca,
+                                                                      peekArray)
+import           Foreign.C.String                                    (withCString)
 import           Foreign.C.Types                                     (CChar (..))
+import qualified Graphics.GLUtil                                     as GLU
 import qualified Graphics.Rendering.FreeType.Internal                as FT
 import qualified Graphics.Rendering.FreeType.Internal.Bitmap         as FT
 import qualified Graphics.Rendering.FreeType.Internal.BitmapSize     as FTS
@@ -37,17 +42,17 @@ import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 loadCharacter :: FilePath -> Char -> Int -> IO GL.TextureObject
 loadCharacter path char px = do
     -- FreeType (http://freetype.org/freetype2/docs/tutorial/step1.html)
-    ft <- freeType
+    ft <- initFreeType
 
     -- Get the Ubuntu Mono fontface.
-    ff <- fontFace ft path
-    runFreeType $ FT.ft_Set_Pixel_Sizes ff (fromIntegral px) 0
+    ff <- newFace ft path
+    throwIfNot0 $ FT.ft_Set_Pixel_Sizes ff (fromIntegral px) 0
 
     -- Get the unicode char index.
     chNdx <- FT.ft_Get_Char_Index ff $ fromIntegral $ fromEnum char
 
     -- Load the glyph into freetype memory.
-    runFreeType $ FT.ft_Load_Glyph ff chNdx FT.ft_LOAD_DEFAULT
+    throwIfNot0 $ FT.ft_Load_Glyph ff chNdx FT.ft_LOAD_DEFAULT
 
     -- Get the GlyphSlot.
     slot <- peek $ FT.glyph ff
@@ -77,7 +82,7 @@ loadCharacter path char px = do
                       , show t
                       ]
 
-    runFreeType $ FT.ft_Render_Glyph slot FT.ft_RENDER_MODE_NORMAL
+    throwIfNot0 $ FT.ft_Render_Glyph slot FT.ft_RENDER_MODE_NORMAL
 
     -- Get the char bitmap.
     bmp <- peek $ FT.bitmap slot
@@ -116,7 +121,7 @@ loadCharacter path char px = do
 
     -- Generate an opengl texture.
     tex <- newBoundTexUnit 0
-    printError
+    GLU.printError
     --
     putStrLn "Buffering glyph bitmap into texture."
     let (PS fptr off len) = data''
@@ -133,7 +138,7 @@ loadCharacter path char px = do
     withForeignPtr fptr $ \ptr0 ->
       foldM_ pokeColor ptr0 $ take len [0..]
 
-    printError
+    GLU.printError
 
     putStrLn "Texture loaded."
     GL.textureFilter   GL.Texture2D   $= ((GL.Linear', Nothing), GL.Linear')
@@ -151,11 +156,12 @@ newBoundTexUnit u = do
   return tex
 
 addPadding :: Int -> Int -> a -> [a] -> [a]
-addPadding _ _ _ [] = []
+addPadding _   _ _   [] = []
 addPadding amt w val xs = a ++ b ++ c
-    where a = take w xs
-          b = replicate amt val
-          c = addPadding amt w val (drop w xs)
+  where
+    a = take w xs
+    b = replicate amt val
+    c = addPadding amt w val (drop w xs)
 
 makeRGBABytes :: V3 Word8 -> [CChar] -> IO BS.ByteString
 makeRGBABytes (V3 r g b) cs =
@@ -169,38 +175,39 @@ makeRGBABytes (V3 r g b) cs =
           poke p depth
           return $ p `plusPtr` 1
 
-create :: Int -> (Ptr Word8 -> IO ()) -> IO ByteString
-create l f = do
-  fp <- mallocPlainForeignPtrBytes l
-  withForeignPtr fp $ \p -> f p
-  return $! PS fp 0 l
+    create :: Int -> (Ptr Word8 -> IO ()) -> IO ByteString
+    create l f = do
+      fp <- mallocPlainForeignPtrBytes l
+      withForeignPtr fp $ \p -> f p
+      return $! PS fp 0 l
 
 glyphFormatString :: FT.FT_Glyph_Format -> String
 glyphFormatString fmt
-    | fmt == FT.ft_GLYPH_FORMAT_COMPOSITE = "ft_GLYPH_FORMAT_COMPOSITE"
-    | fmt == FT.ft_GLYPH_FORMAT_OUTLINE = "ft_GLYPH_FORMAT_OUTLINE"
-    | fmt == FT.ft_GLYPH_FORMAT_PLOTTER = "ft_GLYPH_FORMAT_PLOTTER"
-    | fmt == FT.ft_GLYPH_FORMAT_BITMAP = "ft_GLYPH_FORMAT_BITMAP"
-    | otherwise = "ft_GLYPH_FORMAT_NONE"
+  | fmt == FT.ft_GLYPH_FORMAT_COMPOSITE = "ft_GLYPH_FORMAT_COMPOSITE"
+  | fmt == FT.ft_GLYPH_FORMAT_OUTLINE   = "ft_GLYPH_FORMAT_OUTLINE"
+  | fmt == FT.ft_GLYPH_FORMAT_PLOTTER   = "ft_GLYPH_FORMAT_PLOTTER"
+  | fmt == FT.ft_GLYPH_FORMAT_BITMAP    = "ft_GLYPH_FORMAT_BITMAP"
+  | otherwise                           = "ft_GLYPH_FORMAT_NONE"
 
+initFreeType :: IO FT.FT_Library
+initFreeType = alloca $ \p -> do
+  throwIfNot0 $ FT.ft_Init_FreeType p
+  peek p
 
-runFreeType :: IO FT.FT_Error -> IO ()
-runFreeType m = do
-    r <- m
-    unless (r == 0) $ fail $ "FreeType Error:" ++ show r
+doneFreeType :: FT.FT_Library -> IO ()
+doneFreeType ft = throwIfNot0 $ FT.ft_Done_FreeType ft
 
+newFace :: FT.FT_Library -> FilePath -> IO FT.FT_Face
+newFace ft fp = withCString fp $ \str ->
+  alloca $ \ptr -> do
+    throwIfNot0 $ FT.ft_New_Face ft str 0 ptr
+    peek ptr
 
-freeType :: IO FT.FT_Library
-freeType = alloca $ \p -> do
-    runFreeType $ FT.ft_Init_FreeType p
-    peek p
+doneFace :: FT.FT_Face -> IO ()
+doneFace face = throwIfNot0 $ FT.ft_Done_Face face
 
-
-fontFace :: FT.FT_Library -> FilePath -> IO FT.FT_Face
-fontFace ft fp = withCString fp $ \str ->
-    alloca $ \ptr -> do
-        runFreeType $ FT.ft_New_Face ft str 0 ptr
-        peek ptr
-
-printError :: IO ()
-printError = get GL.errors >>= mapM_ (hPutStrLn stderr . ("GL: "++) . show)
+throwIfNot0 :: IO FT.FT_Error -> IO ()
+throwIfNot0 m = do
+  r <- m
+  unless (r == 0) $
+    E.throwIO $ userError $ "FreeType Error:" ++ show r
