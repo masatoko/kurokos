@@ -37,9 +37,11 @@ import qualified Graphics.Rendering.FreeType.Internal.Bitmap         as FT
 import qualified Graphics.Rendering.FreeType.Internal.BitmapSize     as FTS
 import qualified Graphics.Rendering.FreeType.Internal.Face           as FT
 import qualified Graphics.Rendering.FreeType.Internal.FaceType       as FT
+import qualified Graphics.Rendering.FreeType.Internal.GlyphMetrics   as GM
 import qualified Graphics.Rendering.FreeType.Internal.GlyphSlot      as FT
 import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
+import qualified Graphics.Rendering.FreeType.Internal.Vector         as FT
 
 import           Kurokos.Graphics.Types                              (CharTexture (..),
                                                                       TextTexture,
@@ -65,32 +67,29 @@ createCharTexture face color char = do
 
   -- Get the char bitmap.
   bmp <- peek $ FT.bitmap slot
-  putStrLn $ concat ["width:"
-                    , show $ FT.width bmp
-                    , " rows:"
-                    , show $ FT.rows bmp
-                    , " pitch:"
-                    , show $ FT.pitch bmp
-                    , " num_grays:"
-                    , show $ FT.num_grays bmp
-                    , " pixel_mode:"
-                    , show $ FT.pixel_mode bmp
-                    , " palette_mode:"
-                    , show $ FT.palette_mode bmp
-                    ]
+  -- putStrLn $ concat ["width:"
+  --                   , show $ FT.width bmp
+  --                   , " rows:"
+  --                   , show $ FT.rows bmp
+  --                   , " pitch:"
+  --                   , show $ FT.pitch bmp
+  --                   , " num_grays:"
+  --                   , show $ FT.num_grays bmp
+  --                   , " pixel_mode:"
+  --                   , show $ FT.pixel_mode bmp
+  --                   , " palette_mode:"
+  --                   , show $ FT.palette_mode bmp
+  --                   ]
 
   let w  = fromIntegral $ FT.width bmp
       h  = fromIntegral $ FT.rows bmp
       w' = fromIntegral w :: Integer
       h' = fromIntegral h
-      p  = 4 - w `mod` 4
-      nw = p + fromIntegral w'
 
-  bmpData <- peekArray (w*h) $ FT.buffer bmp
-  bytes <- makeRGBABytes color $ addPadding p w 0 bmpData
+  bmpData <- peekArray (w * h) $ FT.buffer bmp
+  bytes <- makeRGBABytes color bmpData
 
   -- Set the texture params on our bound texture.
-  GL.texture GL.Texture2D $= GL.Enabled
 
   -- Generate an opengl texture.
   tex <- newBoundTexUnit 0
@@ -104,7 +103,7 @@ createCharTexture face color char = do
           GL.NoProxy
           0
           GL.RGBA8 -- PixelInternalFormat
-          (GL.TextureSize2D (fromIntegral nw) h')
+          (GL.TextureSize2D (fromIntegral w) h')
           0
           (GL.PixelData GL.RGBA GL.UnsignedByte ptr) -- PixelFormat
         return $ ptr `plusPtr` off
@@ -116,25 +115,25 @@ createCharTexture face color char = do
   GL.textureWrapMode GL.Texture2D GL.S $= (GL.Repeated, GL.ClampToEdge)
   GL.textureWrapMode GL.Texture2D GL.T $= (GL.Repeated, GL.ClampToEdge)
 
-  CharTexture (Texture tex w h)
-    <$> (fromIntegral <$> peek (FT.bitmap_left slot))
-    <*> (fromIntegral <$> peek (FT.bitmap_top slot))
+  left <- fromIntegral <$> peek (FT.bitmap_left slot)
+  top <- fromIntegral <$> peek (FT.bitmap_top slot)
+  FT.FT_Vector x y <- peek $ FT.advance slot
+  gm <- peek $ FT.metrics slot -- FT_Glyph_Metrics
+  return $ CharTexture
+    (Texture tex w h)
+    left
+    top
+    (fromIntegral x / 64)
+    (fromIntegral y / 64)
+    (top - h)
 
 newBoundTexUnit :: Int -> IO GL.TextureObject
 newBoundTexUnit u = do
   [tex] <- GL.genObjectNames 1
-  GL.texture GL.Texture2D $= GL.Enabled
+  -- GL.texture GL.Texture2D $= GL.Enabled
   GL.activeTexture $= GL.TextureUnit (fromIntegral u)
   GL.textureBinding GL.Texture2D $= Just tex
   return tex
-
-addPadding :: Int -> Int -> a -> [a] -> [a]
-addPadding _   _ _   [] = []
-addPadding amt w val xs = a ++ b ++ c
-  where
-    a = take w xs
-    b = replicate amt val
-    c = addPadding amt w val (drop w xs)
 
 makeRGBABytes :: V3 Word8 -> [CChar] -> IO BS.ByteString
 makeRGBABytes (V3 r g b) cs =

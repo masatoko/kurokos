@@ -5,6 +5,7 @@ module Main where
 import qualified Control.Exception         as E
 import           Control.Monad             (unless)
 import           Data.Either.Extra         (fromRight)
+import qualified Data.Vector               as V
 import           Foreign.Storable          (sizeOf)
 import           Linear.V2
 import           Linear.V3
@@ -35,8 +36,10 @@ main = do
     --
     ft <- Font.initFreeType
     face <- Font.newFace ft "_test/mplus-1p-medium.ttf"
-    Font.setPixelSize face 128
-    chartex <- Font.createCharTexture face (V3 255 0 0) 'A'
+    Font.setPixelSize face 32
+    -- chartex <- Font.createCharTexture face (V3 255 0 0) 'A'
+    --
+    texttex <- Font.createTextTexture face (V3 0 0 255) "Hello, World! こんにちは世界"
 
     br <- KG.newBasicRenderer
     winSize <- get $ SDL.windowSize window
@@ -44,7 +47,7 @@ main = do
     --
     Right tex1 <- KG.readTexture "_data/in_transit.png"
     Right tex2 <- KG.readTexture "_data/panorama.png"
-    loop window br (KG.ctTexture chartex) tex2
+    loop window br tex1 tex2 texttex
     --
     Font.doneFace face
     Font.doneFreeType ft
@@ -63,15 +66,25 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 4 0
         }
 
-    loop win br tex1 tex2 = go 0
+    loop win br tex1 tex2 texttex = go 0
       where
         go i = do
+          let i' = fromIntegral i
           GLU.printError
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          let ctx = KG.RContext (V2 320 240) (Just (pure $ fromIntegral i)) (Just $ fromIntegral i / 10) Nothing
+          let ctx = KG.RContext (V2 320 240) (Just (pure i')) (Just $ i' / 10) Nothing
           KG.renderTexByBasicRenderer_ br ctx $ if i `mod` 60 < 30 then tex1 else tex2
+          let x0 = 100
+              y = 240
+              work x (KG.CharTexture tex left top dx _ offY) = do
+                let x' = x + fromIntegral left
+                    y' = y + fromIntegral offY
+                let ctx = KG.RContext (V2 x' y') Nothing Nothing Nothing
+                KG.renderTexByBasicRenderer_ br ctx tex
+                return $ x + dx
+          V.foldM_ work x0 texttex
           --
           SDL.glSwapWindow win
           unless (any shouldExit events) $ go (i + 1)
