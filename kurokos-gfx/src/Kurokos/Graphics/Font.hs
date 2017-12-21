@@ -1,4 +1,18 @@
-module Kurokos.Graphics.Font where
+module Kurokos.Graphics.Font
+  (
+  -- ** Initialize FreeType
+    withFreeType
+  , initFreeType
+  , doneFreeType
+  -- ** Face
+  , newFace
+  , newFaceBS
+  , doneFace
+  , setPixelSize
+  -- ** Texture
+  , createTextTexture
+  , createCharTexture
+  ) where
 
 import qualified Control.Exception                                   as E
 import           Control.Monad                                       (foldM,
@@ -136,9 +150,9 @@ makeRGBABytes (V3 r g b) cs =
     foldM_ work ptr0 cs
   where
     work p0 (CChar a) =
-      foldM poke' p0 [r,g,b, fromIntegral a]
+      foldM pokeIncr p0 [r,g,b, fromIntegral a]
       where
-        poke' p depth = do
+        pokeIncr p depth = do
           poke p depth
           return $ p `plusPtr` 1
 
