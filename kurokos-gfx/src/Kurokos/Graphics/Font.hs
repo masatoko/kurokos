@@ -189,6 +189,10 @@ glyphFormatString fmt
   | fmt == FT.ft_GLYPH_FORMAT_BITMAP    = "ft_GLYPH_FORMAT_BITMAP"
   | otherwise                           = "ft_GLYPH_FORMAT_NONE"
 
+--
+withFreeType :: (FT.FT_Library -> IO a) -> IO a
+withFreeType = E.bracket initFreeType doneFreeType
+
 initFreeType :: IO FT.FT_Library
 initFreeType = alloca $ \p -> do
   throwIfNot0 $ FT.ft_Init_FreeType p
@@ -196,7 +200,9 @@ initFreeType = alloca $ \p -> do
 
 doneFreeType :: FT.FT_Library -> IO ()
 doneFreeType ft = throwIfNot0 $ FT.ft_Done_FreeType ft
+--
 
+--
 newFace :: FT.FT_Library -> FilePath -> IO FT.FT_Face
 newFace ft fp = withCString fp $ \str ->
   alloca $ \ptr -> do
@@ -205,6 +211,7 @@ newFace ft fp = withCString fp $ \str ->
 
 doneFace :: FT.FT_Face -> IO ()
 doneFace face = throwIfNot0 $ FT.ft_Done_Face face
+--
 
 throwIfNot0 :: IO FT.FT_Error -> IO ()
 throwIfNot0 m = do
