@@ -1,1 +1,4 @@
 kurokos-gfx.cabal
+
+_test
+src/Graphics/

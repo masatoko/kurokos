@@ -6,8 +6,8 @@ import qualified Control.Exception         as E
 import           Control.Monad             (unless)
 import           Data.Either.Extra         (fromRight)
 import           Foreign.Storable          (sizeOf)
+import           Linear.V2
 import           System.FilePath.Posix
-import Linear.V2
 
 import qualified SDL
 import           SDL.Event
@@ -17,8 +17,10 @@ import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (get, ($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
-import qualified Kurokos.Graphics.Texture  as KG
+import qualified Kurokos.Graphics.Font     as Font
 import qualified Kurokos.Graphics.Shader   as KG
+import qualified Kurokos.Graphics.Texture  as KG
+import qualified Kurokos.Graphics.Texture
 
 main :: IO ()
 main = do
@@ -29,13 +31,16 @@ main = do
     SDL.swapInterval $= SDL.SynchronizedUpdates
     GL.clearColor $= GL.Color4 0 1 0 1
     --
+    charTexObj <- Font.loadCharacter "_test/mplus-1p-medium.ttf" 'A' 128
+    let charTex = Kurokos.Graphics.Texture.Texture charTexObj 128 128
+
     br <- KG.newBasicRenderer
     winSize <- get $ SDL.windowSize window
     KG.updateBasicRenderer KG.Ortho winSize br
     --
     Right tex1 <- KG.readTexture "_data/in_transit.png"
     Right tex2 <- KG.readTexture "_data/panorama.png"
-    loop window br tex1 tex2
+    loop window br charTex tex2
   where
     winConf =
       SDL.defaultWindow

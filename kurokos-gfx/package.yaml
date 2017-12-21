@@ -16,6 +16,7 @@ dependencies:
   - OpenGL
   - OpenGLRaw
   - GLUtil
+  - freetype2
   - JuicyPixels
   - JuicyPixels-extra
   - bytestring
@@ -28,6 +29,7 @@ library:
     - Kurokos.Graphics
     - Kurokos.Graphics.Texture
     - Kurokos.Graphics.Shader
+    - Kurokos.Graphics.Font
 
 executables:
   test-gfx:

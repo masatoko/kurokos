@@ -44,7 +44,8 @@ packages:
 extra-deps:
   - GLUtil-0.9.3
   - sdl2-2.3.0
-  
+  - freetype2-0.1.2
+
 # Override default flag values for local packages and extra-deps
 # flags: {}
 
@@ -65,6 +66,10 @@ extra-deps:
 # Extra directories used by stack for building
 # extra-include-dirs: [/path/to/dir]
 # extra-lib-dirs: [/path/to/dir]
+extra-include-dirs:
+  - C:/msys64/mingw64/include # For Msys on Windows
+extra-lib-dirs:
+  - C:/msys64/mingw64/lib # For Msys on Windows
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
