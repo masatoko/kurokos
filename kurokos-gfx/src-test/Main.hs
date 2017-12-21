@@ -35,8 +35,7 @@ main = do
     ft <- Font.initFreeType
     face <- Font.newFace ft "_test/mplus-1p-medium.ttf"
     Font.setPixelSize face 128
-    charTexObj <- Font.createCharTexture face (V3 255 0 0) 'A'
-    let charTex = Kurokos.Graphics.Texture.Texture charTexObj 128 128
+    chartex <- Font.createCharTexture face (V3 255 0 0) 'A'
 
     br <- KG.newBasicRenderer
     winSize <- get $ SDL.windowSize window
@@ -44,7 +43,7 @@ main = do
     --
     Right tex1 <- KG.readTexture "_data/in_transit.png"
     Right tex2 <- KG.readTexture "_data/panorama.png"
-    loop window br charTex tex2
+    loop window br (Font.ctTexture chartex) tex2
     --
     Font.doneFace face
     Font.doneFreeType ft

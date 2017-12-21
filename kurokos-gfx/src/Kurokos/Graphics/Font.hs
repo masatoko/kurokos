@@ -39,11 +39,19 @@ import qualified Graphics.Rendering.FreeType.Internal.GlyphSlot      as FT
 import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 
+import Kurokos.Graphics.Texture (Texture (..))
+
 -- Reffered this article [http://zyghost.com/articles/Haskell-font-rendering-with-freetype2-and-opengl.html].
 -- Original code is [https://github.com/schell/editor/blob/glyph-rendering/src/Graphics/Text/Font.hs].
 -- Thanks to schell.
 
-createCharTexture :: FT.FT_Face -> V3 Word8 -> Char -> IO GL.TextureObject
+data CharTexture = CharTexture
+  { ctTexture :: Texture
+  , ctLeft    :: Int
+  , ctTop     :: Int
+  }
+
+createCharTexture :: FT.FT_Face -> V3 Word8 -> Char -> IO CharTexture
 createCharTexture ff color char = do
   charInd <- FT.ft_Get_Char_Index ff $ fromIntegral $ fromEnum char -- Get the unicode char index.
   throwIfNot0 $ FT.ft_Load_Glyph ff charInd FT.ft_LOAD_DEFAULT -- Load the glyph into freetype memory.
@@ -53,19 +61,19 @@ createCharTexture ff color char = do
 
   -- Get the char bitmap.
   bmp <- peek $ FT.bitmap slot
-  -- putStrLn $ concat ["width:"
-  --                   , show $ FT.width bmp
-  --                   , " rows:"
-  --                   , show $ FT.rows bmp
-  --                   , " pitch:"
-  --                   , show $ FT.pitch bmp
-  --                   , " num_grays:"
-  --                   , show $ FT.num_grays bmp
-  --                   , " pixel_mode:"
-  --                   , show $ FT.pixel_mode bmp
-  --                   , " palette_mode:"
-  --                   , show $ FT.palette_mode bmp
-  --                   ]
+  putStrLn $ concat ["width:"
+                    , show $ FT.width bmp
+                    , " rows:"
+                    , show $ FT.rows bmp
+                    , " pitch:"
+                    , show $ FT.pitch bmp
+                    , " num_grays:"
+                    , show $ FT.num_grays bmp
+                    , " pixel_mode:"
+                    , show $ FT.pixel_mode bmp
+                    , " palette_mode:"
+                    , show $ FT.palette_mode bmp
+                    ]
 
   let w  = fromIntegral $ FT.width bmp
       h  = fromIntegral $ FT.rows bmp
@@ -74,11 +82,7 @@ createCharTexture ff color char = do
       p  = 4 - w `mod` 4
       nw = p + fromIntegral w'
 
-  -- putStrLn $ "padding by " ++ show p
-
-  -- Get the raw bitmap data.
   bmpData <- peekArray (w*h) $ FT.buffer bmp
-
   bytes <- makeRGBABytes color $ addPadding p w 0 bmpData
 
   -- Set the texture params on our bound texture.
@@ -104,12 +108,13 @@ createCharTexture ff color char = do
     foldM_ pokeColor ptr0 $ take len [0..]
   GLU.printError
 
-  -- putStrLn "Texture loaded."
   GL.textureFilter   GL.Texture2D   $= ((GL.Linear', Nothing), GL.Linear')
   GL.textureWrapMode GL.Texture2D GL.S $= (GL.Repeated, GL.ClampToEdge)
   GL.textureWrapMode GL.Texture2D GL.T $= (GL.Repeated, GL.ClampToEdge)
 
-  return tex
+  CharTexture (Texture tex w h)
+    <$> (fromIntegral <$> peek (FT.bitmap_left slot))
+    <*> (fromIntegral <$> peek (FT.bitmap_top slot))
 
 newBoundTexUnit :: Int -> IO GL.TextureObject
 newBoundTexUnit u = do
