@@ -22,9 +22,12 @@ import qualified Graphics.Rendering.OpenGL                           as GL
 import           Foreign                                             (Ptr,
                                                                       Word8,
                                                                       alloca,
+                                                                      allocaBytes,
+                                                                      realloc,
+                                                                      reallocBytes,
                                                                       peekArray)
 import           Foreign.C.String                                    (withCString)
-import           Foreign.C.Types                                     (CChar (..))
+import           Foreign.C.Types                                     (CChar (..), CUChar (..))
 import qualified Graphics.GLUtil                                     as GLU
 import qualified Graphics.Rendering.FreeType.Internal                as FT
 import qualified Graphics.Rendering.FreeType.Internal.Bitmap         as FT
@@ -45,7 +48,8 @@ loadCharacter path char px = do
   ft <- initFreeType
 
   -- Get the Ubuntu Mono fontface.
-  ff <- newFace ft path
+  -- ff <- newFace ft path
+  ff <- newFaceBS ft =<< BS.readFile path
   throwIfNot0 $ FT.ft_Set_Pixel_Sizes ff (fromIntegral px) 0
 
   -- Get the unicode char index.
@@ -208,6 +212,20 @@ newFace ft fp = withCString fp $ \str ->
   alloca $ \ptr -> do
     throwIfNot0 $ FT.ft_New_Face ft str 0 ptr
     peek ptr
+
+newFaceBS :: FT.FT_Library -> BS.ByteString -> IO FT.FT_Face
+newFaceBS ft bytes@(PS fptr off len) =
+  -- Is there any smart way?
+  allocaBytes len $ \dst0 -> do -- Destination (Ptr CUChar8)
+    withForeignPtr fptr $ \org0 -> -- Origin (Ptr Word8)
+      foldM_ work (org0, dst0 :: Ptr CUChar) $ take len [0..]
+    alloca $ \ptr -> do
+      FT.ft_New_Memory_Face ft dst0 (fromIntegral len) 0 ptr
+      peek ptr
+  where
+    work (from, to) _ = do
+      poke to . fromIntegral =<< peek from
+      return (from `plusPtr` 1, to `plusPtr` 1)
 
 doneFace :: FT.FT_Face -> IO ()
 doneFace face = throwIfNot0 $ FT.ft_Done_Face face
