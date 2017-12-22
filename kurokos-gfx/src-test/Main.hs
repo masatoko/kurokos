@@ -79,16 +79,18 @@ main = do
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          let ctx = G.RContext (V2 320 240) (Just (pure i')) (Just $ i' / 10) Nothing
-          SB.renderTexByBasicRenderer_ br ctx $ if i `mod` 60 < 30 then tex1 else tex2
+          let ctx = G.RContext (V2 320 240) (pure i') (Just $ i' / 10) Nothing
+          G.setTexture br $ if i `mod` 60 < 30 then tex1 else tex2
+          G.renderByShader_ br ctx
           let x0 = 100
               y = 240
               work x (G.CharTexture tex left top dx _ offY) = do
                 let x' = x + fromIntegral left
                     y' = y + fromIntegral offY
-                let ctx = G.RContext (V2 x' y') Nothing Nothing Nothing
-                -- SB.renderTexByBasicRenderer_ br ctx tex
-                ST.renderTexByBasicShader_ st ctx tex
+                    size = fromIntegral <$> V2 (G.texWidth tex) (G.texHeight tex)
+                    ctx' = G.RContext (V2 x' y') size Nothing Nothing
+                G.setTexture st tex
+                G.renderByShader_ st ctx'
                 return $ x + dx
           ST.setColor st $ V3 (i `mod` 255) 0 (255 - i `mod` 255)
           V.foldM_ work x0 texttex

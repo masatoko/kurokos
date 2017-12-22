@@ -34,45 +34,48 @@ instance Shader TextShader where
   shdrProjection = sProjVar
   shdrVAO        = sVao
 
-renderTexByBasicShader_ :: TextShader -> RContext -> Texture -> IO ()
-renderTexByBasicShader_ r = renderTexByBasicShader r Cam.mkCamera
+instance TextureShader TextShader where
+  shdrSampler2D = sTexVar
 
-renderTexByBasicShader :: TextShader -> Cam.Camera -> RContext -> Texture -> IO ()
-renderTexByBasicShader TextShader{..} cam rctx (Texture tex texW texH) =
-  withProgram sProgram $ do
-    setUniformMat4 sModelViewVar (view !*! model)
-    setUniformSampler2D sTexVar tex
-    GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
-    GL.blend $= GL.Enabled
-    GLU.withVAO sVao $
-      GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
-    GL.blend $= GL.Disabled
-  where
-    texW' = fromIntegral texW
-    texH' = fromIntegral texH
-    RContext (V2 x y) mSize mRad mRotCenter = rctx
-    V2 sizeX sizeY = fromMaybe (V2 texW' texH') mSize
-    V2 rotX0 rotY0 = fromMaybe (V2 (sizeX / 2) (sizeY / 2)) mRotCenter
-
-    view = Cam.viewMatFromCam cam
-    model =
-      trans !*! rot !*! scaleMat
-      where
-        trans = mkTransformationMat identity $ V3 x y 0
-        rot = case mRad of
-                Nothing  -> identity
-                Just rad -> let
-                  rot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1) $ rad
-                  in back !*! rot !*! go
-
-        k = V3 rotX0 rotY0 0
-        go = mkTransformationMat identity (k ^* (-1))
-        back = mkTransformationMat identity k
-
-        scaleMat = V4 (V4 sizeX 0 0 0)
-                      (V4 0 sizeY 0 0)
-                      (V4 0 0     1 0)
-                      (V4 0 0     0 1)
+-- renderTexByBasicShader_ :: TextShader -> RContext -> Texture -> IO ()
+-- renderTexByBasicShader_ r = renderTexByBasicShader r Cam.mkCamera
+--
+-- renderTexByBasicShader :: TextShader -> Cam.Camera -> RContext -> Texture -> IO ()
+-- renderTexByBasicShader TextShader{..} cam rctx (Texture tex texW texH) =
+--   withProgram sProgram $ do
+--     setUniformMat4 sModelViewVar (view !*! model)
+--     setUniformSampler2D sTexVar tex
+--     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
+--     GL.blend $= GL.Enabled
+--     GLU.withVAO sVao $
+--       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
+--     GL.blend $= GL.Disabled
+--   where
+--     texW' = fromIntegral texW
+--     texH' = fromIntegral texH
+--     RContext (V2 x y) mSize mRad mRotCenter = rctx
+--     V2 sizeX sizeY = fromMaybe (V2 texW' texH') mSize
+--     V2 rotX0 rotY0 = fromMaybe (V2 (sizeX / 2) (sizeY / 2)) mRotCenter
+--
+--     view = Cam.viewMatFromCam cam
+--     model =
+--       trans !*! rot !*! scaleMat
+--       where
+--         trans = mkTransformationMat identity $ V3 x y 0
+--         rot = case mRad of
+--                 Nothing  -> identity
+--                 Just rad -> let
+--                   rot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1) $ rad
+--                   in back !*! rot !*! go
+--
+--         k = V3 rotX0 rotY0 0
+--         go = mkTransformationMat identity (k ^* (-1))
+--         back = mkTransformationMat identity k
+--
+--         scaleMat = V4 (V4 sizeX 0 0 0)
+--                       (V4 0 sizeY 0 0)
+--                       (V4 0 0     1 0)
+--                       (V4 0 0     0 1)
 
 setColor :: TextShader -> V3 Word8 -> IO ()
 setColor TextShader{..} color =

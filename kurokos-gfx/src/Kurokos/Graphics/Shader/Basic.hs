@@ -32,46 +32,49 @@ instance Shader BasicShader where
   shdrProjection = sProjVar
   shdrVAO        = sVao
 
-renderTexByBasicRenderer_ :: BasicShader -> RContext -> Texture -> IO ()
-renderTexByBasicRenderer_ r =
-  renderTexByBasicRenderer r Cam.mkCamera
+instance TextureShader BasicShader where
+  shdrSampler2D = sTexVar
 
-renderTexByBasicRenderer :: BasicShader -> Cam.Camera -> RContext -> Texture -> IO ()
-renderTexByBasicRenderer BasicShader{..} cam rctx (Texture tex texW texH) =
-  withProgram sProgram $ do
-    setUniformMat4 sModelViewVar (view !*! model)
-    setUniformSampler2D sTexVar tex
-    GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
-    GL.blend $= GL.Enabled
-    GLU.withVAO sVao $
-      GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
-    GL.blend $= GL.Disabled
-  where
-    texW' = fromIntegral texW
-    texH' = fromIntegral texH
-    RContext (V2 x y) mSize mRad mRotCenter = rctx
-    V2 sizeX sizeY = fromMaybe (V2 texW' texH') mSize
-    V2 rotX0 rotY0 = fromMaybe (V2 (sizeX / 2) (sizeY / 2)) mRotCenter
-
-    view = Cam.viewMatFromCam cam
-    model =
-      trans !*! rot !*! scaleMat
-      where
-        trans = mkTransformationMat identity $ V3 x y 0
-        rot = case mRad of
-                Nothing  -> identity
-                Just rad -> let
-                  rot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1) $ rad
-                  in back !*! rot !*! go
-
-        k = V3 rotX0 rotY0 0
-        go = mkTransformationMat identity (k ^* (-1))
-        back = mkTransformationMat identity k
-
-        scaleMat = V4 (V4 sizeX 0 0 0)
-                      (V4 0 sizeY 0 0)
-                      (V4 0 0     1 0)
-                      (V4 0 0     0 1)
+-- renderTexByBasicRenderer_ :: BasicShader -> RContext -> Texture -> IO ()
+-- renderTexByBasicRenderer_ r =
+--   renderTexByBasicRenderer r Cam.mkCamera
+--
+-- renderTexByBasicRenderer :: BasicShader -> Cam.Camera -> RContext -> Texture -> IO ()
+-- renderTexByBasicRenderer BasicShader{..} cam rctx (Texture tex texW texH) =
+--   withProgram sProgram $ do
+--     setUniformMat4 sModelViewVar (view !*! model)
+--     setUniformSampler2D sTexVar tex
+--     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
+--     GL.blend $= GL.Enabled
+--     GLU.withVAO sVao $
+--       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
+--     GL.blend $= GL.Disabled
+--   where
+--     texW' = fromIntegral texW
+--     texH' = fromIntegral texH
+--     RContext (V2 x y) mSize mRad mRotCenter = rctx
+--     V2 sizeX sizeY = fromMaybe (V2 texW' texH') mSize
+--     V2 rotX0 rotY0 = fromMaybe (V2 (sizeX / 2) (sizeY / 2)) mRotCenter
+--
+--     view = Cam.viewMatFromCam cam
+--     model =
+--       trans !*! rot !*! scaleMat
+--       where
+--         trans = mkTransformationMat identity $ V3 x y 0
+--         rot = case mRad of
+--                 Nothing  -> identity
+--                 Just rad -> let
+--                   rot = m33_to_m44 . fromQuaternion . axisAngle (V3 0 0 1) $ rad
+--                   in back !*! rot !*! go
+--
+--         k = V3 rotX0 rotY0 0
+--         go = mkTransformationMat identity (k ^* (-1))
+--         back = mkTransformationMat identity k
+--
+--         scaleMat = V4 (V4 sizeX 0 0 0)
+--                       (V4 0 sizeY 0 0)
+--                       (V4 0 0     1 0)
+--                       (V4 0 0     0 1)
 
 
 newBasicRenderer :: IO BasicShader
