@@ -4,8 +4,9 @@ module Kurokos.Graphics.Render
   , renderText
   ) where
 
+import           Control.Monad                (foldM_)
 import           Data.Maybe                   (fromMaybe)
-import qualified Data.Vector                  as V
+-- import qualified Data.Vector                  as V
 import           Linear
 
 import qualified Graphics.GLUtil              as GLU
@@ -56,10 +57,10 @@ renderByShader shdr cam rctx =
 
 -- Text
 
-renderText :: V2 Int -> TextShader -> TextTexture -> IO ()
+renderText :: Foldable t => V2 Int -> TextShader -> t CharTexture -> IO ()
 renderText (V2 x0 iy) shdr ts = do
   setColor shdr $ V3 255 0 0
-  V.foldM_ renderChar (fromIntegral x0) ts
+  foldM_ renderChar (fromIntegral x0) ts
   where
     y0 = fromIntegral iy
 

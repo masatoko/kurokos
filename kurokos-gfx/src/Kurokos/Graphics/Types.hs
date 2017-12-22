@@ -1,6 +1,5 @@
 module Kurokos.Graphics.Types where
 
-import qualified Data.Vector               as V
 import           Linear
 
 import qualified Graphics.Rendering.OpenGL as GL
@@ -31,7 +30,7 @@ data Texture = Texture
 
 -- Font
 
-type TextTexture = V.Vector CharTexture
+type TextTexture = [CharTexture]
 
 data CharTexture = CharTexture
   { ctTexture  :: Texture

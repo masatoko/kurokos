@@ -22,7 +22,6 @@ import           Control.Monad                                       (foldM,
                                                                       unless)
 import           Data.ByteString.Internal                            (ByteString (..))
 import qualified Data.Text                                           as T
-import qualified Data.Vector                                         as V
 import           Foreign.ForeignPtr                                  (withForeignPtr)
 import           Foreign.Ptr                                         (plusPtr)
 import           Foreign.Storable                                    (peek,
@@ -44,9 +43,7 @@ import           Foreign.C.Types                                     (CChar (..)
 import qualified Graphics.GLUtil                                     as GLU
 import qualified Graphics.Rendering.FreeType.Internal                as FT
 import qualified Graphics.Rendering.FreeType.Internal.Bitmap         as FT
--- import qualified Graphics.Rendering.FreeType.Internal.BitmapSize     as FTS
 import qualified Graphics.Rendering.FreeType.Internal.Face           as FT
--- import qualified Graphics.Rendering.FreeType.Internal.FaceType       as FT
 import qualified Graphics.Rendering.FreeType.Internal.GlyphSlot      as FT
 import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
@@ -69,7 +66,7 @@ deleteTextTexture = mapM_ deleteCharTexture
 
 createTextTexture :: FT.FT_Face -> T.Text -> IO TextTexture
 createTextTexture face =
-  fmap V.fromList . mapM work . T.unpack
+  mapM work . T.unpack
   where
     work = createCharTexture face
 
