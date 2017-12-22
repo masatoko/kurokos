@@ -2,13 +2,13 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Main where
 
-import qualified Control.Exception         as E
-import           Control.Monad             (unless)
-import           Control.Monad.IO.Class    (liftIO)
-import           Control.Monad.Managed     (managed, runManaged)
-import           Data.Either.Extra         (fromRight)
-import qualified Data.Vector               as V
-import           Foreign.Storable          (sizeOf)
+import qualified Control.Exception             as E
+import           Control.Monad                 (unless)
+import           Control.Monad.IO.Class        (liftIO)
+import           Control.Monad.Managed         (managed, runManaged)
+import           Data.Either.Extra             (fromRight)
+import qualified Data.Vector                   as V
+import           Foreign.Storable              (sizeOf)
 import           Linear.V2
 import           Linear.V3
 import           System.FilePath.Posix
@@ -16,16 +16,17 @@ import           System.FilePath.Posix
 import qualified SDL
 import           SDL.Event
 
-import qualified Graphics.GL               as GLRaw
-import qualified Graphics.GLUtil           as GLU
-import           Graphics.Rendering.OpenGL (get, ($=))
-import qualified Graphics.Rendering.OpenGL as GL
+import qualified Graphics.GL                   as GLRaw
+import qualified Graphics.GLUtil               as GLU
+import           Graphics.Rendering.OpenGL     (get, ($=))
+import qualified Graphics.Rendering.OpenGL     as GL
 
-import qualified Kurokos.Graphics.Font     as Font
-import qualified Kurokos.Graphics.Shader   as KG
-import qualified Kurokos.Graphics.Texture  as KG
+import qualified Kurokos.Graphics.Font         as Font
+import qualified Kurokos.Graphics.Shader       as KG
+import qualified Kurokos.Graphics.Shader.Basic as KG
+import qualified Kurokos.Graphics.Texture      as KG
 import qualified Kurokos.Graphics.Texture
-import qualified Kurokos.Graphics.Types    as KG
+import qualified Kurokos.Graphics.Types        as KG
 
 main :: IO ()
 main = do

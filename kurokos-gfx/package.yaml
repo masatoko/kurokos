@@ -31,8 +31,9 @@ library:
     - Kurokos.Graphics
     - Kurokos.Graphics.Types
     - Kurokos.Graphics.Texture
-    - Kurokos.Graphics.Shader
     - Kurokos.Graphics.Font
+    - Kurokos.Graphics.Shader
+    - Kurokos.Graphics.Shader.Basic
 
 executables:
   test-gfx:
