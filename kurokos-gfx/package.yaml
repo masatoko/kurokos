@@ -34,6 +34,7 @@ library:
   exposed-modules:
     - Kurokos.Graphics
     - Kurokos.Graphics.Font
+    - Kurokos.Graphics.Camera
 # Temporal
     - Kurokos.Graphics.Types
     - Kurokos.Graphics.Texture

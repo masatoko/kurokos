@@ -1,12 +1,10 @@
 module Kurokos.Graphics.Render
-  ( renderByShader_
-  , renderByShader
+  ( renderByShader
   , renderText
   ) where
 
 import           Control.Monad                (foldM_)
 import           Data.Maybe                   (fromMaybe)
--- import qualified Data.Vector                  as V
 import           Linear
 
 import qualified Graphics.GLUtil              as GLU
@@ -17,10 +15,6 @@ import qualified Kurokos.Graphics.Camera      as Cam
 import           Kurokos.Graphics.Shader
 import           Kurokos.Graphics.Shader.Text (TextShader, setColor)
 import           Kurokos.Graphics.Types
-
-renderByShader_ :: Shader a => a -> RContext -> IO ()
-renderByShader_ shdr =
-  renderByShader shdr Cam.mkCamera
 
 renderByShader :: Shader a => a -> Cam.Camera -> RContext -> IO ()
 renderByShader shdr cam rctx =
@@ -70,5 +64,5 @@ renderText (V2 x0 iy) shdr =
           ctx' = RContext (V2 x' y') size Nothing Nothing
       setColor shdr color
       setTexture shdr $ texObject tex
-      renderByShader_ shdr ctx'
+      renderByShader shdr Cam.mkCamera ctx'
       return $ x + dx

@@ -16,13 +16,14 @@ import qualified Graphics.GLUtil               as GLU
 import           Graphics.Rendering.OpenGL     (get, ($=))
 import qualified Graphics.Rendering.OpenGL     as GL
 
+import qualified Kurokos.Graphics              as G
+import qualified Kurokos.Graphics.Camera       as Cam
 import qualified Kurokos.Graphics.Font         as Font
-import qualified Kurokos.Graphics.Text         as KGT
+
+-- TODO: Remove these shader modules
 import qualified Kurokos.Graphics.Shader       as G
-import qualified Kurokos.Graphics.Render       as G
 import qualified Kurokos.Graphics.Shader.Basic as SB
 import qualified Kurokos.Graphics.Shader.Text  as ST
-import qualified Kurokos.Graphics.Texture      as G
 
 main :: IO ()
 main = do
@@ -40,9 +41,9 @@ main = do
       liftIO $ Font.setPixelSize face 32
     --
       text1 <- managed $
-                E.bracket (KGT.createTextTexture face (V3 255 0 0) "Hello, ") KGT.deleteTextTexture
+                E.bracket (G.createTextTexture face (V3 255 0 0) "Hello, ") G.deleteTextTexture
       text2 <- managed $
-                E.bracket (KGT.createTextTexture face (V3 0 0 255) "World!") KGT.deleteTextTexture
+                E.bracket (G.createTextTexture face (V3 0 0 255) "World!") G.deleteTextTexture
       let texttex = text1 ++ text2
 
       liftIO $ do
@@ -79,7 +80,7 @@ main = do
           --
           let ctx = G.RContext (V2 320 240) (pure i') (Just $ i' / 10) Nothing
           G.setTexture br $ G.texObject $ if i `mod` 60 < 30 then tex1 else tex2
-          G.renderByShader_ br ctx
+          G.renderByShader br Cam.mkCamera ctx
           --
           G.renderText (V2 100 240) st texttex
           --
