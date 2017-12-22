@@ -33,6 +33,8 @@ library:
   source-dirs: src
   exposed-modules:
     - Kurokos.Graphics
+    - Kurokos.Graphics.Font
+# Temporal
     - Kurokos.Graphics.Types
     - Kurokos.Graphics.Texture
     - Kurokos.Graphics.Text

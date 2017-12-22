@@ -16,7 +16,8 @@ import qualified Graphics.GLUtil               as GLU
 import           Graphics.Rendering.OpenGL     (get, ($=))
 import qualified Graphics.Rendering.OpenGL     as GL
 
-import qualified Kurokos.Graphics.Text         as GText
+import qualified Kurokos.Graphics.Font         as Font
+import qualified Kurokos.Graphics.Text         as KGT
 import qualified Kurokos.Graphics.Shader       as G
 import qualified Kurokos.Graphics.Render       as G
 import qualified Kurokos.Graphics.Shader.Basic as SB
@@ -28,23 +29,23 @@ main = do
   SDL.initializeAll
   window <- SDL.createWindow "Test kurokos-gfx" winConf
   withGL window $ \_glContext -> do
-    -- GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral w) (fromIntegral h))
+    winSize@(V2 winW winH) <- get $ SDL.windowSize window
+    GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral winW) (fromIntegral winH))
     SDL.swapInterval $= SDL.SynchronizedUpdates
     GL.clearColor $= GL.Color4 0 1 0 1
     --
     runManaged $ do
-      ft <- managed GText.withFreeType
-      face <- managed $ E.bracket (GText.newFace ft "_test/mplus-1p-medium.ttf") GText.doneFace
-      liftIO $ GText.setPixelSize face 32
+      ft <- managed Font.withFreeType
+      face <- managed $ E.bracket (Font.newFace ft "_test/mplus-1p-medium.ttf") Font.doneFace
+      liftIO $ Font.setPixelSize face 32
     --
       text1 <- managed $
-                E.bracket (GText.createTextTexture face (V3 255 0 0) "Hello, ") GText.deleteTextTexture
+                E.bracket (KGT.createTextTexture face (V3 255 0 0) "Hello, ") KGT.deleteTextTexture
       text2 <- managed $
-                E.bracket (GText.createTextTexture face (V3 0 0 255) "World!") GText.deleteTextTexture
+                E.bracket (KGT.createTextTexture face (V3 0 0 255) "World!") KGT.deleteTextTexture
       let texttex = text1 ++ text2
-      
+
       liftIO $ do
-        winSize <- get $ SDL.windowSize window
         br <- SB.newBasicRenderer
         G.updateProjection G.Ortho winSize br
         st <- ST.newTextShader
