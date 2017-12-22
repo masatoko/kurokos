@@ -4,6 +4,8 @@ module Kurokos.Graphics
     Renderer
   , getFreeType
   , newRenderer
+  , freeRenderer
+  , RContext (..)
   , renderTexture
   , renderTexture_
   , renderText
@@ -27,6 +29,7 @@ module Kurokos.Graphics
   , renderTextTexture
   ) where
 
+import           Kurokos.Graphics.Shader (RContext (..))
 import           Kurokos.Graphics.Render
 import           Kurokos.Graphics.Text
 import           Kurokos.Graphics.Types

@@ -3,17 +3,20 @@ module Kurokos.Renderer
   ( Renderer
   , getFreeType
   , newRenderer
+  , freeRenderer
   --
   , renderTexture
   , renderTexture_
   , renderText
   ) where
 
+import           Foreign.C.Types                              (CInt)
 import           Graphics.Rendering.FreeType.Internal.Library (FT_Library)
 import           Linear.V2
 
 import qualified Kurokos.Graphics.Camera                      as Cam
-import           Kurokos.Graphics.Font                        (initFreeType)
+import           Kurokos.Graphics.Font                        (doneFreeType,
+                                                               initFreeType)
 import           Kurokos.Graphics.Render                      (renderByShader,
                                                                renderTextTexture)
 import           Kurokos.Graphics.Shader                      (RContext,
@@ -33,7 +36,7 @@ data Renderer = Renderer
 getFreeType :: Renderer -> FT_Library
 getFreeType = rndrFreeType
 
-newRenderer :: V2 Int -> IO Renderer
+newRenderer :: V2 CInt -> IO Renderer
 newRenderer winSize = do
   b <- Basic.newBasicShader
   setProjection Ortho winSize' b
@@ -44,7 +47,10 @@ newRenderer winSize = do
   where
     winSize' = fromIntegral <$> winSize
 
--- TODO: Implement freeRenderer
+freeRenderer :: Renderer -> IO ()
+freeRenderer Renderer{..} =
+  doneFreeType rndrFreeType
+  -- TODO: Implement others
 
 -- | Render Texture with camera.
 renderTexture :: Renderer -> Cam.Camera -> Texture -> RContext -> IO ()

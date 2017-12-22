@@ -1,10 +1,12 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 module Kurokos.Graphics.Shader.Text
   ( TextShader
   , newTextShader
   , setColor
   ) where
 
+import qualified Data.ByteString           as BS
 import           Data.Word                 (Word8)
 import           Linear
 
@@ -38,7 +40,7 @@ instance TextureShader TextShader where
 
 newTextShader :: IO TextShader
 newTextShader = do
-  sp <- GLU.simpleShaderProgram "_data/basic-text.vert" "_data/basic-text.frag"
+  sp <- GLU.simpleShaderProgramBS vert frag
   let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
       texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
       modelViewUniform = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
@@ -71,10 +73,43 @@ newTextShader = do
 
     texPs :: [GL.GLfloat]
     texPs = [0, 1, 1, 1, 0, 0, 1, 0]
-    
+
 setColor :: TextShader -> V3 Word8 -> IO ()
 setColor TextShader{..} color =
   withProgram sProgram $
     setUniformVec3 sColorVar color'
   where
     color' = (/ 255) . fromIntegral <$> color
+
+vert :: BS.ByteString
+vert = BS.intercalate "\n"
+  [ "#version 400"
+  , ""
+  , "in vec2 VertexCoord;"
+  , "in vec2 TexCoord;"
+  , "out vec2 OTexCoord;"
+  , ""
+  , "uniform mat4 Projection;"
+  , "uniform mat4 ModelView;"
+  , ""
+  , "void main()"
+  , "{"
+  , "  gl_Position = Projection * ModelView * vec4( VertexCoord, 0, 1 );"
+  , "  OTexCoord = TexCoord;"
+  , "}"
+  ]
+
+frag :: BS.ByteString
+frag = BS.intercalate "\n"
+  [ "#version 400"
+  , ""
+  , "uniform sampler2D Texture;"
+  , "in vec2 OTexCoord;"
+  , ""
+  , "out vec4 FragColor;"
+  , ""
+  , "void main()"
+  , "{"
+  , "  FragColor = texture2D( Texture, OTexCoord );"
+  , "}"
+  ]

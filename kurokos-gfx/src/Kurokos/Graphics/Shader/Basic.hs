@@ -1,15 +1,16 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Kurokos.Graphics.Shader.Basic
   ( BasicShader
   , newBasicShader
   ) where
 
+import qualified Data.ByteString           as BS
 import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
 import           Kurokos.Graphics.Types
-
-import Kurokos.Graphics.Shader
+import           Kurokos.Graphics.Shader
 
 data BasicShader = BasicShader
   { sProgram      :: GL.Program
@@ -32,7 +33,7 @@ instance TextureShader BasicShader where
 
 newBasicShader :: IO BasicShader
 newBasicShader = do
-  sp <- GLU.simpleShaderProgram "_data/basic-texture.vert" "_data/basic-texture.frag"
+  sp <- GLU.simpleShaderProgramBS vert frag
   let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
       texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
       modelViewUniform = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
@@ -60,3 +61,38 @@ newBasicShader = do
 
     texPs :: [GL.GLfloat]
     texPs = [0, 1, 1, 1, 0, 0, 1, 0]
+
+vert :: BS.ByteString
+vert = BS.intercalate "\n"
+  [ "#version 400"
+  , ""
+  , "in vec2 VertexCoord;"
+  , "in vec2 TexCoord;"
+  , "out vec2 OTexCoord;"
+  , ""
+  , "uniform mat4 Projection;"
+  , "uniform mat4 ModelView;"
+  , ""
+  , "void main()"
+  , "{"
+  , "  gl_Position = Projection * ModelView * vec4( VertexCoord, 0, 1 );"
+  , "  OTexCoord = TexCoord;"
+  , "}"
+  ]
+
+frag :: BS.ByteString
+frag = BS.intercalate "\n"
+  [ "#version 400"
+  , ""
+  , "uniform sampler2D Texture;"
+  , "in vec2 OTexCoord;"
+  , ""
+  , "uniform vec3 BasisColor;"
+  , ""
+  , "out vec4 FragColor;"
+  , ""
+  , "void main()"
+  , "{"
+  , "  FragColor = vec4(BasisColor, texture2D( Texture, OTexCoord ).a);"
+  , "}"
+  ]
