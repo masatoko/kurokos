@@ -23,7 +23,7 @@ library
     , sdl2 >= 2.2.0
     , sdl2-ttf >= 2.0.0
     , sdl2-image
-    , kurokos-asset
+    , kurokos-asset-raw
     , containers
     , bytestring
     , text

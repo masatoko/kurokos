@@ -24,7 +24,7 @@ import           SDL                      (($=))
 import qualified SDL
 import qualified SDL.Font                 as Font
 
-import qualified Kurokos.Asset            as Asset
+import qualified Kurokos.Asset.Raw        as Asset
 import qualified Kurokos.Asset.SDL        as Asset
 import qualified Kurokos.RPN              as RPN
 

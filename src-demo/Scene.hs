@@ -26,7 +26,7 @@ import qualified SDL.Primitive                as Prim
 import           SDL.Vect
 
 import qualified Kurokos                      as K
-import qualified Kurokos.Asset                as Asset
+import qualified Kurokos.Asset.Raw            as Asset
 import qualified Kurokos.Asset.SDL            as Asset
 import           Kurokos.UI                   (UExp (..), ctxAttrib, cursorPos,
                                                visible, clickable)

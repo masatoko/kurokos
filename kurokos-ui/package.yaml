@@ -25,7 +25,7 @@ dependencies:
 - sdl2-ttf >= 2.0.0
 - sdl2-image
 - kurokos-sdl2-gfx
-- kurokos-asset
+- kurokos-asset-raw
 - kurokos-asset-sdl2
 - kurokos-rpn
 - bytestring

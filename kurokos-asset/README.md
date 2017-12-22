@@ -1,1 +1,0 @@
-# kurokos-asset

@@ -39,7 +39,7 @@ compiler: ghc-8.0.1
 packages:
 - '.'
 - ../kurokos-sdl2-gfx
-- ../kurokos-asset
+- ../kurokos-asset-raw
 - ../kurokos-asset-sdl2
 - ../kurokos-rpn
 # Dependency packages to be pulled from upstream that are not in the resolver

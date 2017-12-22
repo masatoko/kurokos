@@ -10,7 +10,7 @@ import qualified SDL
 
 import           Kurokos           (KurokosConfig (..))
 import qualified Kurokos           as K
-import qualified Kurokos.Asset     as Asset
+import qualified Kurokos.Asset.Raw as Asset
 import qualified Kurokos.Asset.SDL as Asset
 
 import           Game

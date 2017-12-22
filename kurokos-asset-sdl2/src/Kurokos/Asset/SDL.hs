@@ -27,9 +27,9 @@ import           System.FilePath.Posix
 import qualified SDL.Font                     as Font
 import qualified SDL.Image                    as Image
 
-import           Kurokos.Asset                (Ident)
-import qualified Kurokos.Asset                as Asset
 import           Kurokos.Asset.Internal.Types (AssetManager (..))
+import           Kurokos.Asset.Raw            (Ident)
+import qualified Kurokos.Asset.Raw            as Asset
 
 data SDLAssetManager = SDLAssetManager
   { amByteMap    :: M.Map Ident BS.ByteString

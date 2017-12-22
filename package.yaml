@@ -25,7 +25,7 @@ dependencies:
   - kurokos-ui
   - kurokos-sdl2-gfx
   - kurokos-rpn
-  - kurokos-asset
+  - kurokos-asset-raw
   - kurokos-asset-sdl2
   - transformers-base
   - transformers
@@ -55,7 +55,7 @@ executables:
           dependencies:
             - kurokos
             - kurokos-ui
-            - kurokos-asset
+            - kurokos-asset-raw
             - kurokos-asset-sdl2
             - OpenGL
             - safe-exceptions

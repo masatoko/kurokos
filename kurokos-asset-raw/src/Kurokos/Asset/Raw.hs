@@ -1,4 +1,4 @@
-module Kurokos.Asset
+module Kurokos.Asset.Raw
   (
   -- ** Type
     Ident

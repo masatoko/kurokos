@@ -66,7 +66,7 @@ import qualified SDL
 import qualified SDL.Font                    as Font
 import           SDL.Vect                    (Point (..), V2 (..), V4 (..))
 
-import qualified Kurokos.Asset               as Asset
+import qualified Kurokos.Asset.Raw           as Asset
 import qualified Kurokos.Asset.SDL           as Asset
 import           Kurokos.Exception           (KurokosException (..))
 import           Kurokos.Types

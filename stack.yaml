@@ -39,7 +39,7 @@ compiler: ghc-8.0.1
 packages:
 - '.'
 - ./kurokos-ui
-- ./kurokos-asset
+- ./kurokos-asset-raw
 - ./kurokos-asset-sdl2
 - ./kurokos-sdl2-gfx
 - ./kurokos-rpn

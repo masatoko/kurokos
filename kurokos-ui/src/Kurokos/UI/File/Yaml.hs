@@ -14,7 +14,7 @@ import qualified Data.Yaml             as Y
 
 import SDL.Font as Font
 
-import qualified Kurokos.Asset         as Asset
+import qualified Kurokos.Asset.Raw     as Asset
 import qualified Kurokos.RPN           as RPN
 import           Kurokos.UI.Color      (ContextColor)
 import           Kurokos.UI.Core

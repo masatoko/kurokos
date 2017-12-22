@@ -1,13 +1,13 @@
-name:                kurokos-asset
+name:                kurokos-asset-raw
 version:             0.1.0.0
 -- synopsis:
 -- description:
-homepage:            https://github.com/githubuser/kurokos-asset#readme
+homepage:            https://github.com/masatoko/kurokos/kurokos-asset-raw#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2017 Author name here
+author:              Masato Kobayashi
+maintainer:          masatoko@gmail.com
+copyright:           2017 Masato Kobayashi
 category:            Web
 build-type:          Simple
 extra-source-files:  README.md
@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Kurokos.Asset
+  exposed-modules:     Kurokos.Asset.Raw
                      , Kurokos.Asset.Internal.Types
   other-modules:       Kurokos.Asset.Internal.AssetManager
                      , Kurokos.Asset.Internal.AssetList
@@ -41,4 +41,4 @@ library
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/kurokos-asset
+  location: https://github.com/masatoko/kurokos/kurokos-asset-raw
