@@ -29,7 +29,6 @@ import           Foreign.Ptr                                         (plusPtr)
 import           Foreign.Storable                                    (peek,
                                                                       poke)
 import           GHC.ForeignPtr                                      (mallocPlainForeignPtrBytes)
-import           Linear.V3                                           (V3 (..))
 import           System.IO                                           (hPutStrLn,
                                                                       stderr)
 
@@ -74,14 +73,14 @@ deleteCharTexture = deleteTexture . ctTexture
 deleteTextTexture :: TextTexture -> IO ()
 deleteTextTexture = mapM_ deleteCharTexture
 
-createTextTexture :: FT.FT_Face -> V3 Word8 -> T.Text -> IO TextTexture
-createTextTexture face color =
+createTextTexture :: FT.FT_Face -> T.Text -> IO TextTexture
+createTextTexture face =
   fmap V.fromList . mapM work . T.unpack
   where
-    work = createCharTexture face color
+    work = createCharTexture face
 
-createCharTexture :: FT.FT_Face -> V3 Word8 -> Char -> IO CharTexture
-createCharTexture face color char = do
+createCharTexture :: FT.FT_Face -> Char -> IO CharTexture
+createCharTexture face char = do
   charInd <- FT.ft_Get_Char_Index face $ fromIntegral $ fromEnum char -- Get the unicode char index.
   throwIfNot0 $ FT.ft_Load_Glyph face charInd FT.ft_LOAD_DEFAULT -- Load the glyph into freetype memory.
   slot <- peek $ FT.glyph face -- GlyphSlot
@@ -108,8 +107,7 @@ createCharTexture face color char = do
       h  = fromIntegral $ FT.rows bmp
 
   bmpData <- peekArray (w * h) $ FT.buffer bmp
-  bytes <- makeRGBABytes color bmpData
-
+  bytes <- convToByteString bmpData
 
   -- Generate an opengl texture.
   tex <- newBoundTexUnit 0
@@ -153,13 +151,13 @@ newBoundTexUnit u = do
   GL.textureBinding GL.Texture2D $= Just tex
   return tex
 
-makeRGBABytes :: V3 Word8 -> [CChar] -> IO BS.ByteString
-makeRGBABytes (V3 r g b) cs =
+convToByteString :: [CChar] -> IO BS.ByteString
+convToByteString cs =
   create (length cs * 4) $ \ptr0 ->
     foldM_ work ptr0 cs
   where
     work p0 (CChar a) =
-      foldM pokeIncr p0 [r,g,b, fromIntegral a]
+      foldM pokeIncr p0 [255, 255, 255, fromIntegral a]
       where
         pokeIncr p depth = do
           poke p depth

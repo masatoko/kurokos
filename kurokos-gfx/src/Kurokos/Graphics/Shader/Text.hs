@@ -1,7 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.Graphics.Shader.Basic where
+module Kurokos.Graphics.Shader.Text where
 
 import           Data.Maybe                (fromMaybe)
+import           Data.Word                 (Word8)
 import           Foreign.C.Types           (CInt)
 import           Foreign.Storable          (sizeOf)
 import           Linear
@@ -14,24 +15,24 @@ import qualified Kurokos.Graphics.Camera   as Cam
 import           Kurokos.Graphics.Texture  (Texture (..))
 import           Kurokos.Graphics.Types
 
-import Kurokos.Graphics.Shader
+import           Kurokos.Graphics.Shader
 
-data BasicShader = BasicShader
+data TextShader = TextShader
   { sProgram      :: GL.Program
   , sCoordVar     :: AttribVar TagVec2
   , sTexCoordVar  :: AttribVar TagVec2
   , sModelViewVar :: UniformVar TagMat4
   , sProjVar      :: UniformVar TagMat4
+  , sColorVar     :: UniformVar TagVec3
   , sTexVar       :: UniformVar TagSampler2D
   , sVao          :: GL.VertexArrayObject
   }
 
-renderTexByBasicRenderer_ :: BasicShader -> RContext -> Texture -> IO ()
-renderTexByBasicRenderer_ r =
-  renderTexByBasicRenderer r Cam.mkCamera
+renderTexByBasicShader_ :: TextShader -> RContext -> Texture -> IO ()
+renderTexByBasicShader_ r = renderTexByBasicShader r Cam.mkCamera
 
-renderTexByBasicRenderer :: BasicShader -> Cam.Camera -> RContext -> Texture -> IO ()
-renderTexByBasicRenderer BasicShader{..} cam rctx (Texture tex texW texH) =
+renderTexByBasicShader :: TextShader -> Cam.Camera -> RContext -> Texture -> IO ()
+renderTexByBasicShader TextShader{..} cam rctx (Texture tex texW texH) =
   withProgram sProgram $ do
     setUniformMat4 sModelViewVar (view !*! model)
     setUniformSampler2D sTexVar tex
@@ -67,9 +68,16 @@ renderTexByBasicRenderer BasicShader{..} cam rctx (Texture tex texW texH) =
                       (V4 0 0     1 0)
                       (V4 0 0     0 1)
 
--- | Update projection matrix of BasicShader
-updateBasicRenderer :: ProjectionType -> V2 CInt -> BasicShader -> IO ()
-updateBasicRenderer ptype (V2 winW winH) BasicShader{..} =
+setColor :: TextShader -> V3 Word8 -> IO ()
+setColor TextShader{..} color =
+  withProgram sProgram $
+    setUniformVec3 sColorVar color'
+  where
+    color' = (/ 255) . fromIntegral <$> color
+
+-- | Update projection matrix of TextShader
+updateTextShader :: ProjectionType -> V2 CInt -> TextShader -> IO ()
+updateTextShader ptype (V2 winW winH) TextShader{..} =
   withProgram sProgram $
     setUniformMat4 sProjVar $ projMat ptype
   where
@@ -79,13 +87,14 @@ updateBasicRenderer ptype (V2 winW winH) BasicShader{..} =
     projMat Ortho              = ortho 0 w 0 h 1 (-1)
     projMat (Frustum near far) = frustum 0 w 0 h near far
 
-newBasicRenderer :: IO BasicShader
-newBasicRenderer = do
-  sp <- GLU.simpleShaderProgram "_data/basic-texture.vert" "_data/basic-texture.frag"
+newTextShader :: IO TextShader
+newTextShader = do
+  sp <- GLU.simpleShaderProgram "_data/basic-text.vert" "_data/basic-text.frag"
   let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
       texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
       modelViewUniform = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
       projUniform = UniformVar TagMat4 $ GLU.getUniform sp "Projection"
+      colorUniform = UniformVar TagVec3 $ GLU.getUniform sp "BasisColor"
       texUniform = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
   -- * Setup
   setupSampler2D texUniform
@@ -95,12 +104,16 @@ newBasicRenderer = do
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
-  return $ BasicShader
+  -- Initial Uniform
+  withProgram (GLU.program sp) $
+    setUniformVec3 colorUniform (V3 1 1 1)
+  return $ TextShader
     (GLU.program sp)
     vtxCoordVar
     texCoordVar
     modelViewUniform
     projUniform
+    colorUniform
     texUniform
     vao
   where

@@ -32,15 +32,26 @@ data ProjectionType
   | Frustum Float Float -- Near Far
   deriving (Eq, Show)
 
+-- Update Uniform
 setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
 setUniformMat4 (UniformVar TagMat4 loc) mat =
   GLU.asUniform mat loc
+
+setUniformVec3 :: UniformVar TagVec3 -> V3 GL.GLfloat -> IO ()
+setUniformVec3 (UniformVar TagVec3 loc) vec =
+  GLU.asUniform vec loc
 
 setUniformSampler2D :: UniformVar TagSampler2D -> GL.TextureObject -> IO ()
 setUniformSampler2D (UniformVar (TagSampler2D num) loc) tex = do
   GL.textureBinding GL.Texture2D $= Just tex -- glBindTexture
   GLU.asUniform (GL.TextureUnit num) loc -- TODO: Move to setup
 
+-- Setup
+setupSampler2D :: UniformVar TagSampler2D -> IO ()
+setupSampler2D (UniformVar (TagSampler2D num) loc) =
+  GL.activeTexture $= GL.TextureUnit num
+
+-- Util
 withProgram :: GL.Program -> IO a -> IO a
 withProgram p act = do
   cur <- get GL.currentProgram
