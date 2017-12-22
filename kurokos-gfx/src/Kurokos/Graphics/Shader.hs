@@ -14,10 +14,7 @@ import qualified Kurokos.Graphics.Camera   as Cam
 import           Kurokos.Graphics.Texture  (Texture (..))
 import           Kurokos.Graphics.Types
 
--- class IsProgram a where
---   programOf :: a -> GL.Program
-
-data BasicRenderer = BasicRenderer
+data BasicShader = BasicShader
   { brProgram      :: GL.Program
   , brCoordVar     :: AttribVar TagVec2
   , brTexCoordVar  :: AttribVar TagVec2
@@ -26,9 +23,6 @@ data BasicRenderer = BasicRenderer
   , brTexVar       :: UniformVar TagSampler2D
   , brVao          :: GLU.VAO
   }
-
--- instance IsProgram BasicRenderer where
---   programOf = brProgram
 
 -- | Rendering context
 data RContext = RContext
@@ -42,12 +36,12 @@ data RContext = RContext
   -- ^ Rotation center coord
   }
 
-renderTexByBasicRenderer_ :: BasicRenderer -> RContext -> Texture -> IO ()
+renderTexByBasicRenderer_ :: BasicShader -> RContext -> Texture -> IO ()
 renderTexByBasicRenderer_ r =
   renderTexByBasicRenderer r Cam.mkCamera
 
-renderTexByBasicRenderer :: BasicRenderer -> Cam.Camera -> RContext -> Texture -> IO ()
-renderTexByBasicRenderer BasicRenderer{..} cam rctx (Texture tex texW texH) =
+renderTexByBasicRenderer :: BasicShader -> Cam.Camera -> RContext -> Texture -> IO ()
+renderTexByBasicRenderer BasicShader{..} cam rctx (Texture tex texW texH) =
   withProgram brProgram $ do
     setUniformMat4 brModelViewVar (view !*! model)
     setUniformSampler2D brTexVar tex
@@ -88,9 +82,9 @@ data ProjectionType
   | Frustum Float Float -- Near Far
   deriving (Eq, Show)
 
--- | Update projection matrix of BasicRenderer
-updateBasicRenderer :: ProjectionType -> V2 CInt -> BasicRenderer -> IO ()
-updateBasicRenderer ptype (V2 winW winH) BasicRenderer{..} =
+-- | Update projection matrix of BasicShader
+updateBasicRenderer :: ProjectionType -> V2 CInt -> BasicShader -> IO ()
+updateBasicRenderer ptype (V2 winW winH) BasicShader{..} =
   withProgram brProgram $
     setUniformMat4 brProjVar $ projMat ptype
   where
@@ -100,9 +94,9 @@ updateBasicRenderer ptype (V2 winW winH) BasicRenderer{..} =
     projMat Ortho              = ortho 0 w 0 h 1 (-1)
     projMat (Frustum near far) = frustum 0 w 0 h near far
 
-newBasicRenderer :: IO BasicRenderer
+newBasicRenderer :: IO BasicShader
 newBasicRenderer = do
-  sp <- GLU.simpleShaderProgram "_data/tex.vert" "_data/tex.frag"
+  sp <- GLU.simpleShaderProgram "_data/basic-texture.vert" "_data/basic-texture.frag"
   let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
       texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
       modelViewUniform = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
@@ -116,7 +110,7 @@ newBasicRenderer = do
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
-  return $ BasicRenderer
+  return $ BasicShader
     (GLU.program sp)
     vtxCoordVar
     texCoordVar
