@@ -10,9 +10,9 @@
 --
 -- text1 <- E.bracket (G.createTextTexture face (V3 255 0 0) "Hello, ") G.deleteTextTexture
 -- text2 <- E.bracket (G.createTextTexture face (V3 0 0 255) "World!") G.deleteTextTexture
--- let texttex = text1 ++ text2
+-- let textTexture = text1 ++ text2
 --
--- -- G.renderText (V2 x0 y0) TextChader texttex
+-- -- G.renderText (V2 x0 y0) TextShader textTexture
 --
 -- G.deleteTexture text1
 -- G.deleteTexture text2

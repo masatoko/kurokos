@@ -23,11 +23,6 @@ data RContext = RContext
   }
 
 
-data ProjectionType
-  = Ortho
-  | Frustum Float Float -- Near Far
-  deriving (Eq, Show)
-
 -- Update Uniform
 setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
 setUniformMat4 (UniformVar TagMat4 loc) mat =
@@ -68,8 +63,8 @@ class TextureShader a where
   shdrSampler2D :: a -> UniformVar TagSampler2D
 
 -- | Update projection matrix of BasicShader
-updateProjection :: Shader a => ProjectionType -> V2 CInt -> a -> IO ()
-updateProjection ptype (V2 winW winH) shdr =
+setProjection :: Shader a => ProjectionType -> V2 CInt -> a -> IO ()
+setProjection ptype (V2 winW winH) shdr =
   withProgram (shdrProgram shdr) $
     setUniformMat4 (shdrProjection shdr) $ projMat ptype
   where

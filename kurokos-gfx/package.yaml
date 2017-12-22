@@ -36,13 +36,9 @@ library:
     - Kurokos.Graphics.Font
     - Kurokos.Graphics.Camera
 # Temporal
-    - Kurokos.Graphics.Types
-    - Kurokos.Graphics.Texture
-    - Kurokos.Graphics.Text
     - Kurokos.Graphics.Shader
     - Kurokos.Graphics.Shader.Basic
     - Kurokos.Graphics.Shader.Text
-    - Kurokos.Graphics.Render
 
 executables:
   test-gfx:

@@ -1,6 +1,6 @@
 module Kurokos.Graphics.Render
   ( renderByShader
-  , renderText
+  , renderTextTexture
   ) where
 
 import           Control.Monad                (foldM_)
@@ -51,8 +51,8 @@ renderByShader shdr cam rctx =
 
 -- Text
 
-renderText :: Foldable t => V2 Int -> TextShader -> t CharTexture -> IO ()
-renderText (V2 x0 iy) shdr =
+renderTextTexture :: Foldable t => TextShader -> V2 Int -> t CharTexture -> IO ()
+renderTextTexture shdr (V2 x0 iy) =
   foldM_ renderChar (fromIntegral x0)
   where
     y0 = fromIntegral iy

@@ -1,4 +1,7 @@
-module Kurokos.Graphics.Shader.Basic where
+module Kurokos.Graphics.Shader.Basic
+  ( BasicShader
+  , newBasicShader
+  ) where
 
 import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (($=))
@@ -27,8 +30,8 @@ instance Shader BasicShader where
 instance TextureShader BasicShader where
   shdrSampler2D = sTexVar
 
-newBasicRenderer :: IO BasicShader
-newBasicRenderer = do
+newBasicShader :: IO BasicShader
+newBasicShader = do
   sp <- GLU.simpleShaderProgram "_data/basic-texture.vert" "_data/basic-texture.frag"
   let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
       texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"

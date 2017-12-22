@@ -44,3 +44,10 @@ data CharTexture = CharTexture
   , ctAdvanceY :: Float -- ^ vertAdvance
   , ctOffsetY  :: Int -- ^ Rendering offset of vertical axis (= top - height)
   }
+
+--
+
+data ProjectionType
+  = Ortho
+  | Frustum Float Float -- Near Far
+  deriving (Eq, Show)

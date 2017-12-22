@@ -47,10 +47,10 @@ main = do
       let texttex = text1 ++ text2
 
       liftIO $ do
-        br <- SB.newBasicRenderer
-        G.updateProjection G.Ortho winSize br
+        br <- SB.newBasicShader
+        G.setProjection G.Ortho winSize br
         st <- ST.newTextShader
-        G.updateProjection G.Ortho winSize st
+        G.setProjection G.Ortho winSize st
         --
         tex1 <- G.readTexture "_data/in_transit.png"
         tex2 <- G.readTexture "_data/panorama.png"
@@ -82,7 +82,7 @@ main = do
           G.setTexture br $ G.texObject $ if i `mod` 60 < 30 then tex1 else tex2
           G.renderByShader br Cam.mkCamera ctx
           --
-          G.renderText (V2 100 240) st texttex
+          G.renderTextTexture st (V2 100 240) texttex
           --
           SDL.glSwapWindow win
           unless (any shouldExit events) $ go (i + 1)

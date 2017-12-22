@@ -1,5 +1,9 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.Graphics.Shader.Text where
+module Kurokos.Graphics.Shader.Text
+  ( TextShader
+  , newTextShader
+  , setColor
+  ) where
 
 import           Data.Word                 (Word8)
 import           Linear
@@ -31,13 +35,6 @@ instance Shader TextShader where
 
 instance TextureShader TextShader where
   shdrSampler2D = sTexVar
-
-setColor :: TextShader -> V3 Word8 -> IO ()
-setColor TextShader{..} color =
-  withProgram sProgram $
-    setUniformVec3 sColorVar color'
-  where
-    color' = (/ 255) . fromIntegral <$> color
 
 newTextShader :: IO TextShader
 newTextShader = do
@@ -74,3 +71,10 @@ newTextShader = do
 
     texPs :: [GL.GLfloat]
     texPs = [0, 1, 1, 1, 0, 0, 1, 0]
+    
+setColor :: TextShader -> V3 Word8 -> IO ()
+setColor TextShader{..} color =
+  withProgram sProgram $
+    setUniformVec3 sColorVar color'
+  where
+    color' = (/ 255) . fromIntegral <$> color
