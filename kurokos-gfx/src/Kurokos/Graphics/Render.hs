@@ -68,6 +68,6 @@ renderText (V2 x0 iy) shdr ts = do
           y' = y0 + fromIntegral offY
           size = fromIntegral <$> V2 (texWidth tex) (texHeight tex)
           ctx' = RContext (V2 x' y') size Nothing Nothing
-      setTexture shdr tex
+      setTexture shdr $ texObject tex
       renderByShader_ shdr ctx'
       return $ x + dx

@@ -73,7 +73,7 @@ main = do
           GL.clear [GL.ColorBuffer]
           --
           let ctx = G.RContext (V2 320 240) (pure i') (Just $ i' / 10) Nothing
-          G.setTexture br $ if i `mod` 60 < 30 then tex1 else tex2
+          G.setTexture br $ G.texObject $ if i `mod` 60 < 30 then tex1 else tex2
           G.renderByShader_ br ctx
           --
           G.renderText (V2 100 240) st texttex

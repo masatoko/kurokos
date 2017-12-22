@@ -8,7 +8,6 @@ import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (get, ($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
-import           Kurokos.Graphics.Texture  (Texture (..))
 import           Kurokos.Graphics.Types
 
 -- | Rendering context
@@ -80,10 +79,10 @@ updateProjection ptype (V2 winW winH) shdr =
     projMat Ortho              = ortho 0 w 0 h 1 (-1)
     projMat (Frustum near far) = frustum 0 w 0 h near far
 
-setTexture :: (Shader a, TextureShader a) => a -> Texture -> IO ()
+setTexture :: (Shader a, TextureShader a) => a -> GL.TextureObject -> IO ()
 setTexture shdr tex =
   withProgram (shdrProgram shdr) $
-    setUniformSampler2D (shdrSampler2D shdr) $ texObject tex
+    setUniformSampler2D (shdrSampler2D shdr) tex
 
 -- Util
 withProgram :: GL.Program -> IO a -> IO a
