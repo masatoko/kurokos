@@ -3,7 +3,7 @@ module Kurokos.Asset.Raw
   -- ** Type
     Ident
   , AssetList
-  , AssetManager
+  , RawAssetManager
   -- ** Load
   , readAssetList
   , decodeAssetList

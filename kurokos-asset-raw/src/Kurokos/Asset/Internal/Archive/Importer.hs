@@ -20,10 +20,10 @@ import           Kurokos.Asset.Internal.Archive.Encrypt (decode)
 import           Kurokos.Asset.Internal.Archive.Util    (Password, unpackSize, (<+>))
 import           Kurokos.Asset.Internal.Types
 
-importAssetManager :: Password -> FilePath -> IO AssetManager
+importAssetManager :: Password -> FilePath -> IO RawAssetManager
 importAssetManager pass orgPath = do
   (headerSize, as) <- readHeaderInfo pass orgPath
-  AssetManager . snd <$> foldM work (headerSize, M.empty) as
+  RawAssetManager . snd <$> foldM work (headerSize, M.empty) as
   where
     work (offset, amap) (size, ident, path) = do
       bytes <- decode (pass <+> offset) <$> mmapFileByteString orgPath range

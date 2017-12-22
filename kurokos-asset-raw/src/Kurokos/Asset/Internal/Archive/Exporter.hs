@@ -13,8 +13,8 @@ import           Kurokos.Asset.Internal.Archive.Encrypt (encode)
 import           Kurokos.Asset.Internal.Archive.Util    (Password, packSize, (<+>))
 import           Kurokos.Asset.Internal.Types
 
-exportAssetManager :: Password -> FilePath -> AssetManager -> IO ()
-exportAssetManager pwd dest (AssetManager amap) =
+exportAssetManager :: Password -> FilePath -> RawAssetManager -> IO ()
+exportAssetManager pwd dest (RawAssetManager amap) =
   generate $ M.toList amap
   where
     generate :: [(Ident, (FilePath, BS.ByteString))] -> IO ()

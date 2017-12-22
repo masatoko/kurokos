@@ -79,7 +79,7 @@ data KurokosConfig = KurokosConfig
   -- ^ Print FPS for debugging
   , confDebugPrintSystem :: Bool
   -- ^ Print system information for debugging
-  , confSystemAsset      :: Asset.AssetManager
+  , confSystemAsset      :: Asset.RawAssetManager
   , confSystemFontId     :: Asset.Ident
   }
 

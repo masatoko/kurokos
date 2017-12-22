@@ -56,6 +56,6 @@ instance Monoid AssetList where
   mempty = AssetList []
   mappend (AssetList xs) (AssetList ys) = AssetList $ xs ++ ys
 
-newtype AssetManager = AssetManager
+newtype RawAssetManager = RawAssetManager
   { unAssetManager :: M.Map Ident (FilePath, BS.ByteString)
   }

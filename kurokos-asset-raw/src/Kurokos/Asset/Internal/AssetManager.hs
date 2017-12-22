@@ -12,9 +12,9 @@ import           System.FilePath.Posix
 
 import           Kurokos.Asset.Internal.Types
 
-loadAssetManager :: MonadIO m => AssetList -> m AssetManager
+loadAssetManager :: MonadIO m => AssetList -> m RawAssetManager
 loadAssetManager (AssetList as) =
-  AssetManager . M.fromList <$> liftIO (mapM work as) -- TODO: Shold check whether keys are duplicated or not.
+  RawAssetManager . M.fromList <$> liftIO (mapM work as) -- TODO: Shold check whether keys are duplicated or not.
   where
     work AssetInfo{..} =
       IO.withFile path IO.ReadMode $ \h -> do

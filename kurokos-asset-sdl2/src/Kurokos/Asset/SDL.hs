@@ -27,7 +27,7 @@ import           System.FilePath.Posix
 import qualified SDL.Font                     as Font
 import qualified SDL.Image                    as Image
 
-import           Kurokos.Asset.Internal.Types (AssetManager (..))
+import           Kurokos.Asset.Internal.Types (RawAssetManager (..))
 import           Kurokos.Asset.Raw            (Ident)
 import qualified Kurokos.Asset.Raw            as Asset
 
@@ -39,8 +39,8 @@ data SDLAssetManager = SDLAssetManager
   , amFontHolder :: MVar (M.Map (Ident, Font.PointSize) Font.Font)
   }
 
-newSDLAssetManager :: MonadIO m => SDL.Renderer -> AssetManager -> m SDLAssetManager
-newSDLAssetManager r (AssetManager bmap) = do
+newSDLAssetManager :: MonadIO m => SDL.Renderer -> RawAssetManager -> m SDLAssetManager
+newSDLAssetManager r (RawAssetManager bmap) = do
   mvFontHolder <- liftIO $ newMVar M.empty
   let empty = SDLAssetManager M.empty M.empty M.empty mvFontHolder
   foldM work empty $ M.toList bmap
