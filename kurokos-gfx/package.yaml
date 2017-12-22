@@ -11,6 +11,12 @@ category:            Graphics
 extra-source-files:
 - README.md
 
+flags:
+  test:
+    description: Build testing executable
+    manual: False
+    default: False
+
 ghc-options:
   - -Wall
   - -fno-warn-unused-do-bind
@@ -44,11 +50,16 @@ executables:
   test-gfx:
     source-dirs:      src-test
     main:             Main.hs
-    dependencies:
-      - kurokos-gfx
-      - sdl2 >= 2.2.0
-      - linear
-      - filepath
-      - extra
-      - managed
-      - binary
+    when:
+      - condition: flag(test)
+        then:
+          dependencies:
+            - kurokos-gfx
+            - sdl2 >= 2.2.0
+            - linear
+            - filepath
+            - extra
+            - managed
+            - binary
+        else:
+          buildable: False

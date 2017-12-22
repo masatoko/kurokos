@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.Renderer
   ( Renderer
+  , getFreeType
   , newRenderer
   --
   , renderTexture
@@ -8,21 +9,29 @@ module Kurokos.Renderer
   , renderText
   ) where
 
+import           Graphics.Rendering.FreeType.Internal.Library (FT_Library)
 import           Linear.V2
 
-import qualified Kurokos.Graphics.Camera       as Cam
-import           Kurokos.Graphics.Render       (renderByShader,
-                                                renderTextTexture)
-import           Kurokos.Graphics.Shader       (RContext, setProjection,
-                                                setTexture)
-import qualified Kurokos.Graphics.Shader.Basic as Basic
-import qualified Kurokos.Graphics.Shader.Text  as Text
-import           Kurokos.Graphics.Types        (CharTexture, Texture (..), ProjectionType (..))
+import qualified Kurokos.Graphics.Camera                      as Cam
+import           Kurokos.Graphics.Font                        (initFreeType)
+import           Kurokos.Graphics.Render                      (renderByShader,
+                                                               renderTextTexture)
+import           Kurokos.Graphics.Shader                      (RContext,
+                                                               setProjection,
+                                                               setTexture)
+import qualified Kurokos.Graphics.Shader.Basic                as Basic
+import qualified Kurokos.Graphics.Shader.Text                 as Text
+import           Kurokos.Graphics.Types                       (CharTexture, ProjectionType (..),
+                                                               Texture (..))
 
 data Renderer = Renderer
   { rndrBasicShader :: Basic.BasicShader
   , rndrTextShader  :: Text.TextShader
+  , rndrFreeType    :: FT_Library
   }
+
+getFreeType :: Renderer -> FT_Library
+getFreeType = rndrFreeType
 
 newRenderer :: V2 Int -> IO Renderer
 newRenderer winSize = do
@@ -30,7 +39,8 @@ newRenderer winSize = do
   setProjection Ortho winSize' b
   t <- Text.newTextShader
   setProjection Ortho winSize' t
-  return $ Renderer b t
+  ft <- initFreeType
+  return $ Renderer b t ft
   where
     winSize' = fromIntegral <$> winSize
 

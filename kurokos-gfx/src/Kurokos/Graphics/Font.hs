@@ -27,7 +27,9 @@ module Kurokos.Graphics.Font
     withFreeType
   , initFreeType
   , doneFreeType
-  -- ** Face
+  -- ** Font Face
+  , Font
+  , PixelSize
   , newFace
   , newFaceBS
   , doneFace
@@ -37,6 +39,8 @@ module Kurokos.Graphics.Font
 import qualified Control.Exception                                   as E
 import           Control.Monad                                       (foldM_,
                                                                       unless)
+import           Control.Monad.IO.Class                              (MonadIO,
+                                                                      liftIO)
 import qualified Data.ByteString                                     as BS
 import           Data.ByteString.Internal                            (ByteString (..))
 import           Foreign                                             (Ptr,
@@ -53,28 +57,32 @@ import qualified Graphics.Rendering.FreeType.Internal.Face           as FT
 import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 
---
-withFreeType :: (FT.FT_Library -> IO a) -> IO a
-withFreeType = E.bracket initFreeType doneFreeType
+type Font = FT.FT_Face
 
-initFreeType :: IO FT.FT_Library
-initFreeType = alloca $ \p -> do
+type PixelSize = Int
+
+--
+withFreeType :: MonadIO m => (FT.FT_Library -> IO a) -> m a
+withFreeType = liftIO . E.bracket initFreeType doneFreeType
+
+initFreeType :: MonadIO m => m FT.FT_Library
+initFreeType = liftIO $ alloca $ \p -> do
   throwIfNot0 $ FT.ft_Init_FreeType p
   peek p
 
-doneFreeType :: FT.FT_Library -> IO ()
-doneFreeType ft = throwIfNot0 $ FT.ft_Done_FreeType ft
+doneFreeType :: MonadIO m => FT.FT_Library -> m ()
+doneFreeType ft = liftIO $ throwIfNot0 $ FT.ft_Done_FreeType ft
 --
 
 --
-newFace :: FT.FT_Library -> FilePath -> IO FT.FT_Face
-newFace ft fp = withCString fp $ \str ->
+newFace :: MonadIO m => FT.FT_Library -> FilePath -> m FT.FT_Face
+newFace ft fp = liftIO $ withCString fp $ \str ->
   alloca $ \ptr -> do
     throwIfNot0 $ FT.ft_New_Face ft str 0 ptr
     peek ptr
 
-newFaceBS :: FT.FT_Library -> BS.ByteString -> IO FT.FT_Face
-newFaceBS ft (PS fptr _off len) =
+newFaceBS :: MonadIO m => FT.FT_Library -> BS.ByteString -> m FT.FT_Face
+newFaceBS ft (PS fptr _off len) = liftIO $
   -- Is there any smart way?
   allocaBytes len $ \dst0 -> do -- Destination (Ptr CUChar8)
     withForeignPtr fptr $ \org0 -> -- Origin (Ptr Word8)
@@ -87,12 +95,12 @@ newFaceBS ft (PS fptr _off len) =
       poke to . fromIntegral =<< peek from
       return (from `plusPtr` 1, to `plusPtr` 1)
 
-doneFace :: FT.FT_Face -> IO ()
-doneFace face = throwIfNot0 $ FT.ft_Done_Face face
+doneFace :: MonadIO m => FT.FT_Face -> m ()
+doneFace face = liftIO $ throwIfNot0 $ FT.ft_Done_Face face
 --
 
-setPixelSize :: FT.FT_Face -> Int -> IO ()
-setPixelSize face size =
+setPixelSize :: MonadIO m => FT.FT_Face -> Int -> m ()
+setPixelSize face size = liftIO $
   throwIfNot0 $ FT.ft_Set_Pixel_Sizes face (fromIntegral size) 0
 
 throwIfNot0 :: IO FT.FT_Error -> IO ()

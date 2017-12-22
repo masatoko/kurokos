@@ -1,0 +1,34 @@
+name:                kurokos-asset
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/masatoko/kurokos/kurokos-asset#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Masato Kobayashi
+maintainer:          masatokodo@gmail.com
+copyright:           2017 Masato Kobayashi
+category:            Web
+build-type:          Simple
+extra-source-files:  README.md
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:
+    src
+  exposed-modules:
+    Kurokos.Asset
+  build-depends:
+      base >= 4.7 && < 5
+    , kurokos-asset-raw
+    , kurokos-gfx
+    , containers
+    , bytestring
+    , text
+    , filepath
+  default-language:
+    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/masatoko/kurokos/kurokos-asset

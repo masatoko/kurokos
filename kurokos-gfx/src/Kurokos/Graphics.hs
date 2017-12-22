@@ -2,6 +2,7 @@ module Kurokos.Graphics
   (
   -- ** Renderer
     Renderer
+  , getFreeType
   , newRenderer
   , renderTexture
   , renderTexture_
