@@ -7,7 +7,6 @@ module Kurokos.Graphics.Texture
   ) where
 
 import qualified Codec.Picture             as Pic
-import           Codec.Picture.Types       (convertImage)
 import qualified Control.Exception         as E
 import qualified Data.ByteString           as BS
 import qualified Graphics.GLUtil           as GLU

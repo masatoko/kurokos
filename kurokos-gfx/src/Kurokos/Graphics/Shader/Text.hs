@@ -1,18 +1,13 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.Graphics.Shader.Text where
 
-import           Data.Maybe                (fromMaybe)
 import           Data.Word                 (Word8)
-import           Foreign.C.Types           (CInt)
-import           Foreign.Storable          (sizeOf)
 import           Linear
 
 import qualified Graphics.GLUtil           as GLU
-import           Graphics.Rendering.OpenGL (get, ($=))
+import           Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
-import qualified Kurokos.Graphics.Camera   as Cam
-import           Kurokos.Graphics.Texture  (Texture (..))
 import           Kurokos.Graphics.Types
 
 import           Kurokos.Graphics.Shader

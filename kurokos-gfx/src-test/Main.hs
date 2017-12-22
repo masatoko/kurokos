@@ -6,34 +6,31 @@ import qualified Control.Exception             as E
 import           Control.Monad                 (unless)
 import           Control.Monad.IO.Class        (liftIO)
 import           Control.Monad.Managed         (managed, runManaged)
-import           Data.Either.Extra             (fromRight)
 import qualified Data.Vector                   as V
-import           Foreign.Storable              (sizeOf)
 import           Linear.V2
 import           Linear.V3
-import           System.FilePath.Posix
 
 import qualified SDL
 import           SDL.Event
 
-import qualified Graphics.GL                   as GLRaw
 import qualified Graphics.GLUtil               as GLU
 import           Graphics.Rendering.OpenGL     (get, ($=))
 import qualified Graphics.Rendering.OpenGL     as GL
 
 import qualified Kurokos.Graphics.Font         as Font
 import qualified Kurokos.Graphics.Shader       as G
+import qualified Kurokos.Graphics.Render       as G
 import qualified Kurokos.Graphics.Shader.Basic as SB
 import qualified Kurokos.Graphics.Shader.Text  as ST
 import qualified Kurokos.Graphics.Texture      as G
-import qualified Kurokos.Graphics.Texture
 import qualified Kurokos.Graphics.Types        as G
+
 
 main :: IO ()
 main = do
   SDL.initializeAll
   window <- SDL.createWindow "Test kurokos-gfx" winConf
-  withGL window $ \glContext -> do
+  withGL window $ \_glContext -> do
     -- GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral w) (fromIntegral h))
     SDL.swapInterval $= SDL.SynchronizedUpdates
     GL.clearColor $= GL.Color4 0 1 0 1
@@ -84,7 +81,7 @@ main = do
           G.renderByShader_ br ctx
           let x0 = 100
               y = 240
-              work x (G.CharTexture tex left top dx _ offY) = do
+              work x (G.CharTexture tex left _top dx _ offY) = do
                 let x' = x + fromIntegral left
                     y' = y + fromIntegral offY
                     size = fromIntegral <$> V2 (G.texWidth tex) (G.texHeight tex)

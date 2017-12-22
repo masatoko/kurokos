@@ -11,6 +11,10 @@ category:            Graphics
 extra-source-files:
 - README.md
 
+ghc-options:
+  - -Wall
+  - -fno-warn-unused-do-bind
+
 dependencies:
   - base >= 4.7 && < 5
   - OpenGL
@@ -35,6 +39,7 @@ library:
     - Kurokos.Graphics.Shader
     - Kurokos.Graphics.Shader.Basic
     - Kurokos.Graphics.Shader.Text
+    - Kurokos.Graphics.Render
 
 executables:
   test-gfx:

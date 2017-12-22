@@ -19,7 +19,6 @@ module Kurokos.Graphics.Font
 import qualified Control.Exception                                   as E
 import           Control.Monad                                       (foldM,
                                                                       foldM_,
-                                                                      forM,
                                                                       unless)
 import           Data.ByteString.Internal                            (ByteString (..))
 import qualified Data.Text                                           as T
@@ -29,30 +28,25 @@ import           Foreign.Ptr                                         (plusPtr)
 import           Foreign.Storable                                    (peek,
                                                                       poke)
 import           GHC.ForeignPtr                                      (mallocPlainForeignPtrBytes)
-import           System.IO                                           (hPutStrLn,
-                                                                      stderr)
 
 import qualified Data.ByteString                                     as BS
-import           Graphics.Rendering.OpenGL                           (get, ($=))
+import           Graphics.Rendering.OpenGL                           (($=))
 import qualified Graphics.Rendering.OpenGL                           as GL
 
 import           Foreign                                             (Ptr,
                                                                       Word8,
                                                                       alloca,
                                                                       allocaBytes,
-                                                                      peekArray,
-                                                                      realloc,
-                                                                      reallocBytes)
+                                                                      peekArray)
 import           Foreign.C.String                                    (withCString)
 import           Foreign.C.Types                                     (CChar (..),
                                                                       CUChar (..))
 import qualified Graphics.GLUtil                                     as GLU
 import qualified Graphics.Rendering.FreeType.Internal                as FT
 import qualified Graphics.Rendering.FreeType.Internal.Bitmap         as FT
-import qualified Graphics.Rendering.FreeType.Internal.BitmapSize     as FTS
+-- import qualified Graphics.Rendering.FreeType.Internal.BitmapSize     as FTS
 import qualified Graphics.Rendering.FreeType.Internal.Face           as FT
-import qualified Graphics.Rendering.FreeType.Internal.FaceType       as FT
-import qualified Graphics.Rendering.FreeType.Internal.GlyphMetrics   as GM
+-- import qualified Graphics.Rendering.FreeType.Internal.FaceType       as FT
 import qualified Graphics.Rendering.FreeType.Internal.GlyphSlot      as FT
 import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
@@ -126,7 +120,7 @@ createCharTexture face char = do
           (GL.PixelData GL.RGBA GL.UnsignedByte ptr) -- PixelFormat
         return $ ptr `plusPtr` off
   withForeignPtr fptr $ \ptr0 ->
-    foldM_ pokeColor ptr0 $ take len [0..]
+    foldM_ pokeColor ptr0 $ take len [(0::Int)..]
   GLU.printError
 
   GL.textureFilter   GL.Texture2D $= ((GL.Linear', Nothing), GL.Linear')
@@ -136,7 +130,6 @@ createCharTexture face char = do
   left <- fromIntegral <$> peek (FT.bitmap_left slot)
   top  <- fromIntegral <$> peek (FT.bitmap_top slot)
   FT.FT_Vector advanceX advanceY <- peek $ FT.advance slot
-  gm <- peek $ FT.metrics slot -- FT_Glyph_Metrics
   return $ CharTexture
     (Texture tex w h) left top
     (fromIntegral advanceX / 64)
@@ -190,11 +183,11 @@ newFace ft fp = withCString fp $ \str ->
     peek ptr
 
 newFaceBS :: FT.FT_Library -> BS.ByteString -> IO FT.FT_Face
-newFaceBS ft bytes@(PS fptr off len) =
+newFaceBS ft (PS fptr _off len) =
   -- Is there any smart way?
   allocaBytes len $ \dst0 -> do -- Destination (Ptr CUChar8)
     withForeignPtr fptr $ \org0 -> -- Origin (Ptr Word8)
-      foldM_ work (org0, dst0 :: Ptr CUChar) $ take len [0..]
+      foldM_ work (org0, dst0 :: Ptr CUChar) $ take len [(0::Int)..]
     alloca $ \ptr -> do
       FT.ft_New_Memory_Face ft dst0 (fromIntegral len) 0 ptr
       peek ptr
