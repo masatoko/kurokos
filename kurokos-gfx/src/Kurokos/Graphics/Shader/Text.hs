@@ -28,6 +28,12 @@ data TextShader = TextShader
   , sVao          :: GL.VertexArrayObject
   }
 
+instance Shader TextShader where
+  shdrProgram    = sProgram
+  shdrModelView  = sModelViewVar
+  shdrProjection = sProjVar
+  shdrVAO        = sVao
+
 renderTexByBasicShader_ :: TextShader -> RContext -> Texture -> IO ()
 renderTexByBasicShader_ r = renderTexByBasicShader r Cam.mkCamera
 
@@ -75,18 +81,6 @@ setColor TextShader{..} color =
   where
     color' = (/ 255) . fromIntegral <$> color
 
--- | Update projection matrix of TextShader
-updateTextShader :: ProjectionType -> V2 CInt -> TextShader -> IO ()
-updateTextShader ptype (V2 winW winH) TextShader{..} =
-  withProgram sProgram $
-    setUniformMat4 sProjVar $ projMat ptype
-  where
-    w = fromIntegral winW
-    h = fromIntegral winH
-
-    projMat Ortho              = ortho 0 w 0 h 1 (-1)
-    projMat (Frustum near far) = frustum 0 w 0 h near far
-
 newTextShader :: IO TextShader
 newTextShader = do
   sp <- GLU.simpleShaderProgram "_data/basic-text.vert" "_data/basic-text.frag"
@@ -122,13 +116,3 @@ newTextShader = do
 
     texPs :: [GL.GLfloat]
     texPs = [0, 1, 1, 1, 0, 0, 1, 0]
-
-    setupVec2 :: AttribVar TagVec2 -> [GL.GLfloat] -> IO ()
-    setupVec2 (AttribVar TagVec2 loc) ps = do
-      buf <- GLU.makeBuffer GL.ArrayBuffer ps
-      GL.bindBuffer GL.ArrayBuffer $= Just buf
-      GL.vertexAttribPointer loc $= (GL.ToFloat, vad)
-      GL.vertexAttribArray loc $= GL.Enabled
-      where
-        stride =  fromIntegral $ sizeOf (undefined :: GL.GLfloat) * 2
-        vad = GL.VertexArrayDescriptor 2 GL.Float stride GLU.offset0

@@ -22,12 +22,12 @@ import           Graphics.Rendering.OpenGL     (get, ($=))
 import qualified Graphics.Rendering.OpenGL     as GL
 
 import qualified Kurokos.Graphics.Font         as Font
-import qualified Kurokos.Graphics.Shader       as KG
+import qualified Kurokos.Graphics.Shader       as G
 import qualified Kurokos.Graphics.Shader.Basic as SB
 import qualified Kurokos.Graphics.Shader.Text  as ST
-import qualified Kurokos.Graphics.Texture      as KG
+import qualified Kurokos.Graphics.Texture      as G
 import qualified Kurokos.Graphics.Texture
-import qualified Kurokos.Graphics.Types        as KG
+import qualified Kurokos.Graphics.Types        as G
 
 main :: IO ()
 main = do
@@ -49,12 +49,12 @@ main = do
       liftIO $ do
         winSize <- get $ SDL.windowSize window
         br <- SB.newBasicRenderer
-        SB.updateBasicRenderer KG.Ortho winSize br
+        G.updateProjection G.Ortho winSize br
         st <- ST.newTextShader
-        ST.updateTextShader KG.Ortho winSize st
+        G.updateProjection G.Ortho winSize st
         --
-        tex1 <- KG.readTexture "_data/in_transit.png"
-        tex2 <- KG.readTexture "_data/panorama.png"
+        tex1 <- G.readTexture "_data/in_transit.png"
+        tex2 <- G.readTexture "_data/panorama.png"
         loop window br st tex1 tex2 texttex
   where
     winConf =
@@ -79,14 +79,14 @@ main = do
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          let ctx = KG.RContext (V2 320 240) (Just (pure i')) (Just $ i' / 10) Nothing
+          let ctx = G.RContext (V2 320 240) (Just (pure i')) (Just $ i' / 10) Nothing
           SB.renderTexByBasicRenderer_ br ctx $ if i `mod` 60 < 30 then tex1 else tex2
           let x0 = 100
               y = 240
-              work x (KG.CharTexture tex left top dx _ offY) = do
+              work x (G.CharTexture tex left top dx _ offY) = do
                 let x' = x + fromIntegral left
                     y' = y + fromIntegral offY
-                let ctx = KG.RContext (V2 x' y') Nothing Nothing Nothing
+                let ctx = G.RContext (V2 x' y') Nothing Nothing Nothing
                 -- SB.renderTexByBasicRenderer_ br ctx tex
                 ST.renderTexByBasicShader_ st ctx tex
                 return $ x + dx

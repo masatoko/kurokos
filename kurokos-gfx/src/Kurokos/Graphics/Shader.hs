@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 module Kurokos.Graphics.Shader where
 
 import           Data.Maybe                (fromMaybe)
@@ -60,6 +59,25 @@ setupVec2 (AttribVar TagVec2 loc) ps = do
 setupSampler2D :: UniformVar TagSampler2D -> IO ()
 setupSampler2D (UniformVar (TagSampler2D num) loc) =
   GL.activeTexture $= GL.TextureUnit num
+
+-- Shader class
+class Shader a where
+  shdrProgram    :: a -> GL.Program
+  shdrModelView  :: a -> UniformVar TagMat4
+  shdrProjection :: a -> UniformVar TagMat4
+  shdrVAO        :: a -> GL.VertexArrayObject
+
+-- | Update projection matrix of BasicShader
+updateProjection :: Shader a => ProjectionType -> V2 CInt -> a -> IO ()
+updateProjection ptype (V2 winW winH) shdr =
+  withProgram (shdrProgram shdr) $
+    setUniformMat4 (shdrProjection shdr) $ projMat ptype
+  where
+    w = fromIntegral winW
+    h = fromIntegral winH
+
+    projMat Ortho              = ortho 0 w 0 h 1 (-1)
+    projMat (Frustum near far) = frustum 0 w 0 h near far
 
 -- Util
 withProgram :: GL.Program -> IO a -> IO a

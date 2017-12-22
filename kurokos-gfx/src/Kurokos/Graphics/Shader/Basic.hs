@@ -26,6 +26,12 @@ data BasicShader = BasicShader
   , sVao          :: GL.VertexArrayObject
   }
 
+instance Shader BasicShader where
+  shdrProgram    = sProgram
+  shdrModelView  = sModelViewVar
+  shdrProjection = sProjVar
+  shdrVAO        = sVao
+
 renderTexByBasicRenderer_ :: BasicShader -> RContext -> Texture -> IO ()
 renderTexByBasicRenderer_ r =
   renderTexByBasicRenderer r Cam.mkCamera
@@ -67,17 +73,6 @@ renderTexByBasicRenderer BasicShader{..} cam rctx (Texture tex texW texH) =
                       (V4 0 0     1 0)
                       (V4 0 0     0 1)
 
--- | Update projection matrix of BasicShader
-updateBasicRenderer :: ProjectionType -> V2 CInt -> BasicShader -> IO ()
-updateBasicRenderer ptype (V2 winW winH) BasicShader{..} =
-  withProgram sProgram $
-    setUniformMat4 sProjVar $ projMat ptype
-  where
-    w = fromIntegral winW
-    h = fromIntegral winH
-
-    projMat Ortho              = ortho 0 w 0 h 1 (-1)
-    projMat (Frustum near far) = frustum 0 w 0 h near far
 
 newBasicRenderer :: IO BasicShader
 newBasicRenderer = do
