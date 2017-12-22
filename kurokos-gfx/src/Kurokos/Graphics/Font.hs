@@ -1,3 +1,26 @@
+-- | Font utility for freetype2
+--
+-- @
+-- import qualified Kurokos.Graphics.Font as Font
+-- import qualified Kurokos.Graphics      as G
+--
+-- ft <- Font.initFreeType
+-- face <- Font.newFace ft "_test/mplus-1p-medium.ttf"
+-- Font.setPixelSize face 32
+--
+-- text1 <- E.bracket (G.createTextTexture face (V3 255 0 0) "Hello, ") G.deleteTextTexture
+-- text2 <- E.bracket (G.createTextTexture face (V3 0 0 255) "World!") G.deleteTextTexture
+-- let texttex = text1 ++ text2
+--
+-- -- G.renderText (V2 x0 y0) TextChader texttex
+--
+-- G.deleteTexture text1
+-- G.deleteTexture text2
+-- Font.doneFace face
+-- Font.doneFreeType ft
+-- @
+--
+
 module Kurokos.Graphics.Font
   (
   -- ** Initialize FreeType
