@@ -46,13 +46,13 @@ newAssetManager rndr (RawAssetManager bmap) = liftIO $
       where
         ext = filter (/= '.') . map toLower . takeExtension $ path
         update
-          | ext == "ttf" = do
+          | ext == "ttf" = do -- TODO: Add extensions
               font <- Font.newFaceBS ft bytes
               return $ am {amFontMap = M.insert ident font amFontMap}
           | S.member ext imageExts = do
               tex <- G.decodeTexture bytes
               return $ am {amTexMap = M.insert ident tex amTexMap}
-          | otherwise    =
+          | otherwise =
               return $ am {amByteMap = M.insert ident bytes amByteMap}
 
     imageExts :: S.Set String
