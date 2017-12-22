@@ -7,6 +7,7 @@ import           Control.Monad                 (unless)
 import           Control.Monad.IO.Class        (liftIO)
 import           Control.Monad.Managed         (managed, runManaged)
 import           Linear.V2
+import           Linear.V3
 
 import qualified SDL
 import           SDL.Event
@@ -36,9 +37,12 @@ main = do
       face <- managed $ E.bracket (GText.newFace ft "_test/mplus-1p-medium.ttf") GText.doneFace
       liftIO $ GText.setPixelSize face 32
     --
-      texttex <- managed $
-                  E.bracket (GText.createTextTexture face "Hello, World!")
-                            GText.deleteTextTexture
+      text1 <- managed $
+                E.bracket (GText.createTextTexture face (V3 255 0 0) "Hello, ") GText.deleteTextTexture
+      text2 <- managed $
+                E.bracket (GText.createTextTexture face (V3 0 0 255) "World!") GText.deleteTextTexture
+      let texttex = text1 ++ text2
+      
       liftIO $ do
         winSize <- get $ SDL.windowSize window
         br <- SB.newBasicRenderer

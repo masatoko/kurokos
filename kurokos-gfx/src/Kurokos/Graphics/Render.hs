@@ -58,17 +58,17 @@ renderByShader shdr cam rctx =
 -- Text
 
 renderText :: Foldable t => V2 Int -> TextShader -> t CharTexture -> IO ()
-renderText (V2 x0 iy) shdr ts = do
-  setColor shdr $ V3 255 0 0
-  foldM_ renderChar (fromIntegral x0) ts
+renderText (V2 x0 iy) shdr =
+  foldM_ renderChar (fromIntegral x0)
   where
     y0 = fromIntegral iy
 
-    renderChar x (CharTexture tex left _top dx _ offY) = do
+    renderChar x (CharTexture tex color left _top dx _ offY) = do
       let x' = x + fromIntegral left
           y' = y0 + fromIntegral offY
           size = fromIntegral <$> V2 (texWidth tex) (texHeight tex)
           ctx' = RContext (V2 x' y') size Nothing Nothing
+      setColor shdr color
       setTexture shdr $ texObject tex
       renderByShader_ shdr ctx'
       return $ x + dx

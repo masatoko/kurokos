@@ -51,6 +51,7 @@ import qualified Graphics.Rendering.FreeType.Internal.Vector         as FT
 
 import           Kurokos.Graphics.Texture                            (deleteTexture)
 import           Kurokos.Graphics.Types                              (CharTexture (..),
+                                                                      Color3,
                                                                       TextTexture,
                                                                       Texture (..))
 
@@ -64,14 +65,14 @@ deleteCharTexture = deleteTexture . ctTexture
 deleteTextTexture :: TextTexture -> IO ()
 deleteTextTexture = mapM_ deleteCharTexture
 
-createTextTexture :: FT.FT_Face -> T.Text -> IO TextTexture
-createTextTexture face =
+createTextTexture :: FT.FT_Face -> Color3 -> T.Text -> IO TextTexture
+createTextTexture face color =
   mapM work . T.unpack
   where
-    work = createCharTexture face
+    work = createCharTexture face color
 
-createCharTexture :: FT.FT_Face -> Char -> IO CharTexture
-createCharTexture face char = do
+createCharTexture :: FT.FT_Face -> Color3 -> Char -> IO CharTexture
+createCharTexture face color char = do
   charInd <- FT.ft_Get_Char_Index face $ fromIntegral $ fromEnum char -- Get the unicode char index.
   throwIfNot0 $ FT.ft_Load_Glyph face charInd FT.ft_LOAD_DEFAULT -- Load the glyph into freetype memory.
   slot <- peek $ FT.glyph face -- GlyphSlot
@@ -128,7 +129,7 @@ createCharTexture face char = do
   top  <- fromIntegral <$> peek (FT.bitmap_top slot)
   FT.FT_Vector advanceX advanceY <- peek $ FT.advance slot
   return $ CharTexture
-    (Texture tex w h) left top
+    (Texture tex w h) color left top
     (fromIntegral advanceX / 64)
     (fromIntegral advanceY / 64)
     (top - h)

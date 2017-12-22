@@ -1,5 +1,6 @@
 module Kurokos.Graphics.Types where
 
+import           Data.Word                 (Word8)
 import           Linear
 
 import qualified Graphics.Rendering.OpenGL as GL
@@ -30,10 +31,13 @@ data Texture = Texture
 
 -- Font
 
+type Color3 = V3 Word8
+
 type TextTexture = [CharTexture]
 
 data CharTexture = CharTexture
   { ctTexture  :: Texture
+  , ctColor    :: Color3
   , ctLeft     :: Int
   , ctTop      :: Int
   , ctAdvanceX :: Float -- ^ horiAdvance [FT_Glyph_Metrics](https://hackage.haskell.org/package/freetype2-0.1.2/docs/Graphics-Rendering-FreeType-Internal-GlyphMetrics.html#t:FT_Glyph_Metrics)
