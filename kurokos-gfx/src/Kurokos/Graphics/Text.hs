@@ -1,4 +1,4 @@
-module Kurokos.Graphics.Font
+module Kurokos.Graphics.Text
   (
   -- ** Initialize FreeType
     withFreeType

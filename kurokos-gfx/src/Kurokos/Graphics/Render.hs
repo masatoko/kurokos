@@ -1,18 +1,21 @@
 module Kurokos.Graphics.Render
   ( renderByShader_
   , renderByShader
+  , renderText
   ) where
 
-import           Data.Maybe                (fromMaybe)
+import           Data.Maybe                   (fromMaybe)
+import qualified Data.Vector                  as V
 import           Linear
 
-import qualified Graphics.GLUtil           as GLU
-import           Graphics.Rendering.OpenGL (($=))
-import qualified Graphics.Rendering.OpenGL as GL
+import qualified Graphics.GLUtil              as GLU
+import           Graphics.Rendering.OpenGL    (($=))
+import qualified Graphics.Rendering.OpenGL    as GL
 
-import qualified Kurokos.Graphics.Camera   as Cam
+import qualified Kurokos.Graphics.Camera      as Cam
 import           Kurokos.Graphics.Shader
-
+import           Kurokos.Graphics.Shader.Text (TextShader, setColor)
+import           Kurokos.Graphics.Types
 
 renderByShader_ :: Shader a => a -> RContext -> IO ()
 renderByShader_ shdr =
@@ -50,3 +53,21 @@ renderByShader shdr cam rctx =
                       (V4 0 sizeY 0 0)
                       (V4 0 0     1 0)
                       (V4 0 0     0 1)
+
+-- Text
+
+renderText :: V2 Int -> TextShader -> TextTexture -> IO ()
+renderText (V2 x0 iy) shdr ts = do
+  setColor shdr $ V3 255 0 0
+  V.foldM_ renderChar (fromIntegral x0) ts
+  where
+    y0 = fromIntegral iy
+
+    renderChar x (CharTexture tex left _top dx _ offY) = do
+      let x' = x + fromIntegral left
+          y' = y0 + fromIntegral offY
+          size = fromIntegral <$> V2 (texWidth tex) (texHeight tex)
+          ctx' = RContext (V2 x' y') size Nothing Nothing
+      setTexture shdr tex
+      renderByShader_ shdr ctx'
+      return $ x + dx
