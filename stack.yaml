@@ -38,7 +38,9 @@ compiler: ghc-8.0.1
 # will not be run. This is useful for tweaking upstream packages.
 packages:
 - '.'
+- ./kurokos-gfx
 - ./kurokos-ui
+- ./kurokos-asset
 - ./kurokos-asset-raw
 - ./kurokos-asset-sdl2
 - ./kurokos-sdl2-gfx
@@ -49,9 +51,10 @@ packages:
 extra-deps:
   - sdl2-2.3.0
   - sdl2-image-2.0.0
-  # - sdl2-mixer-0.1
   - sdl2-ttf-2.0.2
   - Glob-0.9.1
+  - GLUtil-0.9.3
+  - freetype2-0.1.2
 
 # Override default flag values for local packages and extra-deps
 flags: {}
