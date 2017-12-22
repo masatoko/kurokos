@@ -34,14 +34,20 @@ newRenderer winSize = do
   where
     winSize' = fromIntegral <$> winSize
 
+-- TODO: Implement freeRenderer
+
+-- | Render Texture with camera.
 renderTexture :: Renderer -> Cam.Camera -> Texture -> RContext -> IO ()
 renderTexture Renderer{..} cam tex rctx = do
   setTexture rndrBasicShader $ texObject tex
   renderByShader rndrBasicShader cam rctx
 
+-- | Render Texture with default camera.
+-- Default camera is Camera.mkCameara
 renderTexture_ :: Renderer -> Texture -> RContext -> IO ()
 renderTexture_ rndr = renderTexture rndr Cam.mkCamera
 
+-- | Render CharTexture list.
 renderText :: Foldable t => Renderer -> V2 Int -> t CharTexture -> IO ()
 renderText Renderer{..} =
   renderTextTexture rndrTextShader
