@@ -47,6 +47,16 @@ setUniformSampler2D (UniformVar (TagSampler2D num) loc) tex = do
   GLU.asUniform (GL.TextureUnit num) loc -- TODO: Move to setup
 
 -- Setup
+setupVec2 :: AttribVar TagVec2 -> [GL.GLfloat] -> IO ()
+setupVec2 (AttribVar TagVec2 loc) ps = do
+  buf <- GLU.makeBuffer GL.ArrayBuffer ps
+  GL.bindBuffer GL.ArrayBuffer $= Just buf
+  GL.vertexAttribPointer loc $= (GL.ToFloat, vad)
+  GL.vertexAttribArray loc $= GL.Enabled
+  where
+    stride =  fromIntegral $ sizeOf (undefined :: GL.GLfloat) * 2
+    vad = GL.VertexArrayDescriptor 2 GL.Float stride GLU.offset0
+
 setupSampler2D :: UniformVar TagSampler2D -> IO ()
 setupSampler2D (UniformVar (TagSampler2D num) loc) =
   GL.activeTexture $= GL.TextureUnit num

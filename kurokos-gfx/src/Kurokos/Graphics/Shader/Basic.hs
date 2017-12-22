@@ -109,13 +109,3 @@ newBasicRenderer = do
 
     texPs :: [GL.GLfloat]
     texPs = [0, 1, 1, 1, 0, 0, 1, 0]
-
-    setupVec2 :: AttribVar TagVec2 -> [GL.GLfloat] -> IO ()
-    setupVec2 (AttribVar TagVec2 loc) ps = do
-      buf <- GLU.makeBuffer GL.ArrayBuffer ps
-      GL.bindBuffer GL.ArrayBuffer $= Just buf
-      GL.vertexAttribPointer loc $= (GL.ToFloat, vad)
-      GL.vertexAttribArray loc $= GL.Enabled
-      where
-        stride =  fromIntegral $ sizeOf (undefined :: GL.GLfloat) * 2
-        vad = GL.VertexArrayDescriptor 2 GL.Float stride GLU.offset0
