@@ -6,8 +6,6 @@ import qualified Control.Exception             as E
 import           Control.Monad                 (unless)
 import           Control.Monad.IO.Class        (liftIO)
 import           Control.Monad.Managed         (managed, runManaged)
-import           Linear.V2
-import           Linear.V4
 
 import qualified SDL
 import           SDL.Event
@@ -16,6 +14,7 @@ import qualified Graphics.GLUtil               as GLU
 import           Graphics.Rendering.OpenGL     (get, ($=))
 import qualified Graphics.Rendering.OpenGL     as GL
 
+import Kurokos.Graphics.Vect
 import qualified Kurokos.Graphics              as G
 -- import qualified Kurokos.Graphics.Camera       as Cam
 import qualified Kurokos.Graphics.Font         as Font
@@ -45,9 +44,11 @@ main = do
         rndr <- G.newRenderer winSize
         tex1 <- G.readTexture "_data/in_transit.png"
         tex2 <- G.readTexture "_data/panorama.png"
-        let ps = map (uncurry V2) [(0,0), (100,0), (50,100)]
+        let ps = map (P . uncurry V2) [(0,0), (100,0), (50,100)]
         poly <- G.newPrim rndr GL.LineLoop ps
-        loop window rndr tex1 tex2 texttex poly
+        rect <- G.newRectangle rndr (V2 40 20)
+        fillRect <- G.newFillRectangle rndr (V2 40 20)
+        loop window rndr tex1 tex2 texttex poly rect fillRect
   where
     winConf =
       SDL.defaultWindow
@@ -63,7 +64,7 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 4 0
         }
 
-    loop win rndr tex1 tex2 texttex poly = go (0 :: Integer)
+    loop win rndr tex1 tex2 texttex poly rect fillRect = go (0 :: Integer)
       where
         go i = do
           let i' = fromIntegral i
@@ -78,6 +79,11 @@ main = do
           G.renderText rndr (V2 100 240) texttex
           --
           G.drawPrim rndr (V2 400 200) poly
+          --
+          G.setPrimColor rndr $ V4 255 255 255 255
+          G.drawPrim rndr (V2 400 300) fillRect
+          G.setPrimColor rndr $ V4 255 0 0 255
+          G.drawPrim rndr (V2 400 300) rect
           --
           SDL.glSwapWindow win
           unless (any shouldExit events) $ go (i + 1)

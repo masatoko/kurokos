@@ -6,12 +6,13 @@ import qualified Data.Vector.Storable              as V
 import qualified Graphics.GLUtil                   as GLU
 import           Graphics.Rendering.OpenGL         (($=))
 import qualified Graphics.Rendering.OpenGL         as GL
-import           Linear.V2
 
 import qualified Kurokos.Graphics.Camera           as Cam
 import           Kurokos.Graphics.Render           (mkModelView, setModelView)
 import           Kurokos.Graphics.Shader
 import           Kurokos.Graphics.Shader.Primitive
+import           Kurokos.Graphics.Types            (Color)
+import           Kurokos.Graphics.Vect
 import           Kurokos.Renderer                  (Renderer (rndrPrimShader))
 
 data Prim = Prim
@@ -34,19 +35,37 @@ drawPrim rndr pos Prim{..} = do
   where
     mv = mkModelView Cam.camForVertFlip pos
 
+setPrimColor :: Renderer -> Color -> IO ()
+setPrimColor rndr = setColor (rndrPrimShader rndr)
+
 -- Make
 
-newPrim :: Foldable t => Renderer -> GL.PrimitiveMode -> t (V2 Float) -> IO Prim
+newPrim :: Foldable t => Renderer -> GL.PrimitiveMode -> t (Point V2 Float) -> IO Prim
 newPrim rndr pmode v0 = do
   vao <- GLU.makeVAO $ setupVec2 attrCoord v'
   return $ Prim vao pmode numArrayIndices
   where
     attrCoord = sAttrCoord $ rndrPrimShader rndr
-
     numArrayIndices = fromIntegral $ V.length v' `div` 2
     v' = foldr' work V.empty v0
       where
-        work (V2 x y) v = x `V.cons` (y `V.cons` v)
+        work (P (V2 x y)) v = x `V.cons` (y `V.cons` v)
+
+newRectangle :: Renderer -> V2 Float -> IO Prim
+newRectangle rndr (V2 w h) = do
+  vao <- GLU.makeVAO $ setupVec2 attrCoord v
+  return $ Prim vao GL.LineLoop 4
+  where
+    attrCoord = sAttrCoord $ rndrPrimShader rndr
+    v = V.fromList [0, 0, w, 0, w, h, 0, h]
+
+newFillRectangle :: Renderer -> V2 Float -> IO Prim
+newFillRectangle rndr (V2 w h) = do
+  vao <- GLU.makeVAO $ setupVec2 attrCoord v
+  return $ Prim vao GL.TriangleStrip 4
+  where
+    attrCoord = sAttrCoord $ rndrPrimShader rndr
+    v = V.fromList [0, 0, w, 0, 0, h, w, h]
 
 -- Internal Helper
 

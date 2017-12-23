@@ -26,8 +26,11 @@ module Kurokos.Graphics
   , createTextTexture
   , deleteTextTexture
   -- ** Primitive
-  , newPrim
   , drawPrim
+  , setPrimColor
+  , newPrim
+  , newRectangle
+  , newFillRectangle
   -- ** Rendering (Temporal)
   , renderTextureShader
   , renderTextTexture
