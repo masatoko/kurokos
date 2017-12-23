@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
 module Kurokos.Graphics.Shader.Text
   ( TextShader
   , newTextShader
@@ -19,24 +18,24 @@ import           Kurokos.Graphics.Types
 import           Kurokos.Graphics.Shader
 
 data TextShader = TextShader
-  { sProgram      :: GL.Program
-  , sCoordVar     :: AttribVar TagVec2
-  , sTexCoordVar  :: AttribVar TagVec2
-  , sModelViewVar :: UniformVar TagMat4
-  , sProjVar      :: UniformVar TagMat4
-  , sColorVar     :: UniformVar TagVec4
-  , sTexVar       :: UniformVar TagSampler2D
-  , sVao          :: GL.VertexArrayObject
+  { sProgram          :: GL.Program
+  -- , sAttrCoord        :: AttribVar TagVec2
+  -- , sAttrTexCoord     :: AttribVar TagVec2
+  , sUniformModelView :: UniformVar TagMat4
+  , sUniformProj      :: UniformVar TagMat4
+  , sColorVar         :: UniformVar TagVec4
+  , sUniformTexture   :: UniformVar TagSampler2D
+  , sVao              :: GL.VertexArrayObject
   }
 
 instance Shader TextShader where
   shdrProgram    = sProgram
-  shdrModelView  = sModelViewVar
-  shdrProjection = sProjVar
+  shdrModelView  = sUniformModelView
+  shdrProjection = sUniformProj
 
 instance TextureShader TextShader where
   shdrVAO       = sVao
-  shdrSampler2D = sTexVar
+  shdrSampler2D = sUniformTexture
 
 instance ColorShader TextShader where
   shdrColor = sColorVar
@@ -44,31 +43,31 @@ instance ColorShader TextShader where
 newTextShader :: IO TextShader
 newTextShader = do
   sp <- GLU.simpleShaderProgramBS vert frag
-  let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
-      texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
-      modelViewUniform = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
-      projUniform = UniformVar TagMat4 $ GLU.getUniform sp "Projection"
-      colorUniform = UniformVar TagVec4 $ GLU.getUniform sp "BasisColor"
-      texUniform = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
+  let attrCoord = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
+      attrTexCoord = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
+      uniformModelView = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
+      uniformProj = UniformVar TagMat4 $ GLU.getUniform sp "Projection"
+      uniformColor = UniformVar TagVec4 $ GLU.getUniform sp "BasisColor"
+      uniformTexture = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
   -- * Setup
-  setupSampler2D texUniform
+  setupSampler2D uniformTexture
   vao <- GLU.makeVAO $ do
-          setupVec2 vtxCoordVar $ V.fromList vtxPs
-          setupVec2 texCoordVar $ V.fromList texPs
+          setupVec2 attrCoord $ V.fromList vtxPs
+          setupVec2 attrTexCoord $ V.fromList texPs
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
   -- Initial Uniform
   withProgram (GLU.program sp) $
-    setUniformVec4 colorUniform (V4 1 1 1 1)
+    setUniformVec4 uniformColor (V4 1 1 1 1)
   return $ TextShader
     (GLU.program sp)
-    vtxCoordVar
-    texCoordVar
-    modelViewUniform
-    projUniform
-    colorUniform
-    texUniform
+    -- attrCoord
+    -- attrTexCoord
+    uniformModelView
+    uniformProj
+    uniformColor
+    uniformTexture
     vao
   where
     vtxPs :: [GL.GLfloat]

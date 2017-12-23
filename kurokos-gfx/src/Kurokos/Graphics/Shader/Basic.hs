@@ -14,47 +14,47 @@ import           Kurokos.Graphics.Shader
 import           Kurokos.Graphics.Types
 
 data BasicShader = BasicShader
-  { sProgram      :: GL.Program
-  , sCoordVar     :: AttribVar TagVec2
-  , sTexCoordVar  :: AttribVar TagVec2
-  , sModelViewVar :: UniformVar TagMat4
-  , sProjVar      :: UniformVar TagMat4
-  , sTexVar       :: UniformVar TagSampler2D
-  , sVao          :: GL.VertexArrayObject
+  { sProgram          :: GL.Program
+  -- , sAttrCoord        :: AttribVar TagVec2
+  -- , sAttrTexCoord     :: AttribVar TagVec2
+  , sUniformModelView :: UniformVar TagMat4
+  , sUniformProj      :: UniformVar TagMat4
+  , sUniformTexture   :: UniformVar TagSampler2D
+  , sVao              :: GL.VertexArrayObject
   }
 
 instance Shader BasicShader where
   shdrProgram    = sProgram
-  shdrModelView  = sModelViewVar
-  shdrProjection = sProjVar
+  shdrModelView  = sUniformModelView
+  shdrProjection = sUniformProj
 
 instance TextureShader BasicShader where
   shdrVAO       = sVao
-  shdrSampler2D = sTexVar
+  shdrSampler2D = sUniformTexture
 
 newBasicShader :: IO BasicShader
 newBasicShader = do
   sp <- GLU.simpleShaderProgramBS vert frag
-  let vtxCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
-      texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
-      modelViewUniform = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
-      projUniform = UniformVar TagMat4 $ GLU.getUniform sp "Projection"
-      texUniform = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
+  let attrCoord = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
+      attrTexCoord = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
+      uniformModelView = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
+      uniformProj = UniformVar TagMat4 $ GLU.getUniform sp "Projection"
+      uniformTexture = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
   -- * Setup
-  setupSampler2D texUniform
+  setupSampler2D uniformTexture
   vao <- GLU.makeVAO $ do
-          setupVec2 vtxCoordVar $ V.fromList vtxPs
-          setupVec2 texCoordVar $ V.fromList texPs
+          setupVec2 attrCoord $ V.fromList vtxPs
+          setupVec2 attrTexCoord $ V.fromList texPs
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
   return $ BasicShader
     (GLU.program sp)
-    vtxCoordVar
-    texCoordVar
-    modelViewUniform
-    projUniform
-    texUniform
+    -- attrCoord
+    -- attrTexCoord
+    uniformModelView
+    uniformProj
+    uniformTexture
     vao
   where
     vtxPs :: [GL.GLfloat]
