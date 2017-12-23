@@ -64,7 +64,7 @@ import           Text.Printf                 (printf)
 import           Graphics.Rendering.OpenGL   (get, ($=))
 import qualified Graphics.Rendering.OpenGL   as GL
 import           Linear.V2
-import           Linear.V3
+import           Linear.V4
 import qualified SDL
 
 import qualified Kurokos.Asset               as Asset
@@ -329,7 +329,6 @@ runScene Scene{..} =
     printMessages :: MonadIO m => KurokosT m ()
     printMessages = do
       font <- asks envSystemFont
-      Font.setPixelSize font 16
       ts <- gets kstMessages
       modify $ \s -> s {kstMessages = []} -- Clear kstMessages
       withRenderer $ \r ->
@@ -338,7 +337,7 @@ runScene Scene{..} =
         work r font y text =
           liftIO $ do
             E.bracket
-              (G.createTextTexture font (V3 0 255 0) text)
+              (G.createTextTexture font 16 (V4 0 255 0 255) text)
               G.deleteTextTexture
               (G.renderText r (V2 8 y))
             return $ y + 20
