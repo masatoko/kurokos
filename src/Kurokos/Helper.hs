@@ -1,9 +1,9 @@
-module Kurokos.Render
+module Kurokos.Helper
   ( printTest
   ) where
 
 import qualified Control.Exception    as E
-import           Control.Monad.Reader
+import           Control.Monad.Reader (MonadIO, asks)
 import           Data.Text            (Text)
 import           Data.Word            (Word8)
 import           Linear.V2
@@ -13,7 +13,7 @@ import           Kurokos.Core
 import qualified Kurokos.Graphics     as G
 
 printTest :: MonadIO m => V2 Int -> V3 Word8 -> Text -> KurokosT m ()
-printTest pos (V3 r g b) text = do -- liftIO $ print text
+printTest pos (V3 r g b) text = do
   font <- asks envSystemFont
   withRenderer $ \rndr ->
     E.bracket
