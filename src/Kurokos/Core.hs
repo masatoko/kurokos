@@ -329,7 +329,7 @@ runScene Scene{..} =
     printMessages :: MonadIO m => KurokosT m ()
     printMessages = do
       font <- asks envSystemFont
-      Font.setPixelSize font 18
+      Font.setPixelSize font 16
       ts <- gets kstMessages
       modify $ \s -> s {kstMessages = []} -- Clear kstMessages
       withRenderer $ \r ->
