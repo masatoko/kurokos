@@ -27,14 +27,8 @@ module Kurokos
   , getFrame
   , getJoysticks
   , showMessageBox
-  -- ** Rendering Helper
-  , setColor
-  , clearBy
+  -- ** Helper
   , printTest
-  -- ** Texture Helper
-  , setBlendMode
-  , setAlphaMod
-  , setColorMod
   -- ** Exceptions
   , KurokosException (..)
   -- ** Debug
@@ -43,6 +37,5 @@ module Kurokos
 
 import           Kurokos.Core
 import           Kurokos.Exception
-import           Kurokos.Render
-import           Kurokos.Texture
+import           Kurokos.Helper
 import           Kurokos.Types
