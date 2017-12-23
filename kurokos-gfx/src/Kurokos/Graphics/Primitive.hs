@@ -12,11 +12,13 @@ import           Kurokos.Graphics.Render           (mkModelView, setModelView)
 import           Kurokos.Graphics.Shader
 import           Kurokos.Graphics.Shader.Primitive
 import           Kurokos.Graphics.Types            (Color)
+import           Kurokos.Graphics.Util             (makeVAO)
 import           Kurokos.Graphics.Vect
 import           Kurokos.Renderer                  (Renderer (rndrPrimShader))
 
 data Prim = Prim
   { primVAO   :: GL.VertexArrayObject
+  , primVBO   :: GL.BufferObject
   , primMode  :: GL.PrimitiveMode
   , primCount :: GL.NumArrayIndices
   }
@@ -40,10 +42,15 @@ setPrimColor rndr = setColor (rndrPrimShader rndr)
 
 -- Make
 
+freePrim :: Prim -> IO ()
+freePrim prim = do
+  GLU.deleteVAO . primVAO $ prim
+  GL.deleteObjectName . primVBO $ prim
+
 newPrim :: Foldable t => Renderer -> GL.PrimitiveMode -> t (Point V2 Float) -> IO Prim
 newPrim rndr pmode v0 = do
-  vao <- GLU.makeVAO $ setupVec2 attrCoord v'
-  return $ Prim vao pmode numArrayIndices
+  (buf, vao) <- makeVAO $ setupVec2 attrCoord v'
+  return $ Prim vao buf pmode numArrayIndices
   where
     attrCoord = sAttrCoord $ rndrPrimShader rndr
     numArrayIndices = fromIntegral $ V.length v' `div` 2
@@ -53,16 +60,16 @@ newPrim rndr pmode v0 = do
 
 newRectangle :: Renderer -> V2 Float -> IO Prim
 newRectangle rndr (V2 w h) = do
-  vao <- GLU.makeVAO $ setupVec2 attrCoord v
-  return $ Prim vao GL.LineLoop 4
+  (buf, vao) <- makeVAO $ setupVec2 attrCoord v
+  return $ Prim vao buf GL.LineLoop 4
   where
     attrCoord = sAttrCoord $ rndrPrimShader rndr
     v = V.fromList [0, 0, w, 0, w, h, 0, h]
 
 newFillRectangle :: Renderer -> V2 Float -> IO Prim
 newFillRectangle rndr (V2 w h) = do
-  vao <- GLU.makeVAO $ setupVec2 attrCoord v
-  return $ Prim vao GL.TriangleStrip 4
+  (buf, vao) <- makeVAO $ setupVec2 attrCoord v
+  return $ Prim vao buf GL.TriangleStrip 4
   where
     attrCoord = sAttrCoord $ rndrPrimShader rndr
     v = V.fromList [0, 0, w, 0, 0, h, w, h]

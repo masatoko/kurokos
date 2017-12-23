@@ -2,7 +2,7 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Main where
 
-import qualified Control.Exception             as E
+import Control.Exception             (bracket)
 import           Control.Monad                 (unless)
 import           Control.Monad.IO.Class        (liftIO)
 import           Control.Monad.Managed         (managed, runManaged)
@@ -16,7 +16,6 @@ import qualified Graphics.Rendering.OpenGL     as GL
 
 import Kurokos.Graphics.Vect
 import qualified Kurokos.Graphics              as G
--- import qualified Kurokos.Graphics.Camera       as Cam
 import qualified Kurokos.Graphics.Font         as Font
 
 main :: IO ()
@@ -31,24 +30,24 @@ main = do
     --
     runManaged $ do
       ft <- managed Font.withFreeType
-      face <- managed $ E.bracket (Font.newFace ft "_test/mplus-1p-medium.ttf") Font.doneFace
+      face <- managed $ bracket (Font.newFace ft "_test/mplus-1p-medium.ttf") Font.doneFace
       liftIO $ Font.setPixelSize face 32
       --
       text1 <- managed $
-                E.bracket (G.createTextTexture face (V4 255 0 0 255) "Hello, ") G.deleteTextTexture
+                bracket (G.createTextTexture face (V4 255 0 0 255) "Hello, ") G.deleteTextTexture
       text2 <- managed $
-                E.bracket (G.createTextTexture face (V4 0 0 255 255) "World!") G.deleteTextTexture
+                bracket (G.createTextTexture face (V4 0 0 255 255) "World!") G.deleteTextTexture
       let texttex = text1 ++ text2
 
-      liftIO $ do
-        rndr <- G.newRenderer winSize
-        tex1 <- G.readTexture "_data/in_transit.png"
-        tex2 <- G.readTexture "_data/panorama.png"
-        let ps = map (P . uncurry V2) [(0,0), (100,0), (50,100)]
-        poly <- G.newPrim rndr GL.LineLoop ps
-        rect <- G.newRectangle rndr (V2 40 20)
-        fillRect <- G.newFillRectangle rndr (V2 40 20)
-        loop window rndr tex1 tex2 texttex poly rect fillRect
+      rndr <- managed $ bracket (G.newRenderer winSize) G.freeRenderer
+      tex1 <- managed $ bracket (G.readTexture "_data/in_transit.png") G.deleteTexture
+      tex2 <- managed $ bracket (G.readTexture "_data/panorama.png") G.deleteTexture
+      let ps = map (P . uncurry V2) [(0,0), (100,0), (50,100)]
+      poly <- managed $ bracket (G.newPrim rndr GL.LineLoop ps) G.freePrim
+      rect <- managed $ bracket (G.newRectangle rndr (V2 40 20)) G.freePrim
+      fillRect <- managed $ bracket (G.newFillRectangle rndr (V2 40 20)) G.freePrim
+      --
+      liftIO $ loop window rndr tex1 tex2 texttex poly rect fillRect
   where
     winConf =
       SDL.defaultWindow
@@ -56,8 +55,8 @@ main = do
         , SDL.windowInitialSize = V2 640 480}
 
     withGL win =
-      E.bracket (SDL.glCreateContext win)
-                SDL.glDeleteContext
+      bracket (SDL.glCreateContext win)
+              SDL.glDeleteContext
 
     glConf =
       SDL.defaultOpenGL

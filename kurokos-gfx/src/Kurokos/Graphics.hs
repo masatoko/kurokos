@@ -29,6 +29,7 @@ module Kurokos.Graphics
   , drawPrim
   , setPrimColor
   , newPrim
+  , freePrim
   , newRectangle
   , newFillRectangle
   -- ** Rendering (Temporal)
