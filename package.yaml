@@ -15,20 +15,17 @@ flags:
   demo:
     description: Build demo executable
     manual: False
-    default: False
+    default: True
 
 dependencies:
   - base >= 4.7 && < 5
+  - OpenGL
   - sdl2 >= 2.2.0
-  - sdl2-ttf >= 2.0.0
-  - sdl2-image
   - kurokos-gfx
   - kurokos-ui
-  - kurokos-sdl2-gfx
   - kurokos-rpn
   - kurokos-asset
   - kurokos-asset-raw
-  - kurokos-asset-sdl2
   - transformers-base
   - transformers
   - mtl
@@ -56,10 +53,6 @@ executables:
         then:
           dependencies:
             - kurokos
-            - kurokos-ui
-            - kurokos-asset-raw
-            - kurokos-asset-sdl2
-            - OpenGL
             - safe-exceptions
             - lens
             - resourcet
