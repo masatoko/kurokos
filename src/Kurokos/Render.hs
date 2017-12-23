@@ -1,45 +1,22 @@
-{-# LANGUAGE FlexibleContexts #-}
 module Kurokos.Render
-  ( setColor
-  , clearBy
-  , printTest
+  ( printTest
   ) where
 
-import qualified Control.Exception     as E
-import           Control.Monad.Managed (managed, runManaged)
+import qualified Control.Exception    as E
 import           Control.Monad.Reader
-import           Data.Text             (Text)
-import           Data.Word             (Word8)
-import           Linear.Affine         (Point (..))
+import           Data.Text            (Text)
+import           Data.Word            (Word8)
 import           Linear.V2
-import           Linear.V4
-
-import           SDL                   (($=))
-import qualified SDL
-import qualified SDL.Font              as Font
+import           Linear.V3
 
 import           Kurokos.Core
+import qualified Kurokos.Graphics     as G
 
-setColor :: MonadIO m => V4 Word8 -> KurokosT m ()
-setColor color =
-  withRenderer $ \r ->
-    SDL.rendererDrawColor r $= color
-
-clearBy :: MonadIO m => V4 Word8 -> KurokosT m ()
-clearBy color =
-  withRenderer $ \r -> do
-    SDL.rendererDrawColor r $= color
-    SDL.clear r
-
-printTest :: MonadIO m => Point V2 Int -> V4 Word8 -> Text -> KurokosT m ()
-printTest pos color text = do
+printTest :: MonadIO m => V2 Int -> V3 Word8 -> Text -> KurokosT m ()
+printTest pos (V3 r g b) text = do -- liftIO $ print text
   font <- asks envSystemFont
-  withRenderer $ \r -> do
-    (w,h) <- Font.size font text
-    runManaged $ do
-      surface <- managed $ E.bracket (Font.blended font color text) SDL.freeSurface
-      texture <- managed $ E.bracket (SDL.createTextureFromSurface r surface) SDL.destroyTexture
-      let rect = Just $ SDL.Rectangle pos' (fromIntegral <$> V2 w h)
-      SDL.copy r texture Nothing rect
-  where
-    pos' = fromIntegral <$> pos
+  withRenderer $ \rndr ->
+    E.bracket
+      (G.createTextTexture font (V3 r g b) text)
+      G.deleteTextTexture
+      (G.renderText rndr pos)
