@@ -11,6 +11,7 @@ module Kurokos.Graphics
   -- , setTextColor
   -- ** Types
   , Color
+  , FontSize
   , ProjectionType (..)
   , Texture (..)
   , TextTexture
