@@ -1,12 +1,15 @@
 module Kurokos.Graphics.Shader where
 
-import           Foreign.C.Types           (CInt)
-import           Foreign.Storable          (sizeOf)
+import qualified Data.Vector.Storable          as V
+import           Data.Word                     (Word8)
+import           Foreign.C.Types               (CInt)
+import           Foreign.Storable              (sizeOf)
 import           Linear
 
-import qualified Graphics.GLUtil           as GLU
-import           Graphics.Rendering.OpenGL (get, ($=))
-import qualified Graphics.Rendering.OpenGL as GL
+import qualified Graphics.GLUtil               as GLU
+import qualified Graphics.GLUtil.BufferObjects as BO
+import           Graphics.Rendering.OpenGL     (get, ($=))
+import qualified Graphics.Rendering.OpenGL     as GL
 
 import           Kurokos.Graphics.Types
 
@@ -19,19 +22,24 @@ setUniformVec3 :: UniformVar TagVec3 -> V3 GL.GLfloat -> IO ()
 setUniformVec3 (UniformVar TagVec3 loc) vec =
   GLU.asUniform vec loc
 
+setUniformVec4 :: UniformVar TagVec4 -> V4 GL.GLfloat -> IO ()
+setUniformVec4 (UniformVar TagVec4 loc) vec =
+  GLU.asUniform vec loc
+
 setUniformSampler2D :: UniformVar TagSampler2D -> GL.TextureObject -> IO ()
 setUniformSampler2D (UniformVar (TagSampler2D num) loc) tex = do
   GL.textureBinding GL.Texture2D $= Just tex -- glBindTexture
   GLU.asUniform (GL.TextureUnit num) loc -- TODO: Move to setup
 
 -- Setup
-setupVec2 :: AttribVar TagVec2 -> [GL.GLfloat] -> IO ()
+setupVec2 :: AttribVar TagVec2 -> V.Vector GL.GLfloat -> IO ()
 setupVec2 (AttribVar TagVec2 loc) ps = do
-  buf <- GLU.makeBuffer GL.ArrayBuffer ps
+  buf <- BO.fromVector GL.ArrayBuffer ps
   GL.bindBuffer GL.ArrayBuffer $= Just buf
   GL.vertexAttribPointer loc $= (GL.ToFloat, vad)
   GL.vertexAttribArray loc $= GL.Enabled
   where
+    -- stride = 0
     stride =  fromIntegral $ sizeOf (undefined :: GL.GLfloat) * 2
     vad = GL.VertexArrayDescriptor 2 GL.Float stride GLU.offset0
 
@@ -44,10 +52,13 @@ class Shader a where
   shdrProgram    :: a -> GL.Program
   shdrModelView  :: a -> UniformVar TagMat4
   shdrProjection :: a -> UniformVar TagMat4
-  shdrVAO        :: a -> GL.VertexArrayObject
 
 class TextureShader a where
+  shdrVAO       :: a -> GL.VertexArrayObject
   shdrSampler2D :: a -> UniformVar TagSampler2D
+
+class ColorShader a where
+  shdrColor :: a -> UniformVar TagVec4
 
 -- | Update projection matrix of BasicShader
 setProjection :: Shader a => a -> ProjectionType -> V2 CInt -> Bool -> IO ()
@@ -67,6 +78,13 @@ setTexture :: (Shader a, TextureShader a) => a -> GL.TextureObject -> IO ()
 setTexture shdr tex =
   withProgram (shdrProgram shdr) $
     setUniformSampler2D (shdrSampler2D shdr) tex
+
+setColor :: (ColorShader a, Shader a) => a -> V4 Word8 -> IO ()
+setColor shdr color =
+  withProgram (shdrProgram shdr) $
+    setUniformVec4 (shdrColor shdr) color'
+  where
+    color' = (/ 255) . fromIntegral <$> color
 
 -- Util
 withProgram :: GL.Program -> IO a -> IO a

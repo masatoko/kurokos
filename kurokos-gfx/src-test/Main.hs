@@ -3,11 +3,11 @@
 module Main where
 
 import qualified Control.Exception             as E
-import           Control.Monad                 (unless, forM_)
+import           Control.Monad                 (unless)
 import           Control.Monad.IO.Class        (liftIO)
 import           Control.Monad.Managed         (managed, runManaged)
 import           Linear.V2
-import           Linear.V3
+import           Linear.V4
 
 import qualified SDL
 import           SDL.Event
@@ -17,13 +17,8 @@ import           Graphics.Rendering.OpenGL     (get, ($=))
 import qualified Graphics.Rendering.OpenGL     as GL
 
 import qualified Kurokos.Graphics              as G
-import qualified Kurokos.Graphics.Camera       as Cam
+-- import qualified Kurokos.Graphics.Camera       as Cam
 import qualified Kurokos.Graphics.Font         as Font
-
--- TODO: Remove these shader modules
-import qualified Kurokos.Graphics.Shader       as G
-import qualified Kurokos.Graphics.Shader.Basic as SB
-import qualified Kurokos.Graphics.Shader.Text  as ST
 
 main :: IO ()
 main = do
@@ -33,28 +28,26 @@ main = do
     winSize@(V2 winW winH) <- get $ SDL.windowSize window
     GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral winW) (fromIntegral winH))
     SDL.swapInterval $= SDL.SynchronizedUpdates
-    GL.clearColor $= GL.Color4 0 1 0 1
+    GL.clearColor $= GL.Color4 0.2 0.2 0.2 1
     --
     runManaged $ do
       ft <- managed Font.withFreeType
       face <- managed $ E.bracket (Font.newFace ft "_test/mplus-1p-medium.ttf") Font.doneFace
       liftIO $ Font.setPixelSize face 32
-    --
+      --
       text1 <- managed $
-                E.bracket (G.createTextTexture face (V3 255 0 0) "Hello, ") G.deleteTextTexture
+                E.bracket (G.createTextTexture face (V4 255 0 0 255) "Hello, ") G.deleteTextTexture
       text2 <- managed $
-                E.bracket (G.createTextTexture face (V3 0 0 255) "World!") G.deleteTextTexture
+                E.bracket (G.createTextTexture face (V4 0 0 255 255) "World!") G.deleteTextTexture
       let texttex = text1 ++ text2
 
       liftIO $ do
-        br <- SB.newBasicShader
-        G.setProjection br G.Ortho winSize True
-        st <- ST.newTextShader
-        G.setProjection st G.Ortho winSize True
-        --
+        rndr <- G.newRenderer winSize
         tex1 <- G.readTexture "_data/in_transit.png"
         tex2 <- G.readTexture "_data/panorama.png"
-        loop window br st tex1 tex2 texttex
+        let ps = map (uncurry V2) [(0,0), (100,0), (50,100)]
+        poly <- G.newPrim rndr GL.LineLoop ps
+        loop window rndr tex1 tex2 texttex poly
   where
     winConf =
       SDL.defaultWindow
@@ -70,7 +63,7 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 4 0
         }
 
-    loop win br st tex1 tex2 texttex = go (0 :: Integer)
+    loop win rndr tex1 tex2 texttex poly = go (0 :: Integer)
       where
         go i = do
           let i' = fromIntegral i
@@ -78,14 +71,13 @@ main = do
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          forM_ [(x,y) | x <- [1], y <- [1,-1]] $ \(ax,ay) -> do
-            let x = ax * fromIntegral i
-                y = ay * fromIntegral i
-            let ctx = G.RContext (V2 x y) (pure i') Nothing Nothing
-            G.setTexture br $ G.texObject $ if i `mod` 60 < 30 then tex1 else tex2
-            G.renderByShader br Cam.camForVertFlip ctx
+          let ctx = G.RContext (pure 0) (pure i') Nothing Nothing
+              tex = if i `mod` 60 < 30 then tex1 else tex2
+          G.renderTexture rndr tex ctx
           --
-          G.renderTextTexture st (V2 100 240) texttex
+          G.renderText rndr (V2 100 240) texttex
+          --
+          G.drawPrim rndr (V2 400 200) poly
           --
           SDL.glSwapWindow win
           unless (any shouldExit events) $ go (i + 1)

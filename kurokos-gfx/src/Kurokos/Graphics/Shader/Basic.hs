@@ -5,12 +5,13 @@ module Kurokos.Graphics.Shader.Basic
   ) where
 
 import qualified Data.ByteString           as BS
+import qualified Data.Vector.Storable      as V
 import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
-import           Kurokos.Graphics.Types
 import           Kurokos.Graphics.Shader
+import           Kurokos.Graphics.Types
 
 data BasicShader = BasicShader
   { sProgram      :: GL.Program
@@ -26,9 +27,9 @@ instance Shader BasicShader where
   shdrProgram    = sProgram
   shdrModelView  = sModelViewVar
   shdrProjection = sProjVar
-  shdrVAO        = sVao
 
 instance TextureShader BasicShader where
+  shdrVAO       = sVao
   shdrSampler2D = sTexVar
 
 newBasicShader :: IO BasicShader
@@ -42,8 +43,8 @@ newBasicShader = do
   -- * Setup
   setupSampler2D texUniform
   vao <- GLU.makeVAO $ do
-          setupVec2 vtxCoordVar vtxPs
-          setupVec2 texCoordVar texPs
+          setupVec2 vtxCoordVar $ V.fromList vtxPs
+          setupVec2 texCoordVar $ V.fromList texPs
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf

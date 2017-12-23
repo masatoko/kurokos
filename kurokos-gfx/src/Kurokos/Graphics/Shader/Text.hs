@@ -7,7 +7,7 @@ module Kurokos.Graphics.Shader.Text
   ) where
 
 import qualified Data.ByteString           as BS
-import           Data.Word                 (Word8)
+import qualified Data.Vector.Storable      as V
 import           Linear
 
 import qualified Graphics.GLUtil           as GLU
@@ -24,7 +24,7 @@ data TextShader = TextShader
   , sTexCoordVar  :: AttribVar TagVec2
   , sModelViewVar :: UniformVar TagMat4
   , sProjVar      :: UniformVar TagMat4
-  , sColorVar     :: UniformVar TagVec3
+  , sColorVar     :: UniformVar TagVec4
   , sTexVar       :: UniformVar TagSampler2D
   , sVao          :: GL.VertexArrayObject
   }
@@ -33,10 +33,13 @@ instance Shader TextShader where
   shdrProgram    = sProgram
   shdrModelView  = sModelViewVar
   shdrProjection = sProjVar
-  shdrVAO        = sVao
 
 instance TextureShader TextShader where
+  shdrVAO       = sVao
   shdrSampler2D = sTexVar
+
+instance ColorShader TextShader where
+  shdrColor = sColorVar
 
 newTextShader :: IO TextShader
 newTextShader = do
@@ -45,19 +48,19 @@ newTextShader = do
       texCoordVar = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
       modelViewUniform = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
       projUniform = UniformVar TagMat4 $ GLU.getUniform sp "Projection"
-      colorUniform = UniformVar TagVec3 $ GLU.getUniform sp "BasisColor"
+      colorUniform = UniformVar TagVec4 $ GLU.getUniform sp "BasisColor"
       texUniform = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
   -- * Setup
   setupSampler2D texUniform
   vao <- GLU.makeVAO $ do
-          setupVec2 vtxCoordVar vtxPs
-          setupVec2 texCoordVar texPs
+          setupVec2 vtxCoordVar $ V.fromList vtxPs
+          setupVec2 texCoordVar $ V.fromList texPs
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
   -- Initial Uniform
   withProgram (GLU.program sp) $
-    setUniformVec3 colorUniform (V3 1 1 1)
+    setUniformVec4 colorUniform (V4 1 1 1 1)
   return $ TextShader
     (GLU.program sp)
     vtxCoordVar
@@ -76,13 +79,6 @@ newTextShader = do
 
     -- texPs :: [GL.GLfloat]
     -- texPs = [0, 1, 1, 1, 0, 0, 1, 0]
-
-setColor :: TextShader -> V3 Word8 -> IO ()
-setColor TextShader{..} color =
-  withProgram sProgram $
-    setUniformVec3 sColorVar color'
-  where
-    color' = (/ 255) . fromIntegral <$> color
 
 vert :: BS.ByteString
 vert = BS.intercalate "\n"
@@ -109,12 +105,13 @@ frag = BS.intercalate "\n"
   , "uniform sampler2D Texture;"
   , "in vec2 OTexCoord;"
   , ""
-  , "uniform vec3 BasisColor;"
+  , "uniform vec4 BasisColor;"
   , ""
   , "out vec4 FragColor;"
   , ""
   , "void main()"
   , "{"
-  , "  FragColor = vec4(BasisColor, texture2D( Texture, OTexCoord ).a);"
+  , "  float alpha = BasisColor.w * texture2D( Texture, OTexCoord ).a;"
+  , "  FragColor = vec4(BasisColor.xyz, alpha);"
   , "}"
   ]

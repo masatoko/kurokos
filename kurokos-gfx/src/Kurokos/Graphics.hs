@@ -10,7 +10,7 @@ module Kurokos.Graphics
   , renderText
   -- , setTextColor
   -- ** Types
-  , Color3
+  , Color
   , ProjectionType (..)
   , Texture (..)
   , TextTexture
@@ -25,13 +25,17 @@ module Kurokos.Graphics
   , deleteCharTexture
   , createTextTexture
   , deleteTextTexture
-  -- ** Rendering
-  , renderByShader
+  -- ** Primitive
+  , newPrim
+  , drawPrim
+  -- ** Rendering (Temporal)
+  , renderTextureShader
   , renderTextTexture
   ) where
 
+import           Kurokos.Graphics.Primitive
 import           Kurokos.Graphics.Render
 import           Kurokos.Graphics.Text
-import           Kurokos.Graphics.Types
 import           Kurokos.Graphics.Texture
+import           Kurokos.Graphics.Types
 import           Kurokos.Renderer
