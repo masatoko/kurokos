@@ -41,10 +41,7 @@ library:
     - Kurokos.Graphics
     - Kurokos.Graphics.Font
     - Kurokos.Graphics.Camera
-# Temporal
-    - Kurokos.Graphics.Shader
-    - Kurokos.Graphics.Shader.Basic
-    - Kurokos.Graphics.Shader.Text
+    - Kurokos.Graphics.Vect
 
 executables:
   test-gfx:

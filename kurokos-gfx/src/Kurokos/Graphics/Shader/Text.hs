@@ -7,7 +7,7 @@ module Kurokos.Graphics.Shader.Text
 
 import qualified Data.ByteString           as BS
 import qualified Data.Vector.Storable      as V
-import           Linear
+import           Linear.V4
 
 import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (($=))

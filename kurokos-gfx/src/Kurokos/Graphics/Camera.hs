@@ -10,8 +10,10 @@ module Kurokos.Graphics.Camera
   , viewMatFromCam
   ) where
 
-import Control.Lens
-import Linear
+import           Control.Lens
+import           Kurokos.Graphics.Vect
+import           Linear.Matrix
+import           Linear.Projection
 
 data Camera = Camera
   { _camCoord  :: V2 Float
