@@ -10,19 +10,6 @@ import qualified Graphics.Rendering.OpenGL as GL
 
 import           Kurokos.Graphics.Types
 
--- | Rendering context
-data RContext = RContext
-  { rctxCoord     :: V2 Float
-  -- ^ Left bottom coord
-  , rctxSize      :: V2 Float
-  -- ^ Size
-  , rctxRot       :: Maybe Float
-  -- ^ Rotation angle [rad]
-  , rctxRotCenter :: Maybe (V2 Float)
-  -- ^ Rotation center coord
-  }
-
-
 -- Update Uniform
 setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
 setUniformMat4 (UniformVar TagMat4 loc) mat =

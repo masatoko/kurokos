@@ -27,13 +27,17 @@ renderByShader shdr cam rctx =
     GL.blend $= GL.Disabled
   where
     RContext (V2 x y) (V2 sizeX sizeY) mRad mRotCenter = rctx
-    V2 rotX0 rotY0 = fromMaybe (V2 (sizeX / 2) (sizeY / 2)) mRotCenter
+    x' = fromIntegral x
+    y' = fromIntegral y
+    sizeX' = fromIntegral sizeX
+    sizeY' = fromIntegral sizeY
+    V2 rotX0 rotY0 = fromMaybe (V2 (sizeX' / 2) (sizeY' / 2)) mRotCenter
 
     view = Cam.viewMatFromCam cam
     model =
       trans !*! rot !*! scaleMat
       where
-        trans = mkTransformationMat identity $ V3 x y 0
+        trans = mkTransformationMat identity $ V3 x' y' 0
         rot = case mRad of
                 Nothing  -> identity
                 Just rad -> let
@@ -44,25 +48,23 @@ renderByShader shdr cam rctx =
         go = mkTransformationMat identity (k ^* (-1))
         back = mkTransformationMat identity k
 
-        scaleMat = V4 (V4 sizeX 0 0 0)
-                      (V4 0 sizeY 0 0)
-                      (V4 0 0     1 0)
-                      (V4 0 0     0 1)
+        scaleMat = V4 (V4 sizeX' 0 0 0)
+                      (V4 0 sizeY' 0 0)
+                      (V4 0 0      1 0)
+                      (V4 0 0      0 1)
 
 -- Text
 
 renderTextTexture :: Foldable t => TextShader -> V2 Int -> t CharTexture -> IO ()
-renderTextTexture shdr (V2 x0 iy) =
-  foldM_ renderChar (fromIntegral x0)
+renderTextTexture shdr (V2 x0 y0) =
+  foldM_ renderChar x0
   where
-    y0 = fromIntegral iy
-
     renderChar x (CharTexture tex color left top dx _) = do
-      let x' = x + fromIntegral left
-          y' = y0 - fromIntegral top
+      let x' = x + left
+          y' = y0 - top
           size = fromIntegral <$> V2 (texWidth tex) (texHeight tex)
           ctx' = RContext (V2 x' y') size Nothing Nothing
       setColor shdr color
       setTexture shdr $ texObject tex
       renderByShader shdr Cam.camForVertFlip ctx'
-      return $ x + dx
+      return $ x + truncate dx

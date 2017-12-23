@@ -8,13 +8,14 @@ module Kurokos.Graphics
   , RContext (..)
   , renderTexture
   , renderText
-  , setTextColor
+  -- , setTextColor
   -- ** Types
   , Color3
   , ProjectionType (..)
   , Texture (..)
   , TextTexture
   , CharTexture
+  , charTexColor
   -- ** Texture
   , readTexture
   , decodeTexture
@@ -29,7 +30,6 @@ module Kurokos.Graphics
   , renderTextTexture
   ) where
 
-import           Kurokos.Graphics.Shader (RContext (..))
 import           Kurokos.Graphics.Render
 import           Kurokos.Graphics.Text
 import           Kurokos.Graphics.Types

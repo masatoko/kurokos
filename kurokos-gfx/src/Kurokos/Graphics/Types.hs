@@ -1,5 +1,7 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Kurokos.Graphics.Types where
 
+import           Control.Lens
 import           Data.Word                 (Word8)
 import           Linear
 
@@ -21,6 +23,18 @@ data UniformVar tag = UniformVar tag GL.UniformLocation
 
 type Vec2 = V2 Float
 
+-- | Rendering context
+data RContext = RContext
+  { rctxCoord     :: V2 Int
+  -- ^ Left bottom coord
+  , rctxSize      :: V2 Int
+  -- ^ Size
+  , rctxRot       :: Maybe Float
+  -- ^ Rotation angle [rad]
+  , rctxRotCenter :: Maybe (V2 Float)
+  -- ^ Rotation center coord
+  }
+
 -- Texture
 
 data Texture = Texture
@@ -36,13 +50,15 @@ type Color3 = V3 Word8
 type TextTexture = [CharTexture]
 
 data CharTexture = CharTexture
-  { ctTexture  :: Texture
-  , ctColor    :: Color3
-  , ctLeft     :: Int
-  , ctTop      :: Int
-  , ctAdvanceX :: Float -- ^ horiAdvance [FT_Glyph_Metrics](https://hackage.haskell.org/package/freetype2-0.1.2/docs/Graphics-Rendering-FreeType-Internal-GlyphMetrics.html#t:FT_Glyph_Metrics)
-  , ctAdvanceY :: Float -- ^ vertAdvance
+  { ctTexture     :: Texture
+  , _charTexColor :: Color3
+  , ctLeft        :: Int
+  , ctTop         :: Int
+  , ctAdvanceX    :: Float -- ^ horiAdvance [FT_Glyph_Metrics](https://hackage.haskell.org/package/freetype2-0.1.2/docs/Graphics-Rendering-FreeType-Internal-GlyphMetrics.html#t:FT_Glyph_Metrics)
+  , ctAdvanceY    :: Float -- ^ vertAdvance
   }
+
+makeLenses ''CharTexture
 
 --
 
