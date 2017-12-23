@@ -6,7 +6,6 @@ module Kurokos.Renderer
   , freeRenderer
   --
   , renderTexture
-  , renderTexture_
   , renderText
   ) where
 
@@ -39,9 +38,9 @@ getFreeType = rndrFreeType
 newRenderer :: V2 CInt -> IO Renderer
 newRenderer winSize = do
   b <- Basic.newBasicShader
-  setProjection Ortho winSize' b
+  setProjection b Ortho winSize' True
   t <- Text.newTextShader
-  setProjection Ortho winSize' t
+  setProjection t Ortho winSize' True
   ft <- initFreeType
   return $ Renderer b t ft
   where
@@ -53,15 +52,10 @@ freeRenderer Renderer{..} =
   -- TODO: Implement others
 
 -- | Render Texture with camera.
-renderTexture :: Renderer -> Cam.Camera -> Texture -> RContext -> IO ()
-renderTexture Renderer{..} cam tex rctx = do
+renderTexture :: Renderer -> Texture -> RContext -> IO ()
+renderTexture Renderer{..} tex rctx = do
   setTexture rndrBasicShader $ texObject tex
-  renderByShader rndrBasicShader cam rctx
-
--- | Render Texture with default camera.
--- Default camera is Camera.mkCameara
-renderTexture_ :: Renderer -> Texture -> RContext -> IO ()
-renderTexture_ rndr = renderTexture rndr Cam.mkCamera
+  renderByShader rndrBasicShader Cam.camForVertFlip rctx
 
 -- | Render CharTexture list.
 renderText :: Foldable t => Renderer -> V2 Int -> t CharTexture -> IO ()

@@ -42,7 +42,6 @@ data CharTexture = CharTexture
   , ctTop      :: Int
   , ctAdvanceX :: Float -- ^ horiAdvance [FT_Glyph_Metrics](https://hackage.haskell.org/package/freetype2-0.1.2/docs/Graphics-Rendering-FreeType-Internal-GlyphMetrics.html#t:FT_Glyph_Metrics)
   , ctAdvanceY :: Float -- ^ vertAdvance
-  , ctOffsetY  :: Int -- ^ Rendering offset of vertical axis (= top - height)
   }
 
 --

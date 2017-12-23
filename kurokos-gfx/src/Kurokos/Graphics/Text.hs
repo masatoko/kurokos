@@ -118,7 +118,6 @@ createCharTexture face color char = do
     (Texture tex w h) color left top
     (fromIntegral advanceX / 64)
     (fromIntegral advanceY / 64)
-    (top - h)
 
 newBoundTexUnit :: Int -> IO GL.TextureObject
 newBoundTexUnit u = do

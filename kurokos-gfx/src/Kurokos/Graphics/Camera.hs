@@ -5,6 +5,8 @@ module Kurokos.Graphics.Camera
   , camCoord
   , camHeight
   , mkCamera
+  , camForVertFlip
+  -- , mkCameraVertFlip
   , viewMatFromCam
   ) where
 
@@ -14,19 +16,23 @@ import Linear
 data Camera = Camera
   { _camCoord  :: V2 Float
   , _camHeight :: Float
+  , _camUp     :: V3 Float
   } deriving (Eq, Show, Read)
 
 makeLenses ''Camera
 
 mkCamera :: Camera
-mkCamera = Camera (pure 0) 1
+mkCamera = Camera (pure 0) 1 (V3 0 1 0)
+
+camForVertFlip :: Camera
+camForVertFlip = Camera (pure 0) (-1) (V3 0 (-1) 0)
 
 viewMatFromCam :: Camera -> M44 Float
-viewMatFromCam cam = lookAt eye center up
+viewMatFromCam cam =
+  lookAt eye center (cam^.camUp)
   where
     V2 x y = cam^.camCoord
     h = cam^.camHeight
     --
     eye = V3 x y h
-    center = V3 x y (h - 1)
-    up = V3 0 1 0
+    center = V3 x y 0

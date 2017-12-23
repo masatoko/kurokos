@@ -57,12 +57,12 @@ renderTextTexture shdr (V2 x0 iy) =
   where
     y0 = fromIntegral iy
 
-    renderChar x (CharTexture tex color left _top dx _ offY) = do
+    renderChar x (CharTexture tex color left top dx _) = do
       let x' = x + fromIntegral left
-          y' = y0 + fromIntegral offY
+          y' = y0 - fromIntegral top
           size = fromIntegral <$> V2 (texWidth tex) (texHeight tex)
           ctx' = RContext (V2 x' y') size Nothing Nothing
       setColor shdr color
       setTexture shdr $ texObject tex
-      renderByShader shdr Cam.mkCamera ctx'
+      renderByShader shdr Cam.camForVertFlip ctx'
       return $ x + dx

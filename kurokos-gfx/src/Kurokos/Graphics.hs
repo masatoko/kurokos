@@ -7,7 +7,6 @@ module Kurokos.Graphics
   , freeRenderer
   , RContext (..)
   , renderTexture
-  , renderTexture_
   , renderText
   -- ** Types
   , Color3

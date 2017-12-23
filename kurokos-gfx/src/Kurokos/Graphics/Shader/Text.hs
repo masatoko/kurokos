@@ -72,7 +72,10 @@ newTextShader = do
     vtxPs = [0, 0, 1, 0, 0, 1, 1, 1]
 
     texPs :: [GL.GLfloat]
-    texPs = [0, 1, 1, 1, 0, 0, 1, 0]
+    texPs = [0, 0, 1, 0, 0, 1, 1, 1]
+
+    -- texPs :: [GL.GLfloat]
+    -- texPs = [0, 1, 1, 1, 0, 0, 1, 0]
 
 setColor :: TextShader -> V3 Word8 -> IO ()
 setColor TextShader{..} color =

@@ -3,7 +3,7 @@
 module Main where
 
 import qualified Control.Exception             as E
-import           Control.Monad                 (unless)
+import           Control.Monad                 (unless, forM_)
 import           Control.Monad.IO.Class        (liftIO)
 import           Control.Monad.Managed         (managed, runManaged)
 import           Linear.V2
@@ -48,9 +48,9 @@ main = do
 
       liftIO $ do
         br <- SB.newBasicShader
-        G.setProjection G.Ortho winSize br
+        G.setProjection br G.Ortho winSize True
         st <- ST.newTextShader
-        G.setProjection G.Ortho winSize st
+        G.setProjection st G.Ortho winSize True
         --
         tex1 <- G.readTexture "_data/in_transit.png"
         tex2 <- G.readTexture "_data/panorama.png"
@@ -78,9 +78,12 @@ main = do
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
-          let ctx = G.RContext (V2 320 240) (pure i') (Just $ i' / 10) Nothing
-          G.setTexture br $ G.texObject $ if i `mod` 60 < 30 then tex1 else tex2
-          G.renderByShader br Cam.mkCamera ctx
+          forM_ [(x,y) | x <- [1], y <- [1,-1]] $ \(ax,ay) -> do
+            let x = ax * fromIntegral i
+                y = ay * fromIntegral i
+            let ctx = G.RContext (V2 x y) (pure i') Nothing Nothing
+            G.setTexture br $ G.texObject $ if i `mod` 60 < 30 then tex1 else tex2
+            G.renderByShader br Cam.camForVertFlip ctx
           --
           G.renderTextTexture st (V2 100 240) texttex
           --

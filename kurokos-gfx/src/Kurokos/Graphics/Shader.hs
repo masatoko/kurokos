@@ -63,15 +63,17 @@ class TextureShader a where
   shdrSampler2D :: a -> UniformVar TagSampler2D
 
 -- | Update projection matrix of BasicShader
-setProjection :: Shader a => ProjectionType -> V2 CInt -> a -> IO ()
-setProjection ptype (V2 winW winH) shdr =
+setProjection :: Shader a => a -> ProjectionType -> V2 CInt -> Bool -> IO ()
+setProjection shdr ptype (V2 winW winH) vertFlip =
   withProgram (shdrProgram shdr) $
     setUniformMat4 (shdrProjection shdr) $ projMat ptype
   where
     w = fromIntegral winW
     h = fromIntegral winH
-
-    projMat Ortho              = ortho 0 w 0 h 1 (-1)
+    projMat Ortho =
+      if vertFlip
+        then ortho 0 w (-h) 0 (-1) 1
+        else ortho 0 w 0    h 1    (-1)
     projMat (Frustum near far) = frustum 0 w 0 h near far
 
 setTexture :: (Shader a, TextureShader a) => a -> GL.TextureObject -> IO ()
