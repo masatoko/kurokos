@@ -7,10 +7,8 @@ module Kurokos.Graphics.Text
   , deleteTextTexture
   ) where
 
-import qualified Control.Exception                                   as E
 import           Control.Monad                                       (foldM,
-                                                                      foldM_,
-                                                                      unless)
+                                                                      foldM_)
 import           Data.ByteString.Internal                            (ByteString (..))
 import qualified Data.Text                                           as T
 import           Foreign.ForeignPtr                                  (withForeignPtr)
@@ -38,8 +36,10 @@ import qualified Graphics.Rendering.FreeType.Internal.Vector         as FT
 import           Kurokos.Graphics.Texture                            (deleteTexture)
 import           Kurokos.Graphics.Types                              (CharTexture (..),
                                                                       Color,
+                                                                      FontSize,
                                                                       TextTexture,
                                                                       Texture (..))
+import           Kurokos.Graphics.Util                               (throwIfNot0)
 
 -- Reffered this article [http://zyghost.com/articles/Haskell-font-rendering-with-freetype2-and-opengl.html].
 -- Original code is [https://github.com/schell/editor/blob/glyph-rendering/src/Graphics/Text/Font.hs].
@@ -51,19 +51,21 @@ deleteCharTexture = deleteTexture . ctTexture
 deleteTextTexture :: TextTexture -> IO ()
 deleteTextTexture = mapM_ deleteCharTexture
 
-createTextTexture :: FT.FT_Face -> Color -> T.Text -> IO TextTexture
-createTextTexture face color =
+createTextTexture :: FT.FT_Face -> FontSize -> Color -> T.Text -> IO TextTexture
+createTextTexture face size color =
   mapM work . T.unpack
   where
-    work = createCharTexture face color
+    work = createCharTexture face size color
 
-createCharTexture :: FT.FT_Face -> Color -> Char -> IO CharTexture
-createCharTexture face color char = do
+createCharTexture :: FT.FT_Face -> FontSize -> Color -> Char -> IO CharTexture
+createCharTexture face size color char = do
+  throwIfNot0 "ft_Set_Pixel_Sizes" $ FT.ft_Set_Pixel_Sizes face (fromIntegral size) 0
+  --
   charInd <- FT.ft_Get_Char_Index face $ fromIntegral $ fromEnum char -- Get the unicode char index.
-  throwIfNot0 $ FT.ft_Load_Glyph face charInd FT.ft_LOAD_DEFAULT -- Load the glyph into freetype memory.
+  throwIfNot0 "ft_Load_Glyph" $ FT.ft_Load_Glyph face charInd FT.ft_LOAD_DEFAULT -- Load the glyph into freetype memory.
   slot <- peek $ FT.glyph face -- GlyphSlot
 
-  throwIfNot0 $ FT.ft_Render_Glyph slot FT.ft_RENDER_MODE_NORMAL
+  throwIfNot0 "ft_Render_Glyph" $ FT.ft_Render_Glyph slot FT.ft_RENDER_MODE_NORMAL
 
   -- Get the char bitmap.
   bmp <- peek $ FT.bitmap slot
@@ -115,7 +117,7 @@ createCharTexture face color char = do
   top  <- fromIntegral <$> peek (FT.bitmap_top slot)
   FT.FT_Vector advanceX advanceY <- peek $ FT.advance slot
   return $ CharTexture
-    (Texture tex w h) color left top
+    (Texture tex w h) color size left top
     (fromIntegral advanceX / 64)
     (fromIntegral advanceY / 64)
 
@@ -144,9 +146,3 @@ convToByteString cs =
       fp <- mallocPlainForeignPtrBytes l
       withForeignPtr fp $ \p -> f p
       return $! PS fp 0 l
-
-throwIfNot0 :: IO FT.FT_Error -> IO ()
-throwIfNot0 m = do
-  r <- m
-  unless (r == 0) $
-    E.throwIO $ userError $ "FreeType Error:" ++ show r

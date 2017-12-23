@@ -15,7 +15,7 @@ flags:
   test:
     description: Build testing executable
     manual: False
-    default: True
+    default: False
 
 ghc-options:
   - -Wall

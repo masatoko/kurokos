@@ -31,12 +31,11 @@ main = do
     runManaged $ do
       ft <- managed Font.withFreeType
       face <- managed $ bracket (Font.newFace ft "_test/mplus-1p-medium.ttf") Font.doneFace
-      liftIO $ Font.setPixelSize face 32
       --
       text1 <- managed $
-                bracket (G.createTextTexture face (V4 255 0 0 255) "Hello, ") G.deleteTextTexture
+                bracket (G.createTextTexture face 32 (V4 255 0 0 255) "Hello, ") G.deleteTextTexture
       text2 <- managed $
-                bracket (G.createTextTexture face (V4 0 0 255 255) "World!") G.deleteTextTexture
+                bracket (G.createTextTexture face 32 (V4 0 0 255 255) "World!") G.deleteTextTexture
       let texttex = text1 ++ text2
 
       rndr <- managed $ bracket (G.newRenderer winSize) G.freeRenderer
@@ -75,7 +74,8 @@ main = do
               tex = if i `mod` 60 < 30 then tex1 else tex2
           G.renderTexture rndr tex ctx
           --
-          G.renderText rndr (V2 100 240) texttex
+          G.renderText rndr (V2 100 0) texttex
+          G.renderText rndr (V2 100 480) texttex
           --
           G.drawPrim rndr (V2 400 200) poly
           --

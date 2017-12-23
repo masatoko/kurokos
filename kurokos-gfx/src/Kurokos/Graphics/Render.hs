@@ -81,9 +81,9 @@ renderTextTexture :: Foldable t => TextShader -> V2 Int -> t CharTexture -> IO (
 renderTextTexture shdr (V2 x0 y0) =
   foldM_ renderChar x0
   where
-    renderChar x (CharTexture tex color left top dx _) = do
+    renderChar x (CharTexture tex color fontSize left top dx _) = do
       let x' = x + left
-          y' = y0 - top
+          y' = y0 + fontSize - top
           size = fromIntegral <$> V2 (texWidth tex) (texHeight tex)
           ctx' = RContext (V2 x' y') size Nothing Nothing
       setColor shdr color

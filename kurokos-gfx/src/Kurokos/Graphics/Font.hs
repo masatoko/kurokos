@@ -6,10 +6,9 @@
 --
 -- ft <- Font.initFreeType
 -- face <- Font.newFace ft "_test/mplus-1p-medium.ttf"
--- Font.setPixelSize face 32
 --
--- text1 <- E.bracket (G.createTextTexture face (V3 255 0 0) "Hello, ") G.deleteTextTexture
--- text2 <- E.bracket (G.createTextTexture face (V3 0 0 255) "World!") G.deleteTextTexture
+-- text1 <- E.bracket (G.createTextTexture face 16 (V3 255 0 0) "Hello, ") G.deleteTextTexture
+-- text2 <- E.bracket (G.createTextTexture face 16 (V3 0 0 255) "World!") G.deleteTextTexture
 -- let textTexture = text1 ++ text2
 --
 -- -- G.renderText (V2 x0 y0) TextShader textTexture
@@ -29,11 +28,9 @@ module Kurokos.Graphics.Font
   , doneFreeType
   -- ** Font Face
   , Font
-  , PixelSize
   , newFace
   , newFaceBS
   , doneFace
-  , setPixelSize
   ) where
 
 import qualified Control.Exception                                   as E
@@ -57,9 +54,9 @@ import qualified Graphics.Rendering.FreeType.Internal.Face           as FT
 import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 
-type Font = FT.FT_Face
+import           Kurokos.Graphics.Util                               (throwIfNot0)
 
-type PixelSize = Int
+type Font = FT.FT_Face
 
 --
 withFreeType :: MonadIO m => (FT.FT_Library -> IO a) -> m a
@@ -67,18 +64,19 @@ withFreeType = liftIO . E.bracket initFreeType doneFreeType
 
 initFreeType :: MonadIO m => m FT.FT_Library
 initFreeType = liftIO $ alloca $ \p -> do
-  throwIfNot0 $ FT.ft_Init_FreeType p
+  throwIfNot0 "ft_Init_FreeType" $ FT.ft_Init_FreeType p
   peek p
 
 doneFreeType :: MonadIO m => FT.FT_Library -> m ()
-doneFreeType ft = liftIO $ throwIfNot0 $ FT.ft_Done_FreeType ft
+doneFreeType ft = liftIO $
+  throwIfNot0 "ft_Done_FreeType" $ FT.ft_Done_FreeType ft
 --
 
 --
 newFace :: MonadIO m => FT.FT_Library -> FilePath -> m FT.FT_Face
 newFace ft fp = liftIO $ withCString fp $ \str ->
   alloca $ \ptr -> do
-    throwIfNot0 $ FT.ft_New_Face ft str 0 ptr
+    throwIfNot0 "ft_New_Face" $ FT.ft_New_Face ft str 0 ptr
     peek ptr
 
 newFaceBS :: MonadIO m => FT.FT_Library -> BS.ByteString -> m FT.FT_Face
@@ -96,15 +94,5 @@ newFaceBS ft (PS fptr _off len) = liftIO $
       return (from `plusPtr` 1, to `plusPtr` 1)
 
 doneFace :: MonadIO m => FT.FT_Face -> m ()
-doneFace face = liftIO $ throwIfNot0 $ FT.ft_Done_Face face
---
-
-setPixelSize :: MonadIO m => FT.FT_Face -> Int -> m ()
-setPixelSize face size = liftIO $
-  throwIfNot0 $ FT.ft_Set_Pixel_Sizes face (fromIntegral size) 0
-
-throwIfNot0 :: IO FT.FT_Error -> IO ()
-throwIfNot0 m = do
-  r <- m
-  unless (r == 0) $
-    E.throwIO $ userError $ "FreeType Error:" ++ show r
+doneFace face = liftIO $
+  throwIfNot0 "ft_Done_Face" $ FT.ft_Done_Face face

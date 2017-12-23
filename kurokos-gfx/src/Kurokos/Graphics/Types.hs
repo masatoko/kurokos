@@ -47,11 +47,14 @@ data Texture = Texture
 
 type Color = V4 Word8
 
+type FontSize = Int
+
 type TextTexture = [CharTexture]
 
 data CharTexture = CharTexture
   { ctTexture     :: Texture
   , _charTexColor :: Color
+  , ctFontSize    :: FontSize
   , ctLeft        :: Int
   , ctTop         :: Int
   , ctAdvanceX    :: Float -- ^ horiAdvance [FT_Glyph_Metrics](https://hackage.haskell.org/package/freetype2-0.1.2/docs/Graphics-Rendering-FreeType-Internal-GlyphMetrics.html#t:FT_Glyph_Metrics)
