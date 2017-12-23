@@ -48,6 +48,7 @@ newAssetManager rndr (RawAssetManager bmap) = liftIO $
         update
           | ext == "ttf" = do -- TODO: Add extensions
               font <- Font.newFaceBS ft bytes
+              Font.setPixelSize font 16
               return $ am {amFontMap = M.insert ident font amFontMap}
           | S.member ext imageExts = do
               tex <- G.decodeTexture bytes
