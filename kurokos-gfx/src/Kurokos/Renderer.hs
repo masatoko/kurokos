@@ -7,6 +7,7 @@ module Kurokos.Renderer
   --
   , renderTexture
   , renderText
+  , setTextColor
   ) where
 
 import           Foreign.C.Types                              (CInt)
@@ -23,7 +24,9 @@ import           Kurokos.Graphics.Shader                      (RContext,
                                                                setTexture)
 import qualified Kurokos.Graphics.Shader.Basic                as Basic
 import qualified Kurokos.Graphics.Shader.Text                 as Text
-import           Kurokos.Graphics.Types                       (CharTexture, ProjectionType (..),
+import           Kurokos.Graphics.Types                       (CharTexture,
+                                                               Color3,
+                                                               ProjectionType (..),
                                                                Texture (..))
 
 data Renderer = Renderer
@@ -61,3 +64,7 @@ renderTexture Renderer{..} tex rctx = do
 renderText :: Foldable t => Renderer -> V2 Int -> t CharTexture -> IO ()
 renderText Renderer{..} =
   renderTextTexture rndrTextShader
+
+setTextColor :: Renderer -> Color3 -> IO ()
+setTextColor Renderer{..} =
+  Text.setColor rndrTextShader

@@ -8,6 +8,7 @@ module Kurokos.Graphics
   , RContext (..)
   , renderTexture
   , renderText
+  , setTextColor
   -- ** Types
   , Color3
   , ProjectionType (..)
