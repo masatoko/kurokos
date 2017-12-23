@@ -12,6 +12,7 @@ import           Linear.V4
 import qualified SDL
 
 import qualified Kurokos.RPN     as RPN
+import qualified Kurokos.Graphics as G
 
 import Kurokos.UI.Color
 
@@ -95,7 +96,6 @@ data WContext = WContext
   , _ctxNeedsRender   :: Bool
   , _ctxWidgetState   :: WidgetState
   , _ctxContextColor  :: ContextColor
-  , _ctxTexture       :: SDL.Texture
   , _ctxUPos          :: V2 Exp
   , _ctxUSize         :: V2 Exp
   }

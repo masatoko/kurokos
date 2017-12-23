@@ -1,21 +1,22 @@
 module Kurokos.UI.Widget.Make where
 
-import qualified Control.Exception   as E
+import qualified Control.Exception     as E
 import           Control.Lens
 import           Control.Monad.State
-import qualified Data.ByteString     as BS
-import qualified Data.Map            as M
+import qualified Data.ByteString       as BS
+import qualified Data.Map              as M
 import           Data.Text
-import qualified Data.Text           as T
-import           System.IO           (IOMode (..), hClose, openFile)
+import qualified Data.Text             as T
+import           Linear.V3
+import           System.IO             (IOMode (..), hClose, openFile)
 
 import qualified SDL
-import qualified SDL.Font            as Font
-import qualified SDL.Image           as Image
 
-import qualified Kurokos.Asset.Raw   as Asset
-import qualified Kurokos.Asset.SDL   as Asset
+import qualified Kurokos.Asset         as Asset
+import qualified Kurokos.Asset.Raw     as Asset
 
+import qualified Kurokos.Graphics      as G
+import qualified Kurokos.Graphics.Font as Font
 import           Kurokos.UI.Core
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
@@ -26,25 +27,33 @@ newTransparent = return Transparent
 newFill :: Monad m => GuiT m Widget
 newFill = return Fill
 
-newLabel :: MonadIO m => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
-newLabel ident title size = Label title <$> getFont ident size
+newLabel :: MonadIO m => Asset.Ident -> Int -> Text -> GuiT m Widget
+newLabel ident size title = do
+  font <- getFont ident
+  text <- liftIO $ G.createTextTexture font size (V4 0 255 0 255) title
+  return $ Label text
 
 newImageView :: MonadIO m => Asset.Ident -> GuiT m Widget
 newImageView ident = ImageView <$> getTexture ident
 
-newButton :: MonadIO m => Asset.Ident -> Text -> Font.PointSize -> GuiT m Widget
-newButton ident title size = Button title <$> getFont ident size
+newButton :: MonadIO m => Asset.Ident -> Int -> Text -> GuiT m Widget
+newButton ident size title = do
+  font <- getFont ident
+  text <- liftIO $ G.createTextTexture font size (V4 0 255 0 255) title
+  return $ Button text
 
 -- Internal
 
-getTexture :: MonadIO m => Asset.Ident -> GuiT m SDL.Texture
+getTexture :: MonadIO m => Asset.Ident -> GuiT m G.Texture
 getTexture ident = do
   ast <- asks geAssetManager
   case Asset.lookupTexture ident ast of
-    Nothing   -> liftIO $ E.throwIO $ userError $ "missing texture: " ++ T.unpack ident
-    Just font -> return font
+    Nothing  -> liftIO $ E.throwIO $ userError $ "Missing texture: " ++ T.unpack ident
+    Just tex -> return tex
 
-getFont :: MonadIO m => Asset.Ident -> Font.PointSize -> GuiT m Font.Font
-getFont ident size = do
+getFont :: MonadIO m => Asset.Ident -> GuiT m Font.Font
+getFont ident = do
   ast <- asks geAssetManager
-  lift $ Asset.getFont ident size ast
+  case Asset.lookupFont ident ast of
+    Nothing   -> liftIO $ E.throwIO $ userError $ "Missing font: " ++ T.unpack ident
+    Just font -> return font

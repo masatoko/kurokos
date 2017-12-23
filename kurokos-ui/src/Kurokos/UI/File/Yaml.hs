@@ -12,9 +12,8 @@ import           Safe                  (readMay)
 import           Data.Yaml             (FromJSON (..), (.:), (.:?))
 import qualified Data.Yaml             as Y
 
-import SDL.Font as Font
-
 import qualified Kurokos.Asset.Raw     as Asset
+import           Kurokos.Graphics      (FontSize)
 import qualified Kurokos.RPN           as RPN
 import           Kurokos.UI.Color      (ContextColor)
 import           Kurokos.UI.Core
@@ -114,7 +113,7 @@ parseContainerType (Just ct) = work ct
 
 
 data Title
-  = Title Text Font.PointSize Asset.Ident
+  = Title Text FontSize Asset.Ident
   deriving (Eq, Show)
 
 instance FromJSON Title where

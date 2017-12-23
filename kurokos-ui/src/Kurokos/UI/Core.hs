@@ -22,10 +22,9 @@ import           Linear.V2
 
 import           SDL                      (($=))
 import qualified SDL
-import qualified SDL.Font                 as Font
 
+import qualified Kurokos.Asset            as Asset
 import qualified Kurokos.Asset.Raw        as Asset
-import qualified Kurokos.Asset.SDL        as Asset
 import qualified Kurokos.RPN              as RPN
 
 import           Kurokos.UI.Color
@@ -37,6 +36,7 @@ import           Kurokos.UI.Widget
 import           Kurokos.UI.Widget.Render
 import           Kurokos.UI.WidgetTree    (WidgetTree (..))
 import qualified Kurokos.UI.WidgetTree    as WT
+import qualified Kurokos.Graphics as G
 
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
@@ -90,7 +90,7 @@ updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
           return $ Fork u' a' mc' o'
 
 data GuiEnv = GuiEnv
-  { geAssetManager :: Asset.SDLAssetManager
+  { geAssetManager :: Asset.AssetManager
   , geColorScheme  :: ColorScheme
   }
 
@@ -131,9 +131,8 @@ newGui env initializer = do
     gst0 = GuiState 0 Null
 
 freeGui :: MonadIO m => GUI -> m ()
-freeGui g = mapM_ work $ g^.unGui._2.gstWTree
-  where
-    work = SDL.destroyTexture . view (_1.ctxTexture)
+freeGui g = liftIO $
+  mapM_ (freeWidget . snd) $ g^.unGui._2.gstWTree
 
 -- modifyGui :: (Monad m, Functor m) => (GUI -> GUI) -> GuiT m ()
 -- modifyGui f = do
@@ -158,10 +157,8 @@ mkSingle mName mColor pos size w = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  tex <- lift $ withRenderer $ \r ->
-    SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
-  let ctx = WContext ident mName Nothing (attribOf w) True True iniWidgetState ctxCol tex pos' size'
+  let ctx = WContext ident mName Nothing (attribOf w) True True iniWidgetState ctxCol pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
@@ -175,11 +172,9 @@ mkContainer mName ct mColor pos size = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  tex <- lift $ withRenderer $ \r ->
-    SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget (pure 1)
   let w = Transparent
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
-  let ctx = WContext ident mName (Just ct) (attribOf w) True True iniWidgetState ctxCol tex pos' size'
+  let ctx = WContext ident mName (Just ct) (attribOf w) True True iniWidgetState ctxCol pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
@@ -221,9 +216,7 @@ readyRender g = do
                                (_,UserWidget c) -> liftIO $ needsRender c
                                _                -> return False
       a' <- if ctx^.ctxNeedsRender || needsRenderByItself
-              then do
-                SDL.destroyTexture $ ctx^.ctxTexture
-                renderOnTexture vmap a
+              then readyLayout vmap a
               else return a
       mc' <- case mc of
         Nothing -> return Nothing
@@ -236,7 +229,7 @@ readyRender g = do
       where
         ctx = a^._1
 
-    renderOnTexture vmap (ctx, widget) = do
+    readyLayout vmap (ctx, widget) = do
       let vmap' = M.map fromIntegral vmap
       pos <- case evalExp2 vmap' upos of
               Left err -> E.throw $ userError err
@@ -244,9 +237,7 @@ readyRender g = do
       size <- case evalExp2 vmap' usize of
               Left err -> E.throw $ userError err
               Right v  -> return v
-      tex <- createTexture' size ctx widget renderWidget
       let ctx' = ctx & ctxNeedsRender .~ False
-                     & ctxTexture .~ tex
                      & ctxWidgetState . wstPos .~ pos
                      & ctxWidgetState . wstSize .~ size
       return (ctx', widget)
@@ -254,38 +245,22 @@ readyRender g = do
         upos = ctx^.ctxUPos
         usize = ctx^.ctxUSize
 
-
     evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)
     evalExp2 vmap (V2 x y) = V2 <$> evalExp x <*> evalExp y
       where
         evalExp (ERPN expr) = truncate <$> RPN.eval vmap expr
         evalExp (EConst v)  = return v
 
-    createTexture' size ctx w renderW =
-      withRenderer $ \r -> do
-        tex <- SDL.createTexture r SDL.RGBA8888 SDL.TextureAccessTarget size
-        SDL.textureBlendMode tex $= SDL.BlendAlphaBlend
-        E.bracket_ (SDL.rendererRenderTarget r $= Just tex)
-                   (SDL.rendererRenderTarget r $= Nothing)
-                   (renderContents r)
-        return tex
-      where
-        wcol = optimumColor ctx
-        renderContents r = do
-          -- Initialize background
-          SDL.rendererDrawColor r $= V4 0 0 0 0
-          SDL.clear r
-          -- Render contents
-          renderW r size wcol w
-
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
-render = mapM_ go . view (unGui._2.gstWTree)
+render g =
+  withRenderer $ \r -> liftIO $
+    mapM_ (go r) $ view (unGui._2.gstWTree) g
   where
-    go (ctx,_)
-      | ctx^.ctxNeedsRender            = E.throw $ userError "Call GUI.readyRender before GUI.render!"
-      | ctx^.ctxWidgetState.wstVisible = renderTexture (ctx^.ctxTexture) rect
+    go r (ctx, widget)
+      | ctx^.ctxNeedsRender            = E.throwIO $ userError "Call GUI.readyRender before GUI.render!"
+      | ctx^.ctxWidgetState.wstVisible = renderWidget r pos size wcol widget
       | otherwise                      = return ()
         where
-          rect = Rectangle pos size
-          pos = ctx^.ctxWidgetState.wstGlobalPos
-          size = ctx^.ctxWidgetState^.wstSize
+          P pos = fromIntegral <$> ctx^.ctxWidgetState.wstGlobalPos
+          size = fromIntegral <$> ctx^.ctxWidgetState^.wstSize
+          wcol = optimumColor ctx

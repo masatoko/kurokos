@@ -45,8 +45,8 @@ convert s@Single{..} = do
     Title titleText titleSize titleAssetIdent = fromMaybe (error "Missing title") wTitle
     generate
       | wType == N.wnameFill      = newFill
-      | wType == N.wnameLabel     = newLabel titleAssetIdent titleText titleSize
-      | wType == N.wnameButton    = newButton titleAssetIdent titleText titleSize
+      | wType == N.wnameLabel     = newLabel titleAssetIdent titleSize titleText
+      | wType == N.wnameButton    = newButton titleAssetIdent titleSize titleText
       | wType == N.wnameImageView = newImageView =<< getAssetId
       | otherwise                 = liftIO $ E.throwIO $ userError $ "unkown widget type: " ++ wType
 

@@ -1,63 +1,65 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.UI.Widget.Render where
 
-import qualified Control.Exception   as E
-import           Control.Monad.Extra (whenJust)
-import qualified Data.Text           as T
+import qualified Control.Exception     as E
+import           Control.Lens
+import           Control.Monad.Extra   (whenJust)
+import qualified Data.Text             as T
+import           Linear.V3
 
-import           SDL                 (($=))
+import           SDL                   (($=))
 import qualified SDL
-import qualified SDL.Font            as Font
-import qualified SDL.Primitive       as Prim
 
+import           Kurokos.Graphics      (charTexColor)
+import qualified Kurokos.Graphics      as G
+import qualified Kurokos.Graphics.Font as Font
 import           Kurokos.UI.Color
-import           Kurokos.UI.Def      (Renderable (..))
+import           Kurokos.UI.Def        (Renderable (..))
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Util
 import           Kurokos.UI.Widget
 
-renderWidget :: SDL.Renderer -> GuiSize -> WidgetColor -> Widget -> IO ()
-renderWidget _r _parentSize _ Transparent = return ()
+renderWidget :: G.Renderer -> V2 Int -> V2 Int -> WidgetColor -> Widget -> IO ()
+renderWidget _r _pos _parentSize _ Transparent = return ()
 
-renderWidget r _parentSize WidgetColor{..} Fill =
-  clearBy r _wcBack
+renderWidget r _pos _parentSize WidgetColor{..} Fill = -- do
+  -- clearBy r _wcBack -- TODO:
+  return ()
 
-renderWidget r parentSize wc@WidgetColor{..} (Label title font) = do
-  (tex, size) <- makeTextTexture r wc font title
-  renderBackAndBorder r parentSize wc
-  --
-  let pos = P $ (`div` 2) <$> parentSize - size
-  SDL.copy r tex Nothing $ Just (Rectangle pos size)
+renderWidget r pos parentSize wc@WidgetColor{..} (Label title) = do
+  renderBackAndBorder r pos parentSize wc
+  let title' = map (set charTexColor (wc^.wcTitle)) title -- TODO: Should not do this every frame!
+  G.renderText r pos title'
 
-renderWidget r _parentSize WidgetColor{..} (ImageView image) = do
-  clearBy r _wcBack
-  SDL.copy r image Nothing Nothing
+renderWidget r pos parentSize WidgetColor{..} (ImageView image) = do
+  let size = fromIntegral <$> parentSize
+      rctx = G.RContext pos size Nothing Nothing
+  G.renderTexture r image rctx
 
-renderWidget r parentSize wc@WidgetColor{..} (Button title font) = do
-  (tex, size) <- makeTextTexture r wc font title
-  renderBackAndBorder r parentSize wc
-  let pos = P $ (`div` 2) <$> parentSize - size
-  SDL.copy r tex Nothing $ Just (Rectangle pos size)
+renderWidget r pos parentSize wc@WidgetColor{..} (Button title) = do
+  renderBackAndBorder r pos parentSize wc
+  let title' = map (set charTexColor (wc^.wcTitle)) title -- TODO: Should not do this every frame!
+  G.renderText r pos title'
 
-renderWidget r parentSize wcol (UserWidget a) =
-  renderW r parentSize wcol a
+renderWidget r pos parentSize wcol (UserWidget a) =
+  renderW r pos parentSize wcol a
 
 -- Internal
 
-makeTextTexture :: Num b => SDL.Renderer -> WidgetColor -> Font.Font -> T.Text -> IO (SDL.Texture, V2 b)
-makeTextTexture r WidgetColor{..} font text = do
-  (w,h) <- Font.size font text
-  let size = fromIntegral <$> V2 w h
-  tex <- E.bracket
-    (Font.blended font _wcTitle text)
-    SDL.freeSurface
-    (SDL.createTextureFromSurface r)
-  return (tex, size)
-
-renderBackAndBorder :: MonadIO m => SDL.Renderer -> V2 CInt -> WidgetColor -> m ()
-renderBackAndBorder r parentSize WidgetColor{..} = do
-  Prim.fillRoundRectangle r (pure 0) size' 3 _wcBack
-  Prim.roundRectangle r (pure 0) size' 5 _wcBorder
+renderBackAndBorder :: MonadIO m => G.Renderer -> V2 Int -> V2 Int -> WidgetColor -> m ()
+renderBackAndBorder r pos parentSize wc@WidgetColor{..} = liftIO $ do
+  back <- G.newFillRectangle r size' -- TODO: Must not new every frame! Move another place.
+  rect <- G.newRectangle r size'
+  --
+  G.setPrimColor r _wcBack
+  G.drawPrim r pos' back
+  --
+  G.setPrimColor r _wcBorder
+  G.drawPrim r pos' rect
+  --
+  G.freePrim back
+  G.freePrim rect
   where
-    size' = (+ (-1)) <$> parentSize
+    size' = fromIntegral <$> parentSize
+    pos' = fromIntegral <$> pos

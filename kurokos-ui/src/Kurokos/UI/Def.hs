@@ -5,18 +5,19 @@ import           Linear.V2
 
 import qualified SDL
 
+import qualified Kurokos.Graphics as G
 import           Kurokos.UI.Color (WidgetColor)
 import           Kurokos.UI.Types (GuiSize)
 
 class RenderEnv m where
   getWindow :: m SDL.Window
   getWindowSize :: m (V2 CInt)
-  getRenderer :: m SDL.Renderer
-  withRenderer :: (SDL.Renderer -> IO a) -> m a
-  renderTexture :: SDL.Texture -> SDL.Rectangle CInt -> m ()
+  getRenderer :: m G.Renderer
+  withRenderer :: (G.Renderer -> IO a) -> m a
+  -- renderTexture :: G.Texture -> V2 Int -> V2 Int -> m ()
 
 class Renderable a where
-  renderW :: SDL.Renderer -> GuiSize -> WidgetColor -> a -> IO ()
+  renderW :: G.Renderer -> V2 Int -> V2 Int -> WidgetColor -> a -> IO ()
   -- ^ Rerender user data
   needsRender :: a -> IO Bool
   -- ^ Returns whether this content shold be rerendered or not. It's called in `readyRender`.
