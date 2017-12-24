@@ -8,3 +8,15 @@ files:
     dir: _data/
     file: bird.png
 
+  -
+    id: font-r
+    dir: _data/font/
+    file: mplus-1p-regular.ttf
+  -
+    id: font-m
+    dir: _data/font/
+    file: mplus-1p-medium.ttf
+  -
+    id: font-b
+    dir: _data/font/
+    file: mplus-1p-bold.ttf

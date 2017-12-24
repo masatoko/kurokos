@@ -90,7 +90,7 @@ runUITestScene =
     nameMain = "go-main"
 
     alloc = do
-      guiYaml <- liftIO $ B.readFile "_data/gui-title.yaml"
+      guiYaml <- liftIO $ B.readFile "_data/gui-uitest.yaml"
       assetList <- liftIO $ do
         assets1 <- Asset.decodeAssetList =<< B.readFile "_data/assets1.yaml"
         assets2 <- Asset.decodeAssetList =<< B.readFile "_data/assets2.yaml"

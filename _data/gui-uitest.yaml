@@ -1,0 +1,44 @@
+-
+  type: label
+  title:
+    text: Label From Yaml
+    asset: font-r
+    size: 14
+  x: 20
+  y-rpn: $height 100 -
+  w-rpn: $width 2 /
+  h: 50
+  hoverable: true
+
+-
+  type: fill
+  x-rpn: "$width $width 5 / -"
+  w-rpn: "$width 5 /"
+  color:
+    default:
+      back: 0 0 0 50
+      border: 220 220 220 255
+      title: 54 20 171 255
+      tint: 220 220 220 255
+
+-
+  type: container
+  order: vertical
+  w: 100
+  h: 100
+  children:
+    - &test
+      type: label
+      title:
+        text: Label
+        asset: font-r
+        size: 14
+      h: 20
+    - *test
+    - *test
+    -
+      type: image
+      path: _data/img.png
+      h: 30
+      asset: sample-image
+    - *test

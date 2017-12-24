@@ -10,7 +10,7 @@ import           Linear.V3
 import           SDL                   (($=))
 import qualified SDL
 
-import           Kurokos.Graphics      (ctColor)
+import           Kurokos.Graphics      (ctColor, ctAdvanceX)
 import qualified Kurokos.Graphics      as G
 import qualified Kurokos.Graphics.Font as Font
 import           Kurokos.UI.Color
@@ -29,7 +29,12 @@ renderWidget r pos _parentSize WidgetColor{..} CmnRsc{..} Fill = do
 
 renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Label{} = do
   renderBackAndBorder r pos wc cmnrsc
-  G.renderText r pos (cmnrscTextTex cmnrsc)
+  G.renderText r pos' text
+  where
+    text = cmnrscTextTex cmnrsc
+    width = round . sum $ map (view ctAdvanceX) text
+    dx = ((parentSize^._x) - width) `div` 2
+    pos' = pos & _x +~ dx
 
 renderWidget r pos parentSize WidgetColor{..} CmnRsc{..} (ImageView image) = do
   let size = fromIntegral <$> parentSize
@@ -38,7 +43,12 @@ renderWidget r pos parentSize WidgetColor{..} CmnRsc{..} (ImageView image) = do
 
 renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Button{} = do
   renderBackAndBorder r pos wc cmnrsc
-  G.renderText r pos (cmnrscTextTex cmnrsc)
+  G.renderText r pos' text
+  where
+    text = cmnrscTextTex cmnrsc
+    width = round . sum $ map (view ctAdvanceX) text
+    dx = ((parentSize^._x) - width) `div` 2
+    pos' = pos & _x +~ dx
 
 renderWidget r pos parentSize wcol CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
