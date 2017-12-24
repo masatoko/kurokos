@@ -12,7 +12,7 @@ import           Data.Maybe                   (fromMaybe)
 import           Linear
 
 import qualified Graphics.GLUtil              as GLU
-import           Graphics.Rendering.OpenGL    (($=))
+import           Graphics.Rendering.OpenGL    (get, ($=))
 import qualified Graphics.Rendering.OpenGL    as GL
 
 import qualified Kurokos.Graphics.Camera      as Cam
@@ -70,10 +70,13 @@ renderTextureShader :: (TextureShader a, Shader a) => a -> IO ()
 renderTextureShader shdr =
   withProgram (shdrProgram shdr) $ do
     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
+    blend0 <- get GL.blend
     GL.blend $= GL.Enabled
+    --
     GLU.withVAO (shdrVAO shdr) $
       GL.drawElements GL.TriangleStrip 4 GL.UnsignedInt GLU.offset0
-    GL.blend $= GL.Disabled
+    --
+    GL.blend $= blend0
 
 -- Text
 

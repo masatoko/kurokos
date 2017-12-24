@@ -4,7 +4,7 @@ module Kurokos.Graphics.Primitive where
 import           Data.Foldable                     (foldr')
 import qualified Data.Vector.Storable              as V
 import qualified Graphics.GLUtil                   as GLU
-import           Graphics.Rendering.OpenGL         (($=))
+import           Graphics.Rendering.OpenGL         (get, ($=))
 import qualified Graphics.Rendering.OpenGL         as GL
 
 import qualified Kurokos.Graphics.Camera           as Cam
@@ -30,10 +30,13 @@ drawPrim rndr pos Prim{..} = do
   setModelView (rndrPrimShader rndr) mv
   withShaderProgram rndr $ do
     GL.blendFunc $= (GL.SrcAlpha, GL.OneMinusSrcAlpha)
+    blend0 <- get GL.blend
     GL.blend $= GL.Enabled
+    --
     GLU.withVAO primVAO $
       GL.drawArrays primMode 0 primCount
-    GL.blend $= GL.Disabled
+    --
+    GL.blend $= blend0
   where
     mv = mkModelView Cam.camForVertFlip pos
 
