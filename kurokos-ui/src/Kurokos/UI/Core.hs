@@ -132,7 +132,11 @@ newGui env initializer = do
 
 freeGui :: MonadIO m => GUI -> m ()
 freeGui g = liftIO $
-  mapM_ (freeWidget . snd) $ g^.unGui._2.gstWTree
+  mapM_ work $ g^.unGui._2.gstWTree
+  where
+    work (ctx,w) = do
+      freeCommonResource $ ctx^.ctxCmnRsc
+      freeWidget w
 
 -- modifyGui :: (Monad m, Functor m) => (GUI -> GUI) -> GuiT m ()
 -- modifyGui f = do
