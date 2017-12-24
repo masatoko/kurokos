@@ -10,7 +10,7 @@ import           Linear.V3
 import           SDL                   (($=))
 import qualified SDL
 
-import           Kurokos.Graphics      (charTexColor)
+import           Kurokos.Graphics      (ctColor)
 import qualified Kurokos.Graphics      as G
 import qualified Kurokos.Graphics.Font as Font
 import           Kurokos.UI.Color
@@ -28,7 +28,7 @@ renderWidget r pos _parentSize WidgetColor{..} CmnRsc{..} Fill =
 
 renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Label title) = do
   renderBackAndBorder r pos wc cmnrsc
-  let title' = map (set charTexColor (wc^.wcTitle)) title -- TODO: Should not do this every frame!
+  let title' = map (set ctColor (wc^.wcTitle)) title -- TODO: Should not do this every frame!
   G.renderText r pos title'
 
 renderWidget r pos parentSize WidgetColor{..} CmnRsc{..} (ImageView image) = do
@@ -38,7 +38,7 @@ renderWidget r pos parentSize WidgetColor{..} CmnRsc{..} (ImageView image) = do
 
 renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Button title) = do
   renderBackAndBorder r pos wc cmnrsc
-  let title' = map (set charTexColor (wc^.wcTitle)) title -- TODO: Should not do this every frame!
+  let title' = map (set ctColor (wc^.wcTitle)) title -- TODO: Should not do this every frame!
   G.renderText r pos title'
 
 renderWidget r pos parentSize wcol CmnRsc{..} (UserWidget a) =
