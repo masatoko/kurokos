@@ -27,20 +27,18 @@ newTransparent = return Transparent
 newFill :: Monad m => GuiT m Widget
 newFill = return Fill
 
-newLabel :: MonadIO m => Asset.Ident -> Int -> Text -> GuiT m Widget
+newLabel :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> GuiT m Widget
 newLabel ident size title = do
   font <- getFont ident
-  text <- liftIO $ G.createTextTexture font size (V4 0 255 0 255) title
-  return $ Label text
+  return $ Label title font size
 
 newImageView :: MonadIO m => Asset.Ident -> GuiT m Widget
 newImageView ident = ImageView <$> getTexture ident
 
-newButton :: MonadIO m => Asset.Ident -> Int -> Text -> GuiT m Widget
+newButton :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> GuiT m Widget
 newButton ident size title = do
   font <- getFont ident
-  text <- liftIO $ G.createTextTexture font size (V4 0 255 0 255) title
-  return $ Button text
+  return $ Button title font size
 
 -- Internal
 

@@ -27,23 +27,28 @@ renderWidget r pos _parentSize WidgetColor{..} CmnRsc{..} Fill = do
   G.setPrimColor r _wcBack
   G.drawPrim r pos cmnrscRectFill
 
-renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Label title) = do
+renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Label{} = do
   renderBackAndBorder r pos wc cmnrsc
-  let title' = map (set ctColor (wc^.wcTitle)) title -- TODO: Should not do this every frame!
-  G.renderText r pos title'
+  G.renderText r pos (cmnrscTextTex cmnrsc)
 
 renderWidget r pos parentSize WidgetColor{..} CmnRsc{..} (ImageView image) = do
   let size = fromIntegral <$> parentSize
       rctx = G.RContext pos size Nothing Nothing
   G.renderTexture r image rctx
 
-renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Button title) = do
+renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Button{} = do
   renderBackAndBorder r pos wc cmnrsc
-  let title' = map (set ctColor (wc^.wcTitle)) title -- TODO: Should not do this every frame!
-  G.renderText r pos title'
+  G.renderText r pos (cmnrscTextTex cmnrsc)
 
 renderWidget r pos parentSize wcol CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
+
+genTitle :: WidgetColor ->  Widget -> IO G.TextTexture
+genTitle wc (Label title font size) =
+  G.createTextTexture font size (wc^.wcTitle) title
+genTitle wc (Button title font size) =
+  G.createTextTexture font size (wc^.wcTitle) title
+genTitle _ _ = return []
 
 -- Internal
 renderBackAndBorder :: MonadIO m => G.Renderer -> V2 Int -> WidgetColor -> CommonResource -> m ()

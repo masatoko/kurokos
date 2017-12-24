@@ -134,9 +134,8 @@ freeGui :: MonadIO m => GUI -> m ()
 freeGui g = liftIO $
   mapM_ work $ g^.unGui._2.gstWTree
   where
-    work (ctx,w) = do
+    work (ctx,_) =
       freeCommonResource $ ctx^.ctxCmnRsc
-      freeWidget w
 
 -- modifyGui :: (Monad m, Functor m) => (GUI -> GUI) -> GuiT m ()
 -- modifyGui f = do
@@ -150,12 +149,12 @@ getContextColorOfWidget w = do
     Left err -> E.throwIO $ userError err
     Right a  -> return a
 
-newCommonResource :: (RenderEnv m, MonadIO m) => V2 Int -> m CommonResource
-newCommonResource size =
+newCommonResource :: (RenderEnv m, MonadIO m) => V2 Int -> WidgetColor -> Widget -> m CommonResource
+newCommonResource size wcol w =
   withRenderer $ \r ->
     CmnRsc <$> G.newFillRectangle r size'
            <*> G.newRectangle r size'
-           <*> pure []
+           <*> genTitle wcol w
   where
     size' = fromIntegral <$> size
 
@@ -176,8 +175,8 @@ mkSingle mName mColor pos size w = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  cmnRsc <- lift $ newCommonResource (pure 1)
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
+  cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
   let ctx = WContext ident mName Nothing (attribOf w) True True iniWidgetState cmnRsc ctxCol pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
@@ -192,9 +191,9 @@ mkContainer mName ct mColor pos size = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  cmnRsc <- lift $ newCommonResource (pure 1)
   let w = Transparent
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
+  cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
   let ctx = WContext ident mName (Just ct) (attribOf w) True True iniWidgetState cmnRsc ctxCol pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
@@ -259,7 +258,7 @@ readyRender g = do
               Left err -> E.throw $ userError err
               Right v  -> return v
       liftIO . freeCommonResource $ ctx^.ctxCmnRsc
-      cmnrsc' <- newCommonResource $ fromIntegral <$> size
+      cmnrsc' <- newCommonResource (fromIntegral <$> size) (optimumColor ctx) widget
       let ctx' = ctx & ctxNeedsRender .~ False
                      & ctxWidgetState . wstPos .~ pos
                      & ctxWidgetState . wstSize .~ size

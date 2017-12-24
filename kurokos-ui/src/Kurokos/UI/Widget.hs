@@ -16,9 +16,9 @@ import qualified Kurokos.Graphics.Font as Font
 data Widget where
   Transparent :: Widget
   Fill        :: Widget
-  Label       :: G.TextTexture -> Widget
+  Label       :: Text -> Font.Font -> G.FontSize -> Widget
   ImageView   :: G.Texture -> Widget
-  Button      :: G.TextTexture -> Widget
+  Button      :: Text -> Font.Font -> G.FontSize -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where
@@ -59,10 +59,3 @@ attribOf UserWidget{} =
   defAttrib
     & hoverable .~ False
     & clickable .~ False
-
--- Free
-
-freeWidget :: MonadIO m => Widget -> m ()
-freeWidget (Label texttex)  = liftIO $ G.deleteTextTexture texttex
-freeWidget (Button texttex) = liftIO $ G.deleteTextTexture texttex
-freeWidget _                = return ()
