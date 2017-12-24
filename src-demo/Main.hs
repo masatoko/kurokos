@@ -10,8 +10,8 @@ import qualified SDL
 
 import           Kurokos           (KurokosConfig (..))
 import qualified Kurokos           as K
+import qualified Kurokos.Asset     as Asset
 import qualified Kurokos.Asset.Raw as Asset
-import qualified Kurokos.Asset.SDL as Asset
 
 import           Game
 import           Import
@@ -24,13 +24,13 @@ main = do
         { confWinTitle         = "Kurokos Demo"
         , confDebugPrintFPS    = True
         , confDebugPrintSystem = True
-        , confSystemAsset      = astMgr
+        , confSystemRawAsset   = astMgr
         , confSystemFontId     = "_system-font"
         }
   withKurokos conf winConf $ \kuro -> do
     -- Allocate original data here
     r <- runKurokos kuro K.getRenderer
-    globalAssets <- Asset.newSDLAssetManager r =<< Asset.loadAssetManager =<< Asset.decodeAssetList =<< BS.readFile "_data/assets-global.yaml"
+    globalAssets <- Asset.newAssetManager r =<< Asset.loadAssetManager =<< Asset.decodeAssetList =<< BS.readFile "_data/assets-global.yaml"
     E.handle handler $
       void $ runGameT (GameEnv globalAssets) GameState $
         runKurokos kuro $ do
@@ -39,13 +39,18 @@ main = do
           SDL.cursorVisible $= True
           -- ===
           startScene
+    Asset.freeAssetManager globalAssets
   where
     winConf = SDL.defaultWindow
       { SDL.windowInitialSize = V2 640 480
       , SDL.windowMode = SDL.Windowed
       , SDL.windowResizable = True
-      , SDL.windowOpenGL = Just SDL.defaultOpenGL
+      , SDL.windowOpenGL = Just glConf
       }
+    glConf =
+      SDL.defaultOpenGL
+        { SDL.glProfile = SDL.Core SDL.Debug 4 0
+        }
 
     handler :: K.KurokosException -> IO ()
     handler e = putStrLn $ "Caught exception: " ++ show e

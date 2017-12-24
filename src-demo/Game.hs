@@ -12,12 +12,11 @@ import           Control.Monad.State
 import           Control.Monad.Trans.Control
 import           Control.Monad.Trans.Resource
 
-import qualified Kurokos.Asset.SDL            as Asset
-
 import           Kurokos                      (KurokosT)
+import qualified Kurokos.Asset                as Asset
 
 data GameEnv = GameEnv
-  { envAssets :: Asset.SDLAssetManager
+  { envAssets :: Asset.AssetManager
   }
 
 data GameState = GameState

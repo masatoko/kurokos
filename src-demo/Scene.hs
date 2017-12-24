@@ -8,8 +8,8 @@ module Scene where
 
 -- import           Debug.Trace           (traceM)
 
-import qualified Control.Concurrent.MVar      as MVar
-import qualified Control.Exception            as E
+-- import qualified Control.Concurrent.MVar      as MVar
+-- import qualified Control.Exception            as E
 import           Control.Lens
 import           Control.Monad.Extra          (whenJust)
 import           Control.Monad.Reader
@@ -18,30 +18,30 @@ import           Control.Monad.Trans.Resource
 import qualified Data.ByteString.Char8        as B
 import           Data.Maybe                   (isJust)
 import qualified Data.Text                    as T
-import qualified Data.Vector                  as V
 
 import qualified SDL
-import qualified SDL.Font                     as Font
-import qualified SDL.Primitive                as Prim
-import           SDL.Vect
+import           Linear.V4
 
 import qualified Kurokos                      as K
+import qualified Kurokos.Asset                as Asset
 import qualified Kurokos.Asset.Raw            as Asset
-import qualified Kurokos.Asset.SDL            as Asset
-import           Kurokos.UI                   (UExp (..), ctxAttrib, cursorPos,
-                                               visible, clickable)
+import qualified Kurokos.Graphics             as G
+import           Kurokos.UI                   (UExp (..), clickable, ctxAttrib,
+                                               visible)
 import qualified Kurokos.UI                   as UI
 
 import           Action                       (Action (..), eventsToActions)
 import           Game
 import           Import
 
+import           Graphics.Rendering.OpenGL    (($=))
+import qualified Graphics.Rendering.OpenGL    as GL
 
 data Dummy = Dummy [Action]
 
 data MyData = MyData
-  { gTexture   :: SDL.Texture
-  , gDeg       :: !Double
+  { gTexture   :: G.Texture
+  , gDeg       :: !Float
   , gCount     :: !Int
   , gMyActions :: [Action]
   }
@@ -76,17 +76,18 @@ mouseScene = Scene update render transit
               _               -> return ()
         go _ = return ()
 
-    render s = do
-      P pos <- SDL.getAbsoluteMouseLocation
-      let pos' = fromIntegral <$> pos
-      K.withRenderer $ \r ->
-        Prim.smoothCircle r pos' 5 (V4 255 255 255 255)
+    render _s =
+      -- P pos <- SDL.getAbsoluteMouseLocation
+      -- let pos' = fromIntegral <$> pos
+      -- K.withRenderer $ \r ->
+      --   Prim.smoothCircle r pos' 5 (V4 255 255 255 255)
       --
-      K.withRenderer $ \r -> do
-        forM_ (s^.msLClicks) $ \p ->
-          Prim.fillCircle r p 5 (V4 255 255 0 255)
-        forM_ (s^.msRClicks) $ \p ->
-          Prim.fillCircle r p 5 (V4 255 0 255 255)
+      -- K.withRenderer $ \r -> do
+      --   forM_ (s^.msLClicks) $ \p ->
+      --     Prim.fillCircle r p 5 (V4 255 255 0 255)
+      --   forM_ (s^.msRClicks) $ \p ->
+      --     Prim.fillCircle r p 5 (V4 255 0 255 255)
+      return ()
 
     transit s
       | Select `elem` as = K.end (Just n)
@@ -96,35 +97,35 @@ mouseScene = Scene update render transit
         as = s^.msActions
         n = length (s^.msLClicks) + length (s^.msRClicks)
 
-data UserVal = UserVal
-  { _uvMVar :: MVar.MVar Int
-  , _uvFont :: Font.Font
-  }
-
-makeLenses ''UserVal
-
-instance UI.Renderable UserVal where
-  renderW r _sz wcol (UserVal mvar font) = do
-    cnt <- MVar.readMVar mvar
-    let text = T.pack $ show cnt
-    (w,h) <- Font.size font text
-    let size = fromIntegral <$> V2 w h
-    tex <- E.bracket
-      (Font.blended font (UI._wcTitle wcol) text)
-      SDL.freeSurface
-      (SDL.createTextureFromSurface r)
-    SDL.copy r tex Nothing (Just $ SDL.Rectangle (pure 0) size)
-
-  needsRender (UserVal mvar _) = do
-    cnt <- MVar.readMVar mvar
-    return $ cnt `mod` 10 == 0
+-- data UserVal = UserVal
+--   { _uvMVar :: MVar.MVar Int
+--   , _uvFont :: Font.Font
+--   }
+--
+-- makeLenses ''UserVal
+--
+-- instance UI.Renderable UserVal where
+--   renderW r _sz wcol (UserVal mvar font) = do
+--     cnt <- MVar.readMVar mvar
+--     let text = T.pack $ show cnt
+--     (w,h) <- Font.size font text
+--     let size = fromIntegral <$> V2 w h
+--     tex <- E.bracket
+--       (Font.blended font (UI._wcTitle wcol) text)
+--       SDL.freeSurface
+--       (SDL.createTextureFromSurface r)
+--     SDL.copy r tex Nothing (Just $ SDL.Rectangle (pure 0) size)
+--
+--   needsRender (UserVal mvar _) = do
+--     cnt <- MVar.readMVar mvar
+--     return $ cnt `mod` 10 == 0
 
 data Title = Title
-  { _tGui     :: UI.GUI
-  , _tCursor  :: UI.Cursor
-  , _tUserVal :: UserVal
-  , _tEvents  :: [(UI.GuiAction, UI.GuiEvent)]
-  , _tCnt     :: Int
+  { _tGui    :: UI.GUI
+  , _tCursor :: UI.Cursor
+  -- , _tUserVal :: UserVal
+  , _tEvents :: [(UI.GuiAction, UI.GuiEvent)]
+  , _tCnt    :: Int
   }
 
 makeLenses ''Title
@@ -148,43 +149,44 @@ runTitleScene =
         return $ assets1 <> assets2
       astMng <- Asset.loadAssetManager assetList
       r <- K.getRenderer
-      (_,sdlAssets) <- allocate (Asset.newSDLAssetManager r astMng) Asset.freeSDLAssetManager
+      (_,sdlAssets) <- allocate (Asset.newAssetManager r astMng) Asset.freeAssetManager
       --
-      userVal <- liftIO $ UserVal <$> MVar.newMVar 0 <*> Asset.getFont "font-r" 16 sdlAssets
+      -- userVal <- liftIO $ UserVal <$> MVar.newMVar 0 <*> Asset.getFont "font-r" 16 sdlAssets
       --
       colorScheme <- liftIO $ UI.readColorScheme "_data/gui-color-scheme.yaml"
       gui <- UI.newGui (UI.GuiEnv sdlAssets colorScheme) $ do
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- UI.mkSingle (Just "title") Nothing pos size0 =<< UI.newLabel "font-m" "Kurokos DEMO" 30
+        label <- UI.mkSingle (Just "title") Nothing pos size0 =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
         -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
-        button1 <- UI.mkSingle (Just nameMain) Nothing pos1 size =<< UI.newButton "font-m" "Next: Main Scene" 16
-        button2 <- UI.mkSingle (Just nameMouse) Nothing pos2 size =<< UI.newButton "font-m" "Push: Mouse Scene" 16
+        button1 <- UI.mkSingle (Just nameMain) Nothing pos1 size =<< UI.newButton "font-m" 16 "Next: Main Scene"
+        button2 <- UI.mkSingle (Just nameMouse) Nothing pos2 size =<< UI.newButton "font-m" 16 "Push: Mouse Scene"
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
         img <- UI.mkSingle (Just "image") Nothing imgPos imgSize =<< UI.newImageView "sample-image"
         -- UserWidget
-        userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
+        -- userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
-        lbl' <- UI.mkSingle (Just "label") Nothing (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" "---" 16
-        btn' <- UI.mkSingle (Just "button") Nothing (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" "Button in Container" 16
+        lbl' <- UI.mkSingle (Just "label") Nothing (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" 16 "---"
+        btn' <- UI.mkSingle (Just "button") Nothing (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" 16 "Button in Container"
         ctn1 <- UI.mkContainer Nothing UI.Unordered Nothing (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
         let Just ctn1' = UI.appendChild (mconcat [lbl', btn']) ctn1
         --
-        btns <- mconcat <$> mapM (UI.mkSingle Nothing Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< flip (UI.newButton "font-m") 16 . T.pack . show) [1..(5::Int)]
+        btns <- mconcat <$> mapM (UI.mkSingle Nothing Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
         ctn2 <- UI.mkContainer (Just "menu") UI.VerticalStack Nothing (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
         let Just ctn2' = UI.appendChild btns ctn2
         --
         clickableArea <- UI.mkSingle (Just "clickable") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
         fill <- UI.mkSingle (Just "fill") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
         --
-        UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, userWidget, ctn1', fill, ctn2']
+        UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', fill, ctn2']
+        -- UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, userWidget, ctn1', fill, ctn2']
         -- From file
         UI.appendRoot =<< UI.parseWidgetTree guiYaml
 
@@ -196,12 +198,13 @@ runTitleScene =
       liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui'
       liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui'
       cursor <- UI.newCursor
-      return $ Title gui' cursor userVal [] 0
+      return $ Title gui' cursor [] 0
+      -- return $ Title gui' cursor userVal [] 0
 
     update :: Update (GameT IO) Title
     update title0 = do
       es <- K.getEvents
-      liftIO $ MVar.modifyMVar_ (title0^.tUserVal.uvMVar) (return . (+1)) -- Update UserVal
+      -- liftIO $ MVar.modifyMVar_ (title0^.tUserVal.uvMVar) (return . (+1)) -- Update UserVal
       readyG . work . updateEs es =<< updateT es title0
       where
         updateT es t0 = do
@@ -223,33 +226,33 @@ runTitleScene =
               modGui $ UI.setGlobalPosition "menu" pos
               modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) True
 
-            -- ** Update title
-            whenJust (UI.clickedOn UI.GuiActLeft "button" es) $ \_pos -> do
-              modify' $
-                over tCnt (+1)
-              cnt <- gets $ view tCnt
-              let title = T.pack $ show cnt
-              modGui $ UI.update "label" (over _2 (UI.setTitle title))
+            -- -- ** Update title
+            -- whenJust (UI.clickedOn UI.GuiActLeft "button" es) $ \_pos -> do
+            --   modify' $
+            --     over tCnt (+1)
+            --   cnt <- gets $ view tCnt
+            --   let title = T.pack $ show cnt
+            --   modGui $ UI.update "label" (over _2 (UI.setTitle title))
           where
             es = t^.tEvents
             modGui = modify' . over tGui
 
     render :: Render (GameT IO) Title
     render t = do
-      K.clearBy $ V4 250 250 250 255
+      clearBy $ V4 0.97 0.97 0.97 1
       --
-      K.printTest (P (V2 10 200)) color "- Joysticks"
-      vjs <- K.getJoysticks
-      let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
-      V.imapM_ (\i js -> K.printTest (P $ V2 10 (220 + i * 20)) color (showjs js)) vjs
+      -- K.printTest (V2 10 200) color "- Joysticks"
+      -- vjs <- K.getJoysticks
+      -- let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
+      -- V.imapM_ (\i js -> K.printTest (V2 10 (220 + i * 20)) color (showjs js)) vjs
       --
       UI.render $ t^.tGui
-      K.withRenderer $ \r -> do
-        let P pos = t^.tCursor.cursorPos
-        Prim.smoothCircle r pos 5 (V4 0 0 0 255)
+      -- K.withRenderer $ \r -> do
+      --   let P pos = t^.tCursor.cursorPos
+      --   Prim.smoothCircle r pos 5 (V4 0 0 0 255) -- Cursor
       return ()
-      where
-        color = V4 50 50 50 255
+      -- where
+      --   color = V3 50 50 50
 
     transit t = do
       when (isClicked nameMain) runMainScene
@@ -280,15 +283,15 @@ runMainScene =
       frame <- K.getFrame
       work frame $ g0 {gMyActions = as}
       where
-        work t g = do
-          K.setAlphaMod (gTexture g0) alpha
+        work t g =
+          -- K.setAlphaMod (gTexture g0) alpha
           execStateT go g0
           where
-            alpha = fromIntegral t
+            -- alpha = fromIntegral t
             go :: StateT MyData (KurokosT (GameT IO)) ()
             go = do
               mapM_ count $ gMyActions g
-              modify $ \g' -> g' { gDeg = fromIntegral (t `mod` 360) }
+              modify $ \g' -> g' { gDeg = fromIntegral t / 100 }
 
         count :: Action -> StateT MyData (KurokosT (GameT IO)) ()
         count Select = modify (\a -> let c = gCount a in a {gCount = c + 1})
@@ -297,27 +300,30 @@ runMainScene =
 
     render :: Render (GameT IO) MyData
     render (MyData tex deg cnt as) = do
-      t <- K.getFrame
-      K.clearBy $ V4 0 0 0 255
+      _t <- K.getFrame
+      clearBy $ V4 0 0 0 1
 
       K.withRenderer $ \r -> do
-        let rect = SDL.Rectangle (SDL.P $ V2 50 200) (V2 50 50)
-        SDL.copyEx r tex Nothing (Just rect) (realToFrac deg) Nothing (pure False)
+        -- let rect = SDL.Rectangle (SDL.P $ V2 50 200) (V2 50 50)
+        -- SDL.copyEx r tex Nothing (Just rect) (realToFrac deg) Nothing (pure False)
+        let rctx = G.RContext (V2 50 200) (V2 50 50) (Just deg) Nothing
+        G.renderTexture r tex rctx
 
-      K.withRenderer $ \r -> do
-        let p0 = V2 200 250
-            p1 = p0 + (round <$> (V2 dx dy ^* 30))
-              where
-                dx :: Double
-                dx = cos $ fromIntegral t / 5
-                dy = sin $ fromIntegral t / 5
-        Prim.thickLine r p0 p1 4 (V4 0 255 0 255)
 
-      K.printTest (P (V2 10 100)) color "Press Enter key to pause"
-      K.printTest (P (V2 10 120)) color "Press (Space|Shift) key!"
+      -- K.withRenderer $ \r -> do
+      --   let p0 = V2 200 250
+      --       p1 = p0 + (round <$> (V2 dx dy ^* 30))
+      --         where
+      --           dx :: Double
+      --           dx = cos $ fromIntegral t / 5
+      --           dy = sin $ fromIntegral t / 5
+      --   Prim.thickLine r p0 p1 4 (V4 0 255 0 255)
+
+      K.printTest (V2 10 100) color "Press Enter key to pause"
+      K.printTest (V2 10 120) color "Press (Space|Shift) key!"
       let progress = replicate cnt '>' ++ replicate (targetCount - cnt) '-'
-      K.printTest (P (V2 10 140)) color $ T.pack progress
-      K.printTest (P (V2 10 160)) color $ T.pack $ show as
+      K.printTest (V2 10 140) color $ T.pack progress
+      K.printTest (V2 10 160) color $ T.pack $ show as
       where
         color = V4 255 255 255 255
 
@@ -344,8 +350,8 @@ runPauseScene = K.runScene scene (Dummy [])
       Dummy . eventsToActions <$> K.getEvents
 
     render _ = do
-      K.clearBy $ V4 50 50 0 255
-      K.printTest (P (V2 10 100)) (V4 255 255 255 255) "PAUSE"
+      clearBy $ V4 0.2 0.2 0 1
+      K.printTest (V2 10 100) (V4 255 255 255 255) "PAUSE"
 
     transit d@(Dummy as)
       | Select `elem` as = K.end ()
@@ -354,3 +360,8 @@ runPauseScene = K.runScene scene (Dummy [])
 startScene :: KurokosT (GameT IO) ()
 startScene =
   runTitleScene
+
+clearBy :: MonadIO m => V4 Float -> m ()
+clearBy (V4 r g b a) = liftIO $ do
+  GL.clearColor $= GL.Color4 r g b a
+  GL.clear [GL.ColorBuffer]
