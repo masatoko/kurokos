@@ -4,14 +4,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
-module Scene
+module Scene.UITest
   ( runUITestScene
   ) where
 
--- import           Debug.Trace           (traceM)
-
--- import qualified Control.Concurrent.MVar      as MVar
--- import qualified Control.Exception            as E
 import           Control.Lens
 import           Control.Monad.Extra          (whenJust)
 import           Control.Monad.Reader
