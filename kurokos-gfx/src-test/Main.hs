@@ -2,21 +2,21 @@
 {-# LANGUAGE RecordWildCards   #-}
 module Main where
 
-import Control.Exception             (bracket)
-import           Control.Monad                 (unless, forM_)
-import           Control.Monad.IO.Class        (liftIO)
-import           Control.Monad.Managed         (managed, runManaged)
+import           Control.Exception         (bracket)
+import           Control.Monad             (unless)
+import           Control.Monad.IO.Class    (liftIO)
+import           Control.Monad.Managed     (managed, runManaged)
 
 import qualified SDL
 import           SDL.Event
 
-import qualified Graphics.GLUtil               as GLU
-import           Graphics.Rendering.OpenGL     (get, ($=))
-import qualified Graphics.Rendering.OpenGL     as GL
+import qualified Graphics.GLUtil           as GLU
+import           Graphics.Rendering.OpenGL (get, ($=))
+import qualified Graphics.Rendering.OpenGL as GL
 
-import Kurokos.Graphics.Vect
-import qualified Kurokos.Graphics              as G
-import qualified Kurokos.Graphics.Font         as Font
+import qualified Kurokos.Graphics          as G
+import qualified Kurokos.Graphics.Font     as Font
+import           Kurokos.Graphics.Vect
 
 main :: IO ()
 main = do
@@ -72,11 +72,11 @@ main = do
           GL.clear [GL.ColorBuffer]
           --
           let ctxTile = G.RContext (pure 10) (pure 128) Nothing Nothing
-          G.renderTexture (Just (P (V2 16 0), pure 16)) rndr tile ctxTile
+          G.renderTexture rndr tile (Just (P (V2 16 0), pure 16)) ctxTile
           --
           let ctx = G.RContext (pure 0) (pure i') Nothing Nothing
               tex = if i `mod` 60 < 30 then tex1 else tex2
-          G.renderTexture Nothing rndr tex ctx
+          G.renderTexture rndr tex Nothing ctx
           --
           G.renderText rndr (V2 100 0) texttex
           G.renderText rndr (V2 100 480) texttex

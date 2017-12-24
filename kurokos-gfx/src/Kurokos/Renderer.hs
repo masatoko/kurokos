@@ -59,22 +59,28 @@ freeRenderer Renderer{..} =
   doneFreeType rndrFreeType
   -- TODO: Implement others
 
--- | Render Texture with
-renderTexture :: Maybe (Point V2 Int, V2 Int) -> Renderer -> Texture -> RContext -> IO ()
-renderTexture mTexPos Renderer{..} tex rctx =
-  case mTexPos of
-    Nothing -> work $ shdrTexCoordVbo rndrBasicShader
-    Just (texCoord, texSize) -> do
-      buf <- Texture.newTexCoordVbo tex texCoord texSize
-      work buf
-      GL.deleteObjectName buf
+-- | Render Texture with BufferObject of texture coord
+-- You can make texture coord buffer object by `newTexCoordVbo`.
+renderTextureWithTexCoord :: Renderer -> Texture -> GL.BufferObject -> RContext -> IO ()
+renderTextureWithTexCoord Renderer{..} tex texCoordVbo rctx = do
+  Basic.setTexCoordVbo rndrBasicShader texCoordVbo
+  setTexture rndrBasicShader $ texObject tex
+  let mv = Render.mkModelViewForNormalized Cam.camForVertFlip rctx
+  Render.setModelView rndrBasicShader mv
+  Render.renderTextureShader rndrBasicShader
+
+-- | Render Texture
+-- If call with texture coord, GL.BufferObject will be generated and deleted after rendering.
+-- For fast rendering, use renderTextureWithTexCoord.
+renderTexture :: Renderer -> Texture -> Maybe (Point V2 Int, V2 Int) -> RContext -> IO ()
+renderTexture rndr tex Nothing rctx =
+  renderTextureWithTexCoord rndr tex buf rctx
   where
-    work texCoordVbo = do
-      Basic.setTexCoordVbo rndrBasicShader texCoordVbo
-      setTexture rndrBasicShader $ texObject tex
-      let mv = Render.mkModelViewForNormalized Cam.camForVertFlip rctx
-      Render.setModelView rndrBasicShader mv
-      Render.renderTextureShader rndrBasicShader
+    buf = shdrTexCoordVbo $ rndrBasicShader rndr
+renderTexture rndr tex (Just (texCoord, texSize)) rctx = do
+  buf <- Texture.newTexCoordVbo tex texCoord texSize
+  renderTextureWithTexCoord rndr tex buf rctx
+  GL.deleteObjectName buf
 
 -- | Render CharTexture list.
 renderText :: Foldable t => Renderer -> V2 Int -> t CharTexture -> IO ()
