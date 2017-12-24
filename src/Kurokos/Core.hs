@@ -55,6 +55,8 @@ import           Control.Monad.Trans.Control (ComposeSt, MonadBaseControl (..),
                                               MonadTransControl (..),
                                               defaultLiftBaseWith,
                                               defaultRestoreM)
+import           Data.Char                   (chr, ord)
+import           Data.Maybe                  (mapMaybe)
 import           Data.Text                   (Text)
 import qualified Data.Text                   as T
 import qualified Data.Vector                 as V
@@ -96,6 +98,7 @@ data KurokosEnv = KurokosEnv
   -- Resource
   , envSystemAssets     :: Asset.AssetManager
   , envSystemFont       :: Font.Font
+  , envAsciiTextures    :: V.Vector G.CharTexture
   -- Debug
   , envDebugPrintFps    :: Bool
   , envDebugPrintSystem :: Bool
@@ -103,7 +106,7 @@ data KurokosEnv = KurokosEnv
 
 data KurokosState = KurokosState
   {
-    kstMessages   :: [Text]
+    kstMessages   :: [String]
   , kstSdlEvents  :: [SDL.Event]
   , kstSceneState :: SceneState
   , kstJoysticks  :: V.Vector Joystick
@@ -154,9 +157,15 @@ withKurokos KurokosConfig{..} winConf go =
     (win, r, glContext) <- managed withWinRenderer
     assetManager <- managed $ E.bracket (Asset.newAssetManager r confSystemRawAsset)
                                         Asset.freeAssetManager
+    font <- case Asset.lookupFont confSystemFontId assetManager of
+              Nothing   -> liftIO $ E.throwIO $ userError $ "Missing system font: " ++ T.unpack confSystemFontId
+              Just font -> return font
+    ascii <- managed $
+      E.bracket (V.fromList <$> G.createTextTexture font 18 (V4 0 255 0 255) (T.pack $ map chr [0..127]))
+                (G.deleteTextTexture . V.toList)
     liftIO $ do
       initOthers
-      env <- mkEnv assetManager win r glContext
+      env <- mkEnv assetManager win r glContext font ascii
       let kst = KurokosState
             { kstMessages = []
             , kstSdlEvents = []
@@ -174,11 +183,8 @@ withKurokos KurokosConfig{..} winConf go =
     initOthers =
       SDL.setMouseLocationMode SDL.RelativeLocation
 
-    mkEnv assetManager win r glContext = do
+    mkEnv assetManager win r glContext font ascii = do
       mvar <- MVar.newMVar r
-      font <- case Asset.lookupFont confSystemFontId assetManager of
-                Nothing   -> E.throwIO $ userError $ "Missing system font: " ++ T.unpack confSystemFontId
-                Just font -> return font
       return KurokosEnv
         { envGraphFps = 60
         , envWindow = win
@@ -186,6 +192,7 @@ withKurokos KurokosConfig{..} winConf go =
         , envGLContext = glContext
         , envSystemAssets = assetManager
         , envSystemFont = font
+        , envAsciiTextures = ascii
         , envDebugPrintFps = confDebugPrintFPS
         , envDebugPrintSystem = confDebugPrintSystem
         }
@@ -302,7 +309,7 @@ runScene Scene{..} =
 
       -- Print meter
       p <- asks envDebugPrintSystem
-      when p $ printDebug . T.pack $
+      when p $ printDebug $
         if tWait > 0
           then
             let n = fromIntegral tWait'
@@ -319,7 +326,7 @@ runScene Scene{..} =
       p2 <- asks envDebugPrintFps
       when p2 $ do
         fps <- truncate <$> gets kstActualFps
-        printDebug . T.pack . show $ (fps :: Int)
+        printDebug . show $ (fps :: Int)
 
     advance :: SceneState -> SceneState
     advance s = s {frameCount = c + 1}
@@ -328,24 +335,22 @@ runScene Scene{..} =
 
     printMessages :: MonadIO m => KurokosT m ()
     printMessages = do
-      font <- asks envSystemFont
-      ts <- gets kstMessages
+      ts <- asks envAsciiTextures
+      msgs <- gets kstMessages
       modify $ \s -> s {kstMessages = []} -- Clear kstMessages
       withRenderer $ \r ->
-        foldM_ (work r font) 30 ts
+        foldM_ (work r ts) 30 msgs
       where
-        work r font y text =
-          liftIO $ do
-            E.bracket
-              (G.createTextTexture font 16 (V4 0 255 0 255) text)
-              G.deleteTextTexture
-              (G.renderText r (V2 8 y))
-            return $ y + 20
+        work r ts y cs = do
+          G.renderText r pos $ mapMaybe (\c -> ts V.!? ord c) cs
+          return $ y + 20
+          where
+            pos = V2 8 y
 
-printDebug :: Monad m => Text -> KurokosT m ()
-printDebug text
-  | T.null text = return ()
-  | otherwise   = modify $ \s -> s {kstMessages = text : kstMessages s}
+printDebug :: Monad m => String -> KurokosT m ()
+printDebug str
+  | null str  = return ()
+  | otherwise = modify $ \s -> s {kstMessages = str : kstMessages s}
 
 -- | Process events about system
 procEvents :: MonadIO m => [SDL.Event] -> KurokosT m ()
