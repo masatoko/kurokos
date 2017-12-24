@@ -16,7 +16,12 @@ module Kurokos.Graphics
   , Texture (..)
   , TextTexture
   , CharTexture
-  , charTexColor
+  , ctColor
+  , ctFontSize
+  , ctLeft
+  , ctTop
+  , ctAdvanceX
+  , ctAdvanceY
   -- ** Texture
   , readTexture
   , decodeTexture
