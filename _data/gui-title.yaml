@@ -10,6 +10,7 @@
   h: 50
 
 -
+  name: start
   type: button
   title:
     text: START

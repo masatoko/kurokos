@@ -33,8 +33,8 @@ data BirdState = BirdState
 
 makeLenses ''BirdState
 
-runMainScene :: K.KurokosT (GameT IO) ()
-runMainScene = do
+runGameScene :: K.KurokosT (GameT IO) ()
+runGameScene = do
   ast <- lift $ asks envAssets
   let Just bird = Asset.lookupTexture "bird-image" ast
   K.runScene (K.Scene update (render bird) transit) $ BirdState 0 0
