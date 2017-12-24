@@ -4,7 +4,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
-module Scene where
+module Scene
+  ( runTitleScene
+  ) where
 
 -- import           Debug.Trace           (traceM)
 
@@ -37,6 +39,8 @@ import           Import
 import           Graphics.Rendering.OpenGL    (($=))
 import qualified Graphics.Rendering.OpenGL    as GL
 
+import qualified Scene.Game
+
 data Dummy = Dummy [Action]
 
 data MyData = MyData
@@ -45,57 +49,6 @@ data MyData = MyData
   , gCount     :: !Int
   , gMyActions :: [Action]
   }
-
-data MouseScene = MouseScene
-  { _msLClicks :: [V2 CInt]
-  , _msRClicks :: [V2 CInt]
-  , _msActions :: [Action]
-  } deriving Show
-
-iniMouseSceneData :: MouseScene
-iniMouseSceneData = MouseScene [] [] []
-
-makeLenses ''MouseScene
-
-mouseScene :: Scene MouseScene (GameT IO) (Maybe Int)
-mouseScene = Scene update render transit
-  where
-    update s = do
-      es <- K.getEvents
-      let as = eventsToActions es
-      execStateT (mapM_ go es) $ s&msActions .~ as
-      where
-        go (SDL.MouseButtonEvent dt) = do
-          liftIO $ print dt
-          when (SDL.mouseButtonEventMotion dt == SDL.Pressed) $ do
-            let (P pos) = SDL.mouseButtonEventPos dt
-                pos' = fromIntegral <$> pos
-            case SDL.mouseButtonEventButton dt of
-              SDL.ButtonLeft  -> msLClicks %= (pos':)
-              SDL.ButtonRight -> msRClicks %= (pos':)
-              _               -> return ()
-        go _ = return ()
-
-    render _s =
-      -- P pos <- SDL.getAbsoluteMouseLocation
-      -- let pos' = fromIntegral <$> pos
-      -- K.withRenderer $ \r ->
-      --   Prim.smoothCircle r pos' 5 (V4 255 255 255 255)
-      --
-      -- K.withRenderer $ \r -> do
-      --   forM_ (s^.msLClicks) $ \p ->
-      --     Prim.fillCircle r p 5 (V4 255 255 0 255)
-      --   forM_ (s^.msRClicks) $ \p ->
-      --     Prim.fillCircle r p 5 (V4 255 0 255 255)
-      return ()
-
-    transit s
-      | Select `elem` as = K.end (Just n)
-      | Cancel `elem` as = K.end Nothing
-      | otherwise        = K.continue s
-      where
-        as = s^.msActions
-        n = length (s^.msLClicks) + length (s^.msRClicks)
 
 -- data UserVal = UserVal
 --   { _uvMVar :: MVar.MVar Int
@@ -139,7 +92,6 @@ runTitleScene =
     scene = Scene update render transit
 
     nameMain = "go-main"
-    nameMouse = "go-mouse"
 
     alloc = do
       guiYaml <- liftIO $ B.readFile "_data/gui-title.yaml"
@@ -164,7 +116,6 @@ runTitleScene =
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
         button1 <- UI.mkSingle (Just nameMain) Nothing pos1 size =<< UI.newButton "font-m" 16 "Next: Main Scene"
-        button2 <- UI.mkSingle (Just nameMouse) Nothing pos2 size =<< UI.newButton "font-m" 16 "Push: Mouse Scene"
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
@@ -185,7 +136,7 @@ runTitleScene =
         clickableArea <- UI.mkSingle (Just "clickable") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
         fill <- UI.mkSingle (Just "fill") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
         --
-        UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, ctn1', fill, ctn2']
+        UI.prependRoot $ mconcat [clickableArea, label, button1, img, ctn1', fill, ctn2']
         -- UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, userWidget, ctn1', fill, ctn2']
         -- From file
         UI.appendRoot =<< UI.parseWidgetTree guiYaml
@@ -255,111 +206,102 @@ runTitleScene =
       --   color = V3 50 50 50
 
     transit t = do
-      when (isClicked nameMain) runMainScene
-      when (isClicked nameMouse) $ do
-        mNum <- K.runScene mouseScene iniMouseSceneData
-        liftIO $ case mNum of
-                  Nothing -> putStrLn "Cancel on mouse scene"
-                  Just n  -> putStrLn $ "Clicked " ++ show n ++ " times!"
+      when (isClicked nameMain) Scene.Game.runMainScene
       K.continue t
       where
         isClicked name = isJust $ UI.clickedOn UI.GuiActLeft name $ t^.tEvents
 
-runMainScene :: KurokosT (GameT IO) ()
-runMainScene =
-  K.runScene scene =<< allocGame
-  where
-    scene = Scene update render transit
-
-    allocGame :: KurokosT (GameT IO) MyData
-    allocGame = do
-      ast <- lift $ asks envAssets
-      let Just img = Asset.lookupTexture "sample-image" ast
-      return $ MyData img 0 0 []
-
-    update :: Update (GameT IO) MyData
-    update g0 = do
-      as <- eventsToActions <$> K.getEvents
-      frame <- K.getFrame
-      work frame $ g0 {gMyActions = as}
-      where
-        work t g =
-          -- K.setAlphaMod (gTexture g0) alpha
-          execStateT go g0
-          where
-            -- alpha = fromIntegral t
-            go :: StateT MyData (KurokosT (GameT IO)) ()
-            go = do
-              mapM_ count $ gMyActions g
-              modify $ \g' -> g' { gDeg = fromIntegral t / 100 }
-
-        count :: Action -> StateT MyData (KurokosT (GameT IO)) ()
-        count Select = modify (\a -> let c = gCount a in a {gCount = c + 1})
-        count Cancel = modify (\a -> let c = gCount a in a {gCount = c - 1})
-
-
-    render :: Render (GameT IO) MyData
-    render (MyData tex deg cnt as) = do
-      _t <- K.getFrame
-      clearBy $ V4 0 0 0 1
-
-      K.withRenderer $ \r -> do
-        -- let rect = SDL.Rectangle (SDL.P $ V2 50 200) (V2 50 50)
-        -- SDL.copyEx r tex Nothing (Just rect) (realToFrac deg) Nothing (pure False)
-        let rctx = G.RContext (V2 50 200) (V2 50 50) (Just deg) Nothing
-        G.renderTexture r tex Nothing rctx
-
-
-      -- K.withRenderer $ \r -> do
-      --   let p0 = V2 200 250
-      --       p1 = p0 + (round <$> (V2 dx dy ^* 30))
-      --         where
-      --           dx :: Double
-      --           dx = cos $ fromIntegral t / 5
-      --           dy = sin $ fromIntegral t / 5
-      --   Prim.thickLine r p0 p1 4 (V4 0 255 0 255)
-
-      K.printTest (V2 10 100) color "Press Enter key to pause"
-      K.printTest (V2 10 120) color "Press (Space|Shift) key!"
-      let progress = replicate cnt '>' ++ replicate (targetCount - cnt) '-'
-      K.printTest (V2 10 140) color progress
-      K.printTest (V2 10 160) color $ show as
-      where
-        color = V4 255 255 255 255
-
-    transit :: K.Transit (GameT IO) MyData ()
-    transit g
-      | cnt > targetCount = runTitleScene >> K.end ()
-      | Select `elem` as  = runPauseScene >> K.end ()
-      | Cancel `elem` as  = K.end ()
-      | otherwise         = K.continue g
-      where
-        cnt = gCount g
-        as = gMyActions g
-
-    targetCount = 5 :: Int
-
-
-runPauseScene :: KurokosT (GameT IO) ()
-runPauseScene = K.runScene scene (Dummy [])
-  where
-    scene :: Scene Dummy (GameT IO) ()
-    scene = Scene update render transit
-
-    update _ =
-      Dummy . eventsToActions <$> K.getEvents
-
-    render _ = do
-      clearBy $ V4 0.2 0.2 0 1
-      K.printTest (V2 10 100) (V4 255 255 255 255) "PAUSE"
-
-    transit d@(Dummy as)
-      | Select `elem` as = K.end ()
-      | otherwise        = K.continue d
-
-startScene :: KurokosT (GameT IO) ()
-startScene =
-  runTitleScene
+-- runMainScene :: KurokosT (GameT IO) ()
+-- runMainScene =
+--   K.runScene scene =<< allocGame
+--   where
+--     scene = Scene update render transit
+--
+--     allocGame :: KurokosT (GameT IO) MyData
+--     allocGame = do
+--       ast <- lift $ asks envAssets
+--       let Just img = Asset.lookupTexture "sample-image" ast
+--       return $ MyData img 0 0 []
+--
+--     update :: Update (GameT IO) MyData
+--     update g0 = do
+--       as <- eventsToActions <$> K.getEvents
+--       frame <- K.getFrame
+--       work frame $ g0 {gMyActions = as}
+--       where
+--         work t g =
+--           -- K.setAlphaMod (gTexture g0) alpha
+--           execStateT go g0
+--           where
+--             -- alpha = fromIntegral t
+--             go :: StateT MyData (KurokosT (GameT IO)) ()
+--             go = do
+--               mapM_ count $ gMyActions g
+--               modify $ \g' -> g' { gDeg = fromIntegral t / 100 }
+--
+--         count :: Action -> StateT MyData (KurokosT (GameT IO)) ()
+--         count Select = modify (\a -> let c = gCount a in a {gCount = c + 1})
+--         count Cancel = modify (\a -> let c = gCount a in a {gCount = c - 1})
+--
+--
+--     render :: Render (GameT IO) MyData
+--     render (MyData tex deg cnt as) = do
+--       _t <- K.getFrame
+--       clearBy $ V4 0 0 0 1
+--
+--       K.withRenderer $ \r -> do
+--         -- let rect = SDL.Rectangle (SDL.P $ V2 50 200) (V2 50 50)
+--         -- SDL.copyEx r tex Nothing (Just rect) (realToFrac deg) Nothing (pure False)
+--         let rctx = G.RContext (V2 50 200) (V2 50 50) (Just deg) Nothing
+--         G.renderTexture r tex Nothing rctx
+--
+--
+--       -- K.withRenderer $ \r -> do
+--       --   let p0 = V2 200 250
+--       --       p1 = p0 + (round <$> (V2 dx dy ^* 30))
+--       --         where
+--       --           dx :: Double
+--       --           dx = cos $ fromIntegral t / 5
+--       --           dy = sin $ fromIntegral t / 5
+--       --   Prim.thickLine r p0 p1 4 (V4 0 255 0 255)
+--
+--       K.printTest (V2 10 100) color "Press Enter key to pause"
+--       K.printTest (V2 10 120) color "Press (Space|Shift) key!"
+--       let progress = replicate cnt '>' ++ replicate (targetCount - cnt) '-'
+--       K.printTest (V2 10 140) color progress
+--       K.printTest (V2 10 160) color $ show as
+--       where
+--         color = V4 255 255 255 255
+--
+--     transit :: K.Transit (GameT IO) MyData ()
+--     transit g
+--       | cnt > targetCount = runTitleScene >> K.end ()
+--       | Select `elem` as  = runPauseScene >> K.end ()
+--       | Cancel `elem` as  = K.end ()
+--       | otherwise         = K.continue g
+--       where
+--         cnt = gCount g
+--         as = gMyActions g
+--
+--     targetCount = 5 :: Int
+--
+--
+-- runPauseScene :: KurokosT (GameT IO) ()
+-- runPauseScene = K.runScene scene (Dummy [])
+--   where
+--     scene :: Scene Dummy (GameT IO) ()
+--     scene = Scene update render transit
+--
+--     update _ =
+--       Dummy . eventsToActions <$> K.getEvents
+--
+--     render _ = do
+--       clearBy $ V4 0.2 0.2 0 1
+--       K.printTest (V2 10 100) (V4 255 255 255 255) "PAUSE"
+--
+--     transit d@(Dummy as)
+--       | Select `elem` as = K.end ()
+--       | otherwise        = K.continue d
 
 clearBy :: MonadIO m => V4 Float -> m ()
 clearBy (V4 r g b a) = liftIO $ do
