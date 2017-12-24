@@ -2,7 +2,7 @@ module Kurokos.Graphics.Shader where
 
 import qualified Data.Vector.Storable          as V
 import           Foreign.C.Types               (CInt)
-import           Foreign.Storable              (sizeOf)
+-- import           Foreign.Storable              (sizeOf)
 import           Linear
 
 import qualified Graphics.GLUtil               as GLU
@@ -39,8 +39,8 @@ setupVec2 (AttribVar TagVec2 loc) ps = do
   GL.vertexAttribArray loc $= GL.Enabled
   return buf
   where
-    -- stride = 0
-    stride =  fromIntegral $ sizeOf (undefined :: GL.GLfloat) * 2
+    stride = 0
+    -- stride =  fromIntegral $ sizeOf (undefined :: GL.GLfloat) * 2
     vad = GL.VertexArrayDescriptor 2 GL.Float stride GLU.offset0
 
 setupSampler2D :: UniformVar TagSampler2D -> IO ()
@@ -54,8 +54,10 @@ class Shader a where
   shdrProjection :: a -> UniformVar TagMat4
 
 class TextureShader a where
-  shdrVAO       :: a -> GL.VertexArrayObject
-  shdrSampler2D :: a -> UniformVar TagSampler2D
+  shdrVAO          :: a -> GL.VertexArrayObject
+  shdrTexCoordVbo  :: a -> GL.BufferObject
+  shdrTexCoordAttr :: a -> AttribVar TagVec2
+  shdrSampler2D    :: a -> UniformVar TagSampler2D
 
 class ColorShader a where
   shdrColor :: a -> UniformVar TagVec4

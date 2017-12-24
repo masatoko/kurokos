@@ -12,19 +12,20 @@ import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
+import           Kurokos.Graphics.Util (makeVAO)
 import           Kurokos.Graphics.Types
-
 import           Kurokos.Graphics.Shader
 
 data TextShader = TextShader
   { sProgram          :: GL.Program
   -- , sAttrCoord        :: AttribVar TagVec2
-  -- , sAttrTexCoord     :: AttribVar TagVec2
+  , sAttrTexCoord     :: AttribVar TagVec2
   , sUniformModelView :: UniformVar TagMat4
   , sUniformProj      :: UniformVar TagMat4
   , sColorVar         :: UniformVar TagVec4
   , sUniformTexture   :: UniformVar TagSampler2D
   , sVao              :: GL.VertexArrayObject
+  , sTexCoordVbo      :: GL.BufferObject
   }
 
 instance Shader TextShader where
@@ -33,8 +34,10 @@ instance Shader TextShader where
   shdrProjection = sUniformProj
 
 instance TextureShader TextShader where
-  shdrVAO       = sVao
-  shdrSampler2D = sUniformTexture
+  shdrVAO          = sVao
+  shdrTexCoordVbo  = sTexCoordVbo
+  shdrTexCoordAttr = sAttrTexCoord
+  shdrSampler2D    = sUniformTexture
 
 instance ColorShader TextShader where
   shdrColor = sColorVar
@@ -50,24 +53,26 @@ newTextShader = do
       uniformTexture = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
   -- * Setup
   setupSampler2D uniformTexture
-  vao <- GLU.makeVAO $ do
+  (buf,vao) <- makeVAO $ do
           setupVec2 attrCoord $ V.fromList vtxPs
-          setupVec2 attrTexCoord $ V.fromList texPs
+          buf <- setupVec2 attrTexCoord $ V.fromList texPs
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
+          return buf
   -- Initial Uniform
   withProgram (GLU.program sp) $
     setUniformVec4 uniformColor (V4 1 1 1 1)
   return $ TextShader
     (GLU.program sp)
     -- attrCoord
-    -- attrTexCoord
+    attrTexCoord
     uniformModelView
     uniformProj
     uniformColor
     uniformTexture
     vao
+    buf
   where
     vtxPs :: [GL.GLfloat]
     vtxPs = [0, 0, 1, 0, 0, 1, 1, 1]

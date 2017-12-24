@@ -4,6 +4,8 @@ module Kurokos.Graphics.Texture
   , readTexture
   , decodeTexture
   , deleteTexture
+  --
+  , newTexCoordVbo
   ) where
 
 import qualified Codec.Picture             as Pic
@@ -14,6 +16,7 @@ import           Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
 import           Kurokos.Graphics.Types    (Texture (..))
+import           Kurokos.Graphics.Vect
 
 readTexture :: FilePath -> IO Texture
 readTexture fpath =
@@ -42,3 +45,18 @@ initTexture tex = do
   GL.textureFilter GL.Texture2D $= ((GL.Nearest, Nothing), GL.Nearest)
   GLU.texture2DWrap $= (GL.Mirrored, GL.ClampToEdge)
   GL.textureBinding GL.Texture2D $= Nothing
+
+newTexCoordVbo :: Texture -> Point V2 Int -> V2 Int -> IO GL.BufferObject
+newTexCoordVbo (Texture _ texw texh) pos size =
+  GLU.makeBuffer GL.ArrayBuffer ps
+  where
+    texw' = fromIntegral texw
+    texh' = fromIntegral texh
+    P (V2 x y) = fromIntegral <$> pos
+    V2 w h = fromIntegral <$> size
+    x1 = x / texw'
+    y1 = y / texh'
+    x2 = (x + w) / texw'
+    y2 = (y + h) / texh'
+    ps :: [GL.GLfloat]
+    ps = [x1, y1, x2, y1, x1, y2, x2, y2]

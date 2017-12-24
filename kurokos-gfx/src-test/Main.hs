@@ -3,7 +3,7 @@
 module Main where
 
 import Control.Exception             (bracket)
-import           Control.Monad                 (unless)
+import           Control.Monad                 (unless, forM_)
 import           Control.Monad.IO.Class        (liftIO)
 import           Control.Monad.Managed         (managed, runManaged)
 
@@ -39,6 +39,7 @@ main = do
       let texttex = text1 ++ text2
 
       rndr <- managed $ bracket (G.newRenderer winSize) G.freeRenderer
+      tile <- managed $ bracket (G.readTexture "_data/tile.png") G.deleteTexture
       tex1 <- managed $ bracket (G.readTexture "_data/in_transit.png") G.deleteTexture
       tex2 <- managed $ bracket (G.readTexture "_data/panorama.png") G.deleteTexture
       let ps = map (P . uncurry V2) [(0,0), (100,0), (50,100)]
@@ -46,7 +47,7 @@ main = do
       rect <- managed $ bracket (G.newRectangle rndr (V2 40 20)) G.freePrim
       fillRect <- managed $ bracket (G.newFillRectangle rndr (V2 40 20)) G.freePrim
       --
-      liftIO $ loop window rndr tex1 tex2 texttex poly rect fillRect
+      liftIO $ loop window rndr tile tex1 tex2 texttex poly rect fillRect
   where
     winConf =
       SDL.defaultWindow
@@ -62,7 +63,7 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 4 0
         }
 
-    loop win rndr tex1 tex2 texttex poly rect fillRect = go (0 :: Integer)
+    loop win rndr tile tex1 tex2 texttex poly rect fillRect = go (0 :: Integer)
       where
         go i = do
           let i' = fromIntegral i
@@ -70,9 +71,12 @@ main = do
           events <- SDL.pollEvent
           GL.clear [GL.ColorBuffer]
           --
+          let ctxTile = G.RContext (pure 10) (pure 128) Nothing Nothing
+          G.renderTexture (Just (P (V2 16 0), pure 16)) rndr tile ctxTile
+          --
           let ctx = G.RContext (pure 0) (pure i') Nothing Nothing
               tex = if i `mod` 60 < 30 then tex1 else tex2
-          G.renderTexture rndr tex ctx
+          G.renderTexture Nothing rndr tex ctx
           --
           G.renderText rndr (V2 100 0) texttex
           G.renderText rndr (V2 100 480) texttex
