@@ -20,9 +20,9 @@ import           Control.Monad.Trans.Resource
 import qualified Data.ByteString.Char8        as B
 import           Data.Maybe                   (isJust)
 import qualified Data.Text                    as T
+import           Linear.V4
 
 import qualified SDL
-import           Linear.V4
 
 import qualified Kurokos                      as K
 import qualified Kurokos.Asset                as Asset

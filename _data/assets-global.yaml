@@ -3,3 +3,8 @@ files:
     id: sample-image
     dir: _data/
     file: img.png
+  -
+    id: bird-image
+    dir: _data/
+    file: bird.png
+
