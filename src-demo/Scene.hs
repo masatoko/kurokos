@@ -5,7 +5,7 @@
 {-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE TemplateHaskell   #-}
 module Scene
-  ( runTitleScene
+  ( runUITestScene
   ) where
 
 -- import           Debug.Trace           (traceM)
@@ -73,7 +73,7 @@ data MyData = MyData
 --     cnt <- MVar.readMVar mvar
 --     return $ cnt `mod` 10 == 0
 
-data Title = Title
+data UITest = UITest
   { _tGui    :: UI.GUI
   , _tCursor :: UI.Cursor
   -- , _tUserVal :: UserVal
@@ -81,10 +81,10 @@ data Title = Title
   , _tCnt    :: Int
   }
 
-makeLenses ''Title
+makeLenses ''UITest
 
-runTitleScene :: KurokosT (GameT IO) ()
-runTitleScene =
+runUITestScene :: KurokosT (GameT IO) ()
+runUITestScene =
   runResourceT $ do
     t <- alloc
     lift $ runScene scene t
@@ -149,10 +149,10 @@ runTitleScene =
       liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui'
       liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui'
       cursor <- UI.newCursor
-      return $ Title gui' cursor [] 0
-      -- return $ Title gui' cursor userVal [] 0
+      return $ UITest gui' cursor [] 0
+      -- return $ UITest gui' cursor userVal [] 0
 
-    update :: Update (GameT IO) Title
+    update :: Update (GameT IO) UITest
     update title0 = do
       es <- K.getEvents
       -- liftIO $ MVar.modifyMVar_ (title0^.tUserVal.uvMVar) (return . (+1)) -- Update UserVal
@@ -188,7 +188,7 @@ runTitleScene =
             es = t^.tEvents
             modGui = modify' . over tGui
 
-    render :: Render (GameT IO) Title
+    render :: Render (GameT IO) UITest
     render t = do
       clearBy $ V4 0.97 0.97 0.97 1
       --
@@ -210,98 +210,6 @@ runTitleScene =
       K.continue t
       where
         isClicked name = isJust $ UI.clickedOn UI.GuiActLeft name $ t^.tEvents
-
--- runMainScene :: KurokosT (GameT IO) ()
--- runMainScene =
---   K.runScene scene =<< allocGame
---   where
---     scene = Scene update render transit
---
---     allocGame :: KurokosT (GameT IO) MyData
---     allocGame = do
---       ast <- lift $ asks envAssets
---       let Just img = Asset.lookupTexture "sample-image" ast
---       return $ MyData img 0 0 []
---
---     update :: Update (GameT IO) MyData
---     update g0 = do
---       as <- eventsToActions <$> K.getEvents
---       frame <- K.getFrame
---       work frame $ g0 {gMyActions = as}
---       where
---         work t g =
---           -- K.setAlphaMod (gTexture g0) alpha
---           execStateT go g0
---           where
---             -- alpha = fromIntegral t
---             go :: StateT MyData (KurokosT (GameT IO)) ()
---             go = do
---               mapM_ count $ gMyActions g
---               modify $ \g' -> g' { gDeg = fromIntegral t / 100 }
---
---         count :: Action -> StateT MyData (KurokosT (GameT IO)) ()
---         count Select = modify (\a -> let c = gCount a in a {gCount = c + 1})
---         count Cancel = modify (\a -> let c = gCount a in a {gCount = c - 1})
---
---
---     render :: Render (GameT IO) MyData
---     render (MyData tex deg cnt as) = do
---       _t <- K.getFrame
---       clearBy $ V4 0 0 0 1
---
---       K.withRenderer $ \r -> do
---         -- let rect = SDL.Rectangle (SDL.P $ V2 50 200) (V2 50 50)
---         -- SDL.copyEx r tex Nothing (Just rect) (realToFrac deg) Nothing (pure False)
---         let rctx = G.RContext (V2 50 200) (V2 50 50) (Just deg) Nothing
---         G.renderTexture r tex Nothing rctx
---
---
---       -- K.withRenderer $ \r -> do
---       --   let p0 = V2 200 250
---       --       p1 = p0 + (round <$> (V2 dx dy ^* 30))
---       --         where
---       --           dx :: Double
---       --           dx = cos $ fromIntegral t / 5
---       --           dy = sin $ fromIntegral t / 5
---       --   Prim.thickLine r p0 p1 4 (V4 0 255 0 255)
---
---       K.printTest (V2 10 100) color "Press Enter key to pause"
---       K.printTest (V2 10 120) color "Press (Space|Shift) key!"
---       let progress = replicate cnt '>' ++ replicate (targetCount - cnt) '-'
---       K.printTest (V2 10 140) color progress
---       K.printTest (V2 10 160) color $ show as
---       where
---         color = V4 255 255 255 255
---
---     transit :: K.Transit (GameT IO) MyData ()
---     transit g
---       | cnt > targetCount = runTitleScene >> K.end ()
---       | Select `elem` as  = runPauseScene >> K.end ()
---       | Cancel `elem` as  = K.end ()
---       | otherwise         = K.continue g
---       where
---         cnt = gCount g
---         as = gMyActions g
---
---     targetCount = 5 :: Int
---
---
--- runPauseScene :: KurokosT (GameT IO) ()
--- runPauseScene = K.runScene scene (Dummy [])
---   where
---     scene :: Scene Dummy (GameT IO) ()
---     scene = Scene update render transit
---
---     update _ =
---       Dummy . eventsToActions <$> K.getEvents
---
---     render _ = do
---       clearBy $ V4 0.2 0.2 0 1
---       K.printTest (V2 10 100) (V4 255 255 255 255) "PAUSE"
---
---     transit d@(Dummy as)
---       | Select `elem` as = K.end ()
---       | otherwise        = K.continue d
 
 clearBy :: MonadIO m => V4 Float -> m ()
 clearBy (V4 r g b a) = liftIO $ do
