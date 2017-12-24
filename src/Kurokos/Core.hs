@@ -267,7 +267,6 @@ runScene Scene{..} =
                             , kstSceneState = sst0 } -- For getFrame
       a1 <- sceneUpdate a0
       -- Rendering
-      preRender
       sceneRender a1
       -- updateFPS
       printSystemState
@@ -314,12 +313,7 @@ runScene Scene{..} =
           then
             let n = fromIntegral tWait'
             in printf "%02d" n ++ " " ++ replicate n '.'
-          else "No Wait"
-
-    preRender :: MonadIO m => KurokosT m ()
-    preRender = liftIO $ do
-      GL.clearColor $= GL.Color4 0 0 0 1
-      GL.clear [GL.ColorBuffer]
+          else "Busy!"
 
     printSystemState :: MonadIO m => KurokosT m ()
     printSystemState = do
