@@ -322,8 +322,8 @@ runMainScene =
       K.printTest (V2 10 100) color "Press Enter key to pause"
       K.printTest (V2 10 120) color "Press (Space|Shift) key!"
       let progress = replicate cnt '>' ++ replicate (targetCount - cnt) '-'
-      K.printTest (V2 10 140) color $ T.pack progress
-      K.printTest (V2 10 160) color $ T.pack $ show as
+      K.printTest (V2 10 140) color $ progress
+      K.printTest (V2 10 160) color $ show as
       where
         color = V4 255 255 255 255
 
