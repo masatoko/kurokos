@@ -146,6 +146,21 @@ getContextColorOfWidget w = do
     Left err -> E.throwIO $ userError err
     Right a  -> return a
 
+newCommonResource :: (RenderEnv m, MonadIO m) => V2 Int -> m CommonResource
+newCommonResource size =
+  withRenderer $ \r ->
+    CmnRsc <$> G.newFillRectangle r size'
+           <*> G.newRectangle r size'
+           <*> pure []
+  where
+    size' = fromIntegral <$> size
+
+freeCommonResource :: CommonResource -> IO ()
+freeCommonResource CmnRsc{..} = do
+  G.freePrim cmnrscRectFill
+  G.freePrim cmnrscRectBorder
+  G.deleteTextTexture cmnrscTextTex
+
 mkSingle :: (RenderEnv m, MonadIO m)
   => Maybe WTName -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
 mkSingle mName mColor pos size w = do
@@ -157,8 +172,9 @@ mkSingle mName mColor pos size w = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
+  cmnRsc <- lift $ newCommonResource (pure 1)
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
-  let ctx = WContext ident mName Nothing (attribOf w) True True iniWidgetState ctxCol pos' size'
+  let ctx = WContext ident mName Nothing (attribOf w) True True iniWidgetState cmnRsc ctxCol pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
@@ -172,9 +188,10 @@ mkContainer mName ct mColor pos size = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
+  cmnRsc <- lift $ newCommonResource (pure 1)
   let w = Transparent
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
-  let ctx = WContext ident mName (Just ct) (attribOf w) True True iniWidgetState ctxCol pos' size'
+  let ctx = WContext ident mName (Just ct) (attribOf w) True True iniWidgetState cmnRsc ctxCol pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
@@ -237,9 +254,12 @@ readyRender g = do
       size <- case evalExp2 vmap' usize of
               Left err -> E.throw $ userError err
               Right v  -> return v
+      liftIO . freeCommonResource $ ctx^.ctxCmnRsc
+      cmnrsc' <- newCommonResource $ fromIntegral <$> size
       let ctx' = ctx & ctxNeedsRender .~ False
                      & ctxWidgetState . wstPos .~ pos
                      & ctxWidgetState . wstSize .~ size
+                     & ctxCmnRsc .~ cmnrsc'
       return (ctx', widget)
       where
         upos = ctx^.ctxUPos
@@ -258,9 +278,10 @@ render g =
   where
     go r (ctx, widget)
       | ctx^.ctxNeedsRender            = E.throwIO $ userError "Call GUI.readyRender before GUI.render!"
-      | ctx^.ctxWidgetState.wstVisible = renderWidget r pos size wcol widget
+      | ctx^.ctxWidgetState.wstVisible = renderWidget r pos size wcol cmnrsc widget
       | otherwise                      = return ()
         where
           P pos = fromIntegral <$> ctx^.ctxWidgetState.wstGlobalPos
           size = fromIntegral <$> ctx^.ctxWidgetState^.wstSize
           wcol = optimumColor ctx
+          cmnrsc = ctx^.ctxCmnRsc

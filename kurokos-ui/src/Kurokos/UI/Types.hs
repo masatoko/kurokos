@@ -87,6 +87,12 @@ keyHeight    = "height"
 keyWinWidth  = "winwidth"
 keyWinHeight = "winheight"
 
+data CommonResource = CmnRsc
+  { cmnrscRectFill   :: G.Prim
+  , cmnrscRectBorder :: G.Prim
+  , cmnrscTextTex    :: G.TextTexture
+  }
+
 data WContext = WContext
   { _ctxIdent         :: WTIdent
   , _ctxName          :: Maybe WTName
@@ -95,6 +101,7 @@ data WContext = WContext
   , _ctxNeedsLayout   :: Bool
   , _ctxNeedsRender   :: Bool
   , _ctxWidgetState   :: WidgetState
+  , _ctxCmnRsc        :: CommonResource
   , _ctxContextColor  :: ContextColor
   , _ctxUPos          :: V2 Exp
   , _ctxUSize         :: V2 Exp

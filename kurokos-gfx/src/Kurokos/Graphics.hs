@@ -27,6 +27,7 @@ module Kurokos.Graphics
   , createTextTexture
   , deleteTextTexture
   -- ** Primitive
+  , Prim
   , drawPrim
   , setPrimColor
   , newPrim
