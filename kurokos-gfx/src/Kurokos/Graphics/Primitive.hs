@@ -41,7 +41,10 @@ drawPrim rndr pos Prim{..} = do
     mv = mkModelView Cam.camForVertFlip pos
 
 setPrimColor :: Renderer -> Color -> IO ()
-setPrimColor rndr = setColor (rndrPrimShader rndr)
+setPrimColor rndr color =
+  setColor (rndrPrimShader rndr) color'
+  where
+    color' = (/ 255) . fromIntegral <$> color
 
 -- Make
 

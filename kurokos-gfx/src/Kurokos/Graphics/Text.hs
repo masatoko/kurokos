@@ -117,9 +117,11 @@ createCharTexture face size color char = do
   top  <- fromIntegral <$> peek (FT.bitmap_top slot)
   FT.FT_Vector advanceX advanceY <- peek $ FT.advance slot
   return $ CharTexture
-    (Texture tex w h) color size left top
+    (Texture tex w h) color' size left top
     (fromIntegral advanceX / 64)
     (fromIntegral advanceY / 64)
+  where
+    color' = (/ 255) . fromIntegral <$> color
 
 newBoundTexUnit :: Int -> IO GL.TextureObject
 newBoundTexUnit u = do

@@ -34,8 +34,7 @@ module Kurokos.Graphics.Font
   ) where
 
 import qualified Control.Exception                                   as E
-import           Control.Monad                                       (foldM_,
-                                                                      unless)
+import           Control.Monad                                       (foldM_)
 import           Control.Monad.IO.Class                              (MonadIO,
                                                                       liftIO)
 import qualified Data.ByteString                                     as BS
@@ -52,7 +51,6 @@ import           Foreign.Storable                                    (peek,
 import qualified Graphics.Rendering.FreeType.Internal                as FT
 import qualified Graphics.Rendering.FreeType.Internal.Face           as FT
 import qualified Graphics.Rendering.FreeType.Internal.Library        as FT
-import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 
 import           Kurokos.Graphics.Util                               (throwIfNot0)
 

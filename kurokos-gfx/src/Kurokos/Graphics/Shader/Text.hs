@@ -2,7 +2,6 @@
 module Kurokos.Graphics.Shader.Text
   ( TextShader
   , newTextShader
-  , setColor
   ) where
 
 import qualified Data.ByteString           as BS

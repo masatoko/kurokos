@@ -1,7 +1,6 @@
 module Kurokos.Graphics.Shader where
 
 import qualified Data.Vector.Storable          as V
-import           Data.Word                     (Word8)
 import           Foreign.C.Types               (CInt)
 import           Foreign.Storable              (sizeOf)
 import           Linear
@@ -80,12 +79,10 @@ setTexture shdr tex =
   withProgram (shdrProgram shdr) $
     setUniformSampler2D (shdrSampler2D shdr) tex
 
-setColor :: (ColorShader a, Shader a) => a -> V4 Word8 -> IO ()
+setColor :: (ColorShader a, Shader a) => a -> V4 Float -> IO ()
 setColor shdr color =
   withProgram (shdrProgram shdr) $
-    setUniformVec4 (shdrColor shdr) color'
-  where
-    color' = (/ 255) . fromIntegral <$> color
+    setUniformVec4 (shdrColor shdr) color
 
 -- Util
 withProgram :: GL.Program -> IO a -> IO a

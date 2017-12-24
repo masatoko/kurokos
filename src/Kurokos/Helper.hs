@@ -14,8 +14,7 @@ import           Kurokos.Core
 import qualified Kurokos.Graphics     as G
 
 printTest :: MonadIO m => V2 Int -> V4 Word8 -> String -> KurokosT m ()
-printTest pos color cs = do
+printTest pos _color cs = do
   ts <- asks envAsciiTextures
   let text = mapMaybe (\c -> ts V.!? ord c) cs
-      -- text' = map (\cx -> G._ctColor ct .~ color) text
   withRenderer $ \r -> G.renderText r pos text

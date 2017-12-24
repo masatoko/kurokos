@@ -53,7 +53,7 @@ type TextTexture = [CharTexture]
 
 data CharTexture = CharTexture
   { ctTexture   :: Texture
-  , _ctColor    :: Color
+  , _ctColor    :: V4 Float
   , _ctFontSize :: FontSize
   , _ctLeft     :: Int
   , _ctTop      :: Int

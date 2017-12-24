@@ -17,7 +17,7 @@ import qualified Graphics.Rendering.OpenGL    as GL
 
 import qualified Kurokos.Graphics.Camera      as Cam
 import           Kurokos.Graphics.Shader
-import           Kurokos.Graphics.Shader.Text (TextShader, setColor)
+import           Kurokos.Graphics.Shader.Text (TextShader)
 import           Kurokos.Graphics.Types
 
 setModelView :: Shader a => a -> M44 Float -> IO ()
