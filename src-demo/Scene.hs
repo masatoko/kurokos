@@ -307,7 +307,7 @@ runMainScene =
         -- let rect = SDL.Rectangle (SDL.P $ V2 50 200) (V2 50 50)
         -- SDL.copyEx r tex Nothing (Just rect) (realToFrac deg) Nothing (pure False)
         let rctx = G.RContext (V2 50 200) (V2 50 50) (Just deg) Nothing
-        G.renderTexture r tex rctx
+        G.renderTexture r tex Nothing rctx
 
 
       -- K.withRenderer $ \r -> do
@@ -322,7 +322,7 @@ runMainScene =
       K.printTest (V2 10 100) color "Press Enter key to pause"
       K.printTest (V2 10 120) color "Press (Space|Shift) key!"
       let progress = replicate cnt '>' ++ replicate (targetCount - cnt) '-'
-      K.printTest (V2 10 140) color $ progress
+      K.printTest (V2 10 140) color progress
       K.printTest (V2 10 160) color $ show as
       where
         color = V4 255 255 255 255

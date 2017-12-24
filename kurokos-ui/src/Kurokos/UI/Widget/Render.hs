@@ -34,7 +34,7 @@ renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Label{} = do
 renderWidget r pos parentSize WidgetColor{..} CmnRsc{..} (ImageView image) = do
   let size = fromIntegral <$> parentSize
       rctx = G.RContext pos size Nothing Nothing
-  G.renderTexture r image rctx
+  G.renderTexture r image Nothing rctx
 
 renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Button{} = do
   renderBackAndBorder r pos wc cmnrsc
