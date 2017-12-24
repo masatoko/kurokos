@@ -11,10 +11,10 @@ import           Control.Monad.Reader
 -- import           Control.Monad.Trans.Class (lift)
 
 import qualified Kurokos                   as K
-import qualified Kurokos.Asset             as Asset
+-- import qualified Kurokos.Asset             as Asset
 -- import qualified Kurokos.Asset.Raw            as Asset
-import qualified Kurokos.Graphics          as G
-import           Kurokos.Graphics.Vect
+-- import qualified Kurokos.Graphics          as G
+-- import           Kurokos.Graphics.Vect
 -- import           Kurokos.Graphics.Vect
 import qualified Kurokos.UI                as UI
 
