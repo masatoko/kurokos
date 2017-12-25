@@ -53,13 +53,13 @@ newTextShader = do
       uniformTexture = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
   -- * Setup
   setupSampler2D uniformTexture
-  (buf,vao) <- makeVAO $ do
+  (tbo,vao) <- makeVAO $ do
           setupVec2 attrCoord $ V.fromList vtxPs
-          buf <- setupVec2 attrTexCoord $ V.fromList texPs
+          tbo <- setupVec2 attrTexCoord $ V.fromList texPs
           -- Element
           elmBuf <- GLU.makeBuffer GL.ElementArrayBuffer [0..3::GL.GLuint]
           GL.bindBuffer GL.ElementArrayBuffer $= Just elmBuf
-          return buf
+          return tbo
   -- Initial Uniform
   withProgram (GLU.program sp) $
     setUniformVec4 uniformColor (V4 1 1 1 1)
@@ -72,7 +72,7 @@ newTextShader = do
     uniformColor
     uniformTexture
     vao
-    (TBO buf)
+    tbo
   where
     vtxPs :: [GL.GLfloat]
     vtxPs = [0, 0, 1, 0, 0, 1, 1, 1]
