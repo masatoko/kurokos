@@ -23,7 +23,7 @@ data BasicShader = BasicShader
   , sUniformProj      :: UniformVar TagMat4
   , sUniformTexture   :: UniformVar TagSampler2D
   , sVao              :: GL.VertexArrayObject
-  , sTexVbo           :: GL.BufferObject
+  , sTexVbo           :: TypedBufferObject TagVec2
   }
 
 instance Shader BasicShader where
@@ -62,7 +62,7 @@ newBasicShader = do
     uniformProj
     uniformTexture
     vao
-    buf
+    (TBO buf)
   where
     vtxPs :: [GL.GLfloat]
     vtxPs = [0, 0, 1, 0, 0, 1, 1, 1]
@@ -73,8 +73,8 @@ newBasicShader = do
     -- texPs :: [GL.GLfloat]
     -- texPs = [0, 1, 1, 1, 0, 0, 1, 0]
 
-setTexCoordVbo :: BasicShader -> GL.BufferObject -> IO ()
-setTexCoordVbo shdr buf =
+setTexCoordVbo :: BasicShader -> TypedBufferObject TagVec2 -> IO ()
+setTexCoordVbo shdr (TBO buf) =
   GLU.withVAO (shdrVAO shdr) $ do
     GL.bindBuffer GL.ArrayBuffer $= Just buf
     GL.vertexAttribPointer loc $= (GL.ToFloat, vad)

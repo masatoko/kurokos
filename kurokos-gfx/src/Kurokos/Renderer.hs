@@ -28,7 +28,9 @@ import qualified Kurokos.Graphics.Shader.Text                 as Text
 import qualified Kurokos.Graphics.Texture                     as Texture
 import           Kurokos.Graphics.Types                       (CharTexture, ProjectionType (..),
                                                                RContext (..),
-                                                               Texture (..))
+                                                               TagVec2,
+                                                               Texture (..),
+                                                               TypedBufferObject (..))
 import           Kurokos.Graphics.Vect
 
 data Renderer = Renderer
@@ -61,7 +63,7 @@ freeRenderer Renderer{..} =
 
 -- | Render Texture with BufferObject of texture coord
 -- You can make texture coord buffer object by `newTexCoordVbo`.
-renderTextureWithTexCoord :: Renderer -> Texture -> GL.BufferObject -> RContext -> IO ()
+renderTextureWithTexCoord :: Renderer -> Texture -> TypedBufferObject TagVec2 -> RContext -> IO ()
 renderTextureWithTexCoord Renderer{..} tex texCoordVbo rctx = do
   Basic.setTexCoordVbo rndrBasicShader texCoordVbo
   setTexture rndrBasicShader $ texObject tex
@@ -80,7 +82,7 @@ renderTexture rndr tex Nothing rctx =
 renderTexture rndr tex (Just (texCoord, texSize)) rctx = do
   buf <- Texture.newTexCoordVbo tex texCoord texSize
   renderTextureWithTexCoord rndr tex buf rctx
-  GL.deleteObjectName buf
+  GL.deleteObjectName $ unTBO buf
 
 -- | Render CharTexture list.
 renderText :: Foldable t => Renderer -> V2 Int -> t CharTexture -> IO ()

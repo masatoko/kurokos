@@ -25,7 +25,7 @@ data TextShader = TextShader
   , sColorVar         :: UniformVar TagVec4
   , sUniformTexture   :: UniformVar TagSampler2D
   , sVao              :: GL.VertexArrayObject
-  , sTexCoordVbo      :: GL.BufferObject
+  , sTexCoordVbo      :: TypedBufferObject TagVec2
   }
 
 instance Shader TextShader where
@@ -72,7 +72,7 @@ newTextShader = do
     uniformColor
     uniformTexture
     vao
-    buf
+    (TBO buf)
   where
     vtxPs :: [GL.GLfloat]
     vtxPs = [0, 0, 1, 0, 0, 1, 1, 1]

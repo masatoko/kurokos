@@ -15,7 +15,7 @@ import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
 
-import           Kurokos.Graphics.Types    (Texture (..))
+import           Kurokos.Graphics.Types
 import           Kurokos.Graphics.Vect
 
 readTexture :: FilePath -> IO Texture
@@ -46,9 +46,9 @@ initTexture tex = do
   GLU.texture2DWrap $= (GL.Mirrored, GL.ClampToEdge)
   GL.textureBinding GL.Texture2D $= Nothing
 
-newTexCoordVbo :: Texture -> Point V2 Int -> V2 Int -> IO GL.BufferObject
+newTexCoordVbo :: Texture -> Point V2 Int -> V2 Int -> IO (TypedBufferObject TagVec2)
 newTexCoordVbo (Texture _ texw texh) pos size =
-  GLU.makeBuffer GL.ArrayBuffer ps
+  TBO <$> GLU.makeBuffer GL.ArrayBuffer ps
   where
     texw' = fromIntegral texw
     texh' = fromIntegral texh

@@ -55,7 +55,7 @@ class Shader a where
 
 class TextureShader a where
   shdrVAO          :: a -> GL.VertexArrayObject
-  shdrTexCoordVbo  :: a -> GL.BufferObject
+  shdrTexCoordVbo  :: a -> TypedBufferObject TagVec2
   shdrTexCoordAttr :: a -> AttribVar TagVec2
   shdrSampler2D    :: a -> UniformVar TagSampler2D
 

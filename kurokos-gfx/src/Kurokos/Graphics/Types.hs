@@ -21,6 +21,8 @@ data AttribVar tag = AttribVar tag GL.AttribLocation
 
 data UniformVar tag = UniformVar tag GL.UniformLocation
 
+newtype TypedBufferObject tag = TBO { unTBO :: GL.BufferObject}
+
 type Vec2 = V2 Float
 
 -- | Rendering context
