@@ -15,7 +15,7 @@ flags:
   test:
     description: Build testing executable
     manual: False
-    default: True
+    default: False
 
 ghc-options:
   - -Wall
@@ -42,6 +42,9 @@ library:
     - Kurokos.Graphics.Font
     - Kurokos.Graphics.Camera
     - Kurokos.Graphics.Vect
+    # Internal
+    - Kurokos.Graphics.Types
+    - Kurokos.Graphics.Shader
 
 executables:
   test-gfx:
