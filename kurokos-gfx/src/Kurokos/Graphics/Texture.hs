@@ -42,7 +42,7 @@ deleteTexture =
 initTexture :: GL.TextureObject -> IO ()
 initTexture tex = do
   GL.textureBinding GL.Texture2D $= Just tex -- glBindTexture
-  GL.textureFilter GL.Texture2D $= ((GL.Nearest, Nothing), GL.Nearest)
+  GL.textureFilter GL.Texture2D $= ((GL.Linear', Nothing), GL.Nearest)
   GLU.texture2DWrap $= (GL.Mirrored, GL.ClampToEdge)
   GL.textureBinding GL.Texture2D $= Nothing
 
