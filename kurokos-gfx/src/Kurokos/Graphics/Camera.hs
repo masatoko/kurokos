@@ -4,6 +4,7 @@ module Kurokos.Graphics.Camera
   ( Camera
   , camCoord
   , camHeight
+  , camUp
   , mkCamera
   , camForVertFlip
   -- , mkCameraVertFlip
