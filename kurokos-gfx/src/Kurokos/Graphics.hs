@@ -5,6 +5,7 @@ module Kurokos.Graphics
   , getFreeType
   , newRenderer
   , freeRenderer
+  , withProjView
   , RContext (..)
   , renderTexture
   , renderText

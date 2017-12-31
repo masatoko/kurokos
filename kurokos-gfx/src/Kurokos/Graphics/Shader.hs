@@ -1,7 +1,7 @@
 module Kurokos.Graphics.Shader where
 
 import qualified Data.Vector.Storable          as V
-import           Foreign.C.Types               (CInt)
+-- import           Foreign.C.Types               (CInt)
 -- import           Foreign.Storable              (sizeOf)
 import           Linear
 
@@ -63,18 +63,23 @@ class ColorShader a where
   shdrColor :: a -> UniformVar TagVec4
 
 -- | Update projection matrix of BasicShader
-setProjection :: Shader a => a -> ProjectionType -> V2 CInt -> Bool -> IO ()
-setProjection shdr ptype (V2 winW winH) vertFlip =
+-- setProjection :: Shader a => a -> ProjectionType -> V2 CInt -> Bool -> IO ()
+-- setProjection shdr ptype (V2 winW winH) vertFlip =
+--   withProgram (shdrProgram shdr) $
+--     setUniformMat4 (shdrProjection shdr) $ projMat ptype
+--   where
+--     w = fromIntegral winW
+--     h = fromIntegral winH
+--     projMat Ortho =
+--       if vertFlip
+--         then ortho 0 w (-h) 0 (-1) 1
+--         else ortho 0 w 0    h 1    (-1)
+--     projMat (Frustum near far) = frustum 0 w 0 h near far
+
+setProjection :: Shader a => a -> M44 Float -> IO ()
+setProjection shdr mat =
   withProgram (shdrProgram shdr) $
-    setUniformMat4 (shdrProjection shdr) $ projMat ptype
-  where
-    w = fromIntegral winW
-    h = fromIntegral winH
-    projMat Ortho =
-      if vertFlip
-        then ortho 0 w (-h) 0 (-1) 1
-        else ortho 0 w 0    h 1    (-1)
-    projMat (Frustum near far) = frustum 0 w 0 h near far
+    setUniformMat4 (shdrProjection shdr) mat
 
 setTexture :: (Shader a, TextureShader a) => a -> GL.TextureObject -> IO ()
 setTexture shdr tex =

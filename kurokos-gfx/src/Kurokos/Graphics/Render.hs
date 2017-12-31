@@ -1,7 +1,7 @@
 module Kurokos.Graphics.Render
   ( setModelView
-  , mkModelView
-  , mkModelViewForNormalized
+  , mkModelMat
+  , mkModelMatForNormalized
   --
   , renderTextureShader
   , renderTextTexture
@@ -15,7 +15,6 @@ import qualified Graphics.GLUtil              as GLU
 import           Graphics.Rendering.OpenGL    (get, ($=))
 import qualified Graphics.Rendering.OpenGL    as GL
 
-import qualified Kurokos.Graphics.Camera      as Cam
 import           Kurokos.Graphics.Shader
 import           Kurokos.Graphics.Shader.Text (TextShader)
 import           Kurokos.Graphics.Types
@@ -25,19 +24,18 @@ setModelView shdr modelViewMat =
   withProgram (shdrProgram shdr) $
     setUniformMat4 (shdrModelView shdr) modelViewMat
 
--- TODO: Translation only. Add rotation radius and rotation center. (Should make another RContext)
-mkModelView :: Cam.Camera -> V2 Int -> M44 Float
-mkModelView cam pos = view !*! model
+-- TODO: Translation only. Add rotation radius and rotation center. (Should make another RContext?)
+mkModelMat :: V2 Int -> M44 Float
+mkModelMat pos = model
   where
-    view = Cam.viewMatFromCam cam
     V2 x y = fromIntegral <$> pos
     model = trans
       where
         trans = mkTransformationMat identity $ V3 x y 0
 
 -- Specific for 1x1 size VBO.
-mkModelViewForNormalized :: Cam.Camera -> RContext -> M44 Float
-mkModelViewForNormalized cam rctx = view !*! model
+mkModelMatForNormalized :: RContext -> M44 Float
+mkModelMatForNormalized rctx = model
   where
     RContext (V2 x y) (V2 sizeX sizeY) mRad mRotCenter = rctx
     x' = fromIntegral x
@@ -46,7 +44,6 @@ mkModelViewForNormalized cam rctx = view !*! model
     sizeY' = fromIntegral sizeY
     V2 rotX0 rotY0 = fromMaybe (V2 (sizeX' / 2) (sizeY' / 2)) mRotCenter
 
-    view = Cam.viewMatFromCam cam
     model =
       trans !*! rot !*! scaleMat
       where
@@ -80,8 +77,8 @@ renderTextureShader shdr =
 
 -- Text
 
-renderTextTexture :: Foldable t => TextShader -> V2 Int -> t CharTexture -> IO ()
-renderTextTexture shdr (V2 x0 y0) =
+renderTextTexture :: Foldable t => TextShader -> M44 Float -> V2 Int -> t CharTexture -> IO ()
+renderTextTexture shdr view (V2 x0 y0) =
   foldM_ renderChar x0
   where
     renderChar x (CharTexture tex color fontSize left top dx _) = do
@@ -91,7 +88,7 @@ renderTextTexture shdr (V2 x0 y0) =
           ctx' = RContext (V2 x' y') size Nothing Nothing
       setColor shdr color
       setTexture shdr $ texObject tex
-      let mv = mkModelViewForNormalized Cam.camForVertFlip ctx'
+      let mv = view !*! mkModelMatForNormalized ctx'
       setModelView shdr mv
       renderTextureShader shdr
       return $ x + truncate dx

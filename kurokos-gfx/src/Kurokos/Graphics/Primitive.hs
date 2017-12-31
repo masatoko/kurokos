@@ -6,15 +6,15 @@ import qualified Data.Vector.Storable              as V
 import qualified Graphics.GLUtil                   as GLU
 import           Graphics.Rendering.OpenGL         (get, ($=))
 import qualified Graphics.Rendering.OpenGL         as GL
+import           Linear.Matrix
 
-import qualified Kurokos.Graphics.Camera           as Cam
-import           Kurokos.Graphics.Render           (mkModelView, setModelView)
+import           Kurokos.Graphics.Render           (mkModelMat, setModelView)
 import           Kurokos.Graphics.Shader
 import           Kurokos.Graphics.Shader.Primitive
 import           Kurokos.Graphics.Types
 import           Kurokos.Graphics.Util             (makeVAO)
 import           Kurokos.Graphics.Vect
-import           Kurokos.Renderer                  (Renderer (rndrPrimShader))
+import           Kurokos.Renderer                  (Renderer (..))
 
 data Prim = Prim
   { primVAO   :: GL.VertexArrayObject
@@ -38,7 +38,7 @@ drawPrim rndr pos Prim{..} = do
     --
     GL.blend $= blend0
   where
-    mv = mkModelView Cam.camForVertFlip pos
+    mv = rndrCurrentView rndr !*! mkModelMat pos
 
 setPrimColor :: Renderer -> Color -> IO ()
 setPrimColor rndr color =
