@@ -30,6 +30,7 @@ dependencies:
   - transformers
   - mtl
   - monad-control
+  - safe-exceptions
   - containers
   - bytestring
   - text
@@ -53,7 +54,6 @@ executables:
         then:
           dependencies:
             - kurokos
-            - safe-exceptions
             - lens
             - resourcet
         else:
