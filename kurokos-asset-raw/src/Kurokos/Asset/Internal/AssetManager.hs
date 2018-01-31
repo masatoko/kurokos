@@ -1,16 +1,14 @@
 {-# LANGUAGE RecordWildCards #-}
-module Kurokos.Asset.Internal.AssetManager
-  ( loadAssetManager
-  ) where
+module Kurokos.Asset.Internal.AssetManager where
 
-import qualified Control.Exception            as E
-import           Control.Monad.IO.Class       (MonadIO, liftIO)
-import qualified Data.ByteString              as BS
-import qualified Data.Map                     as M
-import           Data.Maybe                   (fromMaybe)
-import qualified Data.Text                    as T
+import qualified Control.Exception as E
+import qualified System.IO as IO
+import           Control.Monad.IO.Class (MonadIO, liftIO)
+import qualified Data.ByteString        as BS
+import qualified Data.Map               as M
+import           Data.Maybe             (fromMaybe)
+import qualified Data.Text              as T
 import           System.FilePath.Posix
-import qualified System.IO                    as IO
 
 import           Kurokos.Asset.Internal.Types
 

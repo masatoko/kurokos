@@ -26,7 +26,6 @@ library
     , bytestring
     , text
     , filepath
-    , resourcet
   default-language:
     Haskell2010
 
