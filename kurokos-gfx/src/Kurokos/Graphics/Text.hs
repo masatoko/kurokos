@@ -33,6 +33,7 @@ import qualified Graphics.Rendering.FreeType.Internal.GlyphSlot      as FT
 import qualified Graphics.Rendering.FreeType.Internal.PrimitiveTypes as FT
 import qualified Graphics.Rendering.FreeType.Internal.Vector         as FT
 
+import           Kurokos.Graphics.Font                               (Font)
 import           Kurokos.Graphics.Texture                            (deleteTexture)
 import           Kurokos.Graphics.Types                              (CharTexture (..),
                                                                       Color,
@@ -51,14 +52,14 @@ deleteCharTexture = deleteTexture . ctTexture
 deleteTextTexture :: TextTexture -> IO ()
 deleteTextTexture = mapM_ deleteCharTexture
 
-createTextTexture :: FT.FT_Face -> FontSize -> Color -> T.Text -> IO TextTexture
-createTextTexture face size color =
+createTextTexture :: Font -> FontSize -> Color -> T.Text -> IO TextTexture
+createTextTexture font size color =
   mapM work . T.unpack
   where
-    work = createCharTexture face size color
+    work = createCharTexture font size color
 
-createCharTexture :: FT.FT_Face -> FontSize -> Color -> Char -> IO CharTexture
-createCharTexture face size color char = do
+createCharTexture :: Font -> FontSize -> Color -> Char -> IO CharTexture
+createCharTexture (_, face) size color char = do
   throwIfNot0 "ft_Set_Pixel_Sizes" $ FT.ft_Set_Pixel_Sizes face (fromIntegral size) 0
   --
   charInd <- FT.ft_Get_Char_Index face $ fromIntegral $ fromEnum char -- Get the unicode char index.
