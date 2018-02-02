@@ -43,14 +43,15 @@ fileToAssetList (AssetFile fs ds) = do
       return $ map pathToAssetInfo . Set.toList $ includes `Set.difference` ignores
       where
         pathToAssetInfo path =
-          AssetInfo (Just ident) Nothing path
+          AssetInfo (Just ident) Nothing path'
           where
+            path' = map (\c -> if c == '\\' then '/' else c) path
             ident = case pidIdPrefix of
                       Nothing  -> pathid
                       Just pfx -> pfx <> T.cons ':' pathid
             pathid
-              | pidIdFname = T.pack $ takeFileName path
-              | otherwise  = T.pack path
+              | pidIdFname = T.pack $ takeFileName path'
+              | otherwise  = T.pack path'
 
         compilePattern ptnStr =
           case Glob.tryCompileWith Glob.compDefault ptnStr of
