@@ -40,7 +40,7 @@ newPrimitiveShader = do
 
 vert :: BS.ByteString
 vert = BS.intercalate "\n"
-  [ "#version 400"
+  [ "#version 130"
   , ""
   , "in vec2 VertexCoord;"
   , ""
@@ -55,7 +55,7 @@ vert = BS.intercalate "\n"
 
 frag :: BS.ByteString
 frag = BS.intercalate "\n"
-  [ "#version 400"
+  [ "#version 130"
   , ""
   , "uniform vec4 Color;"
   , ""
