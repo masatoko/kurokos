@@ -95,19 +95,16 @@ createCharTexture (_, face) size color char = do
   GLU.printError
   --
   -- Buffering glyph bitmap into texture.
-  let (PS fptr off len) = bytes
-      pokeColor ptr _ = do
-        GL.texImage2D
-          GL.Texture2D
-          GL.NoProxy
-          0
-          GL.RGBA8 -- PixelInternalFormat
-          (GL.TextureSize2D (fromIntegral w) (fromIntegral h))
-          0
-          (GL.PixelData GL.RGBA GL.UnsignedByte ptr) -- PixelFormat
-        return $ ptr `plusPtr` off
-  withForeignPtr fptr $ \ptr0 ->
-    foldM_ pokeColor ptr0 $ take len [(0::Int)..]
+  let (PS fptr _off _len) = bytes
+  withForeignPtr fptr $ \ptr ->
+    GL.texImage2D
+      GL.Texture2D
+      GL.NoProxy
+      0
+      GL.RGBA8 -- PixelInternalFormat
+      (GL.TextureSize2D (fromIntegral w) (fromIntegral h))
+      0
+      (GL.PixelData GL.RGBA GL.UnsignedByte ptr) -- PixelFormat
   GLU.printError
 
   GL.textureFilter   GL.Texture2D $= ((GL.Linear', Nothing), GL.Linear')
