@@ -49,7 +49,7 @@ main = do
       }
     glConf =
       SDL.defaultOpenGL
-        { SDL.glProfile = SDL.Core SDL.Debug 4 0
+        { SDL.glProfile = SDL.Core SDL.Debug 3 0
         }
 
     handler :: K.KurokosException -> IO ()
