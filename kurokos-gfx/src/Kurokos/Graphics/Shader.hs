@@ -17,6 +17,10 @@ setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
 setUniformMat4 (UniformVar TagMat4 loc) mat =
   GLU.asUniform mat loc
 
+setUniformMat3 :: UniformVar TagMat3 -> M33 GL.GLfloat -> IO ()
+setUniformMat3 (UniformVar TagMat3 loc) mat =
+  GLU.asUniform mat loc
+
 setUniformVec3 :: UniformVar TagVec3 -> V3 GL.GLfloat -> IO ()
 setUniformVec3 (UniformVar TagVec3 loc) vec =
   GLU.asUniform vec loc
