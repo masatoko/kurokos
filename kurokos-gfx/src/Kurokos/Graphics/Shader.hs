@@ -13,6 +13,10 @@ import qualified Graphics.Rendering.OpenGL     as GL
 import           Kurokos.Graphics.Types
 
 -- Update Uniform
+setUniformFloat :: UniformVar TagFloat -> GL.GLfloat -> IO ()
+setUniformFloat (UniformVar TagFloat loc) mat =
+  GLU.asUniform mat loc
+
 setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
 setUniformMat4 (UniformVar TagMat4 loc) mat =
   GLU.asUniform mat loc

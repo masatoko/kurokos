@@ -9,6 +9,7 @@ import qualified Graphics.Rendering.OpenGL as GL
 
 type ActiveTextureIndex = GL.GLuint
 
+data TagFloat = TagFloat deriving Show
 data TagVec2 = TagVec2 deriving Show
 data TagVec3 = TagVec3 deriving Show
 data TagVec4 = TagVec4 deriving Show
