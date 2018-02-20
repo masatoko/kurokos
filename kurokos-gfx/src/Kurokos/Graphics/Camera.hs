@@ -9,6 +9,7 @@ module Kurokos.Graphics.Camera
   , camForVertFlip
   -- , mkCameraVertFlip
   , viewMatFromCam
+  , viewMatFromCam3
   ) where
 
 import           Control.Lens
@@ -39,3 +40,11 @@ viewMatFromCam cam =
     --
     eye = V3 x y h
     center = V3 x y 0
+
+viewMatFromCam3 :: Camera -> V3 Float -> M44 Float
+viewMatFromCam3 cam at =
+  lookAt eye at (cam^.camUp)
+  where
+    V2 x y = cam^.camCoord
+    h = cam^.camHeight
+    eye = V3 x y h
