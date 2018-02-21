@@ -39,8 +39,8 @@ setUniformSampler2D (UniformVar (TagSampler2D num) loc) tex = do
   GLU.asUniform (GL.TextureUnit num) loc -- TODO: Move to setup
 
 -- Setup
-setupVec2 :: AttribVar TagVec2 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec2)
-setupVec2 (AttribVar TagVec2 loc) ps = do
+setupVecX :: GL.NumComponents -> GL.AttribLocation -> V.Vector GL.GLfloat -> IO (TypedBufferObject tag)
+setupVecX x loc ps = do
   buf <- BO.fromVector GL.ArrayBuffer ps
   GL.bindBuffer GL.ArrayBuffer $= Just buf
   GL.vertexAttribPointer loc $= (GL.ToFloat, vad)
@@ -48,19 +48,16 @@ setupVec2 (AttribVar TagVec2 loc) ps = do
   return $ TBO buf
   where
     stride = 0
-    -- stride =  fromIntegral $ sizeOf (undefined :: GL.GLfloat) * 2
-    vad = GL.VertexArrayDescriptor 2 GL.Float stride GLU.offset0
+    vad = GL.VertexArrayDescriptor x GL.Float stride GLU.offset0
+
+setupVec2 :: AttribVar TagVec2 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec2)
+setupVec2 (AttribVar TagVec2 loc) = setupVecX 2 loc
 
 setupVec3 :: AttribVar TagVec3 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec3)
-setupVec3 (AttribVar TagVec3 loc) ps = do
-  buf <- BO.fromVector GL.ArrayBuffer ps
-  GL.bindBuffer GL.ArrayBuffer $= Just buf
-  GL.vertexAttribPointer loc $= (GL.ToFloat, vad)
-  GL.vertexAttribArray loc $= GL.Enabled
-  return $ TBO buf
-  where
-    stride = 0
-    vad = GL.VertexArrayDescriptor 3 GL.Float stride GLU.offset0
+setupVec3 (AttribVar TagVec3 loc) = setupVecX 3 loc
+
+setupVec4 :: AttribVar TagVec4 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec4)
+setupVec4 (AttribVar TagVec4 loc) = setupVecX 4 loc
 
 setupSampler2D :: UniformVar TagSampler2D -> IO ()
 setupSampler2D (UniformVar (TagSampler2D num) _loc) =
