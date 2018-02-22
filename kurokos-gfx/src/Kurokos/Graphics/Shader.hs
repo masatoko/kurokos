@@ -39,8 +39,10 @@ setUniformVec4 (UniformVar TagVec4 loc) vec =
   GLU.asUniform vec loc
 
 setUniformSampler2D :: UniformVar TagSampler2D -> GL.TextureObject -> IO ()
-setUniformSampler2D (UniformVar (TagSampler2D num) loc) tex =
+setUniformSampler2D (UniformVar (TagSampler2D num) loc) tex = do
+  GL.activeTexture $= GL.TextureUnit num
   GL.textureBinding GL.Texture2D $= Just tex -- glBindTexture
+  GLU.asUniform (GL.TextureUnit num) loc
 
 -- Setup
 setupVecX :: GL.NumComponents -> GL.AttribLocation -> V.Vector GL.GLfloat -> IO (TypedBufferObject tag)
