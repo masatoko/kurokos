@@ -1,5 +1,6 @@
 module Kurokos.Graphics.Shader where
 
+import           Control.Monad.IO.Class        (MonadIO)
 import qualified Data.Vector.Storable          as V
 -- import           Foreign.C.Types               (CInt)
 -- import           Foreign.Storable              (sizeOf)
@@ -107,8 +108,9 @@ setColor shdr color =
   withProgram (shdrProgram shdr) $
     setUniformVec4 (shdrColor shdr) color
 
+    
 -- Util
-withProgram :: GL.Program -> IO a -> IO a
+withProgram :: MonadIO m => GL.Program -> m a -> m a
 withProgram p act = do
   cur <- get GL.currentProgram
   if cur == Just p

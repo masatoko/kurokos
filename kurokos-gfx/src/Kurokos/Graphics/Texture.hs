@@ -43,7 +43,7 @@ initTexture :: GL.TextureObject -> IO ()
 initTexture tex = do
   GL.textureBinding GL.Texture2D $= Just tex -- glBindTexture
   GL.textureFilter GL.Texture2D $= ((GL.Linear', Nothing), GL.Nearest)
-  GLU.texture2DWrap $= (GL.Mirrored, GL.ClampToEdge)
+  GLU.texture2DWrap $= (GL.Repeated, GL.Repeat)
   GL.textureBinding GL.Texture2D $= Nothing
 
 newTexCoordVbo :: Texture -> Point V2 Int -> V2 Int -> IO (TypedBufferObject TagVec2)
