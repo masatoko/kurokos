@@ -14,6 +14,10 @@ import qualified Graphics.Rendering.OpenGL     as GL
 import           Kurokos.Graphics.Types
 
 -- Update Uniform
+setUniformInt :: UniformVar TagInt -> GL.GLint -> IO ()
+setUniformInt (UniformVar TagInt loc) mat =
+  GLU.asUniform mat loc
+
 setUniformFloat :: UniformVar TagFloat -> GL.GLfloat -> IO ()
 setUniformFloat (UniformVar TagFloat loc) mat =
   GLU.asUniform mat loc
@@ -35,9 +39,8 @@ setUniformVec4 (UniformVar TagVec4 loc) vec =
   GLU.asUniform vec loc
 
 setUniformSampler2D :: UniformVar TagSampler2D -> GL.TextureObject -> IO ()
-setUniformSampler2D (UniformVar (TagSampler2D num) loc) tex = do
+setUniformSampler2D (UniformVar (TagSampler2D num) loc) tex =
   GL.textureBinding GL.Texture2D $= Just tex -- glBindTexture
-  GLU.asUniform (GL.TextureUnit num) loc -- TODO: Move to setup
 
 -- Setup
 setupVecX :: GL.NumComponents -> GL.AttribLocation -> V.Vector GL.GLfloat -> IO (TypedBufferObject tag)
@@ -61,8 +64,9 @@ setupVec4 :: AttribVar TagVec4 -> V.Vector GL.GLfloat -> IO (TypedBufferObject T
 setupVec4 (AttribVar TagVec4 loc) = setupVecX 4 loc
 
 setupSampler2D :: UniformVar TagSampler2D -> IO ()
-setupSampler2D (UniformVar (TagSampler2D num) _loc) =
+setupSampler2D (UniformVar (TagSampler2D num) loc) = do
   GL.activeTexture $= GL.TextureUnit num
+  GLU.asUniform (GL.TextureUnit num) loc
 
 -- Shader class
 class Shader a where
@@ -108,7 +112,7 @@ setColor shdr color =
   withProgram (shdrProgram shdr) $
     setUniformVec4 (shdrColor shdr) color
 
-    
+
 -- Util
 withProgram :: MonadIO m => GL.Program -> m a -> m a
 withProgram p act = do
