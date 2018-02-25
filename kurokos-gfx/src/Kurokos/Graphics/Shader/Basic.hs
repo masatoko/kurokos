@@ -44,7 +44,7 @@ newBasicShader = do
       attrTexCoord = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
       uniformModelView = UniformVar TagMat4 $ GLU.getUniform sp "ModelView"
       uniformProj = UniformVar TagMat4 $ GLU.getUniform sp "Projection"
-      uniformTexture = UniformVar (TagSampler2D 0) (GLU.getUniform sp "Texture")
+      uniformTexture = UniformVar (TagSampler2D (GL.TextureUnit 0)) (GLU.getUniform sp "Texture")
   -- * Setup
   setupSampler2D uniformTexture
   (tbo,vao) <- makeVAO $ do

@@ -7,8 +7,6 @@ import           Linear
 
 import qualified Graphics.Rendering.OpenGL as GL
 
-type ActiveTextureIndex = GL.GLuint
-
 data TagInt = TagInt deriving Show
 data TagFloat = TagFloat deriving Show
 data TagVec2 = TagVec2 deriving Show
@@ -17,7 +15,7 @@ data TagVec4 = TagVec4 deriving Show
 data TagMat2 = TagMat2 deriving Show
 data TagMat3 = TagMat3 deriving Show
 data TagMat4 = TagMat4 deriving Show
-data TagSampler2D = TagSampler2D ActiveTextureIndex deriving Show
+data TagSampler2D = TagSampler2D GL.TextureUnit deriving Show
 data TagSampler2DShadow = TagSampler2DShadow deriving Show
 
 data AttribVar tag = AttribVar tag GL.AttribLocation
