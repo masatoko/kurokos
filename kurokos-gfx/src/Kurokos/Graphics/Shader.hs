@@ -79,16 +79,6 @@ setupVec3 (AttribVar TagVec3 loc) = setupVecX 3 loc
 setupVec4 :: AttribVar TagVec4 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec4)
 setupVec4 (AttribVar TagVec4 loc) = setupVecX 4 loc
 
-setupSampler2D :: UniformVar TagSampler2D -> IO ()
-setupSampler2D (UniformVar (TagSampler2D texUnit) loc) = do
-  GL.activeTexture $= texUnit
-  GLU.asUniform texUnit loc
-
-setupSamplerCube :: UniformVar TagSamplerCube -> IO ()
-setupSamplerCube (UniformVar (TagSamplerCube texUnit) loc) = do
-  GL.activeTexture $= texUnit
-  GLU.asUniform texUnit loc
-
 -- Shader class
 class Shader a where
   shdrProgram    :: a -> GL.Program

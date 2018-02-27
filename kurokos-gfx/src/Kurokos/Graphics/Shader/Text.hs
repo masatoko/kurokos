@@ -51,8 +51,6 @@ newTextShader = do
       uniformProj = UniformVar TagMat4 $ GLU.getUniform sp "Projection"
       uniformColor = UniformVar TagVec4 $ GLU.getUniform sp "BasisColor"
       uniformTexture = UniformVar (TagSampler2D (GL.TextureUnit 0)) (GLU.getUniform sp "Texture")
-  -- * Setup
-  setupSampler2D uniformTexture
   (tbo,vao) <- makeVAO $ do
           setupVec2 attrCoord $ V.fromList vtxPs
           tbo <- setupVec2 attrTexCoord $ V.fromList texPs
