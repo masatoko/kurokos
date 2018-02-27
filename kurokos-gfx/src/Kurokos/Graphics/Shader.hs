@@ -14,29 +14,37 @@ import qualified Graphics.Rendering.OpenGL     as GL
 import           Kurokos.Graphics.Types
 
 -- Update Uniform
+setUniformBool :: UniformVar TagBool -> Bool -> IO ()
+setUniformBool (UniformVar TagBool loc) val =
+  GLU.asUniform (unmarshal val) loc
+  where
+    unmarshal :: Bool -> GL.GLint
+    unmarshal True  = 1
+    unmarshal False = 0
+
 setUniformInt :: UniformVar TagInt -> GL.GLint -> IO ()
-setUniformInt (UniformVar TagInt loc) mat =
-  GLU.asUniform mat loc
+setUniformInt (UniformVar TagInt loc) val =
+  GLU.asUniform val loc
 
 setUniformFloat :: UniformVar TagFloat -> GL.GLfloat -> IO ()
-setUniformFloat (UniformVar TagFloat loc) mat =
-  GLU.asUniform mat loc
+setUniformFloat (UniformVar TagFloat loc) val =
+  GLU.asUniform val loc
 
 setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
-setUniformMat4 (UniformVar TagMat4 loc) mat =
-  GLU.asUniform mat loc
+setUniformMat4 (UniformVar TagMat4 loc) val =
+  GLU.asUniform val loc
 
 setUniformMat3 :: UniformVar TagMat3 -> M33 GL.GLfloat -> IO ()
-setUniformMat3 (UniformVar TagMat3 loc) mat =
-  GLU.asUniform mat loc
+setUniformMat3 (UniformVar TagMat3 loc) val =
+  GLU.asUniform val loc
 
 setUniformVec3 :: UniformVar TagVec3 -> V3 GL.GLfloat -> IO ()
-setUniformVec3 (UniformVar TagVec3 loc) vec =
-  GLU.asUniform vec loc
+setUniformVec3 (UniformVar TagVec3 loc) val =
+  GLU.asUniform val loc
 
 setUniformVec4 :: UniformVar TagVec4 -> V4 GL.GLfloat -> IO ()
-setUniformVec4 (UniformVar TagVec4 loc) vec =
-  GLU.asUniform vec loc
+setUniformVec4 (UniformVar TagVec4 loc) val =
+  GLU.asUniform val loc
 
 setUniformSampler2D :: UniformVar TagSampler2D -> GL.TextureObject -> IO ()
 setUniformSampler2D (UniformVar (TagSampler2D texUnit) loc) tex = do
