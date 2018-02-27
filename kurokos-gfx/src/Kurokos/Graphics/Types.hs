@@ -18,6 +18,7 @@ data TagMat3 = TagMat3 deriving Show
 data TagMat4 = TagMat4 deriving Show
 data TagSampler2D = TagSampler2D GL.TextureUnit deriving Show
 data TagSampler2DShadow = TagSampler2DShadow deriving Show
+data TagSamplerCube = TagSamplerCube GL.TextureUnit deriving Show
 
 data AttribVar tag = AttribVar tag GL.AttribLocation
 

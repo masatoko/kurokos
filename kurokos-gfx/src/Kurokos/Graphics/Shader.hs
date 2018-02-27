@@ -52,6 +52,12 @@ setUniformSampler2D (UniformVar (TagSampler2D texUnit) loc) tex = do
   GL.textureBinding GL.Texture2D $= Just tex -- glBindTexture
   GLU.asUniform texUnit loc
 
+setUniformSamplerCube :: UniformVar TagSamplerCube -> GL.TextureObject -> IO ()
+setUniformSamplerCube (UniformVar (TagSamplerCube texUnit) loc) tex = do
+  GL.activeTexture $= texUnit
+  GL.textureBinding GL.TextureCubeMap $= Just tex -- glBindTexture
+  GLU.asUniform texUnit loc
+
 -- Setup
 setupVecX :: GL.NumComponents -> GL.AttribLocation -> V.Vector GL.GLfloat -> IO (TypedBufferObject tag)
 setupVecX x loc ps = do
@@ -75,6 +81,11 @@ setupVec4 (AttribVar TagVec4 loc) = setupVecX 4 loc
 
 setupSampler2D :: UniformVar TagSampler2D -> IO ()
 setupSampler2D (UniformVar (TagSampler2D texUnit) loc) = do
+  GL.activeTexture $= texUnit
+  GLU.asUniform texUnit loc
+
+setupSamplerCube :: UniformVar TagSamplerCube -> IO ()
+setupSamplerCube (UniformVar (TagSamplerCube texUnit) loc) = do
   GL.activeTexture $= texUnit
   GLU.asUniform texUnit loc
 
