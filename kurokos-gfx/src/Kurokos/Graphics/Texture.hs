@@ -3,6 +3,7 @@ module Kurokos.Graphics.Texture
   ( Texture (..)
   , readTexture
   , decodeTexture
+  , decodeTexInfo
   , deleteTexture
   --
   , newTexCoordVbo
@@ -11,6 +12,8 @@ module Kurokos.Graphics.Texture
 import qualified Codec.Picture             as Pic
 import qualified Control.Exception         as E
 import qualified Data.ByteString           as BS
+import qualified Data.Vector.Storable      as V
+import           Data.Word                 (Word8)
 import qualified Graphics.GLUtil           as GLU
 import           Graphics.Rendering.OpenGL (($=))
 import qualified Graphics.Rendering.OpenGL as GL
@@ -34,6 +37,17 @@ decodeTexture bytes =
       tex <- GLU.loadTexture $ GLU.texInfo w h GLU.TexRGBA p
       initTexture tex
       return $ Texture tex w h
+
+decodeTexInfo :: BS.ByteString -> IO (GLU.TexInfo (V.Vector Word8))
+decodeTexInfo bytes =
+  case Pic.decodeImage bytes of
+    Left err -> E.throwIO $ userError err
+    Right dynamicImage -> do
+      let image = Pic.convertRGBA8 dynamicImage
+          w = Pic.imageWidth image
+          h = Pic.imageHeight image
+          p = Pic.imageData image
+      return $ GLU.texInfo w h GLU.TexRGBA p
 
 deleteTexture :: Texture -> IO ()
 deleteTexture =

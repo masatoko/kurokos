@@ -26,7 +26,9 @@ module Kurokos.Graphics
   -- ** Texture
   , readTexture
   , decodeTexture
+  , decodeTexInfo
   , deleteTexture
+  , reloadTextureWith
   -- ** Text
   , createCharTexture
   , deleteCharTexture
@@ -49,5 +51,6 @@ import           Kurokos.Graphics.Primitive
 import           Kurokos.Graphics.Render
 import           Kurokos.Graphics.Text
 import           Kurokos.Graphics.Texture
+import           Kurokos.Graphics.Texture.Util
 import           Kurokos.Graphics.Types
 import           Kurokos.Renderer
