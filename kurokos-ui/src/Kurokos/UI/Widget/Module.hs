@@ -17,3 +17,9 @@ import           Kurokos.UI.Widget
 modifyOnClicked :: Widget -> Widget
 modifyOnClicked (Switch title font size bool) = Switch title font size (not bool)
 modifyOnClicked w = w
+
+-- For user
+
+isWidgetTrue :: Widget -> Maybe Bool
+isWidgetTrue (Switch _ _ _ bool) = Just bool
+isWidgetTrue _ = Nothing

@@ -1,18 +1,18 @@
 module Kurokos.UI
-  ( module Import
-  -- ** GUI
-  , GUI
+  (
+  -- * GUI
+    GUI
   , GuiEnv (..)
   , GuiState
   , newGui
   , freeGui
   , getWidgetTree
-  -- ** GuiT Monad
+  -- * GuiT Monad
   , GuiT
-  -- ** Def
+  -- * Def
   , RenderEnv (..)
   , Renderable (..)
-  -- ** WContext
+  -- * WContext
   , WContext
   , ctxIdent
   , ctxName
@@ -20,15 +20,15 @@ module Kurokos.UI
   , ctxWidgetState
   , ctxNeedsLayout
   , ctxNeedsRender
-  -- WidgetState
+  -- * WidgetState
   , WidgetState
   , wstHover
-  -- WidgetAttrib
+  -- * WidgetAttrib
   , WidgetAttrib
   , hoverable
   , clickable
   , visible
-  -- ** Color
+  -- * Color
   , Color
   , WidgetColor (..)
   , wcBack
@@ -36,22 +36,24 @@ module Kurokos.UI
   , wcTitle
   , wcTint
   , ContextColor (..)
-  -- ** ColorScheme
+  -- * ColorScheme
   , ColorScheme
   , readColorScheme
   , parseColorScheme
-  -- ** Type
+  -- * Type
   , GuiEvent (..)
   , EventType (..)
   , UExp (..)
-  -- ** Widget
+  -- * Widget
   , Widget (UserWidget)
   , newTransparent
   , newFill
   , newLabel
   , newImageView
   , newButton
-  -- ** WidgetTree
+  -- * Widget.Module
+  , isWidgetTrue
+  -- * WidgetTree
   , WidgetTree
   , ContainerType (..)
   , pretty
@@ -67,30 +69,30 @@ module Kurokos.UI
   , appendChild
   , prependChild
   , wtFromList
-  -- ** WidgetTree (WContext, Widget)
+  -- * WidgetTree (WContext, Widget)
   , WTIdent
   , WTName
-  -- ** Update GUI
+  -- * Update GUI
   , updateGui
   , readyRender
-  -- ** Rendering GUI
+  -- * Rendering GUI
   , render
-  -- ** Control
+  -- * Control
   , GuiHandler (..)
   , GuiAction (..)
   , defaultGuiHandler
   , handleGui
   , clickByCursor
   , topmostAt
-  -- ** Cursor
+  -- * Cursor
   , Cursor
   , cursorPos
   , cursorArea
   , newCursor
   , updateCursor
-  -- ** Control.Helper
+  -- * Control.Helper
   , clickedOn
-  -- ** Helper
+  -- * Helper
   , update
   , findByIdent
   , findByName
@@ -112,5 +114,5 @@ import           Kurokos.UI.Types
 import           Kurokos.UI.Update
 import           Kurokos.UI.Widget
 import           Kurokos.UI.Widget.Make
-import           Kurokos.UI.Widget.Module   as Import
+import           Kurokos.UI.Widget.Module
 import           Kurokos.UI.WidgetTree
