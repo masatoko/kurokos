@@ -50,14 +50,17 @@ renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Button{} = do
     dx = ((parentSize^._x) - width) `div` 2
     pos' = pos & _x +~ dx
 
-renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Switch _ _ _ bool) = do
-  renderBackAndBorder r pos wc cmnrsc
+renderWidget r pos parentSize wc cmnrsc (Switch _ _ _ selected) = do
+  renderBackAndBorder r pos wc' cmnrsc
   G.renderText r pos' text
   where
+    wc'
+      | selected  = wc&wcBack .~ (wc^.wcTint)
+      | otherwise = wc
     text = cmnrscTextTex cmnrsc
     width = round . sum $ map (view ctAdvanceX) text
     dx = ((parentSize^._x) - width) `div` 2
-    pos' = pos & _x +~ (dx + if bool then 5 else 0)
+    pos' = pos & _x +~ dx
 
 renderWidget r pos parentSize wcol CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
