@@ -47,6 +47,7 @@ convert s@Single{..} = do
       | wType == N.wnameFill      = newFill
       | wType == N.wnameLabel     = newLabel titleAssetIdent titleSize titleText
       | wType == N.wnameButton    = newButton titleAssetIdent titleSize titleText
+      | wType == N.wnameSwitch    = newSwitch titleAssetIdent titleSize titleText
       | wType == N.wnameImageView = newImageView =<< getAssetId
       | otherwise                 = liftIO $ E.throwIO $ userError $ "unkown widget type: " ++ wType
 

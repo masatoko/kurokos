@@ -40,6 +40,11 @@ newButton ident size title = do
   font <- getFont ident
   return $ Button title font size
 
+newSwitch :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> GuiT m Widget
+newSwitch ident size title = do
+  font <- getFont ident
+  return $ Switch title font size True
+
 -- Internal
 
 getTexture :: MonadIO m => Asset.Ident -> GuiT m G.Texture

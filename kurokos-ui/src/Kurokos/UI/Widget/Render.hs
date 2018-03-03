@@ -50,6 +50,15 @@ renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Button{} = do
     dx = ((parentSize^._x) - width) `div` 2
     pos' = pos & _x +~ dx
 
+renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Switch _ _ _ bool) = do
+  renderBackAndBorder r pos wc cmnrsc
+  G.renderText r pos' text
+  where
+    text = cmnrscTextTex cmnrsc
+    width = round . sum $ map (view ctAdvanceX) text
+    dx = ((parentSize^._x) - width) `div` 2
+    pos' = pos & _x +~ (dx + if bool then 5 else 0)
+
 renderWidget r pos parentSize wcol CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
 
@@ -58,7 +67,11 @@ genTitle wc (Label title font size) =
   G.createTextTexture font size (wc^.wcTitle) title
 genTitle wc (Button title font size) =
   G.createTextTexture font size (wc^.wcTitle) title
-genTitle _ _ = return []
+genTitle wc (Switch title font size _) =
+  G.createTextTexture font size (wc^.wcTitle) title
+genTitle _ Transparent{} = return []
+genTitle _ Fill{} = return []
+genTitle _ ImageView{} = return []
 
 -- Internal
 renderBackAndBorder :: MonadIO m => G.Renderer -> V2 Int -> WidgetColor -> CommonResource -> m ()

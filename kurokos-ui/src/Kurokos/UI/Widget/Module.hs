@@ -13,3 +13,7 @@ import           Kurokos.UI.Widget
 -- setTitle _     w@ImageView{}   = w
 -- setTitle title (Button _ font) = Button title font
 -- setTitle _     w@UserWidget{}  = w
+
+modifyOnClicked :: Widget -> Widget
+modifyOnClicked (Switch title font size bool) = Switch title font size (not bool)
+modifyOnClicked w = w

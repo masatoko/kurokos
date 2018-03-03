@@ -19,6 +19,7 @@ data Widget where
   Label       :: Text -> Font.Font -> G.FontSize -> Widget
   ImageView   :: G.Texture -> Widget
   Button      :: Text -> Font.Font -> G.FontSize -> Widget
+  Switch      :: Text -> Font.Font -> G.FontSize -> Bool -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where
@@ -27,6 +28,7 @@ instance Show Widget where
   show Label{}      = "<LBL>"
   show ImageView{}  = "<IMG>"
   show Button{}     = "<BTN>"
+  show Switch{}     = "<SWT>"
   show UserWidget{} = "<USR>"
 
 attribOf :: Widget -> WidgetAttrib
@@ -51,6 +53,11 @@ attribOf ImageView{} =
     & clickable .~ False
 
 attribOf Button{} =
+  defAttrib
+    & hoverable .~ True
+    & clickable .~ True
+
+attribOf Switch{} =
   defAttrib
     & hoverable .~ True
     & clickable .~ True

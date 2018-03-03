@@ -17,6 +17,7 @@ import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
 import qualified Kurokos.UI.WidgetTree as WT
+import qualified Kurokos.UI.Widget.Module as WM
 
 import qualified SDL
 import           SDL.Event
@@ -29,6 +30,8 @@ procEvent :: (RenderEnv m, MonadIO m)
   => Cursor -> GUI -> SDL.EventPayload -> m GUI
 procEvent cursor gui = work
   where
+    curPos = cursor^.cursorPos
+    --
     work (WindowResizedEvent WindowResizedEventData{..}) = do
       win <- getWindow
       return $ if windowResizedEventWindow == win
@@ -39,12 +42,20 @@ procEvent cursor gui = work
       return $ if windowMaximizedEventWindow == win
                 then setAllNeedsLayout . setAllNeedsRender $ gui
                 else gui
+    work (MouseButtonEvent MouseButtonEventData{..}) =
+      return . flip execState gui $
+        modify $ over (unGui._2.gstWTree) (fmap modWhenClicked)
+      where
+        clickedByLeft = mouseButtonEventButton == ButtonLeft
+                          && mouseButtonEventMotion == Pressed
+        modWhenClicked a@(ctx,w)
+          | clickedByLeft = (ctx, WM.modifyOnClicked w)
+          | otherwise     = a
     work (MouseMotionEvent MouseMotionEventData{..}) =
       return . flip execState gui $
-        modify $ over (unGui._2.gstWTree) (fmap $ modWhenHover pos)
+        modify $ over (unGui._2.gstWTree) (fmap modWhenHover)
       where
-        pos = cursor^.cursorPos
-        modWhenHover curPos a@(ctx,w)
+        modWhenHover a@(ctx,w)
           | isHoverable && not (wst^.wstHover) && isWithinRect curPos pos size =
             let ctx' = ctx & ctxWidgetState . wstHover .~ True
                            & ctxNeedsRender .~ True
