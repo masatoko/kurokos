@@ -54,7 +54,11 @@ module Kurokos.UI
   , newSwitch
   , newSlider
   -- * Widget.Module
-  , isWidgetTrue
+  -- ** Getting
+  , getBool
+  , getInt
+  , getFloat
+  , getDouble
   -- * WidgetTree
   , WidgetTree
   , ContainerType (..)

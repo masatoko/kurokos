@@ -14,6 +14,22 @@ import           Kurokos.UI.Widget
 -- setTitle title (Button _ font) = Button title font
 -- setTitle _     w@UserWidget{}  = w
 
-isWidgetTrue :: Widget -> Maybe Bool
-isWidgetTrue (Switch _ _ _ bool) = Just bool
-isWidgetTrue _ = Nothing
+-- | Get current state of Switch
+getBool :: Widget -> Maybe Bool
+getBool (Switch _ _ _ bool) = Just bool
+getBool _ = Nothing
+
+-- | Get current value of Int Slider
+getInt :: Widget -> Maybe Int
+getInt (Slider _ _ _ _ (ValueI v _ _)) = Just v
+getInt _ = Nothing
+
+-- | Get current value of Float Slider
+getFloat :: Widget -> Maybe Float
+getFloat (Slider _ _ _ _ (ValueF v _ _)) = Just v
+getFloat _ = Nothing
+
+-- | Get current value of Double Slider
+getDouble :: Widget -> Maybe Double
+getDouble (Slider _ _ _ _ (ValueD v _ _)) = Just v
+getDouble _ = Nothing
