@@ -47,6 +47,17 @@ modifyOnClicked (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title font si
   where
     rate = fromIntegral (curX - wx) / fromIntegral w
     value' = updateValueByRate rate value
-
-
 modifyOnClicked _ _ _ w = w
+
+modifyWhenHoverWithLHold :: Point V2 CInt -- ^ Cursor position
+                          -> Point V2 CInt -- ^ Widget world position
+                          -> V2 CInt -- ^ Widget size
+                          -> Widget
+                          -> Widget
+modifyWhenHoverWithLHold (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title font size mPrim value) =
+  -- Calculate value by click position
+  Slider title font size mPrim value'
+  where
+    rate = fromIntegral (curX - wx) / fromIntegral w
+    value' = updateValueByRate rate value
+modifyWhenHoverWithLHold _ _ _ w = w
