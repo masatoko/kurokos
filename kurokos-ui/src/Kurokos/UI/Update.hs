@@ -49,8 +49,11 @@ procEvent cursor gui = work
         clickedByLeft = mouseButtonEventButton == ButtonLeft
                           && mouseButtonEventMotion == Pressed
         modWhenClicked a@(ctx,w)
-          | clickedByLeft = (ctx, WM.modifyOnClicked w)
-          | otherwise     = a
+          | clickedByLeft && isWithinRect curPos pos size = (ctx, WM.modifyOnClicked w)
+          | otherwise = a
+          where
+            pos = ctx^.ctxWidgetState.wstGlobalPos
+            size = ctx^.ctxWidgetState.wstSize
     work (MouseMotionEvent MouseMotionEventData{..}) =
       return . flip execState gui $
         modify $ over (unGui._2.gstWTree) (fmap modWhenHover)
