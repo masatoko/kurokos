@@ -46,6 +46,7 @@ module Kurokos.UI
   , UExp (..)
   -- * Widget
   , Widget (UserWidget)
+  , Value (..)
   , newTransparent
   , newFill
   , newLabel
