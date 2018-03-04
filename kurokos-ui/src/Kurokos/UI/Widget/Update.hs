@@ -33,3 +33,20 @@ onReadyLayout (V2 w h) (Slider title font size mPreKnob value) = do
   prim <- withRenderer $ \r -> G.newFillRectangle r (V2 30 (fromIntegral h))
   return $ Slider title font size (Just prim) value
 onReadyLayout _ w = return w
+
+
+modifyOnClicked :: Point V2 CInt -- ^ Cursor position
+                -> Point V2 CInt -- ^ Widget world position
+                -> V2 CInt -- ^ Widget size
+                -> Widget
+                -> Widget
+modifyOnClicked _ _ _ (Switch title font size bool) = Switch title font size (not bool)
+modifyOnClicked (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title font size mPrim value) =
+  -- Calculate value by click position
+  Slider title font size mPrim value'
+  where
+    rate = fromIntegral (curX - wx) / fromIntegral w
+    value' = updateValueByRate rate value
+
+
+modifyOnClicked _ _ _ w = w

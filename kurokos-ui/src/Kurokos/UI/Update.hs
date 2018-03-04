@@ -17,7 +17,7 @@ import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
 import qualified Kurokos.UI.WidgetTree as WT
-import qualified Kurokos.UI.Widget.Module as WM
+import qualified Kurokos.UI.Widget.Update as WU
 
 import qualified SDL
 import           SDL.Event
@@ -51,7 +51,7 @@ procEvent cursor gui = work
         modWhenClicked a@(ctx,w)
           | clickedByLeft && isWithinRect curPos pos size =
             let ctx' = ctx & ctxNeedsRender .~ True
-            in (ctx', WM.modifyOnClicked w)
+            in (ctx', WU.modifyOnClicked curPos pos size w)
           | otherwise = a
           where
             pos = ctx^.ctxWidgetState.wstGlobalPos

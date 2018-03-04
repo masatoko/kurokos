@@ -20,9 +20,17 @@ data Value
   deriving Show
 
 rateFromValue :: Value -> Double
-rateFromValue (ValueI v a b) = fromIntegral (v - a) / fromIntegral (b - a)
-rateFromValue (ValueF v a b) = realToFrac $ (v - a) / (b - a)
-rateFromValue (ValueD v a b) = (v - a) / (b - a)
+rateFromValue (ValueI v vmin vmax) = fromIntegral (v - vmin) / fromIntegral (vmax - vmin)
+rateFromValue (ValueF v vmin vmax) = realToFrac $ (v - vmin) / (vmax - vmin)
+rateFromValue (ValueD v vmin vmax) = (v - vmin) / (vmax - vmin)
+
+updateValueByRate :: Double -> Value -> Value
+updateValueByRate rate (ValueI _ vmin vmax) = ValueI v vmin vmax
+  where v = vmin + round (rate * fromIntegral (vmax - vmin))
+updateValueByRate rate (ValueF _ vmin vmax) = ValueF v vmin vmax
+  where v = vmin + realToFrac rate * (vmax - vmin)
+updateValueByRate rate (ValueD _ vmin vmax) = ValueD v vmin vmax
+  where v = vmin + rate * (vmax - vmin)
 
 data Widget where
   Transparent :: Widget
