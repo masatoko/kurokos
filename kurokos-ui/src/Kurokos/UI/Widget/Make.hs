@@ -2,6 +2,7 @@ module Kurokos.UI.Widget.Make where
 
 import qualified Control.Exception     as E
 import           Control.Lens
+import           Control.Monad.Extra   (whenJust)
 import           Control.Monad.State
 import qualified Data.ByteString       as BS
 import qualified Data.Map              as M
@@ -48,7 +49,7 @@ newSwitch ident size title = do
 newSlider :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> Value -> GuiT m Widget
 newSlider ident size title value = do
   font <- getFont ident
-  return $ Slider title font size value
+  return $ Slider title font size Nothing value
 
 -- Internal
 

@@ -19,6 +19,11 @@ data Value
   | ValueD Double Double Double
   deriving Show
 
+rateFromValue :: Value -> Double
+rateFromValue (ValueI v a b) = fromIntegral (v - a) / fromIntegral (b - a)
+rateFromValue (ValueF v a b) = realToFrac $ (v - a) / (b - a)
+rateFromValue (ValueD v a b) = (v - a) / (b - a)
+
 data Widget where
   Transparent :: Widget
   Fill        :: Widget
@@ -26,7 +31,7 @@ data Widget where
   ImageView   :: G.Texture -> Widget
   Button      :: Text -> Font.Font -> G.FontSize -> Widget
   Switch      :: Text -> Font.Font -> G.FontSize -> Bool -> Widget
-  Slider      :: Text -> Font.Font -> G.FontSize -> Value -> Widget
+  Slider      :: Text -> Font.Font -> G.FontSize -> Maybe G.Prim -> Value -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where

@@ -37,6 +37,7 @@ import           Kurokos.UI.Widget.Render
 import           Kurokos.UI.WidgetTree    (WidgetTree (..))
 import qualified Kurokos.UI.WidgetTree    as WT
 import qualified Kurokos.Graphics as G
+import Kurokos.UI.Widget.Update (onReadyLayout)
 
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
@@ -257,13 +258,15 @@ readyRender g = do
       size <- case evalExp2 vmap' usize of
               Left err -> E.throw $ userError err
               Right v  -> return v
+      let size' = fromIntegral <$> size
       liftIO . freeCommonResource $ ctx^.ctxCmnRsc
-      cmnrsc' <- newCommonResource (fromIntegral <$> size) (optimumColor ctx) widget
+      widget' <- onReadyLayout size' widget
+      cmnrsc' <- newCommonResource size' (optimumColor ctx) widget'
       let ctx' = ctx & ctxNeedsRender .~ False
                      & ctxWidgetState . wstPos .~ pos
                      & ctxWidgetState . wstSize .~ size
                      & ctxCmnRsc .~ cmnrsc'
-      return (ctx', widget)
+      return (ctx', widget')
       where
         upos = ctx^.ctxUPos
         usize = ctx^.ctxUSize

@@ -62,14 +62,20 @@ renderWidget r pos parentSize wc cmnrsc (Switch _ _ _ selected) = do
     dx = ((parentSize^._x) - width) `div` 2
     pos' = pos & _x +~ dx
 
-renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Slider{} = do
+renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Slider _ _ _ mKnob value) = do
   renderBackAndBorder r pos wc cmnrsc
+  whenJust mKnob $
+    renderKnob r knobPos wc
   G.renderText r pos' text
   where
     text = cmnrscTextTex cmnrsc
     width = round . sum $ map (view ctAdvanceX) text
-    dx = ((parentSize^._x) - width) `div` 2
     pos' = pos & _x +~ dx
+      where
+        dx = ((parentSize^._x) - width) `div` 2
+    knobPos = pos & _x +~ dx
+      where
+        dx = round $ fromIntegral (parentSize^._x - 30) * rateFromValue value
 
 renderWidget r pos parentSize wcol CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
@@ -81,7 +87,7 @@ genTitle wc (Button title font size) =
   G.createTextTexture font size (wc^.wcTitle) title
 genTitle wc (Switch title font size _) =
   G.createTextTexture font size (wc^.wcTitle) title
-genTitle wc (Slider title font size _) =
+genTitle wc (Slider title font size _ _) =
   G.createTextTexture font size (wc^.wcTitle) title
 genTitle _ Transparent{} = return []
 genTitle _ Fill{} = return []
@@ -94,5 +100,12 @@ renderBackAndBorder r pos wc@WidgetColor{..} CmnRsc{..} = liftIO $ do
   G.drawPrim r pos' cmnrscRectFill
   G.setPrimColor r _wcBorder
   G.drawPrim r pos' cmnrscRectBorder
+  where
+    pos' = fromIntegral <$> pos
+
+renderKnob :: MonadIO m => G.Renderer -> V2 Int -> WidgetColor -> G.Prim -> m ()
+renderKnob r pos WidgetColor{..} rect = liftIO $ do
+  G.setPrimColor r _wcTint
+  G.drawPrim r pos' rect
   where
     pos' = fromIntegral <$> pos
