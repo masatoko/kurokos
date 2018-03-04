@@ -59,8 +59,8 @@ setUniformSamplerCube (UniformVar (TagSamplerCube texUnit) loc) tex = do
   GLU.asUniform texUnit loc
 
 -- Setup
-setupVecX :: GL.NumComponents -> GL.AttribLocation -> V.Vector GL.GLfloat -> IO (TypedBufferObject tag)
-setupVecX x loc ps = do
+setupAttribChunk :: GL.NumComponents -> GL.AttribLocation -> V.Vector GL.GLfloat -> IO (TypedBufferObject tag)
+setupAttribChunk numInChunk loc ps = do
   buf <- BO.fromVector GL.ArrayBuffer ps
   GL.bindBuffer GL.ArrayBuffer $= Just buf
   GL.vertexAttribPointer loc $= (GL.ToFloat, vad)
@@ -68,16 +68,19 @@ setupVecX x loc ps = do
   return $ TBO buf
   where
     stride = 0
-    vad = GL.VertexArrayDescriptor x GL.Float stride GLU.offset0
+    vad = GL.VertexArrayDescriptor numInChunk GL.Float stride GLU.offset0
 
 setupVec2 :: AttribVar TagVec2 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec2)
-setupVec2 (AttribVar TagVec2 loc) = setupVecX 2 loc
+setupVec2 (AttribVar TagVec2 loc) = setupAttribChunk 2 loc
 
 setupVec3 :: AttribVar TagVec3 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec3)
-setupVec3 (AttribVar TagVec3 loc) = setupVecX 3 loc
+setupVec3 (AttribVar TagVec3 loc) = setupAttribChunk 3 loc
 
 setupVec4 :: AttribVar TagVec4 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec4)
-setupVec4 (AttribVar TagVec4 loc) = setupVecX 4 loc
+setupVec4 (AttribVar TagVec4 loc) = setupAttribChunk 4 loc
+
+setupAttribFloat :: AttribVar TagFloat -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagFloat)
+setupAttribFloat (AttribVar TagFloat loc) = setupAttribChunk 1 loc
 
 -- Shader class
 class Shader a where
