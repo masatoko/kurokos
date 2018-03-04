@@ -13,6 +13,12 @@ import           Kurokos.UI.Types
 import qualified Kurokos.Graphics as G
 import qualified Kurokos.Graphics.Font as Font
 
+data Value
+  = ValueI Int Int Int
+  | ValueF Float Float Float
+  | ValueD Double Double Double
+  deriving Show
+
 data Widget where
   Transparent :: Widget
   Fill        :: Widget
@@ -20,6 +26,7 @@ data Widget where
   ImageView   :: G.Texture -> Widget
   Button      :: Text -> Font.Font -> G.FontSize -> Widget
   Switch      :: Text -> Font.Font -> G.FontSize -> Bool -> Widget
+  Slider      :: Text -> Font.Font -> G.FontSize -> Value -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where
@@ -29,6 +36,7 @@ instance Show Widget where
   show ImageView{}  = "<IMG>"
   show Button{}     = "<BTN>"
   show Switch{}     = "<SWT>"
+  show Slider{}     = "<SLD>"
   show UserWidget{} = "<USR>"
 
 attribOf :: Widget -> WidgetAttrib
@@ -58,6 +66,11 @@ attribOf Button{} =
     & clickable .~ True
 
 attribOf Switch{} =
+  defAttrib
+    & hoverable .~ True
+    & clickable .~ True
+
+attribOf Slider{} =
   defAttrib
     & hoverable .~ True
     & clickable .~ True

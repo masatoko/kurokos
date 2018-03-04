@@ -9,10 +9,11 @@ import qualified Control.Exception       as E
 import           Control.Lens
 import qualified Data.ByteString         as BS
 import qualified Data.Yaml               as Y
+import           Safe                    (readMay)
 
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
-import           Kurokos.UI.File.Yaml    (Title (..), YWidget (..),
+import           Kurokos.UI.File.Yaml    (Title (..), YValue (..), YWidget (..),
                                           decodeWidgets)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
@@ -48,6 +49,7 @@ convert s@Single{..} = do
       | wType == N.wnameLabel     = newLabel titleAssetIdent titleSize titleText
       | wType == N.wnameButton    = newButton titleAssetIdent titleSize titleText
       | wType == N.wnameSwitch    = newSwitch titleAssetIdent titleSize titleText
+      | wType == N.wnameSlider    = newSlider titleAssetIdent titleSize titleText value
       | wType == N.wnameImageView = newImageView =<< getAssetId
       | otherwise                 = liftIO $ E.throwIO $ userError $ "unkown widget type: " ++ wType
 
@@ -59,6 +61,16 @@ convert s@Single{..} = do
       ctx & ctxAttrib . visible %~ flip fromMaybe wVisible
           & ctxAttrib . clickable %~ flip fromMaybe wClickable
           & ctxAttrib . hoverable %~ flip fromMaybe wHoverable
+
+    value = maybe (error msg) make wValue
+      where
+        msg = "Missing value for slider " ++ maybe "." (\name -> "named " ++ name ++ ".") wName
+        make YValue{..} = toValue yvType
+          where
+            toValue "int"    = ValueI (maybe 0 round yvDef) (round yvMin) (round yvMax)
+            toValue "float"  = ValueF (maybe 0 realToFrac yvDef) (realToFrac yvMin) (realToFrac yvMax)
+            toValue "double" = ValueD (fromMaybe 0 yvDef) yvMin yvMax
+            toValue tpstr    = error $ "Undefined type: " ++ tpstr
 
 convert Container{..} = do
   cnt <- mkContainer wName wContainerType wColor (V2 wX wY) (V2 wWidth wHeight)

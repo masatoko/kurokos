@@ -45,6 +45,11 @@ newSwitch ident size title = do
   font <- getFont ident
   return $ Switch title font size True
 
+newSlider :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> Value -> GuiT m Widget
+newSlider ident size title value = do
+  font <- getFont ident
+  return $ Slider title font size value
+
 -- Internal
 
 getTexture :: MonadIO m => Asset.Ident -> GuiT m G.Texture

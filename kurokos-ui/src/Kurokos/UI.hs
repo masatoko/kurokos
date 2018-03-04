@@ -51,6 +51,8 @@ module Kurokos.UI
   , newLabel
   , newImageView
   , newButton
+  , newSwitch
+  , newSlider
   -- * Widget.Module
   , isWidgetTrue
   -- * WidgetTree

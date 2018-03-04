@@ -26,8 +26,24 @@
   title:
     text: Switch
     asset: font-m
-    size: 20
+    size: 16
   x-rpn: $width 2 / 100 -
   y: 300
   w: 200
-  h: 50
+  h: 30
+-
+  name: slider
+  type: slider
+  value:
+    type: int
+    def: 1
+    min: 0
+    max: 100
+  title:
+    text: Slider
+    asset: font-m
+    size: 16
+  x-rpn: $width 2 / 100 -
+  y: 350
+  w: 200
+  h: 30

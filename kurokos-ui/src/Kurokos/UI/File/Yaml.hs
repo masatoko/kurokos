@@ -25,6 +25,23 @@ decodeWidgets = Y.decodeEither'
 
 type YWidgets = [YWidget]
 
+-- | Value for slider
+data YValue
+  = YValue
+    { yvType :: String
+    , yvDef  :: Maybe Double
+    , yvMin  :: Double
+    , yvMax  :: Double
+    }
+  deriving (Eq, Show)
+
+instance FromJSON YValue where
+  parseJSON (Y.Object v) = YValue
+    <$> v .: "type"
+    <*> v .:? "def"
+    <*> v .: "min"
+    <*> v .: "max"
+
 data YWidget
   = Single
     { wType      :: String
@@ -38,6 +55,8 @@ data YWidget
     , wVisible   :: Maybe Bool
     , wClickable :: Maybe Bool
     , wHoverable :: Maybe Bool
+    --
+    , wValue     :: Maybe YValue
     --
     , wAsset     :: Maybe Asset.Ident
     --
@@ -75,6 +94,8 @@ instance FromJSON YWidget where
         <*> v .:? "visible"
         <*> v .:? "clickable"
         <*> v .:? "hoverable"
+        -- Value
+        <*> v .:? "value"
         --
         <*> v .:? "asset"
         <*> v .:? "title"
