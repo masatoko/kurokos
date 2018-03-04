@@ -19,6 +19,26 @@ data Value
   | ValueD Double Double Double
   deriving Show
 
+showValue :: Value -> String
+showValue (ValueI v _ _) = show v
+showValue (ValueF v _ _) = show v
+showValue (ValueD v _ _) = show v
+
+valueInt :: Value -> Int
+valueInt (ValueI v _ _) = v
+valueInt (ValueF v _ _) = round v
+valueInt (ValueD v _ _) = round v
+
+valueFloat :: Value -> Float
+valueFloat (ValueI v _ _) = fromIntegral v
+valueFloat (ValueF v _ _) = v
+valueFloat (ValueD v _ _) = realToFrac v
+
+valueDouble :: Value -> Double
+valueDouble (ValueI v _ _) = fromIntegral v
+valueDouble (ValueF v _ _) = realToFrac v
+valueDouble (ValueD v _ _) = v
+
 rateFromValue :: Value -> Double
 rateFromValue (ValueI v vmin vmax) = fromIntegral (v - vmin) / fromIntegral (vmax - vmin)
 rateFromValue (ValueF v vmin vmax) = realToFrac $ (v - vmin) / (vmax - vmin)
@@ -32,6 +52,8 @@ updateValueByRate rate (ValueF _ vmin vmax) = ValueF v vmin vmax
 updateValueByRate rate (ValueD _ vmin vmax) = ValueD v vmin vmax
   where v = vmin + rate * (vmax - vmin)
 
+data SliderResource = SliderResource { sliderRscKnob :: G.Prim, sliderRscText :: G.TextTexture }
+
 data Widget where
   Transparent :: Widget
   Fill        :: Widget
@@ -39,7 +61,7 @@ data Widget where
   ImageView   :: G.Texture -> Widget
   Button      :: Text -> Font.Font -> G.FontSize -> Widget
   Switch      :: Text -> Font.Font -> G.FontSize -> Bool -> Widget
-  Slider      :: Text -> Font.Font -> G.FontSize -> Maybe G.Prim -> Value -> Widget
+  Slider      :: Text -> Font.Font -> G.FontSize -> Maybe SliderResource -> Value -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where

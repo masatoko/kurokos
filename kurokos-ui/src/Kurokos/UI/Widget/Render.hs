@@ -64,15 +64,20 @@ renderWidget r pos parentSize wc cmnrsc (Switch _ _ _ selected) = do
 
 renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Slider _ _ _ mKnob value) = do
   renderBackAndBorder r pos wc cmnrsc
-  whenJust mKnob $
-    renderKnob r knobPos wc
-  G.renderText r pos' text
+  whenJust mKnob $ \(SliderResource knobPrim valText) -> do
+    renderKnob r knobPos wc knobPrim
+    renderValue valText
+    renderTitle $ cmnrscTextTex cmnrsc
   where
-    text = cmnrscTextTex cmnrsc
-    width = round . sum $ map (view ctAdvanceX) text
-    pos' = pos & _x +~ dx
+    renderValue text =
+      G.renderText r pos' text
       where
-        dx = ((parentSize^._x) - width) `div` 2
+        parWidth = parentSize^._x
+        texWidth = round . sum $ map (view ctAdvanceX) text
+        pos' = pos & _x +~ (parWidth - texWidth - 5)
+    renderTitle = G.renderText r pos'
+      where
+        pos' = pos & _x +~ 5
     knobPos = pos & _x +~ dx
       where
         dx = round $ fromIntegral (parentSize^._x - 30) * rateFromValue value

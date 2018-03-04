@@ -20,19 +20,23 @@ import qualified Kurokos.Graphics      as G
 import qualified Kurokos.Graphics.Font as Font
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
+import           Kurokos.UI.Color (WidgetColor (..))
 
 -- | Called when this widget needs re-layout.
 --
 -- Called from Core.readyRender
 -- Ready something except for CommonResource
-onReadyLayout :: (RenderEnv m, MonadIO m) => V2 Int -> Widget -> m Widget
-onReadyLayout (V2 w h) (Slider title font size mPreKnob value) = do
+onReadyLayout :: (RenderEnv m, MonadIO m) => V2 Int -> WidgetColor -> Widget -> m Widget
+onReadyLayout (V2 w h) wc (Slider title font size mPreKnob value) = do
   -- * Release
-  liftIO $ whenJust mPreKnob G.freePrim
+  liftIO $ whenJust mPreKnob (G.freePrim . sliderRscKnob)
   -- * Make
-  prim <- withRenderer $ \r -> G.newFillRectangle r (V2 30 (fromIntegral h))
-  return $ Slider title font size (Just prim) value
-onReadyLayout _ w = return w
+  knob <- withRenderer $ \r -> G.newFillRectangle r (V2 30 (fromIntegral h))
+  let text = T.pack $ showValue value
+  textTex <- liftIO $ G.createTextTexture font size (_wcTitle wc) text
+  let rsc = SliderResource knob textTex
+  return $ Slider title font size (Just rsc) value
+onReadyLayout _ _ w = return w
 
 
 modifyOnClicked :: Point V2 CInt -- ^ Cursor position

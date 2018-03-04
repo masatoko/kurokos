@@ -260,7 +260,7 @@ readyRender g = do
               Right v  -> return v
       let size' = fromIntegral <$> size
       liftIO . freeCommonResource $ ctx^.ctxCmnRsc
-      widget' <- onReadyLayout size' widget
+      widget' <- onReadyLayout size' (optimumColor ctx) widget
       cmnrsc' <- newCommonResource size' (optimumColor ctx) widget'
       let ctx' = ctx & ctxNeedsRender .~ False
                      & ctxWidgetState . wstPos .~ pos
