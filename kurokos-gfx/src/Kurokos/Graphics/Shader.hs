@@ -13,6 +13,10 @@ import qualified Graphics.Rendering.OpenGL     as GL
 
 import           Kurokos.Graphics.Types
 
+addUniformLocation :: GL.UniformLocation -> Int -> GL.UniformLocation
+addUniformLocation (GL.UniformLocation a) b =
+  GL.UniformLocation $ a + fromIntegral b
+
 -- Update Uniform
 setUniformBool :: UniformVar TagBool -> Bool -> IO ()
 setUniformBool (UniformVar TagBool loc) val =
@@ -33,6 +37,10 @@ setUniformFloat (UniformVar TagFloat loc) val =
 setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
 setUniformMat4 (UniformVar TagMat4 loc) val =
   GLU.asUniform val loc
+
+setUniformAryMat4 :: UniformVar TagAryMat4 -> Int -> M44 GL.GLfloat -> IO ()
+setUniformAryMat4 (UniformVar TagAryMat4 loc) aryIdx val =
+  GLU.asUniform val $ addUniformLocation loc aryIdx
 
 setUniformMat3 :: UniformVar TagMat3 -> M33 GL.GLfloat -> IO ()
 setUniformMat3 (UniformVar TagMat3 loc) val =
@@ -59,8 +67,8 @@ setUniformSamplerCube (UniformVar (TagSamplerCube texUnit) loc) tex = do
   GLU.asUniform texUnit loc
 
 -- Setup
-setupAttribChunk :: GL.NumComponents -> GL.AttribLocation -> V.Vector GL.GLfloat -> IO (TypedBufferObject tag)
-setupAttribChunk numInChunk loc ps = do
+setupAttribChunkf :: GL.NumComponents -> GL.AttribLocation -> V.Vector GL.GLfloat -> IO (TypedBufferObject tag)
+setupAttribChunkf numInChunk loc ps = do
   buf <- BO.fromVector GL.ArrayBuffer ps
   GL.bindBuffer GL.ArrayBuffer $= Just buf
   GL.vertexAttribPointer loc $= (GL.ToFloat, vad)
@@ -70,17 +78,31 @@ setupAttribChunk numInChunk loc ps = do
     stride = 0
     vad = GL.VertexArrayDescriptor numInChunk GL.Float stride GLU.offset0
 
+setupAttribChunki :: GL.NumComponents -> GL.AttribLocation -> V.Vector GL.GLint -> IO (TypedBufferObject tag)
+setupAttribChunki numInChunk loc ps = do
+  buf <- BO.fromVector GL.ArrayBuffer ps
+  GL.bindBuffer GL.ArrayBuffer $= Just buf
+  GL.vertexAttribPointer loc $= (GL.KeepIntegral, vad)
+  GL.vertexAttribArray loc $= GL.Enabled
+  return $ TBO buf
+  where
+    stride = 0
+    vad = GL.VertexArrayDescriptor numInChunk GL.Int stride GLU.offset0
+
 setupVec2 :: AttribVar TagVec2 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec2)
-setupVec2 (AttribVar TagVec2 loc) = setupAttribChunk 2 loc
+setupVec2 (AttribVar TagVec2 loc) = setupAttribChunkf 2 loc
 
 setupVec3 :: AttribVar TagVec3 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec3)
-setupVec3 (AttribVar TagVec3 loc) = setupAttribChunk 3 loc
+setupVec3 (AttribVar TagVec3 loc) = setupAttribChunkf 3 loc
 
 setupVec4 :: AttribVar TagVec4 -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagVec4)
-setupVec4 (AttribVar TagVec4 loc) = setupAttribChunk 4 loc
+setupVec4 (AttribVar TagVec4 loc) = setupAttribChunkf 4 loc
 
 setupAttribFloat :: AttribVar TagFloat -> V.Vector GL.GLfloat -> IO (TypedBufferObject TagFloat)
-setupAttribFloat (AttribVar TagFloat loc) = setupAttribChunk 1 loc
+setupAttribFloat (AttribVar TagFloat loc) = setupAttribChunkf 1 loc
+
+setupAttribInt :: AttribVar TagInt -> V.Vector GL.GLint -> IO (TypedBufferObject TagInt)
+setupAttribInt (AttribVar TagInt loc) = setupAttribChunki 1 loc
 
 -- Shader class
 class Shader a where

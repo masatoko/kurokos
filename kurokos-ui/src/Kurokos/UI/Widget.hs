@@ -1,17 +1,18 @@
-{-# LANGUAGE GADTs           #-}
+{-# LANGUAGE GADTs #-}
 module Kurokos.UI.Widget where
 
 import           Control.Lens
-import           Data.Text         (Text)
-import qualified Data.Text         as T
+import           Data.Text             (Text)
+import qualified Data.Text             as T
+import           Text.Printf           (printf)
 
 import qualified SDL
 
-import           Kurokos.UI.Def    (Renderable (..))
+import qualified Kurokos.Graphics      as G
+import qualified Kurokos.Graphics.Font as Font
+import           Kurokos.UI.Def        (Renderable (..))
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
-import qualified Kurokos.Graphics as G
-import qualified Kurokos.Graphics.Font as Font
 
 data Value
   = ValueI Int Int Int
@@ -21,8 +22,8 @@ data Value
 
 showValue :: Value -> String
 showValue (ValueI v _ _) = show v
-showValue (ValueF v _ _) = show v
-showValue (ValueD v _ _) = show v
+showValue (ValueF v _ _) = printf "%.2f" v
+showValue (ValueD v _ _) = printf "%.2f" v
 
 valueInt :: Value -> Int
 valueInt (ValueI v _ _) = v
