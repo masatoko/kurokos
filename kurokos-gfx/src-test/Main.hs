@@ -39,7 +39,7 @@ main = do
                 bracket (G.createTextTexture face 32 (V4 0 0 255 255) "World!") G.deleteTextTexture
       let texttex = text1 ++ text2
       helloTex <- managed $
-                    bracket (G.genTextImage rndr (GL.TextureUnit 0) texttex) G.deleteTexture
+                    bracket (G.genTextImage rndr texttex) G.deleteTexture
 
       tile <- managed $ bracket (G.readTexture "_data/tile.png") G.deleteTexture
       tex1 <- managed $ bracket (G.readTexture "_data/in_transit.png") G.deleteTexture

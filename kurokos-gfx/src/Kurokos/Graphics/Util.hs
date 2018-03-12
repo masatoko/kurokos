@@ -25,14 +25,13 @@ throwIfNot0 tag m = do
   unless (r == 0) $
     E.throwIO $ userError $ "throwIfNot0 @" ++ tag ++ ": " ++ show r
 
-makeRenderFBO :: V2 GL.GLsizei -> GL.TextureUnit -> IO (GL.FramebufferObject, GL.TextureObject)
-makeRenderFBO size@(V2 sizeW sizeH) texunit = do
+makeRenderFBO :: V2 GL.GLsizei -> IO (GL.FramebufferObject, GL.TextureObject)
+makeRenderFBO size@(V2 sizeW sizeH) = do
   -- Generate FBO
   fbo <- GL.genObjectName
   withFBO fbo size $ do
     -- Generate Texture
     renderTex <- GL.genObjectName
-    GL.activeTexture $= texunit
     GL.textureBinding GL.Texture2D $= Just renderTex
     GL.texImage2D GL.Texture2D GL.NoProxy 0 GL.RGBA' (GL.TextureSize2D sizeW sizeH) 0 (GL.PixelData GL.RGBA GL.UnsignedByte nullPtr)
     GL.textureFilter GL.Texture2D $= ((GL.Linear', Nothing), GL.Linear')

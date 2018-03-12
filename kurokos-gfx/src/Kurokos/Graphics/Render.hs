@@ -98,9 +98,9 @@ renderTextTexture shdr viewMat (V2 x0 y0) =
       renderTextureShader shdr
       return $ x + truncate dx
 
-genTextImage_ :: Foldable t => TextShader -> GL.TextureUnit -> M44 Float -> t CharTexture -> IO Texture
-genTextImage_ shdr texUnit originalProjMat cs = do
-  (fbo, tex) <- makeRenderFBO size texUnit
+genTextImage_ :: Foldable t => TextShader -> M44 Float -> t CharTexture -> IO Texture
+genTextImage_ shdr originalProjMat cs = do
+  (fbo, tex) <- makeRenderFBO size
   setProjection shdr projMat
   withFBO fbo size $ do
     GL.clearColor $= GL.Color4 0 0 0 0

@@ -114,6 +114,6 @@ renderText :: Foldable t => Renderer -> V2 Int -> t CharTexture -> IO ()
 renderText Renderer{..} =
   Render.renderTextTexture rndrTextShader rndrCurrentView
 
-genTextImage :: Foldable t => Renderer -> GL.TextureUnit -> t CharTexture -> IO Texture
-genTextImage Renderer{..} texUnit =
-  Render.genTextImage_ rndrTextShader texUnit rndrBasisProj
+genTextImage :: Foldable t => Renderer -> t CharTexture -> IO Texture
+genTextImage Renderer{..} =
+  Render.genTextImage_ rndrTextShader rndrBasisProj
