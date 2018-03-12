@@ -42,8 +42,8 @@ viewMatFromCam cam =
     center = V3 x y 0
 
 viewMatFromCam3 :: Camera -> V3 Float -> M44 Float
-viewMatFromCam3 cam at =
-  lookAt eye at (cam^.camUp)
+viewMatFromCam3 cam atPos =
+  lookAt eye atPos (cam^.camUp)
   where
     V2 x y = cam^.camCoord
     h = cam^.camHeight

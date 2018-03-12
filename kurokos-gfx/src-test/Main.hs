@@ -26,9 +26,10 @@ main = do
     winSize@(V2 winW winH) <- get $ SDL.windowSize window
     GL.viewport $= (GL.Position 0 0, GL.Size (fromIntegral winW) (fromIntegral winH))
     SDL.swapInterval $= SDL.SynchronizedUpdates
-    GL.clearColor $= GL.Color4 0.2 0.2 0.2 1
     --
     runManaged $ do
+      rndr <- managed $ bracket (G.newRenderer winSize) G.freeRenderer
+
       ft <- managed Font.withFreeType
       face <- managed $ bracket (Font.newFace ft "_test/mplus-1p-medium.ttf") Font.doneFace
       --
@@ -37,8 +38,9 @@ main = do
       text2 <- managed $
                 bracket (G.createTextTexture face 32 (V4 0 0 255 255) "World!") G.deleteTextTexture
       let texttex = text1 ++ text2
+      helloTex <- managed $
+                    bracket (G.genTextImage rndr (GL.TextureUnit 0) texttex) G.deleteTexture
 
-      rndr <- managed $ bracket (G.newRenderer winSize) G.freeRenderer
       tile <- managed $ bracket (G.readTexture "_data/tile.png") G.deleteTexture
       tex1 <- managed $ bracket (G.readTexture "_data/in_transit.png") G.deleteTexture
       tex2 <- managed $ bracket (G.readTexture "_data/panorama.png") G.deleteTexture
@@ -47,7 +49,7 @@ main = do
       rect <- managed $ bracket (G.newRectangle rndr (V2 40 20)) G.freePrim
       fillRect <- managed $ bracket (G.newFillRectangle rndr (V2 40 20)) G.freePrim
       --
-      liftIO $ loop window rndr tile tex1 tex2 texttex poly rect fillRect
+      liftIO $ loop window rndr tile tex1 tex2 texttex helloTex poly rect fillRect
   where
     winConf =
       SDL.defaultWindow
@@ -63,12 +65,13 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 4 0
         }
 
-    loop win rndr tile tex1 tex2 texttex poly rect fillRect = go (0 :: Integer)
+    loop win rndr tile tex1 tex2 texttex helloTex poly rect fillRect = go (0 :: Integer)
       where
         go i = do
           let i' = fromIntegral i
           GLU.printError
           events <- SDL.pollEvent
+          GL.clearColor $= GL.Color4 0.2 0.2 0.2 1
           GL.clear [GL.ColorBuffer]
           --
           let ctxTile = G.RContext (pure 10) (pure 128) Nothing Nothing
@@ -80,6 +83,7 @@ main = do
           --
           G.renderText rndr (V2 100 0) texttex
           G.renderText rndr (V2 100 480) texttex
+          G.renderTexture rndr helloTex Nothing (G.RContext (V2 10 100) (V2 (G.texWidth helloTex) (G.texHeight helloTex)) Nothing Nothing)
           --
           G.drawPrim rndr (V2 400 200) poly
           --

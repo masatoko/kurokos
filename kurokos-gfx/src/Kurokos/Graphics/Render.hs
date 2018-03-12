@@ -5,9 +5,11 @@ module Kurokos.Graphics.Render
   --
   , renderTextureShader
   , renderTextTexture
+  , genTextImage_
   ) where
 
 import           Control.Monad                (foldM_)
+import           Data.Foldable                (toList)
 import           Data.Maybe                   (fromMaybe)
 import           Linear
 
@@ -15,9 +17,12 @@ import qualified Graphics.GLUtil              as GLU
 import           Graphics.Rendering.OpenGL    (get, ($=))
 import qualified Graphics.Rendering.OpenGL    as GL
 
+import qualified Kurokos.Graphics.Camera      as Cam
+import           Kurokos.Graphics.Matrix      (mkOrtho)
 import           Kurokos.Graphics.Shader
 import           Kurokos.Graphics.Shader.Text (TextShader)
 import           Kurokos.Graphics.Types
+import           Kurokos.Graphics.Util        (makeRenderFBO, withFBO)
 
 setModelView :: Shader a => a -> M44 Float -> IO ()
 setModelView shdr modelViewMat =
@@ -78,7 +83,7 @@ renderTextureShader shdr =
 -- Text
 
 renderTextTexture :: Foldable t => TextShader -> M44 Float -> V2 Int -> t CharTexture -> IO ()
-renderTextTexture shdr view (V2 x0 y0) =
+renderTextTexture shdr viewMat (V2 x0 y0) =
   foldM_ renderChar x0
   where
     renderChar x (CharTexture tex color fontSize left top dx _) = do
@@ -88,7 +93,29 @@ renderTextTexture shdr view (V2 x0 y0) =
           ctx' = RContext (V2 x' y') size Nothing Nothing
       setColor shdr color
       setTexture shdr $ texObject tex
-      let mv = view !*! mkModelMatForNormalized ctx'
+      let mv = viewMat !*! mkModelMatForNormalized ctx'
       setModelView shdr mv
       renderTextureShader shdr
       return $ x + truncate dx
+
+genTextImage_ :: Foldable t => TextShader -> GL.TextureUnit -> M44 Float -> t CharTexture -> IO Texture
+genTextImage_ shdr texUnit originalProjMat cs = do
+  (fbo, tex) <- makeRenderFBO size texUnit
+  withProgram (shdrProgram shdr) $ do -- TODO: hituyou?
+    setProjection shdr projMat
+    withFBO fbo size $ do
+      GL.clearColor $= GL.Color4 0 0 0 0
+      GL.clear [GL.ColorBuffer]
+      GL.cullFace $= Nothing
+      renderTextTexture shdr viewMat (pure 0) cs
+    setProjection shdr originalProjMat -- Set projection matrix back
+  return $ Texture tex width height
+  where
+    projMat = mkOrtho size False
+    viewMat = Cam.viewMatFromCam Cam.mkCamera
+    --
+    size = V2 (fromIntegral width) (fromIntegral height)
+    width = ceiling . sum . map _ctAdvanceX . toList $ cs
+    height = sum . map heightOf . toList $ cs
+      where
+        heightOf ct = _ctFontSize ct - _ctTop ct + texHeight (ctTexture ct)

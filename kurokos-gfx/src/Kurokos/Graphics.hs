@@ -9,6 +9,7 @@ module Kurokos.Graphics
   , RContext (..)
   , renderTexture
   , renderText
+  , genTextImage
   -- , setTextColor
   -- ** Types
   , Color

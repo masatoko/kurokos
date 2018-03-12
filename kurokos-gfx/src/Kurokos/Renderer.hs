@@ -8,6 +8,7 @@ module Kurokos.Renderer
   --
   , renderTexture
   , renderText
+  , genTextImage
   ) where
 
 import           Foreign.C.Types                              (CInt)
@@ -29,7 +30,7 @@ import qualified Kurokos.Graphics.Shader.Basic                as Basic
 import qualified Kurokos.Graphics.Shader.Primitive            as Prim
 import qualified Kurokos.Graphics.Shader.Text                 as Text
 import qualified Kurokos.Graphics.Texture                     as Texture
-import           Kurokos.Graphics.Types                       (CharTexture, -- ProjectionType (..),
+import           Kurokos.Graphics.Types                       (CharTexture,
                                                                RContext (..),
                                                                TagVec2,
                                                                Texture (..),
@@ -42,7 +43,7 @@ data Renderer = Renderer
   , rndrTextShader  :: Text.TextShader
   , rndrFreeType    :: FT_Library
   -- Env
-  , rndrBasisProj :: M44 Float -- ^ Basis orthographic projection matrix. (Don't change)
+  , rndrBasisProj   :: M44 Float -- ^ Basis orthographic projection matrix. (Don't change)
   -- State
   , rndrCurrentView :: M44 Float -- ^ Current viewing matrix. (Just a state)
   }
@@ -104,7 +105,7 @@ renderTexture rndr tex Nothing rctx =
   where
     buf = shdrTexCoordVbo $ rndrBasicShader rndr
 renderTexture rndr tex (Just (texCoord, texSize)) rctx = do
-  buf <- Texture.newTexCoordVbo tex texCoord texSize
+  buf <- Texture.newTexCoordVbo tex texCoord texSize -- TODO: Modify original vbo by modeling matrix
   renderTextureWithTexCoord rndr tex buf rctx
   GL.deleteObjectName $ unTBO buf
 
@@ -112,3 +113,7 @@ renderTexture rndr tex (Just (texCoord, texSize)) rctx = do
 renderText :: Foldable t => Renderer -> V2 Int -> t CharTexture -> IO ()
 renderText Renderer{..} =
   Render.renderTextTexture rndrTextShader rndrCurrentView
+
+genTextImage :: Foldable t => Renderer -> GL.TextureUnit -> t CharTexture -> IO Texture
+genTextImage Renderer{..} texUnit =
+  Render.genTextImage_ rndrTextShader texUnit rndrBasisProj
