@@ -101,14 +101,13 @@ renderTextTexture shdr viewMat (V2 x0 y0) =
 genTextImage_ :: Foldable t => TextShader -> GL.TextureUnit -> M44 Float -> t CharTexture -> IO Texture
 genTextImage_ shdr texUnit originalProjMat cs = do
   (fbo, tex) <- makeRenderFBO size texUnit
-  withProgram (shdrProgram shdr) $ do -- TODO: hituyou?
-    setProjection shdr projMat
-    withFBO fbo size $ do
-      GL.clearColor $= GL.Color4 0 0 0 0
-      GL.clear [GL.ColorBuffer]
-      GL.cullFace $= Nothing
-      renderTextTexture shdr viewMat (pure 0) cs
-    setProjection shdr originalProjMat -- Set projection matrix back
+  setProjection shdr projMat
+  withFBO fbo size $ do
+    GL.clearColor $= GL.Color4 0 0 0 0
+    GL.clear [GL.ColorBuffer]
+    GL.cullFace $= Nothing
+    renderTextTexture shdr viewMat (pure 0) cs
+  setProjection shdr originalProjMat -- Set projection matrix back
   return $ Texture tex width height
   where
     projMat = mkOrtho size False
@@ -116,6 +115,6 @@ genTextImage_ shdr texUnit originalProjMat cs = do
     --
     size = V2 (fromIntegral width) (fromIntegral height)
     width = ceiling . sum . map _ctAdvanceX . toList $ cs
-    height = sum . map heightOf . toList $ cs
+    height = maximum . map heightOf . toList $ cs
       where
         heightOf ct = _ctFontSize ct - _ctTop ct + texHeight (ctTexture ct)

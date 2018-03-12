@@ -43,6 +43,8 @@ module Kurokos.Graphics
   , freePrim
   , newRectangle
   , newFillRectangle
+  -- ** Util
+  , withBlend
   -- ** Rendering (Temporal)
   , renderTextureShader
   , renderTextTexture
@@ -54,4 +56,5 @@ import           Kurokos.Graphics.Text
 import           Kurokos.Graphics.Texture
 import           Kurokos.Graphics.Texture.Util
 import           Kurokos.Graphics.Types
+import           Kurokos.Graphics.Util         (withBlend)
 import           Kurokos.Renderer

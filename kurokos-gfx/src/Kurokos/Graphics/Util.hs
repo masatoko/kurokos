@@ -55,6 +55,14 @@ withFBO fbo (V2 w h) action =
   GLU.withViewport (GL.Position 0 0) (GL.Size w h) $ do
     originalFBO <- liftIO $ GL.get $ GL.bindFramebuffer GL.Framebuffer
     liftIO $ GL.bindFramebuffer GL.Framebuffer $= fbo
-    a <- action
+    ret <- action
     liftIO $ GL.bindFramebuffer GL.Framebuffer $= originalFBO
-    return a
+    return ret
+
+withBlend :: MonadIO m => m a -> m a
+withBlend action = do
+  org <- liftIO $ GL.get GL.blendFuncSeparate
+  liftIO $ GL.blendFuncSeparate $= ((GL.SrcAlpha, GL.OneMinusSrcAlpha), (GL.One, GL.One))
+  ret <- action
+  liftIO $ GL.blendFuncSeparate $= org
+  return ret
