@@ -13,7 +13,7 @@ import           Control.Monad.Reader
 import qualified Kurokos                   as K
 -- import qualified Kurokos.Asset             as Asset
 -- import qualified Kurokos.Asset.Raw            as Asset
--- import qualified Kurokos.Graphics          as G
+import qualified Kurokos.Graphics          as G
 -- import           Kurokos.Graphics.Vect
 -- import           Kurokos.Graphics.Vect
 import qualified Kurokos.UI                as UI
@@ -57,7 +57,8 @@ runTitleScene = do
       liftIO $ do
         GL.clearColor $= GL.Color4 255 255 255 255
         GL.clear [GL.ColorBuffer]
-      UI.render $ tGui t
+      G.withAlphaBlend $
+        UI.render $ tGui t
 
     transit t = do
       whenJust (UI.clickedOn UI.GuiActLeft "start" es) $

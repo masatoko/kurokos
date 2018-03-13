@@ -58,10 +58,15 @@ withFBO fbo (V2 w h) action =
     liftIO $ GL.bindFramebuffer GL.Framebuffer $= originalFBO
     return ret
 
-withBlend :: MonadIO m => m a -> m a
-withBlend action = do
-  org <- liftIO $ GL.get GL.blendFuncSeparate
-  liftIO $ GL.blendFuncSeparate $= ((GL.SrcAlpha, GL.OneMinusSrcAlpha), (GL.One, GL.One))
+withAlphaBlend :: MonadIO m => m a -> m a
+withAlphaBlend action = do
+  orgBlend <- liftIO $ GL.get GL.blend
+  orgFunc <- liftIO $ GL.get GL.blendFuncSeparate
+  liftIO $ do
+    GL.blend $= GL.Enabled
+    GL.blendFuncSeparate $= ((GL.SrcAlpha, GL.OneMinusSrcAlpha), (GL.One, GL.One))
   ret <- action
-  liftIO $ GL.blendFuncSeparate $= org
+  liftIO $ do
+    GL.blendFuncSeparate $= orgFunc
+    GL.blend $= orgBlend
   return ret
