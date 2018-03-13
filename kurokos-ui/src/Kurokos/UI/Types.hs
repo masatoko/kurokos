@@ -121,6 +121,6 @@ optimumColor WContext{..}
 data Cursor = Cursor
   { _cursorPos  :: GuiPos
   , _cursorArea :: SDL.Rectangle CInt
-  } deriving Show
+  } deriving (Eq, Show)
 
 makeLenses ''Cursor

@@ -127,7 +127,7 @@ newGui :: (RenderEnv m, MonadIO m)
   => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
   g1 <- runGuiT g0 initializer
-  readyRender $ g1 & unGui._2.gstWTree %~ WT.balance
+  return $ g1 & unGui._2.gstWTree %~ WT.balance
   where
     g0 = GUI (env, gst0)
     gst0 = GuiState 0 Null
@@ -220,7 +220,7 @@ setAllNeedsRender =
     work = set (_1 . ctxNeedsRender) True
 
 -- | Ready for rendering. Call this at the end of Update
-readyRender :: (RenderEnv m, MonadIO m) => GUI -> m GUI
+readyRender :: (RenderEnv m, MonadIO m) => GUI -> m (Bool, GUI)
 readyRender g = do
   V2 w h <- getWindowSize
   let vmap = M.fromList
@@ -228,26 +228,29 @@ readyRender g = do
         , (keyHeight, h)
         , (keyWinWidth, w)
         , (keyWinHeight, h)]
-  wt <- go vmap $ g^.unGui._2.gstWTree
-  return $ g & unGui._2.gstWTree .~ (updateLayout . updateVisibility) wt
+  (updated, wt) <- go vmap $ g^.unGui._2.gstWTree
+  let g' = g & unGui._2.gstWTree .~ (updateLayout . updateVisibility) wt
+  return (updated, g')
   where
-    go _ Null = return Null
+    go _ Null = return (False, Null)
     go vmap (Fork u a mc o) = do
-      u' <- go vmap u
+      (readyU, u') <- go vmap u
       needsRenderByItself <- case a of
                                (_,UserWidget c) -> liftIO $ needsRender c
                                _                -> return False
-      a' <- if ctx^.ctxNeedsRender || needsRenderByItself
-              then readyLayout vmap a
-              else return a
-      mc' <- case mc of
-        Nothing -> return Nothing
+      (readyA, a') <- if ctx^.ctxNeedsRender || needsRenderByItself
+                        then (,) True <$> readyLayout vmap a
+                        else return (False, a)
+      (readyC, mc') <- case mc of
+        Nothing -> return (False, Nothing)
         Just c -> do
           let (V2 w h) = fromIntegral <$> (a'^._1 . ctxWidgetState . wstSize)
               vmap' = M.insert keyWidth w . M.insert keyHeight h $ vmap -- Update width and height
-          Just <$> go vmap' c
-      o' <- go vmap o
-      return $ Fork u' a' mc' o'
+          (readyC, c') <- go vmap' c
+          return (readyC, Just c')
+      (readyO, o') <- go vmap o
+      let updated = readyU || readyA || readyC || readyO
+      return (updated, Fork u' a' mc' o')
       where
         ctx = a^._1
 
