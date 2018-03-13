@@ -29,12 +29,7 @@ renderWidget r pos _parentSize WidgetColor{..} CmnRsc{..} Fill = do
 
 renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Label{} = do
   renderBackAndBorder r pos wc cmnrsc
-  G.renderText r pos' text
-  where
-    text = cmnrscTextTex cmnrsc
-    width = round . sum $ map (view ctAdvanceX) text
-    dx = ((parentSize^._x) - width) `div` 2
-    pos' = pos & _x +~ dx
+  whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize
 
 renderWidget r pos parentSize WidgetColor{..} CmnRsc{..} (ImageView image) = do
   let size = fromIntegral <$> parentSize
@@ -43,31 +38,22 @@ renderWidget r pos parentSize WidgetColor{..} CmnRsc{..} (ImageView image) = do
 
 renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Button{} = do
   renderBackAndBorder r pos wc cmnrsc
-  G.renderText r pos' text
-  where
-    text = cmnrscTextTex cmnrsc
-    width = round . sum $ map (view ctAdvanceX) text
-    dx = ((parentSize^._x) - width) `div` 2
-    pos' = pos & _x +~ dx
+  whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize
 
 renderWidget r pos parentSize wc cmnrsc (Switch _ _ _ selected) = do
   renderBackAndBorder r pos wc' cmnrsc
-  G.renderText r pos' text
+  whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize
   where
     wc'
       | selected  = wc&wcBack .~ (wc^.wcTint)
       | otherwise = wc
-    text = cmnrscTextTex cmnrsc
-    width = round . sum $ map (view ctAdvanceX) text
-    dx = ((parentSize^._x) - width) `div` 2
-    pos' = pos & _x +~ dx
 
 renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Slider _ _ _ mKnob value) = do
   renderBackAndBorder r pos wc cmnrsc
   whenJust mKnob $ \(SliderResource knobPrim valText) -> do
     renderKnob r knobPos wc knobPrim
     renderValue valText
-    renderTitle $ cmnrscTextTex cmnrsc
+    whenJust (cmnrscTextTex cmnrsc) renderTitle
   where
     renderValue text =
       G.renderText r pos' text
@@ -75,8 +61,9 @@ renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Slider _ _ _ mKnob valu
         parWidth = parentSize^._x
         texWidth = round . sum $ map (view ctAdvanceX) text
         pos' = pos & _x +~ (parWidth - texWidth - 5)
-    renderTitle = G.renderText r pos'
+    renderTitle tex = G.renderTexture r tex Nothing rctx
       where
+        rctx = G.RContext pos' (G.texSize tex) Nothing Nothing
         pos' = pos & _x +~ 5
     knobPos = pos & _x +~ dx
       where
@@ -85,18 +72,35 @@ renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Slider _ _ _ mKnob valu
 renderWidget r pos parentSize wcol CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
 
-genTitle :: WidgetColor ->  Widget -> IO G.TextTexture
-genTitle wc (Label title font size) =
-  G.createTextTexture font size (wc^.wcTitle) title
-genTitle wc (Button title font size) =
-  G.createTextTexture font size (wc^.wcTitle) title
-genTitle wc (Switch title font size _) =
-  G.createTextTexture font size (wc^.wcTitle) title
-genTitle wc (Slider title font size _ _) =
-  G.createTextTexture font size (wc^.wcTitle) title
-genTitle _ Transparent{} = return []
-genTitle _ Fill{} = return []
-genTitle _ ImageView{} = return []
+renderTex_ :: G.Renderer -> V2 Int -> V2 Int -> G.Texture -> IO ()
+renderTex_ r pos parentSize tex =
+  G.renderTexture r tex Nothing rctx
+  where
+    rctx = G.RContext pos' size Nothing Nothing
+    size = G.texSize tex
+    pos' = pos & _x +~ dx
+      where
+        dx = ((parentSize^._x) - (size^._x)) `div` 2
+
+genTitle :: G.Renderer -> WidgetColor ->  Widget -> IO (Maybe G.Texture)
+genTitle r wc (Label title font size) =
+  Just <$> genTitle_ r font size (wc^.wcTitle) title
+genTitle r wc (Button title font size) =
+  Just <$> genTitle_ r font size (wc^.wcTitle) title
+genTitle r wc (Switch title font size _) =
+  Just <$> genTitle_ r font size (wc^.wcTitle) title
+genTitle r wc (Slider title font size _ _) =
+  Just <$> genTitle_ r font size (wc^.wcTitle) title
+genTitle _ _ Transparent{} = return Nothing
+genTitle _ _ Fill{} = return Nothing
+genTitle _ _ ImageView{} = return Nothing
+
+genTitle_ :: G.Renderer -> Font.Font -> G.FontSize -> G.Color -> T.Text -> IO G.Texture
+genTitle_ rndr font size color title = do
+  text <- G.createTextTexture font size color title
+  tex <- G.genTextImage rndr text
+  G.deleteTextTexture text
+  return tex
 
 -- Internal
 renderBackAndBorder :: MonadIO m => G.Renderer -> V2 Int -> WidgetColor -> CommonResource -> m ()

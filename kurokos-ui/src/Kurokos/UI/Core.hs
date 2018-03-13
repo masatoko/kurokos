@@ -10,6 +10,7 @@ module Kurokos.UI.Core where
 import           Control.Concurrent.MVar
 import qualified Control.Exception        as E
 import           Control.Lens
+import           Control.Monad.Extra      (whenJust)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString          (ByteString)
@@ -155,7 +156,7 @@ newCommonResource size wcol w =
   withRenderer $ \r ->
     CmnRsc <$> G.newFillRectangle r size'
            <*> G.newRectangle r size'
-           <*> genTitle wcol w
+           <*> genTitle r wcol w
   where
     size' = fromIntegral <$> size
 
@@ -163,7 +164,7 @@ freeCommonResource :: CommonResource -> IO ()
 freeCommonResource CmnRsc{..} = do
   G.freePrim cmnrscRectFill
   G.freePrim cmnrscRectBorder
-  G.deleteTextTexture cmnrscTextTex
+  whenJust cmnrscTextTex G.deleteTexture
 
 mkSingle :: (RenderEnv m, MonadIO m)
   => Maybe WTName -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree

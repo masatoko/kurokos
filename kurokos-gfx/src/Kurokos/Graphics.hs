@@ -16,6 +16,7 @@ module Kurokos.Graphics
   , FontSize
   , ProjectionType (..)
   , Texture (..)
+  , texSize
   , TextTexture
   , CharTexture
   , ctColor

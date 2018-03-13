@@ -90,7 +90,7 @@ keyWinHeight = "winheight"
 data CommonResource = CmnRsc
   { cmnrscRectFill   :: G.Prim
   , cmnrscRectBorder :: G.Prim
-  , cmnrscTextTex    :: G.TextTexture
+  , cmnrscTextTex    :: Maybe G.Texture
   }
 
 data WContext = WContext

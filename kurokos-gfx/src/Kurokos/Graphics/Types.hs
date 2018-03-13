@@ -49,6 +49,9 @@ data Texture = Texture
   , texHeight :: Int
   }
 
+texSize :: Texture -> V2 Int
+texSize tex = V2 (texWidth tex) (texHeight tex)
+
 -- Font
 
 type Color = V4 Word8
