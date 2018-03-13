@@ -83,7 +83,7 @@ setTexCoordVbo shdr (TBO buf) =
 
 vert :: BS.ByteString
 vert = BS.intercalate "\n"
-  [ "#version 130"
+  [ "#version 400"
   , ""
   , "in vec2 VertexCoord;"
   , "in vec2 TexCoord;"
@@ -101,7 +101,7 @@ vert = BS.intercalate "\n"
 
 frag :: BS.ByteString
 frag = BS.intercalate "\n"
-  [ "#version 130"
+  [ "#version 400"
   , ""
   , "uniform sampler2D Texture;"
   , "in vec2 OTexCoord;"
@@ -110,6 +110,6 @@ frag = BS.intercalate "\n"
   , ""
   , "void main()"
   , "{"
-  , "  FragColor = texture2D( Texture, OTexCoord );"
+  , "  FragColor = texture( Texture, OTexCoord );"
   , "}"
   ]

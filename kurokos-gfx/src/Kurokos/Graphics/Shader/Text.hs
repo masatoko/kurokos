@@ -83,7 +83,7 @@ newTextShader = do
 
 vert :: BS.ByteString
 vert = BS.intercalate "\n"
-  [ "#version 130"
+  [ "#version 400"
   , ""
   , "in vec2 VertexCoord;"
   , "in vec2 TexCoord;"
@@ -101,7 +101,7 @@ vert = BS.intercalate "\n"
 
 frag :: BS.ByteString
 frag = BS.intercalate "\n"
-  [ "#version 130"
+  [ "#version 400"
   , ""
   , "uniform sampler2D Texture;"
   , "in vec2 OTexCoord;"
@@ -112,7 +112,7 @@ frag = BS.intercalate "\n"
   , ""
   , "void main()"
   , "{"
-  , "  float alpha = BasisColor.w * texture2D( Texture, OTexCoord ).a;"
+  , "  float alpha = BasisColor.w * texture( Texture, OTexCoord ).a;"
   , "  FragColor = vec4(BasisColor.xyz, alpha);"
   , "}"
   ]
