@@ -34,6 +34,10 @@ setUniformFloat :: UniformVar TagFloat -> GL.GLfloat -> IO ()
 setUniformFloat (UniformVar TagFloat loc) val =
   GLU.asUniform val loc
 
+setUniformAryFloat :: UniformVar TagAryFloat -> Int -> GL.GLfloat -> IO ()
+setUniformAryFloat (UniformVar TagAryFloat loc) aryIdx val =
+  GLU.asUniform val $ addUniformLocation loc aryIdx
+
 setUniformMat4 :: UniformVar TagMat4 -> M44 GL.GLfloat -> IO ()
 setUniformMat4 (UniformVar TagMat4 loc) val =
   GLU.asUniform val loc
