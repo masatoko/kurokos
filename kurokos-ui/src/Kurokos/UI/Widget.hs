@@ -53,7 +53,7 @@ updateValueByRate rate (ValueF _ vmin vmax) = ValueF v vmin vmax
 updateValueByRate rate (ValueD _ vmin vmax) = ValueD v vmin vmax
   where v = vmin + rate * (vmax - vmin)
 
-data SliderResource = SliderResource { sliderRscKnob :: G.Prim, sliderRscText :: G.TextTexture }
+data SliderResource = SliderResource { sliderRscKnob :: G.Prim, sliderRscText :: G.Texture }
 
 data Widget where
   Transparent :: Widget

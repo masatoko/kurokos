@@ -33,7 +33,9 @@ onReadyLayout (V2 w h) wc (Slider title font size mPreKnob value) = do
   -- * Make
   knob <- withRenderer $ \r -> G.newFillRectangle r (V2 30 (fromIntegral h))
   let text = T.pack $ showValue value
-  textTex <- liftIO $ G.createTextTexture font size (_wcTitle wc) text
+  text' <- liftIO $ G.createTextTexture font size (_wcTitle wc) text
+  textTex <- withRenderer $ \r -> G.genTextImage r text'
+  liftIO $ G.deleteTextTexture text'
   let rsc = SliderResource knob textTex
   return $ Slider title font size (Just rsc) value
 onReadyLayout _ _ w = return w

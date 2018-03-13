@@ -55,12 +55,14 @@ renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Slider _ _ _ mKnob valu
     renderValue valText
     whenJust (cmnrscTextTex cmnrsc) renderTitle
   where
-    renderValue text =
-      G.renderText r pos' text
+    renderValue tex = G.renderTexture r tex Nothing rctx
       where
-        parWidth = parentSize^._x
-        texWidth = round . sum $ map (view ctAdvanceX) text
+        rctx = G.RContext pos' size Nothing Nothing
+        size = G.texSize tex
         pos' = pos & _x +~ (parWidth - texWidth - 5)
+          where
+            parWidth = parentSize^._x
+            texWidth = size^._x
     renderTitle tex = G.renderTexture r tex Nothing rctx
       where
         rctx = G.RContext pos' (G.texSize tex) Nothing Nothing
