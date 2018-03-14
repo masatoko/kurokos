@@ -8,6 +8,7 @@ module Kurokos.Graphics.Render
   , genTextImage_
   ) where
 
+import qualified Control.Exception            as E
 import           Control.Monad                (foldM_)
 import           Data.Foldable                (toList)
 import           Data.Maybe                   (fromMaybe)
@@ -99,16 +100,18 @@ renderTextTexture shdr viewMat (V2 x0 y0) =
       return $ x + truncate dx
 
 genTextImage_ :: Foldable t => TextShader -> M44 Float -> t CharTexture -> IO Texture
-genTextImage_ shdr originalProjMat cs = do
-  (fbo, tex) <- makeRenderFBO size
-  setProjection shdr projMat
-  withFBO fbo size $ do
-    GL.clearColor $= GL.Color4 0 0 0 0
-    GL.clear [GL.ColorBuffer]
-    GL.cullFace $= Nothing
-    renderTextTexture shdr viewMat (pure 0) cs
-  setProjection shdr originalProjMat -- Set projection matrix back
-  return $ Texture tex width height
+genTextImage_ shdr originalProjMat cs
+  | null (toList cs) = E.throwIO $ userError "Empty TextTexture @Kurokos.Graphics.Render.genTextImage_"
+  | otherwise        = do
+    (fbo, tex) <- makeRenderFBO size
+    setProjection shdr projMat
+    withFBO fbo size $ do
+      GL.clearColor $= GL.Color4 0 0 0 0
+      GL.clear [GL.ColorBuffer]
+      GL.cullFace $= Nothing
+      renderTextTexture shdr viewMat (pure 0) cs
+    setProjection shdr originalProjMat -- Set projection matrix back
+    return $ Texture tex width height
   where
     projMat = mkOrtho size False
     viewMat = Cam.viewMatFromCam Cam.mkCamera
