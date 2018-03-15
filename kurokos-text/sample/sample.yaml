@@ -1,0 +1,3 @@
+sample-key:
+  ja: "私は${num}回も、その名前を呼んだのだった。"
+  en: "I called the name ${num} times."

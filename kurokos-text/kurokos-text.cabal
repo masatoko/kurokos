@@ -1,0 +1,69 @@
+-- This file has been generated from package.yaml by hpack version 0.20.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 6ed9924e3e0f75f3a228c89a1d8296453204c3475ae9e50d3d0d11cc5c1c408e
+
+name:           kurokos-text
+version:        0.1.0.0
+category:       Graphics
+homepage:       https://github.com/githubuser/kurokos-text#readme
+author:         Masato Kobayashi
+maintainer:     masatokodo@gmail.com
+copyright:      2018 Masato Kobayashi
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+
+extra-source-files:
+    README.md
+
+flag test
+  description: Build testing executable
+  manual: False
+  default: False
+
+library
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -fno-warn-unused-do-bind
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , megaparsec
+    , parser-combinators
+    , text
+    , unordered-containers
+    , yaml
+  exposed-modules:
+      Kurokos.Text
+      Kurokos.Text.Parse
+      Kurokos.Text.Types
+  other-modules:
+      Paths_kurokos_text
+  default-language: Haskell2010
+
+executable test-text
+  main-is: Main.hs
+  hs-source-dirs:
+      src-test
+  ghc-options: -Wall -fno-warn-unused-do-bind
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , containers
+    , megaparsec
+    , parser-combinators
+    , text
+    , unordered-containers
+    , yaml
+  if flag(test)
+    build-depends:
+        kurokos-text
+  else
+    buildable: False
+  other-modules:
+      Paths_kurokos_text
+  default-language: Haskell2010

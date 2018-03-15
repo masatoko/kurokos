@@ -1,0 +1,51 @@
+name:                kurokos-text
+version:             0.1.0.0
+#synopsis:
+#description:
+homepage:            https://github.com/githubuser/kurokos-text#readme
+license:             BSD3
+author:              Masato Kobayashi
+maintainer:          masatokodo@gmail.com
+copyright:           2018 Masato Kobayashi
+category:            Graphics
+extra-source-files:
+- README.md
+
+flags:
+  test:
+    description: Build testing executable
+    manual: False
+    default: False
+
+ghc-options:
+  - -Wall
+  - -fno-warn-unused-do-bind
+
+dependencies:
+  - base >= 4.7 && < 5
+  - containers
+  - unordered-containers
+  - text
+  - bytestring
+  - yaml
+  - megaparsec
+  - parser-combinators
+
+library:
+  source-dirs: src
+  exposed-modules:
+    - Kurokos.Text
+    - Kurokos.Text.Parse
+    - Kurokos.Text.Types
+
+executables:
+  test-text:
+    source-dirs:      src-test
+    main:             Main.hs
+    when:
+      - condition: flag(test)
+        then:
+          dependencies:
+            - kurokos-text
+        else:
+          buildable: False
