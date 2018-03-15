@@ -7,6 +7,7 @@ type Lang = T.Text
 
 type TextKey = T.Text
 type VarKey = T.Text
+type VarMap = M.Map VarKey T.Text
 
 data TextChunk
   = Var VarKey -- ^ Variable text
@@ -17,8 +18,7 @@ type LocText = [TextChunk] -- ^ It will be converted to a Text
 
 type TextSet = M.Map TextKey LocText
 
-
-getText :: TextKey -> M.Map VarKey T.Text -> TextSet -> Either String T.Text
+getText :: TextKey -> VarMap -> TextSet -> Either String T.Text
 getText tkey varmap tset =
   toText =<< M.lookup tkey tset <?> ("Missing TextKey '" ++ T.unpack tkey ++ "' in TextSet. " ++ show (M.keys tset))
   where

@@ -2,6 +2,7 @@
 module Kurokos.Text
   ( TextKey
   , VarKey
+  , VarMap
   , TextSet
   , parseTextSet
   , getText
