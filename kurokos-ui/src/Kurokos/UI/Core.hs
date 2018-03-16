@@ -224,10 +224,10 @@ readyRender :: (RenderEnv m, MonadIO m) => GUI -> m (Bool, GUI)
 readyRender g = do
   V2 w h <- getWindowSize
   let vmap = M.fromList
-        [ (keyWidth, w)
-        , (keyHeight, h)
-        , (keyWinWidth, w)
-        , (keyWinHeight, h)]
+        [ (kKeyWidth, w)
+        , (kKeyHeight, h)
+        , (kKeyWinWidth, w)
+        , (kKeyWinHeight, h)]
   (updated, wt) <- go vmap $ g^.unGui._2.gstWTree
   let g' = g & unGui._2.gstWTree .~ (updateLayout . updateVisibility) wt
   return (updated, g')
@@ -245,7 +245,7 @@ readyRender g = do
         Nothing -> return (False, Nothing)
         Just c -> do
           let (V2 w h) = fromIntegral <$> (a'^._1 . ctxWidgetState . wstSize)
-              vmap' = M.insert keyWidth w . M.insert keyHeight h $ vmap -- Update width and height
+              vmap' = M.insert kKeyWidth w . M.insert kKeyHeight h $ vmap -- Update width and height
           (readyC, c') <- go vmap' c
           return (readyC, Just c')
       (readyO, o') <- go vmap o

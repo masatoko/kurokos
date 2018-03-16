@@ -5,6 +5,7 @@ import qualified Data.ByteString.Char8 as BS
 import           Data.List             (isPrefixOf)
 import           Data.List.Extra       (firstJust)
 import qualified Data.Map              as M
+import           Data.Maybe            (fromMaybe)
 import           Data.Monoid           ((<>))
 import           Data.Text             (Text)
 import           Safe                  (readMay)
@@ -61,6 +62,7 @@ data YWidget
     , wAsset     :: Maybe Asset.Ident
     --
     , wTitle     :: Maybe Title
+    , wStyle     :: Style
     }
   | Container
     { wName          :: Maybe String
@@ -99,6 +101,7 @@ instance FromJSON YWidget where
         --
         <*> v .:? "asset"
         <*> v .:? "title"
+        <*> (fromMaybe defStyle <$> (v .:? "style"))
   parseJSON _ = fail "Expected Object for Config value"
 
 makeContainer :: Y.Object -> Y.Parser YWidget
@@ -143,3 +146,15 @@ instance FromJSON Title where
     <*> v .: "size"
     <*> v .: "asset"
   parseJSON _ = fail "Expected Object for Title"
+
+instance FromJSON Style where
+  parseJSON (Y.Object v) = Style
+    <$> (maybe TACenter parseTextAlign <$> v .:? "text-align")
+
+parseTextAlign :: String -> TextAlign
+parseTextAlign "left"   = TALeft
+parseTextAlign "right"  = TARight
+parseTextAlign "center" = TACenter
+
+defStyle :: Style
+defStyle = Style TACenter

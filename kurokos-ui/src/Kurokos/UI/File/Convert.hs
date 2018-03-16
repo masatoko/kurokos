@@ -40,11 +40,10 @@ parseWidgetTree bs =
 convert :: (RenderEnv m, MonadIO m)
   => YWidget -> GuiT m GuiWidgetTree
 convert s@Single{..} = do
-  wt <- mkSingle wName wColor style (V2 wX wY) (V2 wWidth wHeight) =<< generate
+  wt <- mkSingle wName wColor wStyle (V2 wX wY) (V2 wWidth wHeight) =<< generate
   return $ wt & wtElement._1 %~ setContext
   where
     Title titleText titleSize titleAssetIdent = fromMaybe (error "Missing title") wTitle
-    style = Style TACenter
     generate
       | wType == N.wnameFill      = newFill
       | wType == N.wnameLabel     = newLabel titleAssetIdent titleSize titleText

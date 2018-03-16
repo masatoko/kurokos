@@ -47,3 +47,28 @@
   y: 350
   w: 200
   h: 30
+
+-
+  type: container
+  order: vertical
+  w: 100
+  h: 100
+  children:
+    -
+      type: label
+      title:
+        text: "Label1"
+        asset: font-r
+        size: 14
+      style:
+        text-align: left
+      h: 20
+    -
+      type: label
+      title:
+        text: "Label2"
+        asset: font-r
+        size: 14
+      style:
+        text-align: right
+      h: 20

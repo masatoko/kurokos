@@ -81,11 +81,11 @@ fromUExp (C v)      = return $ EConst $ fromIntegral v
 fromUExpV2 :: V2 UExp -> Either String (V2 Exp)
 fromUExpV2 (V2 x y) = V2 <$> fromUExp x <*> fromUExp y
 
-keyWidth, keyHeight, keyWinWidth, keyWinHeight :: String
-keyWidth     = "width"
-keyHeight    = "height"
-keyWinWidth  = "winwidth"
-keyWinHeight = "winheight"
+kKeyWidth, kKeyHeight, kKeyWinWidth, kKeyWinHeight :: String
+kKeyWidth     = "width"
+kKeyHeight    = "height"
+kKeyWinWidth  = "winwidth"
+kKeyWinHeight = "winheight"
 
 data CommonResource = CmnRsc
   { cmnrscRectFill   :: G.Prim
@@ -101,7 +101,7 @@ data TextAlign
 
 data Style = Style
   { _styleTextAlign :: TextAlign
-  } deriving Show
+  } deriving (Eq, Show)
 
 makeLenses ''Style
 data WContext = WContext
