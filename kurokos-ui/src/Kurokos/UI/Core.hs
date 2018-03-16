@@ -167,8 +167,8 @@ freeCommonResource CmnRsc{..} = do
   whenJust cmnrscTextTex G.deleteTexture
 
 mkSingle :: (RenderEnv m, MonadIO m)
-  => Maybe WTName -> Maybe ContextColor -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
-mkSingle mName mColor pos size w = do
+  => Maybe WTName -> Maybe ContextColor -> Style -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
+mkSingle mName mColor style pos size w = do
   ident <- WTIdent <$> use gstIdCnt
   gstIdCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -179,12 +179,12 @@ mkSingle mName mColor pos size w = do
             Right v  -> return v
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
-  let ctx = WContext ident mName Nothing (attribOf w) True True iniWidgetState cmnRsc ctxCol pos' size'
+  let ctx = WContext ident mName Nothing (attribOf w) True True iniWidgetState cmnRsc ctxCol style pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
-  => Maybe WTName -> ContainerType -> Maybe ContextColor -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
-mkContainer mName ct mColor pos size = do
+  => Maybe WTName -> ContainerType -> Maybe ContextColor -> Style -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
+mkContainer mName ct mColor style pos size = do
   ident <- WTIdent <$> use gstIdCnt
   gstIdCnt += 1
   pos' <- case fromUExpV2 pos of
@@ -196,7 +196,7 @@ mkContainer mName ct mColor pos size = do
   let w = Transparent
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
-  let ctx = WContext ident mName (Just ct) (attribOf w) True True iniWidgetState cmnRsc ctxCol pos' size'
+  let ctx = WContext ident mName (Just ct) (attribOf w) True True iniWidgetState cmnRsc ctxCol style pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
@@ -288,10 +288,11 @@ render g =
   where
     go r (ctx, widget)
       | ctx^.ctxNeedsRender            = E.throwIO $ userError "Call GUI.readyRender before GUI.render!"
-      | ctx^.ctxWidgetState.wstVisible = renderWidget r pos size wcol cmnrsc widget
+      | ctx^.ctxWidgetState.wstVisible = renderWidget r pos size wcol style cmnrsc widget
       | otherwise                      = return ()
         where
           P pos = fromIntegral <$> ctx^.ctxWidgetState.wstGlobalPos
           size = fromIntegral <$> ctx^.ctxWidgetState^.wstSize
           wcol = optimumColor ctx
+          style = ctx^.ctxStyle
           cmnrsc = ctx^.ctxCmnRsc

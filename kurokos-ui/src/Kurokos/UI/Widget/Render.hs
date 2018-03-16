@@ -20,35 +20,35 @@ import           Kurokos.UI.Types
 import           Kurokos.UI.Util
 import           Kurokos.UI.Widget
 
-renderWidget :: G.Renderer -> V2 Int -> V2 Int -> WidgetColor -> CommonResource -> Widget -> IO ()
-renderWidget _r _pos _parentSize _ _ Transparent = return ()
+renderWidget :: G.Renderer -> V2 Int -> V2 Int -> WidgetColor -> Style -> CommonResource -> Widget -> IO ()
+renderWidget _r _pos _parentSize _ _ _ Transparent = return ()
 
-renderWidget r pos _parentSize WidgetColor{..} CmnRsc{..} Fill = do
+renderWidget r pos _parentSize WidgetColor{..} style CmnRsc{..} Fill = do
   G.setPrimColor r _wcBack
   G.drawPrim r pos cmnrscRectFill
 
-renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Label{} = do
+renderWidget r pos parentSize wc@WidgetColor{..} style cmnrsc Label{} = do
   renderBackAndBorder r pos wc cmnrsc
-  whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize
+  whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
 
-renderWidget r pos parentSize WidgetColor{..} CmnRsc{..} (ImageView image) = do
+renderWidget r pos parentSize WidgetColor{..} style CmnRsc{..} (ImageView image) = do
   let size = fromIntegral <$> parentSize
       rctx = G.RContext pos size Nothing Nothing
   G.renderTexture r image Nothing rctx
 
-renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc Button{} = do
+renderWidget r pos parentSize wc@WidgetColor{..} style cmnrsc Button{} = do
   renderBackAndBorder r pos wc cmnrsc
-  whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize
+  whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
 
-renderWidget r pos parentSize wc cmnrsc (Switch _ _ _ selected) = do
+renderWidget r pos parentSize wc style cmnrsc (Switch _ _ _ selected) = do
   renderBackAndBorder r pos wc' cmnrsc
-  whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize
+  whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
   where
     wc'
       | selected  = wc&wcBack .~ (wc^.wcTint)
       | otherwise = wc
 
-renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Slider _ _ _ mKnob value) = do
+renderWidget r pos parentSize wc@WidgetColor{..} style cmnrsc (Slider _ _ _ mKnob value) = do
   renderBackAndBorder r pos wc cmnrsc
   whenJust mKnob $ \(SliderResource knobPrim valText) -> do
     renderKnob r knobPos wc knobPrim
@@ -71,18 +71,25 @@ renderWidget r pos parentSize wc@WidgetColor{..} cmnrsc (Slider _ _ _ mKnob valu
       where
         dx = round $ fromIntegral (parentSize^._x - 30) * rateFromValue value
 
-renderWidget r pos parentSize wcol CmnRsc{..} (UserWidget a) =
+renderWidget r pos parentSize wcol style CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
 
-renderTex_ :: G.Renderer -> V2 Int -> V2 Int -> G.Texture -> IO ()
-renderTex_ r pos parentSize tex =
+renderTex_ :: G.Renderer -> V2 Int -> V2 Int -> Style -> G.Texture -> IO ()
+renderTex_ r pos parentSize style tex =
   G.renderTexture r tex Nothing rctx
   where
     rctx = G.RContext pos' size Nothing Nothing
     size = G.texSize tex
-    pos' = pos & _x +~ dx
+
+    dsize = parentSize - size
+    dy = (dsize^._y) `div` 2
+    pos' = mkPos $ style^.styleTextAlign
       where
-        dx = ((parentSize^._x) - (size^._x)) `div` 2
+        mkPos TALeft   = pos & _y +~ dy
+        mkPos TARight  = pos & _x +~ dx & _y +~ dy
+          where dx = dsize^._x
+        mkPos TACenter = pos & _x +~ dx & _y +~ dy
+          where dx = (dsize^._x) `div` 2
 
 genTitle :: G.Renderer -> WidgetColor ->  Widget -> IO (Maybe G.Texture)
 genTitle r wc (Label title font size) =

@@ -44,6 +44,10 @@ module Kurokos.UI
   , GuiEvent (..)
   , EventType (..)
   , UExp (..)
+  -- * Style
+  , Style (..)
+  , styleTextAlign
+  , TextAlign (..)
   -- * Widget
   , Widget (UserWidget)
   , Value (..)

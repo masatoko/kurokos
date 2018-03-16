@@ -40,10 +40,11 @@ parseWidgetTree bs =
 convert :: (RenderEnv m, MonadIO m)
   => YWidget -> GuiT m GuiWidgetTree
 convert s@Single{..} = do
-  wt <- mkSingle wName wColor (V2 wX wY) (V2 wWidth wHeight) =<< generate
+  wt <- mkSingle wName wColor style (V2 wX wY) (V2 wWidth wHeight) =<< generate
   return $ wt & wtElement._1 %~ setContext
   where
     Title titleText titleSize titleAssetIdent = fromMaybe (error "Missing title") wTitle
+    style = Style TACenter
     generate
       | wType == N.wnameFill      = newFill
       | wType == N.wnameLabel     = newLabel titleAssetIdent titleSize titleText
@@ -73,12 +74,13 @@ convert s@Single{..} = do
             toValue tpstr    = error $ "Undefined type: " ++ tpstr
 
 convert Container{..} = do
-  cnt <- mkContainer wName wContainerType wColor (V2 wX wY) (V2 wWidth wHeight)
+  cnt <- mkContainer wName wContainerType wColor style (V2 wX wY) (V2 wWidth wHeight)
   let cnt' = cnt & wtElement._1 %~ setContext
   ws <- mapM convert wChildren
   let w = mconcat ws
   return $ fromMaybe w $ prependChild cnt' w
   where
+    style = Style TACenter
     setContext ctx =
       ctx & ctxAttrib . visible %~ flip fromMaybe wVisible
           & ctxAttrib . clickable %~ flip fromMaybe wClickable

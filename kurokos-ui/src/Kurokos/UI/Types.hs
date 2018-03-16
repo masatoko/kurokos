@@ -93,6 +93,17 @@ data CommonResource = CmnRsc
   , cmnrscTextTex    :: Maybe G.Texture
   }
 
+data TextAlign
+  = TALeft
+  | TARight
+  | TACenter
+  deriving (Eq, Show)
+
+data Style = Style
+  { _styleTextAlign :: TextAlign
+  } deriving Show
+
+makeLenses ''Style
 data WContext = WContext
   { _ctxIdent         :: WTIdent
   , _ctxName          :: Maybe WTName
@@ -103,6 +114,7 @@ data WContext = WContext
   , _ctxWidgetState   :: WidgetState
   , _ctxCmnRsc        :: CommonResource
   , _ctxContextColor  :: ContextColor
+  , _ctxStyle         :: Style
   , _ctxUPos          :: V2 Exp
   , _ctxUSize         :: V2 Exp
   }
