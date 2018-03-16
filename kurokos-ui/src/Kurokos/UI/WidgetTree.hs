@@ -1,16 +1,17 @@
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Kurokos.UI.WidgetTree where
 
 import           Control.Lens
-import           Data.Monoid ((<>))
+import           Data.Foldable (toList)
+import           Data.Monoid   ((<>))
 
 data WidgetTree a
   = Null
   | Fork
-    { _wtUnder :: WidgetTree a
-    , _wtElement :: a
+    { _wtUnder    :: WidgetTree a
+    , _wtElement  :: a
     , _wtChildren :: Maybe (WidgetTree a)
-    , _wtOver :: WidgetTree a
+    , _wtOver     :: WidgetTree a
     }
   deriving (Eq, Show, Read)
 
@@ -50,8 +51,8 @@ size (Fork u _ mc o) = size u + 1 + maybe 0 size mc + size o
 instance Monoid (WidgetTree a) where
   mempty = Null
 
-  mappend k Null = k
-  mappend Null k = k
+  mappend k Null            = k
+  mappend Null k            = k
   mappend k (Fork u a mc o) = Fork (k `mappend` u) a mc o
 
 prepend :: a -> WidgetTree a -> WidgetTree a
@@ -76,10 +77,6 @@ appendChild _ _                      = Nothing
 prependChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
 prependChild (Fork u a (Just c) o) wt = Just $ Fork u a (Just $ c <> wt) o
 prependChild _ _                      = Nothing
-
-toList :: WidgetTree a -> [a]
-toList Null            = []
-toList (Fork u a mc o) = toList u ++ a : maybe [] toList mc ++ toList o
 
 balance :: WidgetTree a -> WidgetTree a
 balance = fromList' . toList'

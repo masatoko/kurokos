@@ -10,6 +10,7 @@ module Kurokos.UI.Control.Control
   ) where
 
 import           Control.Lens
+import           Data.Foldable             (toList)
 import           Data.Maybe                (catMaybes, mapMaybe, maybeToList)
 import           Linear.V2
 import           Safe                      (lastMay)
@@ -83,7 +84,7 @@ wtTopmostAt :: Point V2 CInt -> GuiWidgetTree -> Maybe (WContext, Widget)
 wtTopmostAt p = lastMay . wtFilterAt p
 
 wtFilterAt :: Point V2 CInt -> GuiWidgetTree -> [(WContext, Widget)]
-wtFilterAt aPos' = catMaybes . WT.toList . fmap work
+wtFilterAt aPos' = catMaybes . toList . fmap work
   where
     aPos = fromIntegral <$> aPos'
 
