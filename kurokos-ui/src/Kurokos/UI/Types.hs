@@ -34,9 +34,9 @@ data ContainerType
   deriving (Eq, Show)
 
 data WidgetState = WidgetState
-  { _wstGlobalPos :: GuiPos -- Change via setGlobalPos. Must not change directly.
-  , _wstPos       :: GuiPos -- Lobal position
-  , _wstSize      :: GuiSize -- Texture size
+  { _wstWorldPos :: GuiPos -- ^ Change with setGlobalPos. Must not change directly.
+  , _wstPos       :: GuiPos -- ^ Lobal position (Updated on readyRender)
+  , _wstSize      :: GuiSize -- ^ Texture size (Updated on readyRender)
   --
   , _wstVisible   :: Bool
   , _wstHover     :: Bool

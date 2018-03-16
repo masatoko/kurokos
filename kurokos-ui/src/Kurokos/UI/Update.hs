@@ -54,7 +54,7 @@ procEvent cursor gui = work
             in (ctx', WU.modifyOnClicked curPos pos size w)
           | otherwise = a
           where
-            pos = ctx^.ctxWidgetState.wstGlobalPos
+            pos = ctx^.ctxWidgetState.wstWorldPos
             size = ctx^.ctxWidgetState.wstSize
     work (MouseMotionEvent MouseMotionEventData{..}) =
       return . flip execState gui $ do
@@ -72,7 +72,7 @@ procEvent cursor gui = work
             in (ctx',w)
           | otherwise = a
           where
-            pos = ctx^.ctxWidgetState.wstGlobalPos
+            pos = ctx^.ctxWidgetState.wstWorldPos
             isHoverable = ctx^.ctxAttrib.hoverable
             wst = ctx^.ctxWidgetState
             size = wst^.wstSize
@@ -82,7 +82,7 @@ procEvent cursor gui = work
             in (ctx', WU.modifyWhenHoverWithLHold curPos pos size w)
           | otherwise = a
           where
-            pos = ctx^.ctxWidgetState.wstGlobalPos
+            pos = ctx^.ctxWidgetState.wstWorldPos
             size = ctx^.ctxWidgetState.wstSize
 
     work _ = return gui

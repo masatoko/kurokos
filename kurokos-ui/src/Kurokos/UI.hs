@@ -112,7 +112,7 @@ module Kurokos.UI
   , update
   , findByIdent
   , findByName
-  , setGlobalPosition
+  , setPositionInWorld
   ) where
 
 import           Kurokos.UI.Color

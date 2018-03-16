@@ -43,54 +43,6 @@ import Kurokos.UI.Widget.Update (onReadyLayout)
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
 
--- Update visibiilty in WidgetState
-updateVisibility :: GuiWidgetTree -> GuiWidgetTree
-updateVisibility = work True
-  where
-    work _    Null            = Null
-    work vis0 (Fork u a mc o) =
-      Fork (work vis0 u) a' (work vis' <$> mc) (work vis0 o)
-      where
-        atr = a^._1.ctxAttrib -- Original attribute
-        vis' = vis0 && atr^.visible -- Current state
-        a' = a & _1 . ctxWidgetState . wstVisible .~ vis'
-
--- Update global position in WidgetState
-updateLayout :: GuiWidgetTree -> GuiWidgetTree
-updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
-  where
-    help f (a,p) = f p >> return a
-    modsize Unordered       _ = return ()
-    modsize VerticalStack   p = _y .= (p^._y)
-    modsize HorizontalStack p = _x .= (p^._x)
-
-    work Null            _   _            p0 = (Null, p0)
-    work (Fork u a mc o) ct0 parentLayout p0 = runState go p0
-      where
-        wst = a^._1.ctxWidgetState
-        shouldLayout = parentLayout || (a^._1.ctxNeedsLayout)
-        ct' = fromMaybe Unordered $ a^._1.ctxContainerType
-        go = do
-          -- Under
-          u' <- help (modsize ct0) . work u ct0 parentLayout =<< get
-          -- CtxWidget
-          pos <- get
-          let pos' = case ct0 of
-                      Unordered -> p0 + (wst^.wstPos)
-                      _         -> pos
-              a' = if shouldLayout
-                      then a & _1 . ctxWidgetState . wstGlobalPos .~ pos'
-                             & _1 . ctxNeedsLayout .~ False
-                      else a
-          modsize ct0 $ pos' + P (wst^.wstSize)
-          -- Children
-          mc' <- case mc of
-            Nothing -> return Nothing
-            Just c  -> fmap Just $ help (modsize ct0) $ work c ct' shouldLayout pos'
-          -- Over
-          o' <- help (modsize ct0) . work o ct0 parentLayout =<< get
-          return $ Fork u' a' mc' o'
-
 data GuiEnv = GuiEnv
   { geAssetManager :: Asset.AssetManager
   , geColorScheme  :: ColorScheme
@@ -274,6 +226,54 @@ readyRender g = do
             evalExp (ERPN expr) = truncate <$> RPN.eval (vmap :: M.Map String Double) expr
             evalExp (EConst v)  = return v
 
+-- Update visibiilty in WidgetState
+updateVisibility :: GuiWidgetTree -> GuiWidgetTree
+updateVisibility = work True
+  where
+    work _    Null            = Null
+    work vis0 (Fork u a mc o) =
+      Fork (work vis0 u) a' (work vis' <$> mc) (work vis0 o)
+      where
+        atr = a^._1.ctxAttrib -- Original attribute
+        vis' = vis0 && atr^.visible -- Current state
+        a' = a & _1 . ctxWidgetState . wstVisible .~ vis'
+
+-- Update global position in WidgetState
+updateLayout :: GuiWidgetTree -> GuiWidgetTree
+updateLayout wt0 = fst $ work wt0 Unordered False (P $ V2 0 0)
+  where
+    help f (a,p) = f p >> return a
+    modsize Unordered       _ = return ()
+    modsize VerticalStack   p = _y .= (p^._y)
+    modsize HorizontalStack p = _x .= (p^._x)
+
+    work Null            _   _            p0 = (Null, p0)
+    work (Fork u a mc o) ct0 parentLayout p0 = runState go p0
+      where
+        wst = a^._1.ctxWidgetState
+        shouldLayout = parentLayout || (a^._1.ctxNeedsLayout)
+        ct' = fromMaybe Unordered $ a^._1.ctxContainerType
+        go = do
+          -- Under
+          u' <- help (modsize ct0) . work u ct0 parentLayout =<< get
+          -- CtxWidget
+          pos <- get
+          let pos' = case ct0 of
+                      Unordered -> p0 + (wst^.wstPos)
+                      _         -> pos
+              a' = if shouldLayout
+                      then a & _1 . ctxWidgetState . wstWorldPos .~ pos'
+                             & _1 . ctxNeedsLayout .~ False
+                      else a
+          modsize ct0 $ pos' + P (wst^.wstSize)
+          -- Children
+          mc' <- case mc of
+            Nothing -> return Nothing
+            Just c  -> fmap Just $ help (modsize ct0) $ work c ct' shouldLayout pos'
+          -- Over
+          o' <- help (modsize ct0) . work o ct0 parentLayout =<< get
+          return $ Fork u' a' mc' o'
+
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
 render g =
   withRenderer $ \r -> liftIO $
@@ -284,7 +284,7 @@ render g =
       | ctx^.ctxWidgetState.wstVisible = renderWidget r pos size wcol style cmnrsc widget
       | otherwise                      = return ()
         where
-          P pos = fromIntegral <$> ctx^.ctxWidgetState.wstGlobalPos
+          P pos = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
           size = fromIntegral <$> ctx^.ctxWidgetState^.wstSize
           wcol = optimumColor ctx
           style = ctx^.ctxStyle

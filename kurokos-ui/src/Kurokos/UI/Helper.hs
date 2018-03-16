@@ -38,8 +38,11 @@ findByName name g = find isTarget $ g^.unGui._2.gstWTree
   where
     isTarget (ctx,_) = ctx^.ctxName == Just name
 
-setGlobalPosition :: WTName -> GuiPos -> GUI -> GUI
-setGlobalPosition name g' = over (unGui._2.gstWTree) (fmap work)
+-- | Set position of a widget directly
+--
+-- Use this when put a widget on the required position in world space.
+setPositionInWorld :: WTName -> GuiPos -> GUI -> GUI
+setPositionInWorld name g' = over (unGui._2.gstWTree) (fmap work)
   where
     work :: CtxWidget -> CtxWidget
     work a@(ctx, w)
@@ -48,7 +51,7 @@ setGlobalPosition name g' = over (unGui._2.gstWTree) (fmap work)
       where
         parent = g - l
           where
-            g = ctx^.ctxWidgetState . wstGlobalPos
+            g = ctx^.ctxWidgetState . wstWorldPos
             l = ctx^.ctxWidgetState . wstPos
         P (V2 x y) = g' - parent
         ctx' = ctx & ctxUPos .~ V2 (EConst x) (EConst y)
