@@ -71,11 +71,11 @@ wtFromList as = Fork (wtFromList us) a Nothing (wtFromList os)
     (us, a:os) = splitAt k as
 
 appendChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
-appendChild wt (Fork u a (Just c) o) = Just $ Fork u a (Just $ wt <> c) o
+appendChild (Fork u a (Just c) o) wt = Just $ Fork u a (Just $ c <> wt) o
 appendChild _ _                      = Nothing
 
 prependChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
-prependChild (Fork u a (Just c) o) wt = Just $ Fork u a (Just $ c <> wt) o
+prependChild wt (Fork u a (Just c) o) = Just $ Fork u a (Just $ wt <> c) o
 prependChild _ _                      = Nothing
 
 balance :: WidgetTree a -> WidgetTree a

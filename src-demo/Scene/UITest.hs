@@ -123,11 +123,11 @@ runUITestScene =
         lbl' <- UI.mkSingle (Just "label") Nothing (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" 16 "---"
         btn' <- UI.mkSingle (Just "button") Nothing (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" 16 "Button in Container"
         ctn1 <- UI.mkContainer Nothing UI.Unordered Nothing (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
-        let Just ctn1' = UI.appendChild (mconcat [lbl', btn']) ctn1
+        let Just ctn1' = UI.appendChild ctn1 (mconcat [lbl', btn'])
         --
         btns <- mconcat <$> mapM (UI.mkSingle Nothing Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
         ctn2 <- UI.mkContainer (Just "menu") UI.VerticalStack Nothing (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
-        let Just ctn2' = UI.appendChild btns ctn2
+        let Just ctn2' = UI.appendChild cnt2 btns
         --
         clickableArea <- UI.mkSingle (Just "clickable") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
         fill <- UI.mkSingle (Just "fill") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
