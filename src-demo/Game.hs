@@ -29,7 +29,7 @@ runGameT :: GameEnv -> GameState -> GameT m a -> m (a, GameState)
 runGameT env st k =
   runStateT (runReaderT (runGT k) env) st
 
-instance MonadThrow (KurokosT (GameT IO)) where
+instance {-# OVERLAPS #-} MonadThrow (KurokosT (GameT IO)) where
   throwM e = liftIO $ throwM e
 
 instance MonadTrans GameT where

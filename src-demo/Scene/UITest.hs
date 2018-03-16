@@ -35,7 +35,7 @@ import           Import
 import           Graphics.Rendering.OpenGL    (($=))
 import qualified Graphics.Rendering.OpenGL    as GL
 
-import qualified Scene.Game
+import Scene (runTitleScene)
 
 data Dummy = Dummy [Action]
 
@@ -88,6 +88,7 @@ runUITestScene =
     scene = Scene update render transit
 
     nameMain = "go-main"
+    style = UI.Style UI.TACenter
 
     alloc = do
       guiYaml <- liftIO $ B.readFile "_data/gui-uitest.yaml"
@@ -106,31 +107,31 @@ runUITestScene =
         -- Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
-        label <- UI.mkSingle (Just "title") Nothing pos size0 =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
+        label <- UI.mkSingle (Just "title") Nothing style pos size0 =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
         -- Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
-        button1 <- UI.mkSingle (Just nameMain) Nothing pos1 size =<< UI.newButton "font-m" 16 "Next: Main Scene"
+        button1 <- UI.mkSingle (Just nameMain) Nothing style pos1 size =<< UI.newButton "font-m" 16 "Next: Main Scene"
         -- Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
-        img <- UI.mkSingle (Just "image") Nothing imgPos imgSize =<< UI.newImageView "sample-image"
+        img <- UI.mkSingle (Just "image") Nothing style imgPos imgSize =<< UI.newImageView "sample-image"
         -- UserWidget
         -- userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
-        lbl' <- UI.mkSingle (Just "label") Nothing (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" 16 "---"
-        btn' <- UI.mkSingle (Just "button") Nothing (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" 16 "Button in Container"
-        ctn1 <- UI.mkContainer Nothing UI.Unordered Nothing (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
+        lbl' <- UI.mkSingle (Just "label") Nothing style (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" 16 "---"
+        btn' <- UI.mkSingle (Just "button") Nothing style (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" 16 "Button in Container"
+        ctn1 <- UI.mkContainer Nothing UI.Unordered Nothing style (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
         let Just ctn1' = UI.appendChild ctn1 (mconcat [lbl', btn'])
         --
-        btns <- mconcat <$> mapM (UI.mkSingle Nothing Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
-        ctn2 <- UI.mkContainer (Just "menu") UI.VerticalStack Nothing (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
+        btns <- mconcat <$> mapM (UI.mkSingle Nothing Nothing style (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
+        cnt2 <- UI.mkContainer (Just "menu") UI.VerticalStack Nothing style (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
         let Just ctn2' = UI.appendChild cnt2 btns
         --
-        clickableArea <- UI.mkSingle (Just "clickable") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
-        fill <- UI.mkSingle (Just "fill") Nothing (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
+        clickableArea <- UI.mkSingle (Just "clickable") Nothing style (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
+        fill <- UI.mkSingle (Just "fill") Nothing style (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
         --
         UI.prependRoot $ mconcat [clickableArea, label, button1, img, ctn1', fill, ctn2']
         -- UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, userWidget, ctn1', fill, ctn2']
@@ -160,7 +161,9 @@ runUITestScene =
         updateEs esSDL t = t & tEvents .~ es
           where
             es = UI.handleGui UI.defaultGuiHandler esSDL (t^.tCursor) (t^.tGui)
-        readyG t = t & tGui %%~ UI.readyRender
+        readyG t = do
+          (_updated,g) <- UI.readyRender $ t^.tGui
+          return $ t & tGui .~ g
 
         work t =
           flip execState t $ do
@@ -170,7 +173,7 @@ runUITestScene =
 
             whenJust (UI.clickedOn UI.GuiActRight "clickable" es) $ \pos -> do -- TODO: Right click
               modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) True
-              modGui $ UI.setGlobalPosition "menu" pos
+              modGui $ UI.setPositionInWorld "menu" pos
               modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) True
 
             -- -- ** Update title
@@ -202,7 +205,7 @@ runUITestScene =
       --   color = V3 50 50 50
 
     transit t = do
-      when (isClicked nameMain) Scene.Game.runMainScene
+      when (isClicked nameMain) runTitleScene
       K.continue t
       where
         isClicked name = isJust $ UI.clickedOn UI.GuiActLeft name $ t^.tEvents

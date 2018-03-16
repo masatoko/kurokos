@@ -15,7 +15,8 @@ import qualified Kurokos.Asset.Raw as Asset
 
 import           Game
 import           Import
-import           Scene             (runTitleScene)
+-- import           Scene             (runTitleScene)
+import           Scene.UITest      (runUITestScene)
 
 main :: IO ()
 main = do
@@ -38,7 +39,8 @@ main = do
           -- SDL.setMouseLocationMode SDL.RelativeLocation
           SDL.cursorVisible $= True
           -- ===
-          runTitleScene
+          -- runTitleScene
+          runUITestScene
     Asset.freeAssetManager globalAssets
   where
     winConf = SDL.defaultWindow
