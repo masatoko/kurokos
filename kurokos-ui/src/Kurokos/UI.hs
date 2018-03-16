@@ -71,6 +71,7 @@ module Kurokos.UI
   , WidgetTree
   , ContainerType (..)
   , pretty
+  , prettyWith
   , showTree
   , readWidgetTree
   , parseWidgetTree

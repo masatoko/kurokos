@@ -44,6 +44,17 @@ pretty = unlines . work 0
     work n (Fork u _ (Just c) o) =
       work n u ++ [indent n ++ "@ | Container"] ++ work (n+1) c ++ work n o
 
+prettyWith :: (a -> String) -> WidgetTree a -> String
+prettyWith f = unlines . work 0
+  where
+    indent n = replicate (2 * n) ' '
+
+    work _ Null = []
+    work n (Fork u a Nothing o) =
+      work n u ++ [indent n ++ "+ " ++ f a] ++ work n o
+    work n (Fork u _ (Just c) o) =
+      work n u ++ [indent n ++ "@ | Container"] ++ work (n+1) c ++ work n o
+
 size :: WidgetTree a -> Int
 size Null            = 0
 size (Fork u _ mc o) = size u + 1 + maybe 0 size mc + size o
