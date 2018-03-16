@@ -223,11 +223,7 @@ setAllNeedsRender =
 readyRender :: (RenderEnv m, MonadIO m) => GUI -> m (Bool, GUI)
 readyRender g = do
   V2 w h <- getWindowSize
-  let vmap = M.fromList
-        [ (kKeyWidth, w)
-        , (kKeyHeight, h)
-        , (kKeyWinWidth, w)
-        , (kKeyWinHeight, h)]
+  let vmap = M.fromList [ (kKeyWidth, w), (kKeyHeight, h), (kKeyWinWidth, w), (kKeyWinHeight, h)]
   (updated, wt) <- go vmap $ g^.unGui._2.gstWTree
   let g' = g & unGui._2.gstWTree .~ (updateLayout . updateVisibility) wt
   return (updated, g')
@@ -239,7 +235,7 @@ readyRender g = do
                                (_,UserWidget c) -> liftIO $ needsRender c
                                _                -> return False
       (readyA, a') <- if ctx^.ctxNeedsRender || needsRenderByItself
-                        then (,) True <$> readyLayout vmap a
+                        then (,) True <$> readyLayout (M.map fromIntegral vmap) a
                         else return (False, a)
       (readyC, mc') <- case mc of
         Nothing -> return (False, Nothing)
@@ -255,13 +251,8 @@ readyRender g = do
         ctx = a^._1
 
     readyLayout vmap (ctx, widget) = do
-      let vmap' = M.map fromIntegral vmap
-      pos <- case evalExp2 vmap' upos of
-              Left err -> E.throw $ userError err
-              Right v  -> return $ P v
-      size <- case evalExp2 vmap' usize of
-              Left err -> E.throw $ userError err
-              Right v  -> return v
+      pos <- P <$> evalExp2 upos
+      size <- evalExp2 usize
       let size' = fromIntegral <$> size
       liftIO . freeCommonResource $ ctx^.ctxCmnRsc
       widget' <- onReadyLayout size' (optimumColor ctx) widget
@@ -275,11 +266,13 @@ readyRender g = do
         upos = ctx^.ctxUPos
         usize = ctx^.ctxUSize
 
-    evalExp2 :: M.Map String Double -> V2 Exp -> Either String (V2 CInt)
-    evalExp2 vmap (V2 x y) = V2 <$> evalExp x <*> evalExp y
-      where
-        evalExp (ERPN expr) = truncate <$> RPN.eval vmap expr
-        evalExp (EConst v)  = return v
+        evalExp2  (V2 x y) =
+          case V2 <$> evalExp x <*> evalExp y of
+            Left errmsg -> E.throw $ userError errmsg
+            Right v2    -> return v2
+          where
+            evalExp (ERPN expr) = truncate <$> RPN.eval (vmap :: M.Map String Double) expr
+            evalExp (EConst v)  = return v
 
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
 render g =
