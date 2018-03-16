@@ -2,13 +2,15 @@ module Kurokos.RPN
   ( Exp
   , parse
   , eval
+  , consts
   ) where
 
 import qualified Control.Exception as E
 import           Data.Fixed        (mod')
 import           Data.Foldable     (foldlM)
+import qualified Data.Map          as M
+import           Data.Maybe        (mapMaybe)
 import           Safe              (headMay, readMay)
-import qualified Data.Map as M
 
 type Exp = [Term]
 type Key = String
@@ -84,3 +86,9 @@ eval vmap ts = do
         Nothing -> Left $ "undefined constant value for key: $" ++ key
         Just v  -> go xs (V v)
     go xs           t     = Left $ "eval failed: " ++ show xs ++ " - " ++ show t
+
+consts :: Exp -> [Key]
+consts = mapMaybe work
+  where
+    work (Const key) = Just key
+    work _           = Nothing
