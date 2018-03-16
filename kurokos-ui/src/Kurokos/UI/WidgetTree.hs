@@ -52,8 +52,8 @@ prettyWith f = unlines . work 0
     work _ Null = []
     work n (Fork u a Nothing o) =
       work n u ++ [indent n ++ "+ " ++ f a] ++ work n o
-    work n (Fork u _ (Just c) o) =
-      work n u ++ [indent n ++ "@ | Container"] ++ work (n+1) c ++ work n o
+    work n (Fork u a (Just c) o) =
+      work n u ++ [indent n ++ "@ | Container: " ++ f a] ++ work (n+1) c ++ work n o
 
 size :: WidgetTree a -> Int
 size Null            = 0
