@@ -22,11 +22,11 @@ data TagSampler2D = TagSampler2D GL.TextureUnit deriving Show
 data TagSampler2DShadow = TagSampler2DShadow deriving Show
 data TagSamplerCube = TagSamplerCube GL.TextureUnit deriving Show
 
-data AttribVar tag = AttribVar tag GL.AttribLocation
+data AttribVar tag = AttribVar tag GL.AttribLocation deriving Show
 
-data UniformVar tag = UniformVar tag GL.UniformLocation
+data UniformVar tag = UniformVar tag GL.UniformLocation deriving Show
 
-newtype TypedBufferObject tag = TBO { unTBO :: GL.BufferObject }
+newtype TypedBufferObject tag = TBO { unTBO :: GL.BufferObject } deriving Show
 
 type Vec2 = V2 Float
 
@@ -48,7 +48,7 @@ data Texture = Texture
   { texObject :: GL.TextureObject
   , texWidth  :: Int
   , texHeight :: Int
-  }
+  } deriving Show
 
 texSize :: Texture -> V2 Int
 texSize tex = V2 (texWidth tex) (texHeight tex)

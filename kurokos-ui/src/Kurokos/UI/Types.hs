@@ -40,7 +40,7 @@ data WidgetState = WidgetState
   --
   , _wstVisible   :: Bool
   , _wstHover     :: Bool
-  }
+  } deriving Show
 
 makeLenses ''WidgetState
 
@@ -51,7 +51,7 @@ data WidgetAttrib = WidgetAttrib
   { _hoverable :: Bool
   , _clickable :: Bool
   , _visible   :: Bool
-  }
+  } deriving Show
 
 makeLenses ''WidgetAttrib
 
@@ -91,7 +91,7 @@ data CommonResource = CmnRsc
   { cmnrscRectFill   :: G.Prim
   , cmnrscRectBorder :: G.Prim
   , cmnrscTextTex    :: Maybe G.Texture
-  }
+  } deriving Show
 
 data TextAlign
   = TALeft
@@ -117,7 +117,7 @@ data WContext = WContext
   , _ctxStyle         :: Style
   , _ctxUPos          :: V2 Exp
   , _ctxUSize         :: V2 Exp
-  }
+  } deriving Show
 
 makeLenses ''WContext
 

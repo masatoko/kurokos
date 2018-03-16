@@ -21,7 +21,7 @@ data Prim = Prim
   , primVBO   :: TypedBufferObject TagVec2
   , primMode  :: GL.PrimitiveMode
   , primCount :: GL.NumArrayIndices
-  }
+  } deriving Show
 
 -- Render
 
