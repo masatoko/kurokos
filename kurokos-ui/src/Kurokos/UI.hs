@@ -12,6 +12,9 @@ module Kurokos.UI
   -- * Def
   , RenderEnv (..)
   , Renderable (..)
+  -- * Type
+  , CtxWidget
+  , GuiWidgetTree
   -- * WContext
   , WContext
   , ctxIdent
