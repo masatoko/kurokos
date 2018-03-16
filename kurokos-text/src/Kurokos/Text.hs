@@ -6,6 +6,8 @@ module Kurokos.Text
   , TextSet
   , parseTextSet
   , getText
+  , toListWith
+  , toListWithM
   ) where
 
 import           Kurokos.Text.Types

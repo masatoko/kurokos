@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 6ed9924e3e0f75f3a228c89a1d8296453204c3475ae9e50d3d0d11cc5c1c408e
+-- hash: 4e0111b11ed0c2182f96cd2110079e090b8f67fcde2d3f5e053b9944aab412f2
 
 name:           kurokos-text
 version:        0.1.0.0
@@ -34,6 +34,7 @@ library
     , containers
     , megaparsec
     , parser-combinators
+    , safe-exceptions
     , text
     , unordered-containers
     , yaml
@@ -56,6 +57,7 @@ executable test-text
     , containers
     , megaparsec
     , parser-combinators
+    , safe-exceptions
     , text
     , unordered-containers
     , yaml
