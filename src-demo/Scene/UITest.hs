@@ -18,7 +18,7 @@ import           Data.Maybe                   (isJust)
 import qualified Data.Text                    as T
 import           Linear.V4
 
-import qualified SDL
+-- import qualified SDL
 
 import qualified Kurokos                      as K
 import qualified Kurokos.Asset                as Asset
@@ -37,14 +37,14 @@ import qualified Graphics.Rendering.OpenGL    as GL
 
 import Scene (runTitleScene)
 
-data Dummy = Dummy [Action]
+-- data Dummy = Dummy [Action]
 
-data MyData = MyData
-  { gTexture   :: G.Texture
-  , gDeg       :: !Float
-  , gCount     :: !Int
-  , gMyActions :: [Action]
-  }
+-- data MyData = MyData
+--   { gTexture   :: G.Texture
+--   , gDeg       :: !Float
+--   , gCount     :: !Int
+--   , gMyActions :: [Action]
+--   }
 
 -- data UserVal = UserVal
 --   { _uvMVar :: MVar.MVar Int
@@ -82,8 +82,9 @@ makeLenses ''UITest
 runUITestScene :: KurokosT (GameT IO) ()
 runUITestScene =
   runResourceT $ do
-    t <- alloc
+    (t, sdlAssets) <- alloc
     lift $ runScene scene t
+    Asset.freeAssetManager sdlAssets
   where
     scene = Scene update render transit
 
@@ -98,7 +99,7 @@ runUITestScene =
         return $ assets1 <> assets2
       astMng <- Asset.loadAssetManager assetList
       r <- K.getRenderer
-      (_,sdlAssets) <- allocate (Asset.newAssetManager r astMng) Asset.freeAssetManager
+      sdlAssets <- liftIO $ Asset.newAssetManager r astMng
       --
       -- userVal <- liftIO $ UserVal <$> MVar.newMVar 0 <*> Asset.getFont "font-r" 16 sdlAssets
       --
@@ -146,7 +147,7 @@ runUITestScene =
       liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui'
       liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui'
       cursor <- UI.newCursor
-      return $ UITest gui' cursor [] 0
+      return (UITest gui' cursor [] 0, sdlAssets)
       -- return $ UITest gui' cursor userVal [] 0
 
     update :: Update (GameT IO) UITest
