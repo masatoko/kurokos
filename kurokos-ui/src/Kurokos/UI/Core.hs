@@ -230,22 +230,22 @@ readyRender g = do
   where
     go _ Null = return (False, Null)
     go vmap (Fork u a mc o) = do
-      (readyU, u') <- go vmap u
+      (updatedU, u') <- go vmap u
       needsRenderByItself <- case a of
                                (_,UserWidget c) -> liftIO $ needsRender c
                                _                -> return False
-      (readyA, a') <- if ctx^.ctxNeedsRender || needsRenderByItself
+      (updatedA, a') <- if ctx^.ctxNeedsRender || needsRenderByItself
                         then (,) True <$> readyLayout (M.map fromIntegral vmap) a
                         else return (False, a)
-      (readyC, mc') <- case mc of
+      (updatedC, mc') <- case mc of
         Nothing -> return (False, Nothing)
         Just c -> do
           let (V2 w h) = fromIntegral <$> (a'^._1 . ctxWidgetState . wstSize)
               vmap' = M.insert kKeyWidth w . M.insert kKeyHeight h $ vmap -- Update width and height
-          (readyC, c') <- go vmap' c
-          return (readyC, Just c')
-      (readyO, o') <- go vmap o
-      let updated = readyU || readyA || readyC || readyO
+          (updatedC, c') <- go vmap' c
+          return (updatedC, Just c')
+      (updatedO, o') <- go vmap o
+      let updated = updatedU || updatedA || updatedC || updatedO
       return (updated, Fork u' a' mc' o')
       where
         ctx = a^._1
