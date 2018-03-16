@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
@@ -25,7 +26,9 @@ main = do
       case testToListWith of
         Left errmsg -> putStrLn errmsg
         Right ts    -> T.putStrLn . T.concat $ ts
-      (T.putStrLn . T.concat) =<< testToListWithM
+      testToListWithM >>= \case
+        Left errmsg -> putStrLn errmsg
+        Right ts    -> T.putStrLn . T.concat $ ts
       where
         key = "sample-key"
         get = getText key varmap =<< parseTextSet bytes lang

@@ -30,7 +30,7 @@ dependencies:
   - yaml
   - megaparsec
   - parser-combinators
-  - safe-exceptions
+  - extra
 
 library:
   source-dirs: src
