@@ -76,8 +76,7 @@ convert Container{..} = do
   cnt <- mkContainer wName wContainerType wColor style (V2 wX wY) (V2 wWidth wHeight)
   let cnt' = cnt & wtElement._1 %~ setContext
   ws <- mapM convert wChildren
-  let w = mconcat ws
-  return $ fromMaybe w $ prependChild cnt' w
+  return $ appendChild cnt' (mconcat ws)
   where
     style = Style TACenter
     setContext ctx =

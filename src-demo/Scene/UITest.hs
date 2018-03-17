@@ -72,6 +72,7 @@ import Scene (runTitleScene)
 data UITest = UITest
   { _tGui    :: UI.GUI
   , _tCursor :: UI.Cursor
+  , _tUpdated :: Bool
   -- , _tUserVal :: UserVal
   , _tEvents :: [(UI.GuiAction, UI.GuiEvent)]
   , _tCnt    :: Int
@@ -125,17 +126,16 @@ runUITestScene =
         lbl' <- UI.mkSingle (Just "label") Nothing style (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" 16 "---"
         btn' <- UI.mkSingle (Just "button") Nothing style (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" 16 "Button in Container"
         ctn1 <- UI.mkContainer Nothing UI.Unordered Nothing style (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
-        let Just ctn1' = UI.appendChild ctn1 (mconcat [lbl', btn'])
+        let ctn1' = UI.appendChild ctn1 (mconcat [lbl', btn'])
         --
         btns <- mconcat <$> mapM (UI.mkSingle Nothing Nothing style (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
         cnt2 <- UI.mkContainer (Just "menu") UI.VerticalStack Nothing style (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
-        let Just ctn2' = UI.appendChild cnt2 btns
+        let ctn2' = UI.appendChild cnt2 btns
         --
         clickableArea <- UI.mkSingle (Just "clickable") Nothing style (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
         fill <- UI.mkSingle (Just "fill") Nothing style (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
         --
         UI.prependRoot $ mconcat [clickableArea, label, button1, img, ctn1', fill, ctn2']
-        -- UI.prependRoot $ mconcat [clickableArea, label, button1, button2, img, userWidget, ctn1', fill, ctn2']
         -- From file
         UI.appendRoot =<< UI.parseWidgetTree guiYaml
 
@@ -144,10 +144,18 @@ runUITestScene =
                    modify' $ UI.update "clickable" (set (_1.ctxAttrib.clickable) True)
                    modify' $ UI.update "fill" (set (_1.ctxAttrib.visible) False)
 
-      liftIO . putStrLn . UI.pretty $ UI.getWidgetTree gui'
-      liftIO . putStrLn . UI.showTree $ UI.getWidgetTree gui'
+      liftIO $ do
+        let wt = UI.getWidgetTree gui'
+        putStrLn "==="
+        putStrLn $ UI.pretty wt
+        putStrLn "==="
+        putStrLn $ UI.showTree wt
+        putStrLn "==="
+        putStrLn $ UI.prettyWith show wt
+        putStrLn "==="
+
       cursor <- UI.newCursor
-      return (UITest gui' cursor [] 0, sdlAssets)
+      return (UITest gui' cursor False [] 0, sdlAssets)
       -- return $ UITest gui' cursor userVal [] 0
 
     update :: Update (GameT IO) UITest
@@ -163,8 +171,9 @@ runUITestScene =
           where
             es = UI.handleGui UI.defaultGuiHandler esSDL (t^.tCursor) (t^.tGui)
         readyG t = do
-          (_updated,g) <- UI.readyRender $ t^.tGui
+          (updated,g) <- UI.readyRender $ t^.tGui
           return $ t & tGui .~ g
+                     & tUpdated .~ updated
 
         work t =
           flip execState t $ do
@@ -190,20 +199,21 @@ runUITestScene =
 
     render :: Render (GameT IO) UITest
     render t = do
-      clearBy $ V4 0.97 0.97 0.97 1
-      --
-      -- K.printTest (V2 10 200) color "- Joysticks"
-      -- vjs <- K.getJoysticks
-      -- let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
-      -- V.imapM_ (\i js -> K.printTest (V2 10 (220 + i * 20)) color (showjs js)) vjs
-      --
-      UI.render $ t^.tGui
-      -- K.withRenderer $ \r -> do
-      --   let P pos = t^.tCursor.cursorPos
-      --   Prim.smoothCircle r pos 5 (V4 0 0 0 255) -- Cursor
-      return ()
-      -- where
-      --   color = V3 50 50 50
+      -- when (t^.tUpdated) $ do
+        clearBy $ V4 0.97 0.97 0.97 1
+        --
+        -- K.printTest (V2 10 200) color "- Joysticks"
+        -- vjs <- K.getJoysticks
+        -- let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
+        -- V.imapM_ (\i js -> K.printTest (V2 10 (220 + i * 20)) color (showjs js)) vjs
+        --
+        UI.render $ t^.tGui
+        -- K.withRenderer $ \r -> do
+        --   let P pos = t^.tCursor.cursorPos
+        --   Prim.smoothCircle r pos 5 (V4 0 0 0 255) -- Cursor
+        return ()
+        -- where
+        --   color = V3 50 50 50
 
     transit t = do
       when (isClicked nameMain) runTitleScene

@@ -7,6 +7,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 module Kurokos.UI.Core where
 
+-- import Debug.Trace (traceM)
 import Data.List.Extra (firstJust)
 import qualified Data.Set as Set
 import           Control.Concurrent.MVar
@@ -17,6 +18,7 @@ import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString          (ByteString)
 import qualified Data.Map                 as M
+import qualified Data.Map.Strict          as MS
 import           Data.Maybe               (fromMaybe, isJust)
 import           Data.Monoid              ((<>))
 import           Data.Text                (Text)
@@ -83,7 +85,7 @@ newGui env initializer = do
   g1 <- runGuiT g0 initializer
   (_,g2) <- readyRender g1 -- Generate textures
   (_,g3) <- readyRender $ setAllNeedsRender g2 -- Calculate position and size
-  return $ g1 & unGui._2.gstWTree %~ WT.balance
+  return $ g3 & unGui._2.gstWTree %~ WT.balance
   where
     g0 = GUI (env, gst0)
     gst0 = GuiState 0 Null
@@ -311,17 +313,24 @@ updateVisibility = work True
 updateLayout :: V2 CInt -> GuiWidgetTree -> GuiWidgetTree
 updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
   let vmap = M.insert kKeyWidth winW . M.insert kKeyHeight winH $ defVmap
-  calcMinSizeForCntr vmap wt0
+  calcMinSize vmap wt0
   wt1 <- calcSize vmap wt0
   return $ snd $ calcWPos Unordered (pure 0) wt1
   where
     defVmap = M.fromList [(kKeyWinWidth, fromIntegral winW), (kKeyWinHeight, fromIntegral winH)]
 
-    minSizeMap0 :: M.Map WTIdent (V2 CInt)
-    minSizeMap0 = M.empty
+    minSizeMap0 :: MS.Map WTIdent (V2 (Maybe CInt))
+    minSizeMap0 = MS.empty
 
-    getMinSize idx = M.lookup idx <$> get
-    writeSize idx wh = modify $ M.insert idx wh
+    getMinSize idx = MS.lookup idx <$> get
+    writeW idx w = modify $ \pm ->
+      case M.lookup idx pm of
+        Nothing        -> M.insert idx (V2 (Just w) Nothing) pm
+        Just (V2 _ mh) -> M.insert idx (V2 (Just w) mh) pm
+    writeH idx h = modify $ \pm ->
+      case M.lookup idx pm of
+        Nothing        -> M.insert idx (V2 Nothing (Just h)) pm
+        Just (V2 mw _) -> M.insert idx (V2 mw (Just h)) pm
 
     evalExp _    (EConst x) = Right x
     evalExp vmap (ERPN e)   = case RPN.eval (M.map fromIntegral vmap) e of
@@ -331,9 +340,9 @@ updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
     -- * Step.1
     --   - Calculate minimum size for Container (bottom-up)
     --   - Parent size is NOT calculated at this time, so kKeyWidth and kKeyHeight are not fixed.
-    calcMinSizeForCntr :: M.Map String CInt -> GuiWidgetTree -> State (M.Map WTIdent (V2 CInt)) ([CInt], [CInt])
-    calcMinSizeForCntr _    Null                       = return ([],[])
-    calcMinSizeForCntr vmap (Fork u a@(ctx,widget) mc o) = do
+    calcMinSize :: M.Map String CInt -> GuiWidgetTree -> State (M.Map WTIdent (V2 (Maybe CInt))) ([CInt], [CInt])
+    calcMinSize _    Null                         = return ([],[])
+    calcMinSize vmap (Fork u a@(ctx,widget) mc o) = do
       -- * Calc size (if decidable)
       let mw = case evalExp vmap expW of -- Use vmap from PARENT here
                 Left _  -> Nothing -- Not decidable yet (kKeyMinWidth and kKeyMinHeight is not supplied)
@@ -341,24 +350,29 @@ updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
           mh = case evalExp vmap expH of -- Use vmap from PARENT here
                 Left _  -> Nothing -- Not decidable yet (..)
                 Right h -> Just h
+      -- traceM $ unwords [">>>", show (ctx^.ctxName), show mw, show mh, show vmap]
       -- * Minimum size
       case mc of
         Nothing -> do
           let (V2 mMinW mMinH) = widgetMinimumSize a
               w = fromMaybe 1 $ firstJust id [mw, mMinW] -- TODO: Reconsider
               h = fromMaybe 1 $ firstJust id [mh, mMinH]
-          writeSize idx (V2 w h)
+          writeW idx w
+          writeH idx h
         Just c  -> do -- Container
-          let vmap4children = workH . workW $ vmap
+          let vmap4children = workH . workW $ defVmap
                 where
                   workW = maybe id (M.insert kKeyWidth) mw
                   workH = maybe id (M.insert kKeyHeight) mh
-          (ws,hs) <- calcMinSizeForCntr vmap4children c
-          writeSize idx (calcMinimumSize ws hs) -- Memorize mininum size here
+          (ws,hs) <- calcMinSize vmap4children c
+          -- traceM $ unwords [">>>+", show (ctx^.ctxName), show ws, show hs, show vmap4children, show (calcMinimumSize ws hs)]
+          let V2 mMinW mMinH = calcMinimumSize ws hs
+          whenJust mMinW $ writeW idx
+          whenJust mMinH $ writeH idx
 
       -- * Calculate sizes for the parent
-      (wsU, hsU) <- calcMinSizeForCntr vmap u
-      (wsO, hsO) <- calcMinSizeForCntr vmap o
+      (wsU, hsU) <- calcMinSize vmap u
+      (wsO, hsO) <- calcMinSize vmap o
       let fw = maybe id (:) mw
           fh = maybe id (:) mh
       return (fw (wsU ++ wsO), fh (hsU ++ hsO)) -- Returns all sizes to the parent.
@@ -367,22 +381,25 @@ updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
         V2 expW expH = ctx^.ctxUSize
         calcMinimumSize ws hs =
           case thisCType of
-            VerticalStack   -> V2 (maximum ws) (sum hs)
-            HorizontalStack -> V2 (sum ws) (maximum hs)
-            Unordered       -> V2 (maximum ws) (maximum hs) -- TODO: Fix
+            VerticalStack   -> V2 (help maximum ws) (help sum hs)
+            HorizontalStack -> V2 (help sum ws) (help maximum hs)
+            Unordered       -> V2 (help maximum ws) (help maximum hs) -- TODO: Considering position
           where
             thisCType = fromMaybe (error "No ContainerType for container") $ ctx^.ctxContainerType
+            help _ [] = Nothing
+            help f as = Just $ f as
 
     -- * Step.2
     --   - Calculate local pos and size using vmap with all keys (top-down)
     --   - Update ctxWidgetState.wstSize
-    calcSize _     Null            = return Null
+    calcSize _     Null                    = return Null
     calcSize vmap0 (Fork u a@(ctx,_) mc o) = do
       -- * Complement vmap
       -- - Get minimum size
       mMinSize <- getMinSize idx
-      let (V2 minW minH) = fromMaybe (error msg) mMinSize
-            where msg = "Missing minimum size @" ++ show idx
+      let V2 mMinW mMinH = fromMaybe (error $ "Missing minimum size @" ++ show idx) mMinSize
+          minW = fromMaybe 0 mMinW
+          minH = fromMaybe 0 mMinH
       -- - Complement vmap
       let vmap = M.insert kKeyMinWidth minW . M.insert kKeyMinHeight minH $ vmap0
       -- * Decide size
@@ -400,6 +417,7 @@ updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
                 Right y -> y
           a' = a&_1.ctxWidgetState.wstSize .~ V2 w h
                 &_1.ctxWidgetState.wstPos  .~ P (V2 x y)
+      -- traceM $ show (ctx^.ctxName) ++ " " ++ show (w,h) ++ " " ++ show vmap
       -- * Same depth
       u' <- calcSize vmap u
       o' <- calcSize vmap o
@@ -423,18 +441,19 @@ updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
     calcWPos _     pos0 Null                    = (pos0, Null)
     calcWPos parCT pos0 (Fork u a@(ctx,_) mc o) =
       let (pos1, u') = calcWPos parCT pos0 u
+          wpos = if parCT == Unordered
+                  then P pos1 + (ctx^.ctxWidgetState.wstPos)
+                  else P pos1
           a' = a&_1.ctxWidgetState.wstWorldPos .~ wpos
-            where
-              wpos = if parCT == Unordered
-                      then P pos1 + (ctx^.ctxWidgetState.wstPos)
-                      else P pos1
           pos2 = pos1 `advance` (ctx^.ctxWidgetState.wstSize)
           (pos3, mc') = case mc of
             Nothing -> (pos2, Nothing)
             Just c  ->
               case ctx^.ctxContainerType of
                 Nothing    -> error "Missing ContainerType"
-                Just ctype -> Just <$> calcWPos ctype pos2 c
+                Just ctype ->
+                  let P wpos' = wpos
+                  in Just <$> calcWPos ctype wpos' c
           (pos4, o') = calcWPos parCT pos3 o
       in (pos4, Fork u' a' mc' o')
       where

@@ -81,13 +81,15 @@ wtFromList as = Fork (wtFromList us) a Nothing (wtFromList os)
     k = length as `div` 2
     (us, a:os) = splitAt k as
 
-appendChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
-appendChild (Fork u a (Just c) o) wt = Just $ Fork u a (Just $ c <> wt) o
-appendChild _ _                      = Nothing
+-- TODO: Add phantom type
+appendChild :: WidgetTree a -> WidgetTree a -> WidgetTree a
+appendChild (Fork u a (Just c) o) wt = Fork u a (Just $ c <> wt) o
+appendChild _ _                      = error "appendChild"
 
-prependChild :: WidgetTree a -> WidgetTree a -> Maybe (WidgetTree a)
-prependChild wt (Fork u a (Just c) o) = Just $ Fork u a (Just $ wt <> c) o
-prependChild _ _                      = Nothing
+-- TODO: Add phantom type
+prependChild :: WidgetTree a -> WidgetTree a -> WidgetTree a
+prependChild wt (Fork u a (Just c) o) = Fork u a (Just $ wt <> c) o
+prependChild _ _                      = error "prependChild"
 
 balance :: WidgetTree a -> WidgetTree a
 balance = fromList' . toList'
