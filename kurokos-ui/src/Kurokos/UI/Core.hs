@@ -320,15 +320,15 @@ updateLayout (V2 winW winH) wt0
   | otherwise          =
     let vmap = M.insert kKeyWidth winW . M.insert kKeyHeight winH $ defVmap
         wt' = flip evalState minSizeMap0 $ do
-                let calcTillLayouted notLayoutedList wt = do
-                      calcMinSize vmap wt
-                      wt' <- calcSize vmap wt
+                let calcTillLayouted i notLayoutedList wt = do
+                      calcMinSize i vmap wt
+                      wt' <- calcSize i vmap wt
                       let notLayoutedList' = getNotLayouted wt'
                           notChanged = notLayoutedList' == notLayoutedList
                       if | all isLayouted wt' -> return wt'
-                         | notChanged         -> error $ "Can't layout: " ++ show notLayoutedList
-                         | otherwise          -> calcTillLayouted notLayoutedList' wt'
-                calcTillLayouted (getNotLayouted wt0) wt0
+                         | notChanged         -> error $ "Cannot resolve layout: " ++ show notLayoutedList
+                         | otherwise          -> calcTillLayouted (i+1) notLayoutedList' wt'
+                calcTillLayouted 0 (getNotLayouted wt0) wt0
     in snd $ calcWPos Unordered (pure 0) wt'
   where
     defVmap = M.fromList [(kKeyWinWidth, fromIntegral winW), (kKeyWinHeight, fromIntegral winH)]
@@ -361,16 +361,12 @@ updateLayout (V2 winW winH) wt0
     -- * Step.1
     --   - Calculate minimum size for Container (bottom-up)
     --   - Parent size is NOT calculated at this time, so kKeyWidth and kKeyHeight are not fixed.
-    calcMinSize :: M.Map String CInt -> GuiWidgetTree -> State (M.Map WTIdent (V2 (Maybe CInt))) ([CInt], [CInt])
-    calcMinSize _    Null                         = return ([],[])
-    calcMinSize vmap (Fork u a@(ctx,widget) mc o) = do
+    calcMinSize :: Int -> M.Map String CInt -> GuiWidgetTree -> State (M.Map WTIdent (V2 (Maybe CInt))) ([CInt], [CInt])
+    calcMinSize _ _    Null                         = return ([],[])
+    calcMinSize i vmap (Fork u a@(ctx,widget) mc o) = do
       -- * Calc size (if decidable)
-      let mw = case evalExp vmap expW of -- Use vmap from PARENT here
-                Left _  -> Nothing -- Not decidable yet (kKeyMinWidth and kKeyMinHeight is not supplied)
-                Right w -> Just w
-          mh = case evalExp vmap expH of -- Use vmap from PARENT here
-                Left _  -> Nothing -- Not decidable yet (..)
-                Right h -> Just h
+      let mw = firstJust id [ctx^.ctxWidgetState.wstWidth, eitherToMaybe (evalExp vmap expW)]
+          mh = firstJust id [ctx^.ctxWidgetState.wstHeight, eitherToMaybe (evalExp vmap expH)]
       -- * Minimum size
       case mc of
         Nothing -> do
@@ -384,14 +380,15 @@ updateLayout (V2 winW winH) wt0
                 where
                   workW = maybe id (M.insert kKeyWidth) mw
                   workH = maybe id (M.insert kKeyHeight) mh
-          (ws,hs) <- calcMinSize vmap4children c
+          (ws,hs) <- calcMinSize i vmap4children c
           let V2 mMinW mMinH = calcMinimumSize ws hs
+          -- traceM $ unwords ["!", show i, show (ctx^.ctxIdent), show (ctx^.ctxName), show mMinH, show vmap4children]
           whenJust mMinW $ writeW idx
           whenJust mMinH $ writeH idx
 
       -- * Calculate sizes for the parent
-      (wsU, hsU) <- calcMinSize vmap u
-      (wsO, hsO) <- calcMinSize vmap o
+      (wsU, hsU) <- calcMinSize i vmap u
+      (wsO, hsO) <- calcMinSize i vmap o
       let fw = maybe id (:) mw
           fh = maybe id (:) mh
       return (fw (wsU ++ wsO), fh (hsU ++ hsO)) -- Returns all sizes to the parent.
@@ -411,8 +408,8 @@ updateLayout (V2 winW winH) wt0
     -- * Step.2
     --   - Calculate local pos and size using vmap with all keys (top-down)
     --   - Update ctxWidgetState.wstSize
-    calcSize _     Null                    = return Null
-    calcSize vmap0 (Fork u a@(ctx,_) mc o) = do
+    calcSize _ _     Null                    = return Null
+    calcSize i vmap0 (Fork u a@(ctx,_) mc o) = do
       -- * Complement vmap
       -- - Get minimum size
       mMinSize <- getMinSize idx
@@ -438,18 +435,19 @@ updateLayout (V2 winW winH) wt0
           a' = a&_1.ctxWidgetState.wstWidth  .~ (fromIntegral <$> mw)
                 &_1.ctxWidgetState.wstHeight .~ (fromIntegral <$> mh)
                 &_1.ctxWidgetState.wstPos    .~ P (V2 x y)
+      -- traceM $ unwords [show i, show (ctx^.ctxIdent), show (ctx^.ctxName), show mh, show vmap]
       -- * Same depth
-      u' <- calcSize vmap u
-      o' <- calcSize vmap o
+      u' <- calcSize i vmap u
+      o' <- calcSize i vmap o
       -- * Children
       mc' <- case mc of
                 Nothing -> return Nothing
                 Just c  -> do
-                  let vmap4cs = workW . workH $ vmap
+                  let vmap4cs = workW . workH $ defVmap
                         where
                           workW = maybe id (M.insert kKeyWidth) mw
                           workH = maybe id (M.insert kKeyHeight) mh
-                  Just <$> calcSize vmap4cs c
+                  Just <$> calcSize i vmap4cs c
       return $ Fork u' a' mc' o'
       where
         idx = ctx^.ctxIdent
@@ -511,3 +509,6 @@ render g =
           wcol = optimumColor ctx
           style = ctx^.ctxStyle
           cmnrsc = ctx^.ctxCmnRsc
+
+eitherToMaybe :: Either a b -> Maybe b
+eitherToMaybe = either (const Nothing) Just

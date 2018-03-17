@@ -106,20 +106,20 @@ runUITestScene =
       --
       colorScheme <- liftIO $ UI.readColorScheme "_data/gui-color-scheme.yaml"
       gui <- UI.newGui (UI.GuiEnv sdlAssets colorScheme) $ do
-        -- Label
+        -- * Label
         let size0 = V2 (Rpn "$width") (C 40)
             pos = V2 (C 0) (C 30)
         label <- UI.mkSingle (Just "title") Nothing style pos size0 =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
-        -- Buttons
+        -- * Buttons
         let size = V2 (Rpn "0.4 $width *") (C 40)
             pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
             pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
         button1 <- UI.mkSingle (Just nameMain) Nothing style pos1 size =<< UI.newButton "font-m" 16 "Next: Main Scene"
-        -- Image
+        -- * Image
         let imgSize = V2 (C 48) (C 48)
             imgPos = V2 (C 10) (Rpn "$height 58 -")
         img <- UI.mkSingle (Just "image") Nothing style imgPos imgSize =<< UI.newImageView "sample-image"
-        -- UserWidget
+        -- * UserWidget
         -- userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --
         let size' = V2 (Rpn "$width") (Rpn "$height 2 /")

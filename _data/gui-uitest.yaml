@@ -30,19 +30,20 @@
   w: 100
   h-rpn: "$min-height"
   children:
-    # -
-    #   type: fill
-    #   name: "target-fill"
-    #   w-rpn: "$width"
-    #   h-rpn: "$height"
-    #   color:
-    #     default:
-    #       back: 0 255 0 255
-    #       border: 220 220 220 0
-    #       title: 54 20 171 0
-    #       tint: 220 220 220 0
+    -
+      type: fill
+      name: "target-fill"
+      w-rpn: "$width"
+      h-rpn: "$height"
+      color:
+        default:
+          back: 0 255 0 100
+          border: 220 220 220 0
+          title: 54 20 171 0
+          tint: 220 220 220 0
     -
       type: container
+      name: "child-container"
       order: vertical
       h-rpn: "$min-height"
       children:
