@@ -4,7 +4,7 @@
     text: Label From Yaml
     asset: font-r
     size: 14
-  x: 20
+  x: 100
   y-rpn: $height 100 -
   w-rpn: $min-width
   h: 50

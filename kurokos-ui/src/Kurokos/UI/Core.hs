@@ -8,7 +8,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 module Kurokos.UI.Core where
 
--- import Debug.Trace (traceM)
+import Debug.Trace (traceM, trace)
 import Data.Foldable (toList)
 import Data.List.Extra (firstJust)
 import qualified Data.Set as Set
@@ -469,16 +469,16 @@ updateLayout (V2 winW winH) wt0
           pos2 = pos1 `advance` size
             where
               size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
-          (pos3, mc') = case mc of
+          (_, mc') = case mc of
             Nothing -> (pos2, Nothing)
             Just c  ->
               case ctx^.ctxContainerType of
                 Nothing    -> error "Missing ContainerType"
-                Just ctype ->
+                Just ctype -> do
                   let P wpos' = wpos
-                  in Just <$> calcWPos ctype wpos' c
-          (pos4, o') = calcWPos parCT pos3 o
-      in (pos4, Fork u' a' mc' o')
+                  Just <$> calcWPos ctype wpos' c
+          (pos3, o') = calcWPos parCT pos2 o
+      in (pos3, Fork u' a' mc' o')
       where
         advance pos0@(V2 x y) (V2 w h) = case parCT of
           Unordered       -> pos0
