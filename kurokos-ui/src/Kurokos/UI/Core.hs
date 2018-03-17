@@ -8,7 +8,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 module Kurokos.UI.Core where
 
-import Debug.Trace (traceM, trace)
+-- import Debug.Trace (traceM, trace)
 import Data.Foldable (toList)
 import Data.List.Extra (firstJust)
 import qualified Data.Set as Set
@@ -435,10 +435,10 @@ updateLayout (V2 winW winH) wt0
           a' = a&_1.ctxWidgetState.wstWidth  .~ (fromIntegral <$> mw)
                 &_1.ctxWidgetState.wstHeight .~ (fromIntegral <$> mh)
                 &_1.ctxWidgetState.wstPos    .~ P (V2 x y)
-      -- traceM $ unwords [show i, show (ctx^.ctxIdent), show (ctx^.ctxName), show mh, show vmap]
+      -- traceM $ unwords [show i, show (ctx^.ctxIdent), show (ctx^.ctxName), show mh, show vmap0, show vmap]
       -- * Same depth
-      u' <- calcSize i vmap u
-      o' <- calcSize i vmap o
+      u' <- calcSize i vmap0 u
+      o' <- calcSize i vmap0 o
       -- * Children
       mc' <- case mc of
                 Nothing -> return Nothing
