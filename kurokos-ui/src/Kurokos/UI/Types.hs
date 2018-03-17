@@ -120,7 +120,6 @@ data WContext = WContext
   , _ctxName          :: Maybe WTName
   , _ctxContainerType :: Maybe ContainerType
   , _ctxAttrib        :: WidgetAttrib
-  , _ctxNeedsLayout   :: Bool
   , _ctxNeedsRender   :: Bool
   , _ctxWidgetState   :: WidgetState
   , _ctxCmnRsc        :: CommonResource

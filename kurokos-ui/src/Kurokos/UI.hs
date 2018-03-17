@@ -22,7 +22,6 @@ module Kurokos.UI
   , ctxContainerType
   , ctxAttrib
   , ctxWidgetState
-  , ctxNeedsLayout
   , ctxNeedsRender
   -- * WidgetState
   , WidgetState

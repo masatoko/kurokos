@@ -8,7 +8,7 @@
 {-# LANGUAGE TemplateHaskell            #-}
 module Kurokos.UI.Core where
 
-import Debug.Trace (traceM)
+-- import Debug.Trace (traceM)
 import Data.Foldable (toList)
 import Data.List.Extra (firstJust)
 import qualified Data.Set as Set
@@ -139,7 +139,7 @@ mkSingle mName mColor style pos size w = do
             Right v  -> return v
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
-  let ctx = WContext ident mName Nothing (attribOf w) True True iniWidgetState cmnRsc ctxCol style pos' size'
+  let ctx = WContext ident mName Nothing (attribOf w) True iniWidgetState cmnRsc ctxCol style pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
@@ -156,7 +156,7 @@ mkContainer mName ct mColor style pos size = do
   let w = Transparent
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
-  let ctx = WContext ident mName (Just ct) (attribOf w) True True iniWidgetState cmnRsc ctxCol style pos' size'
+  let ctx = WContext ident mName (Just ct) (attribOf w) True iniWidgetState cmnRsc ctxCol style pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
@@ -169,17 +169,18 @@ prependRoot wt = modify $ over gstWTree (<> wt)
 
 setAllNeedsLayout :: GUI -> GUI
 setAllNeedsLayout =
-  over (unGui._2.gstWTree) (fmap work)
-  where
-    work a = a&_1.ctxNeedsLayout .~ True
-              &_1.ctxWidgetState.wstWidth .~ Nothing
-              &_1.ctxWidgetState.wstHeight .~ Nothing
+  over (unGui._2.gstWTree) (fmap setNeedsLayout)
+
+setNeedsLayout :: CtxWidget -> CtxWidget
+setNeedsLayout cw =
+  cw&_1.ctxWidgetState.wstWidth .~ Nothing
+    &_1.ctxWidgetState.wstHeight .~ Nothing
 
 setAllNeedsRender :: GUI -> GUI
 setAllNeedsRender =
   over (unGui._2.gstWTree) (fmap work)
   where
-    work = set (_1 . ctxNeedsRender) True
+    work cw = setNeedsLayout $ cw&_1.ctxNeedsRender .~ True
 
 -- readyRender :: (RenderEnv m, MonadIO m) => GUI -> m (Bool, GUI)
 -- readyRender g = do
@@ -319,19 +320,21 @@ updateVisibility = work True
 
 -- Update position (local and world) and size
 updateLayout :: V2 CInt -> GuiWidgetTree -> GuiWidgetTree
-updateLayout (V2 winW winH) wt0 =
-  let vmap = M.insert kKeyWidth winW . M.insert kKeyHeight winH $ defVmap
-      wt' = flip evalState minSizeMap0 $ do
-              let calcTillLayouted notLayoutedList wt = do
-                    calcMinSize vmap wt
-                    wt' <- calcSize vmap wt
-                    let notLayoutedList' = getNotLayouted wt'
-                        notChanged = notLayoutedList' == notLayoutedList
-                    if | all isLayouted wt' -> return wt'
-                       | notChanged         -> error $ "Can't layout: " ++ show notLayoutedList
-                       | otherwise          -> calcTillLayouted notLayoutedList' wt'
-              calcTillLayouted (getNotLayouted wt0) wt0
-  in snd $ calcWPos Unordered (pure 0) wt'
+updateLayout (V2 winW winH) wt0
+  | all isLayouted wt0 = wt0
+  | otherwise          =
+    let vmap = M.insert kKeyWidth winW . M.insert kKeyHeight winH $ defVmap
+        wt' = flip evalState minSizeMap0 $ do
+                let calcTillLayouted notLayoutedList wt = do
+                      calcMinSize vmap wt
+                      wt' <- calcSize vmap wt
+                      let notLayoutedList' = getNotLayouted wt'
+                          notChanged = notLayoutedList' == notLayoutedList
+                      if | all isLayouted wt' -> return wt'
+                         | notChanged         -> error $ "Can't layout: " ++ show notLayoutedList
+                         | otherwise          -> calcTillLayouted notLayoutedList' wt'
+                calcTillLayouted (getNotLayouted wt0) wt0
+    in snd $ calcWPos Unordered (pure 0) wt'
   where
     defVmap = M.fromList [(kKeyWinWidth, fromIntegral winW), (kKeyWinHeight, fromIntegral winH)]
 
@@ -373,7 +376,6 @@ updateLayout (V2 winW winH) wt0 =
           mh = case evalExp vmap expH of -- Use vmap from PARENT here
                 Left _  -> Nothing -- Not decidable yet (..)
                 Right h -> Just h
-      -- traceM $ unwords [">>>", show (ctx^.ctxName), show mw, show mh, show vmap]
       -- * Minimum size
       case mc of
         Nothing -> do
@@ -388,7 +390,6 @@ updateLayout (V2 winW winH) wt0 =
                   workW = maybe id (M.insert kKeyWidth) mw
                   workH = maybe id (M.insert kKeyHeight) mh
           (ws,hs) <- calcMinSize vmap4children c
-          -- traceM $ unwords [">>>+", show (ctx^.ctxName), show ws, show hs, show vmap4children, show (calcMinimumSize ws hs)]
           let V2 mMinW mMinH = calcMinimumSize ws hs
           whenJust mMinW $ writeW idx
           whenJust mMinH $ writeH idx
@@ -442,7 +443,6 @@ updateLayout (V2 winW winH) wt0 =
           a' = a&_1.ctxWidgetState.wstWidth  .~ (fromIntegral <$> mw)
                 &_1.ctxWidgetState.wstHeight .~ (fromIntegral <$> mh)
                 &_1.ctxWidgetState.wstPos    .~ P (V2 x y)
-      -- traceM $ show (ctx^.ctxName) ++ " " ++ show (w,h) ++ " " ++ show vmap
       -- * Same depth
       u' <- calcSize vmap u
       o' <- calcSize vmap o

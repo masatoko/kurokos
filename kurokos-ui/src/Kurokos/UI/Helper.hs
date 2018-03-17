@@ -46,8 +46,8 @@ setPositionInWorld name g' = over (unGui._2.gstWTree) (fmap work)
   where
     work :: CtxWidget -> CtxWidget
     work a@(ctx, w)
-      | ctx^.ctxName == Just name = (ctx', w)
-      | otherwise                  = a
+      | ctx^.ctxName == Just name = setNeedsLayout (ctx', w)
+      | otherwise                 = a
       where
         parent = g - l
           where
@@ -55,4 +55,3 @@ setPositionInWorld name g' = over (unGui._2.gstWTree) (fmap work)
             l = ctx^.ctxWidgetState . wstPos
         P (V2 x y) = g' - parent
         ctx' = ctx & ctxUPos .~ V2 (EConst x) (EConst y)
-                   & ctxNeedsLayout .~ True
