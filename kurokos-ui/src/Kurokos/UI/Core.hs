@@ -1,4 +1,5 @@
 {-# LANGUAGE ExistentialQuantification  #-}
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards            #-}
@@ -7,7 +8,8 @@
 {-# LANGUAGE TemplateHaskell            #-}
 module Kurokos.UI.Core where
 
--- import Debug.Trace (traceM)
+import Debug.Trace (traceM)
+import Data.Foldable (toList)
 import Data.List.Extra (firstJust)
 import qualified Data.Set as Set
 import           Control.Concurrent.MVar
@@ -169,7 +171,9 @@ setAllNeedsLayout :: GUI -> GUI
 setAllNeedsLayout =
   over (unGui._2.gstWTree) (fmap work)
   where
-    work = set (_1 . ctxNeedsLayout) True
+    work a = a&_1.ctxNeedsLayout .~ True
+              &_1.ctxWidgetState.wstWidth .~ Nothing
+              &_1.ctxWidgetState.wstHeight .~ Nothing
 
 setAllNeedsRender :: GUI -> GUI
 setAllNeedsRender =
@@ -295,7 +299,11 @@ readyRender g = do
           return (ctx', widget)
         else return a
       where
-        size = fromIntegral <$> ctx^.ctxWidgetState.wstSize
+        wst = ctx^.ctxWidgetState
+        size = fromIntegral <$> V2 w h
+          where
+            w = fromMaybe (error "Missing width") (wst^.wstWidth)
+            h = fromMaybe (error "Missing height") (wst^.wstHeight)
 
 -- Update visibiilty in WidgetState
 updateVisibility :: GuiWidgetTree -> GuiWidgetTree
@@ -311,13 +319,28 @@ updateVisibility = work True
 
 -- Update position (local and world) and size
 updateLayout :: V2 CInt -> GuiWidgetTree -> GuiWidgetTree
-updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
+updateLayout (V2 winW winH) wt0 =
   let vmap = M.insert kKeyWidth winW . M.insert kKeyHeight winH $ defVmap
-  calcMinSize vmap wt0
-  wt1 <- calcSize vmap wt0
-  return $ snd $ calcWPos Unordered (pure 0) wt1
+      wt' = flip evalState minSizeMap0 $ do
+              let calcTillLayouted notLayoutedList wt = do
+                    calcMinSize vmap wt
+                    wt' <- calcSize vmap wt
+                    let notLayoutedList' = getNotLayouted wt'
+                        notChanged = notLayoutedList' == notLayoutedList
+                    if | all isLayouted wt' -> return wt'
+                       | notChanged         -> error $ "Can't layout: " ++ show notLayoutedList
+                       | otherwise          -> calcTillLayouted notLayoutedList' wt'
+              calcTillLayouted (getNotLayouted wt0) wt0
+  in snd $ calcWPos Unordered (pure 0) wt'
   where
     defVmap = M.fromList [(kKeyWinWidth, fromIntegral winW), (kKeyWinHeight, fromIntegral winH)]
+
+    getNotLayouted = map (view (_1.ctxIdent)) . filter (not . isLayouted) . toList
+
+    isLayouted :: CtxWidget -> Bool
+    isLayouted (ctx,_) = isJust (wst^.wstWidth) && isJust (wst^.wstHeight)
+      where
+        wst = ctx^.ctxWidgetState
 
     minSizeMap0 :: MS.Map WTIdent (V2 (Maybe CInt))
     minSizeMap0 = MS.empty
@@ -355,10 +378,10 @@ updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
       case mc of
         Nothing -> do
           let (V2 mMinW mMinH) = widgetMinimumSize a
-              w = fromMaybe 1 $ firstJust id [mw, mMinW] -- TODO: Reconsider
-              h = fromMaybe 1 $ firstJust id [mh, mMinH]
-          writeW idx w
-          writeH idx h
+              mMinW' = firstJust id [mw, mMinW] -- TODO: Reconsider
+              mMinH' = firstJust id [mh, mMinH]
+          whenJust mMinW' $ writeW idx
+          whenJust mMinH' $ writeH idx
         Just c  -> do -- Container
           let vmap4children = workH . workW $ defVmap
                 where
@@ -398,25 +421,27 @@ updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
       -- - Get minimum size
       mMinSize <- getMinSize idx
       let V2 mMinW mMinH = fromMaybe (error $ "Missing minimum size @" ++ show idx) mMinSize
-          minW = fromMaybe 0 mMinW
-          minH = fromMaybe 0 mMinH
       -- - Complement vmap
-      let vmap = M.insert kKeyMinWidth minW . M.insert kKeyMinHeight minH $ vmap0
+      let vmap = workW . workH $ vmap0
+            where
+              workW = maybe id (M.insert kKeyMinWidth) mMinW
+              workH = maybe id (M.insert kKeyMinHeight) mMinH
       -- * Decide size
-      let w = case evalExp vmap expW of
-                Left _  -> error $ "Can't eval width: " ++ show expW
-                Right w -> w
-          h = case evalExp vmap expH of
-                Left _  -> error $ "Can't eval height: " ++ show expH
-                Right h -> h
+      let mw = case evalExp vmap expW of
+                Left _  -> Nothing
+                Right w -> Just w
+          mh = case evalExp vmap expH of
+                Left _  -> Nothing
+                Right h -> Just h
           x = case evalExp vmap expX of
                 Left _  -> error $ "Can't eval pos.x: " ++ show expX
                 Right x -> x
           y = case evalExp vmap expY of
                 Left _  -> error $ "Can't eval pos.y: " ++ show expY
                 Right y -> y
-          a' = a&_1.ctxWidgetState.wstSize .~ V2 w h
-                &_1.ctxWidgetState.wstPos  .~ P (V2 x y)
+          a' = a&_1.ctxWidgetState.wstWidth  .~ (fromIntegral <$> mw)
+                &_1.ctxWidgetState.wstHeight .~ (fromIntegral <$> mh)
+                &_1.ctxWidgetState.wstPos    .~ P (V2 x y)
       -- traceM $ show (ctx^.ctxName) ++ " " ++ show (w,h) ++ " " ++ show vmap
       -- * Same depth
       u' <- calcSize vmap u
@@ -425,7 +450,10 @@ updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
       mc' <- case mc of
                 Nothing -> return Nothing
                 Just c  -> do
-                  let vmap4cs = M.insert kKeyWidth w . M.insert kKeyHeight h $ vmap
+                  let vmap4cs = workW . workH $ vmap
+                        where
+                          workW = maybe id (M.insert kKeyWidth) mw
+                          workH = maybe id (M.insert kKeyHeight) mh
                   Just <$> calcSize vmap4cs c
       return $ Fork u' a' mc' o'
       where
@@ -445,7 +473,9 @@ updateLayout (V2 winW winH) wt0 = flip evalState minSizeMap0 $ do
                   then P pos1 + (ctx^.ctxWidgetState.wstPos)
                   else P pos1
           a' = a&_1.ctxWidgetState.wstWorldPos .~ wpos
-          pos2 = pos1 `advance` (ctx^.ctxWidgetState.wstSize)
+          pos2 = pos1 `advance` size
+            where
+              size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
           (pos3, mc') = case mc of
             Nothing -> (pos2, Nothing)
             Just c  ->
@@ -482,7 +512,7 @@ render g =
       | otherwise                      = return ()
         where
           P pos = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
-          size = fromIntegral <$> ctx^.ctxWidgetState^.wstSize
+          size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
           wcol = optimumColor ctx
           style = ctx^.ctxStyle
           cmnrsc = ctx^.ctxCmnRsc

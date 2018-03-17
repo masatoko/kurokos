@@ -55,7 +55,7 @@ procEvent cursor gui = work
           | otherwise = a
           where
             pos = ctx^.ctxWidgetState.wstWorldPos
-            size = ctx^.ctxWidgetState.wstSize
+            size = wstSize $ ctx^.ctxWidgetState
     work (MouseMotionEvent MouseMotionEventData{..}) =
       return . flip execState gui $ do
         modify $ over (unGui._2.gstWTree) (fmap modWhenHover)
@@ -75,7 +75,7 @@ procEvent cursor gui = work
             pos = ctx^.ctxWidgetState.wstWorldPos
             isHoverable = ctx^.ctxAttrib.hoverable
             wst = ctx^.ctxWidgetState
-            size = wst^.wstSize
+            size = wstSize wst
         modWhenHoverWithLHold a@(ctx,w)
           | ButtonLeft `elem` mouseMotionEventState && isWithinRect curPos pos size =
             let ctx' = ctx & ctxNeedsRender .~ True
@@ -83,7 +83,7 @@ procEvent cursor gui = work
           | otherwise = a
           where
             pos = ctx^.ctxWidgetState.wstWorldPos
-            size = ctx^.ctxWidgetState.wstSize
+            size = wstSize $ ctx^.ctxWidgetState
 
     work _ = return gui
 

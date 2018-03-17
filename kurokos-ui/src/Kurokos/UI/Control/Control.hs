@@ -95,7 +95,7 @@ wtFilterAt aPos' = catMaybes . toList . fmap work
       where
         wst = cw^._1.ctxWidgetState
         pos = wst^.wstWorldPos
-        size = wst^.wstSize
+        size = wstSize wst
         --
         vis = wst^.wstVisible
         within = isWithinRect aPos pos size

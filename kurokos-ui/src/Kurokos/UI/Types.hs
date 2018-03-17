@@ -3,18 +3,19 @@
 module Kurokos.UI.Types where
 
 import           Control.Lens
-import           Data.Int        (Int64)
-import           Data.Word       (Word8)
-import           Foreign.C.Types (CInt)
+import           Data.Int         (Int64)
+import           Data.Maybe       (fromMaybe)
+import           Data.Word        (Word8)
+import           Foreign.C.Types  (CInt)
 import           Linear.V2
 import           Linear.V4
 
 import qualified SDL
 
-import qualified Kurokos.RPN     as RPN
 import qualified Kurokos.Graphics as G
+import qualified Kurokos.RPN      as RPN
 
-import Kurokos.UI.Color
+import           Kurokos.UI.Color
 
 type WidgetIdent = Int64
 -- | Identity of WidgetTree. It's unique in a GUI.
@@ -36,7 +37,9 @@ data ContainerType
 data WidgetState = WidgetState
   { _wstWorldPos :: GuiPos -- ^ Change with setGlobalPos. Must not change directly.
   , _wstPos      :: GuiPos -- ^ Lobal position (Updated on readyRender)
-  , _wstSize     :: GuiSize -- ^ Texture size (Updated on readyRender)
+  , _wstWidth    :: Maybe CInt
+  , _wstHeight   :: Maybe CInt
+  -- , _wstSize     :: GuiSize -- ^ Texture size (Updated on readyRender)
   --
   , _wstVisible  :: Bool
   , _wstHover    :: Bool
@@ -45,7 +48,13 @@ data WidgetState = WidgetState
 makeLenses ''WidgetState
 
 iniWidgetState :: WidgetState
-iniWidgetState = WidgetState (pure 0) (pure 0) (pure 0) True False
+iniWidgetState = WidgetState (pure 0) (pure 0) Nothing Nothing True False
+
+wstSize :: WidgetState -> V2 CInt
+wstSize wst = V2 w h
+  where
+    w = fromMaybe (error "Missing width") $ wst^.wstWidth
+    h = fromMaybe (error "Missing height") $ wst^.wstHeight
 
 data WidgetAttrib = WidgetAttrib
   { _hoverable :: Bool
