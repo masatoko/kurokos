@@ -85,9 +85,8 @@ newGui :: (RenderEnv m, MonadIO m)
   => GuiEnv -> GuiT m () -> m GUI
 newGui env initializer = do
   g1 <- runGuiT g0 initializer
-  (_,g2) <- readyRender g1 -- Generate textures
-  (_,g3) <- readyRender $ setAllNeedsRender g2 -- Calculate position and size
-  return $ g3 & unGui._2.gstWTree %~ WT.balance
+  g2 <- snd <$> readyRender (setAllNeedsRender g1)
+  return $ g2 & unGui._2.gstWTree %~ WT.balance
   where
     g0 = GUI (env, gst0)
     gst0 = GuiState 0 Null
@@ -297,14 +296,10 @@ readyRender g = do
           cmnrsc' <- lift $ newCommonResource size (optimumColor ctx) widget'
           let ctx' = ctx & ctxNeedsRender .~ False
                          & ctxCmnRsc .~ cmnrsc'
-          return (ctx', widget)
+          return (ctx', widget')
         else return a
       where
-        wst = ctx^.ctxWidgetState
-        size = fromIntegral <$> V2 w h
-          where
-            w = fromMaybe (error "Missing width") (wst^.wstWidth)
-            h = fromMaybe (error "Missing height") (wst^.wstHeight)
+        size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
 
 -- Update visibiilty in WidgetState
 updateVisibility :: GuiWidgetTree -> GuiWidgetTree

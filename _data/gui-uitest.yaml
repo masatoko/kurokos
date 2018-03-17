@@ -21,43 +21,43 @@
       title: 54 20 171 255
       tint: 220 220 220 255
 
-# -
-#   type: container
-#   name: "cntn"
-#   order: unordered
-#   x: 100
-#   y: 100
-#   w: 100
-#   h-rpn: "$min-height"
-#   children:
-#     -
-#       type: fill
-#       name: "target-fill"
-#       w-rpn: "$width"
-#       h-rpn: "$height"
-#       color:
-#         default:
-#           back: 0 255 0 255
-#           border: 220 220 220 0
-#           title: 54 20 171 0
-#           tint: 220 220 220 0
-#     -
-#       type: container
-#       order: vertical
-#       h-rpn: "$min-height"
-#       children:
-#         - &test
-#           type: label
-#           title:
-#             text: Label
-#             asset: font-r
-#             size: 14
-#           h: 20
-#         - *test
-#         - *test
-#         -
-#           type: image
-#           path: _data/img.png
-#           h: 30
-#           asset: sample-image
-#         - *test
+-
+  type: container
+  name: "cntn"
+  order: unordered
+  x: 100
+  y: 100
+  w: 100
+  h-rpn: "$min-height"
+  children:
+    # -
+    #   type: fill
+    #   name: "target-fill"
+    #   w-rpn: "$width"
+    #   h-rpn: "$height"
+    #   color:
+    #     default:
+    #       back: 0 255 0 255
+    #       border: 220 220 220 0
+    #       title: 54 20 171 0
+    #       tint: 220 220 220 0
+    -
+      type: container
+      order: vertical
+      h-rpn: "$min-height"
+      children:
+        - &test
+          type: label
+          title:
+            text: Label
+            asset: font-r
+            size: 14
+          h: 20
+        - *test
+        - *test
+        -
+          type: image
+          path: _data/img.png
+          h: 30
+          asset: sample-image
+        - *test
