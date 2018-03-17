@@ -18,7 +18,7 @@ import Kurokos.UI.Color
 
 type WidgetIdent = Int64
 -- | Identity of WidgetTree. It's unique in a GUI.
-newtype WTIdent = WTIdent WidgetIdent deriving (Eq, Show)
+newtype WTIdent = WTIdent { unWidgetIdent :: WidgetIdent } deriving (Eq, Ord, Show)
 
 -- | Name of WidgetTree defined by a user. It's not always unique.
 type WTName = String
@@ -35,11 +35,11 @@ data ContainerType
 
 data WidgetState = WidgetState
   { _wstWorldPos :: GuiPos -- ^ Change with setGlobalPos. Must not change directly.
-  , _wstPos       :: GuiPos -- ^ Lobal position (Updated on readyRender)
-  , _wstSize      :: GuiSize -- ^ Texture size (Updated on readyRender)
+  , _wstPos      :: GuiPos -- ^ Lobal position (Updated on readyRender)
+  , _wstSize     :: GuiSize -- ^ Texture size (Updated on readyRender)
   --
-  , _wstVisible   :: Bool
-  , _wstHover     :: Bool
+  , _wstVisible  :: Bool
+  , _wstHover    :: Bool
   } deriving Show
 
 makeLenses ''WidgetState
@@ -81,11 +81,13 @@ fromUExp (C v)      = return $ EConst $ fromIntegral v
 fromUExpV2 :: V2 UExp -> Either String (V2 Exp)
 fromUExpV2 (V2 x y) = V2 <$> fromUExp x <*> fromUExp y
 
-kKeyWidth, kKeyHeight, kKeyWinWidth, kKeyWinHeight :: String
+kKeyWidth, kKeyHeight, kKeyWinWidth, kKeyWinHeight, kKeyMinWidth, kKeyMinHeight :: String
 kKeyWidth     = "width"
 kKeyHeight    = "height"
-kKeyWinWidth  = "winwidth"
-kKeyWinHeight = "winheight"
+kKeyWinWidth  = "win-width" -- ^ Window width
+kKeyWinHeight = "win-height" -- ^ Window height
+kKeyMinWidth  = "min-width" -- ^ Minimum required width for parent container
+kKeyMinHeight = "min-height" -- ^ Minimum required height for parent container
 
 data CommonResource = CmnRsc
   { cmnrscRectFill   :: G.Prim
