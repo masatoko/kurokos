@@ -6,7 +6,7 @@
     size: 14
   x: 20
   y-rpn: $height 100 -
-  w-rpn: $width 2 /
+  w-rpn: $min-width
   h: 50
   hoverable: true
 

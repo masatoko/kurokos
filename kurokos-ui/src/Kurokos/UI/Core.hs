@@ -413,7 +413,7 @@ updateLayout (V2 winW winH) wt0
       -- * Complement vmap
       -- - Get minimum size
       mMinSize <- getMinSize idx
-      let V2 mMinW mMinH = fromMaybe (error $ "Missing minimum size @" ++ show idx) mMinSize
+      let V2 mMinW mMinH = fromMaybe (V2 Nothing Nothing) mMinSize
       -- - Complement vmap
       let vmap = workW . workH $ vmap0
             where
