@@ -155,7 +155,7 @@ mkContainer mName ct mColor style pos size = do
   size' <- case fromUExpV2 size of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  let w = Transparent
+  let w = Fill
   ctxCol <- maybe (getContextColorOfWidget w) return mColor
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
   let ctx = WContext ident mName (Just ct) (attribOf w) True iniWidgetState cmnRsc ctxCol style pos' size'

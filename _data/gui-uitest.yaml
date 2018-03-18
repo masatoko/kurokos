@@ -1,56 +1,49 @@
 -
   type: container
   order: horizontal
-  color: &cntncol
+  color: &cntn-col
     default:
-      back: 0 0 0 0
-      border: 0 0 0 50
-      title: 0 0 0 255
-      tint: 0 0 0 255
-
+      back: 0 0 0 50
+      border: 0 0 0 200
+      title: 0 0 0 0
+      tint: 0 0 0 0
   children:
     -
       type: container
-      order: unordered
+      order: horizontal
+      color: *cntn-col
       children:
         -
-          type: fill
-          w-rpn: "$width"
-          h-rpn: "$height"
-          color: *cntncol
+          type: label
+          name: "00000"
+          title:
+            text: "00000"
+            asset: font-r
+            size: 20
+          color: &col
+            default:
+              back: 0 0 0 0
+              border: 255 255 255 255
+              title: 0 0 0 255
+              tint: 220 220 220 255
         -
           type: container
           order: horizontal
+          color: *cntn-col
           children:
-            -
-              type: label
-              name: "00000"
-              title:
-                text: "00000"
-                asset: font-r
-                size: 20
-              color: &col
-                default:
-                  back: 0 0 255 30
-                  border: 220 220 220 255
-                  title: 0 0 0 255
-                  tint: 220 220 220 255
             -
               type: container
               order: horizontal
+              color: *cntn-col
               children:
                 -
-                  type: container
-                  order: horizontal
-                  children:
-                    -
-                      type: label
-                      name: "11111"
-                      title:
-                        text: "11111"
-                        asset: font-r
-                        size: 20
-                      color: *col
+                  type: label
+                  name: "11111"
+                  title:
+                    text: "11111"
+                    asset: font-r
+                    size: 20
+                  color: *col
     -
       type: label
       name: "22222"
