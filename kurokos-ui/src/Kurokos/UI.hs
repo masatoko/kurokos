@@ -50,7 +50,9 @@ module Kurokos.UI
   -- * Style
   , Style (..)
   , styleTextAlign
+  , styleMargin
   , TextAlign (..)
+  , LRTB (..)
   -- * Widget
   , Widget (UserWidget)
   , Value (..)

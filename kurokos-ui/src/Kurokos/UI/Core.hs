@@ -391,10 +391,11 @@ updateLayout (V2 winW winH) wt0
       case mc of
         Nothing -> do
           let (V2 mMinW mMinH) = widgetMinimumSize a
-              mMinW' = firstJust id [mw, mMinW] -- TODO: Reconsider
-              mMinH' = firstJust id [mh, mMinH]
-          whenJust mMinW' $ writeW idx
-          whenJust mMinH' $ writeH idx
+              mMinW' = firstJust id [mMinW, mw] -- TODO: Reconsider
+              mMinH' = firstJust id [mMinH, mh]
+              mgn = ctx^.ctxStyle.styleMargin
+          whenJust mMinW' $ writeW idx . (+ marginW)
+          whenJust mMinH' $ writeH idx . (+ marginH)
         Just c  -> do -- Container
           let vmap4children = workH . workW $ defVmap
                 where
@@ -406,8 +407,8 @@ updateLayout (V2 winW winH) wt0
               hs' = if SDChild `elem` lefts hs then [] else rights hs
           let V2 mMinW mMinH = calcMinimumSize ws' hs'
           -- traceM $ unwords ["!", show i, show (ctx^.ctxIdent), show (ctx^.ctxName), show mMinH, show vmap4children]
-          whenJust mMinW $ writeW idx
-          whenJust mMinH $ writeH idx
+          whenJust mMinW $ writeW idx . (+ marginW)
+          whenJust mMinH $ writeH idx . (+ marginH)
 
       -- * Calculate sizes for the parent
       (wsU, hsU) <- calcMinSize i vmap u
@@ -417,6 +418,11 @@ updateLayout (V2 winW winH) wt0
       return (ew:wsU ++ wsO, eh:hsU ++ hsO) -- Returns all sizes to the parent.
       where
         idx = ctx^.ctxIdent
+
+        margin = ctx^.ctxStyle.styleMargin
+        marginW = fromIntegral $ left margin + right margin
+        marginH = fromIntegral $ top margin + bottom margin
+
         V2 expW expH = ctx^.ctxUSize
         calcMinimumSize ws hs =
           case thisCType of
@@ -497,10 +503,11 @@ updateLayout (V2 winW winH) wt0
       let (pos1, u') = calcWPos parCT pos0 u
           wpos = if parCT == Unordered
                   then P pos1 + (ctx^.ctxWidgetState.wstPos)
-                  else P pos1
+                  else P $ pos1 + marginLT
           a' = a&_1.ctxWidgetState.wstWorldPos .~ wpos
-          pos2 = pos1 `advance` size
+          pos2 = pos1 `advance` size'
             where
+              size' = size + marginSize
               size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
           (_, mc') = case mc of
             Nothing -> (pos2, Nothing)
@@ -514,8 +521,14 @@ updateLayout (V2 winW winH) wt0
       in (pos3, Fork u' a' mc' o')
       -- in trace (unwords [show (ctx^.ctxIdent), show (wstSize (ctx^.ctxWidgetState)), " : ", show pos0, show pos1, show pos2, show pos3]) $ (pos3, Fork u' a' mc' o')
       where
-        advance pos0@(V2 x y) (V2 w h) = case parCT of
-          Unordered       -> pos0
+        margin = ctx^.ctxStyle.styleMargin
+        marginLT = fromIntegral <$> V2 (left margin) (top margin)
+        marginW = fromIntegral $ left margin + right margin
+        marginH = fromIntegral $ top margin + bottom margin
+        marginSize = V2 marginW marginH
+
+        advance p@(V2 x y) (V2 w h) = case parCT of
+          Unordered       -> p
           VerticalStack   -> V2 x (y + h)
           HorizontalStack -> V2 (x + w) y
 
@@ -538,7 +551,10 @@ render g =
       | ctx^.ctxWidgetState.wstVisible = renderWidget r pos size wcol style cmnrsc widget
       | otherwise                      = return ()
         where
-          P pos = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
+          pos = p + V2 (left margin) (top margin)
+            where
+              P p = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
+              margin = style^.styleMargin
           size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
           wcol = optimumColor ctx
           style = ctx^.ctxStyle

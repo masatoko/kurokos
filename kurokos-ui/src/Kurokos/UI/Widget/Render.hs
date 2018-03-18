@@ -23,9 +23,8 @@ import           Kurokos.UI.Widget
 renderWidget :: G.Renderer -> V2 Int -> V2 Int -> WidgetColor -> Style -> CommonResource -> Widget -> IO ()
 renderWidget _r _pos _parentSize _ _ _ Transparent = return ()
 
-renderWidget r pos _parentSize WidgetColor{..} style CmnRsc{..} Fill = do
-  G.setPrimColor r _wcBack
-  G.drawPrim r pos cmnrscRectFill
+renderWidget r pos _parentSize wc style cmnrsc Fill = do
+  renderBackAndBorder r pos wc cmnrsc
 
 renderWidget r pos parentSize wc@WidgetColor{..} style cmnrsc Label{} = do
   renderBackAndBorder r pos wc cmnrsc
