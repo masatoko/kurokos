@@ -1,13 +1,13 @@
 module Kurokos.UI.Helper where
 
-import           Debug.Trace         (traceM)
+import           Debug.Trace           (traceM)
 
 import           Control.Lens
 import           Control.Monad.State
-import           Data.Foldable       (find)
-import           Data.List           (find)
-import           Data.List.Extra     (firstJust)
-import           Safe                (headMay)
+import           Data.Foldable         (find)
+import           Data.List             (find)
+import           Data.List.Extra       (firstJust)
+import           Safe                  (headMay)
 
 import qualified SDL
 import           SDL.Event
@@ -16,7 +16,18 @@ import           Kurokos.UI.Core
 import           Kurokos.UI.Event
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
-import           Kurokos.UI.Widget  (Widget)
+import           Kurokos.UI.Widget     (Widget)
+import           Kurokos.UI.WidgetTree (prettyWith)
+
+prettyWT :: GuiWidgetTree -> String
+prettyWT = prettyWith showWidget
+  where
+    showWidget (ctx,w) = show w ++ " - " ++ ctx'
+      where
+        ctx' = concat
+          [ "'" , fromMaybe "-" (ctx^.ctxName), "' "
+          , "#", show (unWidgetIdent $ ctx^.ctxIdent), " "
+          , maybe "" show (ctx^.ctxContainerType)]
 
 -- update by name with function
 update :: WTName -> (CtxWidget -> CtxWidget) -> GUI -> GUI
