@@ -73,12 +73,11 @@ convert s@Single{..} = do
             toValue tpstr    = error $ "Undefined type: " ++ tpstr
 
 convert Container{..} = do
-  cnt <- mkContainer wName wContainerType wColor style (V2 wX wY) (V2 wWidth wHeight)
+  cnt <- mkContainer wName wContainerType wColor wStyle (V2 wX wY) (V2 wWidth wHeight)
   let cnt' = cnt & wtElement._1 %~ setContext
   ws <- mapM convert wChildren
   return $ appendChild cnt' (mconcat ws)
   where
-    style = Style TACenter
     setContext ctx =
       ctx & ctxAttrib . visible %~ flip fromMaybe wVisible
           & ctxAttrib . clickable %~ flip fromMaybe wClickable

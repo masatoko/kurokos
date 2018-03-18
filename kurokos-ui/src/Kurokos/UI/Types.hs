@@ -110,11 +110,20 @@ data TextAlign
   | TACenter
   deriving (Eq, Show)
 
+data LRTB a = LRTB
+  { left   :: a
+  , right  :: a
+  , top    :: a
+  , bottom :: a
+  } deriving (Eq, Show)
+
 data Style = Style
   { _styleTextAlign :: TextAlign
+  , _styleMargin    :: LRTB Int
   } deriving (Eq, Show)
 
 makeLenses ''Style
+
 data WContext = WContext
   { _ctxIdent         :: WTIdent
   , _ctxName          :: Maybe WTName

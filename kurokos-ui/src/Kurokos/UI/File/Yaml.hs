@@ -4,8 +4,9 @@ module Kurokos.UI.File.Yaml where
 import qualified Data.ByteString.Char8 as BS
 import           Data.List             (isPrefixOf)
 import           Data.List.Extra       (firstJust)
+import           Data.List.Split       (splitOn)
 import qualified Data.Map              as M
-import           Data.Maybe            (fromMaybe)
+import           Data.Maybe            (fromMaybe, mapMaybe)
 import           Data.Monoid           ((<>))
 import           Data.Text             (Text)
 import           Safe                  (readMay)
@@ -52,7 +53,7 @@ data YWidget
     , wY         :: UExp
     , wWidth     :: UExp
     , wHeight    :: UExp
-    -- Attribute
+    -- * Attribute
     , wVisible   :: Maybe Bool
     , wClickable :: Maybe Bool
     , wHoverable :: Maybe Bool
@@ -73,10 +74,12 @@ data YWidget
     , wHeight        :: UExp
     , wContainerType :: ContainerType
     , wChildren      :: [YWidget]
-    -- Attribute
+    -- * Attribute
     , wVisible       :: Maybe Bool
     , wClickable     :: Maybe Bool
     , wHoverable     :: Maybe Bool
+    --
+    , wStyle         :: Style
     }
   deriving (Eq, Show)
 
@@ -118,6 +121,8 @@ makeContainer v = Container
   <*> v .:? "visible"
   <*> v .:? "clickable"
   <*> v .:? "hoverable"
+  --
+  <*> (fromMaybe defStyle <$> (v .:? "style"))
 
 getUExp :: Text -> UExp -> Y.Object -> Y.Parser UExp
 getUExp label def v = do
@@ -150,11 +155,23 @@ instance FromJSON Title where
 instance FromJSON Style where
   parseJSON (Y.Object v) = Style
     <$> (maybe TACenter parseTextAlign <$> v .:? "text-align")
+    <*> (maybe defMargin parseMargin <$> v .:? "margin")
 
 parseTextAlign :: String -> TextAlign
 parseTextAlign "left"   = TALeft
 parseTextAlign "right"  = TARight
 parseTextAlign "center" = TACenter
 
+parseMargin :: String -> LRTB Int
+parseMargin str =
+  case mapMaybe readMay $ splitOn " " str of
+    (l:r:t:b:_) -> LRTB l r t b
+    _           -> error $ "parse error for margin: " ++ str
+
 defStyle :: Style
-defStyle = Style TACenter
+defStyle = Style textAlign defMargin
+  where
+    textAlign = TACenter
+
+defMargin :: LRTB Int
+defMargin = LRTB 4 4 4 4
