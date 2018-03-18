@@ -338,7 +338,8 @@ updateLayout (V2 winW winH) wt0
                       if | all isLayouted wt' -> return wt'
                          | notChanged         -> error $ "Cannot resolve layout: " ++ show notLayoutedList
                          | otherwise          -> calcTillLayouted (i+1) notLayoutedList' wt'
-                calcTillLayouted 0 (getNotLayouted wt0) wt0
+                wt1 <- calcTillLayouted 0 (getNotLayouted wt0) wt0
+                calcLocalPos vmap wt1
     in snd $ calcWPos Unordered (pure 0) wt'
   where
     defVmap = M.fromList [(kKeyWinWidth, fromIntegral winW), (kKeyWinHeight, fromIntegral winH)]
@@ -444,20 +445,21 @@ updateLayout (V2 winW winH) wt0
           where
             cs = RPN.consts e
 
+    -- | Complement vmap
+    complementMinSize idx vmap = do
+      mMinSize <- getMinSize idx -- Get minimum size
+      let V2 mMinW mMinH = fromMaybe (V2 Nothing Nothing) mMinSize
+      -- - Complement vmap
+      let workW = maybe id (M.insert kKeyMinWidth) mMinW
+          workH = maybe id (M.insert kKeyMinHeight) mMinH
+      return $ workW . workH $ vmap
+
     -- * Step.2
     --   - Calculate local pos and size using vmap with all keys (top-down)
     --   - Update ctxWidgetState.wstSize
     calcSize _ _     Null                    = return Null
     calcSize i vmap0 (Fork u a@(ctx,_) mc o) = do
-      -- * Complement vmap
-      -- - Get minimum size
-      mMinSize <- getMinSize idx
-      let V2 mMinW mMinH = fromMaybe (V2 Nothing Nothing) mMinSize
-      -- - Complement vmap
-      let vmap = workW . workH $ vmap0
-            where
-              workW = maybe id (M.insert kKeyMinWidth) mMinW
-              workH = maybe id (M.insert kKeyMinHeight) mMinH
+      vmap <- complementMinSize idx vmap0
       -- * Decide size
       let mw = case evalExp vmap expW of
                 Left _  -> Nothing
@@ -465,15 +467,8 @@ updateLayout (V2 winW winH) wt0
           mh = case evalExp vmap expH of
                 Left _  -> Nothing
                 Right h -> Just h
-          x = case evalExp vmap expX of
-                Left _  -> error $ "Can't eval pos.x: " ++ show expX
-                Right x -> x
-          y = case evalExp vmap expY of
-                Left _  -> error $ "Can't eval pos.y: " ++ show expY
-                Right y -> y
           a' = a&_1.ctxWidgetState.wstWidth  .~ (fromIntegral <$> mw)
                 &_1.ctxWidgetState.wstHeight .~ (fromIntegral <$> mh)
-                &_1.ctxWidgetState.wstPos    .~ P (V2 x y)
       -- traceM $ unwords [show i, show (ctx^.ctxIdent), show (ctx^.ctxName), show mh, show vmap0, show vmap]
       -- * Same depth
       u' <- calcSize i vmap0 u
@@ -494,6 +489,35 @@ updateLayout (V2 winW winH) wt0
         V2 expX expY = ctx^.ctxUPos
 
     -- * Step.3
+    calcLocalPos _     Null            = return Null
+    calcLocalPos vmap0 (Fork u a@(ctx,_) mc o) = do
+      u' <- calcLocalPos vmap0 u
+      o' <- calcLocalPos vmap0 o
+      -- * Complement vmap
+      vmap <- complementMinSize idx vmap0
+      let x = case evalExp vmap expX of
+                Left _  -> error $ "Can't eval pos.x: " ++ show expX ++ " " ++ show vmap
+                Right x -> x
+          y = case evalExp vmap expY of
+                Left _  -> error $ "Can't eval pos.y: " ++ show expY ++ " " ++ show vmap
+                Right y -> y
+          a' = a&_1.ctxWidgetState.wstPos .~ P (V2 x y)
+      mc' <- case mc of
+              Nothing -> return Nothing
+              Just c -> do
+                let vmap4cs = workW . workH $ defVmap
+                      where
+                        workW = M.insert kKeyWidth w
+                        workH = M.insert kKeyHeight h
+                Just <$> calcLocalPos vmap4cs c
+      return $ Fork u' a' mc' o'
+      where
+        idx = ctx^.ctxIdent
+        V2 expW expH = ctx^.ctxUSize
+        V2 expX expY = ctx^.ctxUPos
+        V2 w h = wstSize $ ctx^.ctxWidgetState
+
+    -- * Step.4
     -- Calculate world position
     --   - Update ctxWidgetState.wstWorldPos
     --   - Top to down, under to over
