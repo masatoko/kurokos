@@ -66,8 +66,8 @@ newtype GUI = GUI { _unGui :: (GuiEnv, GuiState) }
 
 makeLenses ''GUI
 
-getWidgetTree :: GUI -> WidgetTree Widget
-getWidgetTree = fmap snd . view gstWTree . snd . _unGui
+getWidgetTree :: GUI -> GuiWidgetTree
+getWidgetTree = view gstWTree . snd . _unGui
 
 newtype GuiT m a = GuiT {
     runGT :: ReaderT GuiEnv (StateT GuiState m) a
