@@ -90,8 +90,8 @@ instance FromJSON YWidget where
         <*> v .:? "color"
         <*> getUExp "x" (C 0) v
         <*> getUExp "y" (C 0) v
-        <*> getUExp "w" (Rpn "$width") v
-        <*> getUExp "h" (Rpn "$height") v
+        <*> getUExp "w" (Rpn "$min-width") v
+        <*> getUExp "h" (Rpn "$min-height") v
         -- Attribute
         <*> v .:? "visible"
         <*> v .:? "clickable"
@@ -110,8 +110,8 @@ makeContainer v = Container
   <*> v .:? "color"
   <*> getUExp "x" (C 0) v
   <*> getUExp "y" (C 0) v
-  <*> getUExp "w" (Rpn "$width") v
-  <*> getUExp "h" (Rpn "$height") v
+  <*> getUExp "w" (Rpn "$min-width") v
+  <*> getUExp "h" (Rpn "$min-height") v
   <*> (parseContainerType <$> (v .:? "order"))
   <*> v .: "children"
   -- Attribute
