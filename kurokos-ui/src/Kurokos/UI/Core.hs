@@ -525,9 +525,12 @@ updateLayout (V2 winW winH) wt0
     calcWPos _     pos0 Null                    = (pos0, Null)
     calcWPos parCT pos0 (Fork u a@(ctx,_) mc o) =
       let (pos1, u') = calcWPos parCT pos0 u
-          wpos = if parCT == Unordered
-                  then P pos1 + (ctx^.ctxWidgetState.wstPos)
-                  else P $ pos1 + marginLT
+          wpos = case parCT of
+                  Unordered       -> P pos1 + localPos
+                  HorizontalStack -> P (pos1 + marginLT) & _y +~ dy
+                  VerticalStack   -> P (pos1 + marginLT) & _x +~ dx
+            where
+              localPos@(P (V2 dx dy)) = ctx^.ctxWidgetState.wstPos
           a' = a&_1.ctxWidgetState.wstWorldPos .~ wpos
           pos2 = pos1 `advance` size'
             where
