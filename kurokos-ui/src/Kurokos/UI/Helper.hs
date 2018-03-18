@@ -25,8 +25,8 @@ prettyWT = prettyWith showWidget
     showWidget (ctx,w) = show w ++ " - " ++ ctx'
       where
         ctx' = concat
-          [ "'" , fromMaybe "-" (ctx^.ctxName), "' "
-          , "#", show (unWidgetIdent $ ctx^.ctxIdent), " "
+          [ "#", show (unWidgetIdent $ ctx^.ctxIdent), " "
+          , "'" , fromMaybe "-" (ctx^.ctxName), "' "
           , maybe "" show (ctx^.ctxContainerType)]
 
 -- update by name with function

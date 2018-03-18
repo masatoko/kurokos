@@ -1,64 +1,112 @@
 -
-  type: label
-  title:
-    text: Label From Yaml
-    asset: font-r
-    size: 14
-  x: 100
-  y-rpn: $height 100 -
-  w-rpn: $min-width
-  h: 50
-  hoverable: true
-
--
-  type: fill
-  x-rpn: "$width $width 5 / -"
-  w-rpn: "$width 5 /"
-  color:
-    default:
-      back: 0 0 0 50
-      border: 220 220 220 255
-      title: 54 20 171 255
-      tint: 220 220 220 255
-
--
   type: container
-  name: "cntn"
-  order: unordered
-  x: 100
-  y: 100
-  w: 100
-  h-rpn: "$min-height"
+  order: horizontal
   children:
     -
-      type: fill
-      name: "target-fill"
-      w-rpn: "$width"
-      h-rpn: "$height"
-      color:
-        default:
-          back: 0 255 0 100
-          border: 220 220 220 0
-          title: 54 20 171 0
-          tint: 220 220 220 0
-    -
       type: container
-      name: "child-container"
-      order: vertical
-      h-rpn: "$min-height"
+      order: horizontal
       children:
-        - &test
-          type: label
-          title:
-            text: Label
-            asset: font-r
-            size: 14
-          h: 20
-        - *test
-        - *test
         -
-          type: image
-          path: _data/img.png
-          h: 30
-          asset: sample-image
-        - *test
+          type: label
+          name: "00000"
+          title:
+            text: "00000"
+            asset: font-r
+            size: 20
+          color: &col
+            default:
+              back: 0 0 255 30
+              border: 220 220 220 255
+              title: 0 0 0 255
+              tint: 220 220 220 255
+        -
+          type: container
+          order: horizontal
+          children:
+            -
+              type: container
+              order: horizontal
+              children:
+                -
+                  type: label
+                  name: "11111"
+                  title:
+                    text: "11111"
+                    asset: font-r
+                    size: 20
+                  color: *col
+    -
+      type: label
+      name: "22222"
+      title:
+        text: "22222"
+        asset: font-r
+        size: 20
+      color: *col
+
+
+#
+# -
+#   type: label
+#   title:
+#     text: Label From Yaml
+#     asset: font-r
+#     size: 14
+#   x: 100
+#   y-rpn: $height 100 -
+#   w-rpn: $min-width
+#   h: 50
+#   hoverable: true
+#
+# -
+#   type: fill
+#   x-rpn: "$width $width 5 / -"
+#   w-rpn: "$width 5 /"
+#   color:
+#     default:
+#       back: 0 0 0 50
+#       border: 220 220 220 255
+#       title: 54 20 171 255
+#       tint: 220 220 220 255
+#
+# -
+#   type: container
+#   name: "cntn"
+#   order: unordered
+#   x: 100
+#   y: 100
+#   w: 100
+#   h-rpn: "$min-height"
+#   children:
+#     -
+#       type: fill
+#       name: "target-fill"
+#       w-rpn: "$width"
+#       h-rpn: "$height"
+#       color:
+#         default:
+#           back: 0 255 0 100
+#           border: 220 220 220 0
+#           title: 54 20 171 0
+#           tint: 220 220 220 0
+#     -
+#       type: container
+#       name: "child-container"
+#       order: vertical
+#       h-rpn: "$min-height"
+#       children:
+#         - &test
+#           type: label
+#           title:
+#             text: Label
+#             asset: font-r
+#             size: 14
+#           h: 20
+#         - *test
+#         - *test
+#         -
+#           type: image
+#           path: _data/img.png
+#           h: 30
+#           asset: sample-image
+#         - *test

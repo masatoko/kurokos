@@ -1,17 +1,16 @@
 {-# LANGUAGE ExistentialQuantification  #-}
-{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE MultiWayIf                 #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE Strict                     #-}
 {-# LANGUAGE StrictData                 #-}
 {-# LANGUAGE TemplateHaskell            #-}
 module Kurokos.UI.Core where
 
--- import Debug.Trace (traceM, trace)
-import Data.Foldable (toList)
-import Data.List.Extra (firstJust)
-import qualified Data.Set as Set
+-- import           Debug.Trace              (trace, traceM)
+
 import           Control.Concurrent.MVar
 import qualified Control.Exception        as E
 import           Control.Lens
@@ -19,10 +18,14 @@ import           Control.Monad.Extra      (whenJust)
 import           Control.Monad.Reader
 import           Control.Monad.State
 import           Data.ByteString          (ByteString)
+import           Data.Either              (lefts, rights)
+import           Data.Foldable            (toList)
+import           Data.List.Extra          (firstJust)
 import qualified Data.Map                 as M
 import qualified Data.Map.Strict          as MS
 import           Data.Maybe               (fromMaybe, isJust)
 import           Data.Monoid              ((<>))
+import qualified Data.Set                 as Set
 import           Data.Text                (Text)
 import qualified Data.Text                as T
 import           Linear.V2
@@ -34,6 +37,7 @@ import qualified Kurokos.Asset            as Asset
 import qualified Kurokos.Asset.Raw        as Asset
 import qualified Kurokos.RPN              as RPN
 
+import qualified Kurokos.Graphics         as G
 import           Kurokos.UI.Color
 import           Kurokos.UI.Color.Scheme  (ColorScheme, lookupColorOfWidget)
 import           Kurokos.UI.Event         (GuiEvent)
@@ -41,10 +45,9 @@ import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
 import           Kurokos.UI.Widget.Render
+import           Kurokos.UI.Widget.Update (onReadyLayout)
 import           Kurokos.UI.WidgetTree    (WidgetTree (..))
 import qualified Kurokos.UI.WidgetTree    as WT
-import qualified Kurokos.Graphics as G
-import Kurokos.UI.Widget.Update (onReadyLayout)
 
 type CtxWidget = (WContext, Widget)
 type GuiWidgetTree = WidgetTree CtxWidget
@@ -313,6 +316,12 @@ updateVisibility = work True
         vis' = vis0 && atr^.visible -- Current state
         a' = a & _1 . ctxWidgetState . wstVisible .~ vis'
 
+data SizeDependency
+  = SDIndependent
+  | SDParent
+  | SDChild
+  deriving (Eq, Show)
+
 -- Update position (local and world) and size
 updateLayout :: V2 CInt -> GuiWidgetTree -> GuiWidgetTree
 updateLayout (V2 winW winH) wt0
@@ -323,6 +332,7 @@ updateLayout (V2 winW winH) wt0
                 let calcTillLayouted i notLayoutedList wt = do
                       calcMinSize i vmap wt
                       wt' <- calcSize i vmap wt
+                      -- traceCurrentState i wt'
                       let notLayoutedList' = getNotLayouted wt'
                           notChanged = notLayoutedList' == notLayoutedList
                       if | all isLayouted wt' -> return wt'
@@ -334,6 +344,16 @@ updateLayout (V2 winW winH) wt0
     defVmap = M.fromList [(kKeyWinWidth, fromIntegral winW), (kKeyWinHeight, fromIntegral winH)]
 
     getNotLayouted = map (view (_1.ctxIdent)) . filter (not . isLayouted) . toList
+
+    -- * for debug
+    -- traceCurrentState i wt = do
+    --   m <- get
+    --   traceM $ "- TRY" ++ show i ++ " " ++ show m
+    --   mapM_ work wt
+    --   where
+    --     work (ctx,_) = traceM $ unwords ["TRY", show i, ": #", show (unWidgetIdent $ ctx^.ctxIdent), show (wst^.wstWidth), show (wst^.wstHeight)]
+    --       where
+    --         wst = ctx^.ctxWidgetState
 
     isLayouted :: CtxWidget -> Bool
     isLayouted (ctx,_) = isJust (wst^.wstWidth) && isJust (wst^.wstHeight)
@@ -361,7 +381,7 @@ updateLayout (V2 winW winH) wt0
     -- * Step.1
     --   - Calculate minimum size for Container (bottom-up)
     --   - Parent size is NOT calculated at this time, so kKeyWidth and kKeyHeight are not fixed.
-    calcMinSize :: Int -> M.Map String CInt -> GuiWidgetTree -> State (M.Map WTIdent (V2 (Maybe CInt))) ([CInt], [CInt])
+    calcMinSize :: Int -> M.Map String CInt -> GuiWidgetTree -> State (M.Map WTIdent (V2 (Maybe CInt))) ([Either SizeDependency CInt], [Either SizeDependency CInt])
     calcMinSize _ _    Null                         = return ([],[])
     calcMinSize i vmap (Fork u a@(ctx,widget) mc o) = do
       -- * Calc size (if decidable)
@@ -381,7 +401,10 @@ updateLayout (V2 winW winH) wt0
                   workW = maybe id (M.insert kKeyWidth) mw
                   workH = maybe id (M.insert kKeyHeight) mh
           (ws,hs) <- calcMinSize i vmap4children c
-          let V2 mMinW mMinH = calcMinimumSize ws hs
+          -- * Not decide minimum size if depends children's size
+          let ws' = if SDChild `elem` lefts ws then [] else rights ws
+              hs' = if SDChild `elem` lefts hs then [] else rights hs
+          let V2 mMinW mMinH = calcMinimumSize ws' hs'
           -- traceM $ unwords ["!", show i, show (ctx^.ctxIdent), show (ctx^.ctxName), show mMinH, show vmap4children]
           whenJust mMinW $ writeW idx
           whenJust mMinH $ writeH idx
@@ -389,9 +412,9 @@ updateLayout (V2 winW winH) wt0
       -- * Calculate sizes for the parent
       (wsU, hsU) <- calcMinSize i vmap u
       (wsO, hsO) <- calcMinSize i vmap o
-      let fw = maybe id (:) mw
-          fh = maybe id (:) mh
-      return (fw (wsU ++ wsO), fh (hsU ++ hsO)) -- Returns all sizes to the parent.
+      let ew = maybe (Left sdw) Right mw
+          eh = maybe (Left sdh) Right mh
+      return (ew:wsU ++ wsO, eh:hsU ++ hsO) -- Returns all sizes to the parent.
       where
         idx = ctx^.ctxIdent
         V2 expW expH = ctx^.ctxUSize
@@ -404,6 +427,16 @@ updateLayout (V2 winW winH) wt0
             thisCType = fromMaybe (error "No ContainerType for container") $ ctx^.ctxContainerType
             help _ [] = Nothing
             help f as = Just $ f as
+
+        sdw = sizeDependency expW
+        sdh = sizeDependency expH
+        sizeDependency EConst{} = SDIndependent
+        sizeDependency (ERPN e)
+          | kKeyWidth `elem` cs    || kKeyHeight `elem` cs    = SDParent
+          | kKeyMinWidth `elem` cs || kKeyMinHeight `elem` cs = SDChild
+          | otherwise                                         = SDIndependent
+          where
+            cs = RPN.consts e
 
     -- * Step.2
     --   - Calculate local pos and size using vmap with all keys (top-down)
@@ -479,6 +512,7 @@ updateLayout (V2 winW winH) wt0
                   Just <$> calcWPos ctype wpos' c
           (pos3, o') = calcWPos parCT pos2 o
       in (pos3, Fork u' a' mc' o')
+      -- in trace (unwords [show (ctx^.ctxIdent), show (wstSize (ctx^.ctxWidgetState)), " : ", show pos0, show pos1, show pos2, show pos3]) $ (pos3, Fork u' a' mc' o')
       where
         advance pos0@(V2 x y) (V2 w h) = case parCT of
           Unordered       -> pos0

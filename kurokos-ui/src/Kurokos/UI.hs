@@ -108,6 +108,7 @@ module Kurokos.UI
   -- * Control.Helper
   , clickedOn
   -- * Helper
+  , prettyWT
   , update
   , findByIdent
   , findByName
