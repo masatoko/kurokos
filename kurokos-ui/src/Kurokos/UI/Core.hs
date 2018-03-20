@@ -76,20 +76,20 @@ newtype GuiT m a = GuiT {
     runGT :: ReaderT GuiEnv (StateT GuiState m) a
   } deriving (Functor, Applicative, Monad, MonadIO, MonadReader GuiEnv, MonadState GuiState)
 
-runGuiT :: Monad m => GUI -> GuiT m a -> m GUI
+runGuiT :: Monad m => GUI -> GuiT m a -> m (a, GUI)
 runGuiT (GUI (env, gst)) k = do
-  gst' <- execStateT (runReaderT (runGT k) env) gst
-  return $ GUI (env, gst')
+  (a, gst') <- runStateT (runReaderT (runGT k) env) gst
+  return (a, GUI (env, gst'))
 
 instance MonadTrans GuiT where
   lift = GuiT . lift . lift
 
 newGui :: (RenderEnv m, MonadIO m)
-  => GuiEnv -> GuiT m () -> m GUI
+  => GuiEnv -> GuiT m a -> m (a, GUI)
 newGui env initializer = do
-  g1 <- runGuiT g0 initializer
+  (a,g1) <- runGuiT g0 initializer
   g2 <- snd <$> readyRender (setAllNeedsRender g1)
-  return $ g2 & unGui._2.gstWTree %~ WT.balance
+  return (a, g2 & unGui._2.gstWTree %~ WT.balance)
   where
     g0 = GUI (env, gst0)
     gst0 = GuiState 0 Null

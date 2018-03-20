@@ -37,8 +37,8 @@ runTitleScene :: K.KurokosT (GameT IO) ()
 runTitleScene = do
   colorScheme <- liftIO $ UI.readColorScheme "_data/gui-color-scheme.yaml"
   assets <- lift $ asks envAssets
-  gui <- UI.newGui (UI.GuiEnv assets colorScheme) $
-           UI.appendRoot =<< UI.parseWidgetTree =<< liftIO (BS.readFile "_data/gui-title.yaml")
+  (_,gui) <- UI.newGui (UI.GuiEnv assets colorScheme) $
+               UI.appendRoot =<< UI.parseWidgetTree =<< liftIO (BS.readFile "_data/gui-title.yaml")
   cursor <- UI.newCursor
   K.runScene scene $ Title gui cursor []
   where

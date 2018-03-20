@@ -108,7 +108,7 @@ runUITestScene =
       -- userVal <- liftIO $ UserVal <$> MVar.newMVar 0 <*> Asset.getFont "font-r" 16 sdlAssets
       --
       colorScheme <- liftIO $ UI.readColorScheme "_data/gui-color-scheme.yaml"
-      gui <- UI.newGui (UI.GuiEnv sdlAssets colorScheme) $ do
+      (_,gui) <- UI.newGui (UI.GuiEnv sdlAssets colorScheme) $ do
         -- * Label
         let confL = UI.WidgetConfig (Just "title") Nothing style (C 0) (C 30) (Rpn "$width") (C 40)
         label <- UI.mkSingle confL =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
