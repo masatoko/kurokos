@@ -142,19 +142,23 @@ data WContext = WContext
 makeLenses ''WContext
 
 data WidgetConfig = WidgetConfig
-  { wconfName     :: Maybe WTName
-  , wconfColor    :: Maybe ContextColor
-  , wconfStyle    :: Style
-  , wconfPosition :: V2 UExp
-  , wconfSize     :: V2 UExp
+  { wconfName   :: Maybe WTName
+  , wconfColor  :: Maybe ContextColor
+  , wconfStyle  :: Style
+  , wconfPosX   :: UExp
+  , wconfPosY   :: UExp
+  , wconfWidth  :: UExp
+  , wconfHeight :: UExp
   } deriving Show
 
 instance Default WidgetConfig where
-  def = WidgetConfig Nothing Nothing style pos size
+  def = WidgetConfig Nothing Nothing style x y w h
     where
       style = Style TACenter (LRTB 0 0 0 0)
-      pos = V2 (C 0) (C 0)
-      size = V2 (Rpn "$min-width") (Rpn "$min-height")
+      x = C 0
+      y = C 0
+      w = Rpn "$min-width"
+      h = Rpn "$min-height"
 
 optimumColor :: WContext -> WidgetColor
 optimumColor WContext{..}

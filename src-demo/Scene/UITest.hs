@@ -110,29 +110,20 @@ runUITestScene =
       colorScheme <- liftIO $ UI.readColorScheme "_data/gui-color-scheme.yaml"
       gui <- UI.newGui (UI.GuiEnv sdlAssets colorScheme) $ do
         -- * Label
-        let confL = UI.WidgetConfig (Just "title") Nothing style pos size0
-              where
-                size0 = V2 (Rpn "$width") (C 40)
-                pos = V2 (C 0) (C 30)
+        let confL = UI.WidgetConfig (Just "title") Nothing style (C 0) (C 30) (Rpn "$width") (C 40)
         label <- UI.mkSingle confL =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
         -- * Buttons
-        let confB = UI.WidgetConfig (Just nameMain) Nothing style pos size
-              where
-                pos = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
-                size = V2 (Rpn "0.4 $width *") (C 40)
+        let confB = UI.WidgetConfig (Just nameMain) Nothing style (Rpn "0.3 $width *") (Rpn "0.2 $height *") (Rpn "0.4 $width *") (C 40)
         button1 <- UI.mkSingle confB =<< UI.newButton "font-m" 16 "Next: Main Scene"
         -- * Image
-        let confImg = UI.WidgetConfig (Just "image") Nothing style pos size
-              where
-                pos = V2 (C 10) (Rpn "$height 58 -")
-                size = V2 (C 48) (C 48)
+        let confImg = UI.WidgetConfig (Just "image") Nothing style (C 10) (Rpn "$height 58 -") (C 48) (C 48)
         img <- UI.mkSingle confImg =<< UI.newImageView "sample-image"
         -- * UserWidget
         -- userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --
-        let confBs = def {UI.wconfSize = V2 (Rpn "$width") (Rpn "$min-height 10 +")}
+        let confBs = fillConf {UI.wconfHeight = Rpn "$min-height 10 +"}
         btns <- mconcat <$> mapM (UI.mkSingle confBs <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
-        let confCntn = UI.WidgetConfig (Just "menu") Nothing style (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
+        let confCntn = UI.WidgetConfig (Just "menu") Nothing style (Rpn "$width 140 -") (C 0) (C 100) (C 300)
         cnt2 <- (`UI.appendChild` btns) <$> UI.mkContainer confCntn UI.VerticalStack
         --
         clickableArea <- UI.mkSingle (fillConf {UI.wconfName = Just "clickable"}) =<< UI.newTransparent
@@ -154,7 +145,7 @@ runUITestScene =
       -- return $ UITest gui' cursor userVal [] 0
       where
         fillConf :: UI.WidgetConfig
-        fillConf = def {UI.wconfSize = V2 (Rpn "$width") (Rpn "$height")}
+        fillConf = def {UI.wconfWidth = Rpn "$width", UI.wconfHeight = Rpn "$height"}
 
     update :: Update (GameT IO) UITest
     update title0 = do

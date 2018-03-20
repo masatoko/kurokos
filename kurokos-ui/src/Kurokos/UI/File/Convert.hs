@@ -43,7 +43,7 @@ convert s@Single{..} = do
   wt <- mkSingle conf =<< generate
   return $ wt & wtElement._1 %~ setContext
   where
-    conf = WidgetConfig wName wColor wStyle (V2 wX wY) (V2 wWidth wHeight)
+    conf = WidgetConfig wName wColor wStyle wX wY wWidth wHeight
     Title titleText titleSize titleAssetIdent = fromMaybe (error "Missing title") wTitle
     generate
       | wType == N.wnameFill      = newFill
@@ -79,7 +79,7 @@ convert Container{..} = do
   ws <- mapM convert wChildren
   return $ appendChild cnt' (mconcat ws)
   where
-    conf = WidgetConfig wName wColor wStyle (V2 wX wY) (V2 wWidth wHeight)
+    conf = WidgetConfig wName wColor wStyle wX wY wWidth wHeight
     setContext ctx =
       ctx & ctxAttrib . visible %~ flip fromMaybe wVisible
           & ctxAttrib . clickable %~ flip fromMaybe wClickable

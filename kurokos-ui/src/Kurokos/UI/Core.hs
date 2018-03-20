@@ -133,10 +133,10 @@ mkSingle :: (RenderEnv m, MonadIO m)
 mkSingle conf w = do
   ident <- WTIdent <$> use gstIdCnt
   gstIdCnt += 1
-  pos' <- case fromUExpV2 (wconfPosition conf) of
+  pos' <- case fromUExpV2 (V2 (wconfPosX conf) (wconfPosY conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  size' <- case fromUExpV2 (wconfSize conf) of
+  size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
   ctxCol <- maybe (getContextColorOfWidget w) return (wconfColor conf)
@@ -149,10 +149,10 @@ mkContainer :: (RenderEnv m, MonadIO m)
 mkContainer conf ct = do
   ident <- WTIdent <$> use gstIdCnt
   gstIdCnt += 1
-  pos' <- case fromUExpV2 (wconfPosition conf) of
+  pos' <- case fromUExpV2 (V2 (wconfPosX conf) (wconfPosY conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  size' <- case fromUExpV2 (wconfSize conf) of
+  size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
   let w = Fill
