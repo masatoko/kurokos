@@ -77,6 +77,7 @@ module Kurokos.UI
   , showTree
   , readWidgetTree
   , parseWidgetTree
+  , WidgetConfig (..)
   , mkSingle
   , mkContainer
   , appendRoot

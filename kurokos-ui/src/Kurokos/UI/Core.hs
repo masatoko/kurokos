@@ -129,36 +129,36 @@ freeCommonResource CmnRsc{..} = do
   whenJust cmnrscTextTex G.deleteTexture
 
 mkSingle :: (RenderEnv m, MonadIO m)
-  => Maybe WTName -> Maybe ContextColor -> Style -> V2 UExp -> V2 UExp -> Widget -> GuiT m GuiWidgetTree
-mkSingle mName mColor style pos size w = do
+  => WidgetConfig -> Widget -> GuiT m GuiWidgetTree
+mkSingle conf w = do
   ident <- WTIdent <$> use gstIdCnt
   gstIdCnt += 1
-  pos' <- case fromUExpV2 pos of
+  pos' <- case fromUExpV2 (wconfPosition conf) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  size' <- case fromUExpV2 size of
+  size' <- case fromUExpV2 (wconfSize conf) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  ctxCol <- maybe (getContextColorOfWidget w) return mColor
+  ctxCol <- maybe (getContextColorOfWidget w) return (wconfColor conf)
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
-  let ctx = WContext ident mName Nothing (attribOf w) True iniWidgetState cmnRsc ctxCol style pos' size'
+  let ctx = WContext ident (wconfName conf) Nothing (attribOf w) True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
   return $ Fork Null (ctx, w) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
-  => Maybe WTName -> ContainerType -> Maybe ContextColor -> Style -> V2 UExp -> V2 UExp -> GuiT m GuiWidgetTree
-mkContainer mName ct mColor style pos size = do
+  => WidgetConfig -> ContainerType -> GuiT m GuiWidgetTree
+mkContainer conf ct = do
   ident <- WTIdent <$> use gstIdCnt
   gstIdCnt += 1
-  pos' <- case fromUExpV2 pos of
+  pos' <- case fromUExpV2 (wconfPosition conf) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  size' <- case fromUExpV2 size of
+  size' <- case fromUExpV2 (wconfSize conf) of
             Left err -> E.throw $ userError err
             Right v  -> return v
   let w = Fill
-  ctxCol <- maybe (getContextColorOfWidget w) return mColor
+  ctxCol <- maybe (getContextColorOfWidget w) return (wconfColor conf)
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
-  let ctx = WContext ident mName (Just ct) (attribOf w) True iniWidgetState cmnRsc ctxCol style pos' size'
+  let ctx = WContext ident (wconfName conf) (Just ct) (attribOf w) True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
   return $ Fork Null (ctx,w) (Just Null) Null
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()

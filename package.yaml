@@ -56,5 +56,6 @@ executables:
             - kurokos
             - lens
             - resourcet
+            - data-default-class
         else:
           buildable: False

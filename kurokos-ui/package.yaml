@@ -32,6 +32,7 @@ dependencies:
 - unordered-containers
 - transformers
 - mtl
+- data-default-class
 - split
 - lens
 - linear

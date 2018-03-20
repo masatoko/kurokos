@@ -20,6 +20,7 @@ import           Linear.V4
 
 -- import qualified SDL
 
+import           Data.Default.Class           (def)
 import qualified Kurokos                      as K
 import qualified Kurokos.Asset                as Asset
 import qualified Kurokos.Asset.Raw            as Asset
@@ -35,7 +36,7 @@ import           Import
 import           Graphics.Rendering.OpenGL    (($=))
 import qualified Graphics.Rendering.OpenGL    as GL
 
-import Scene (runTitleScene)
+import           Scene                        (runTitleScene)
 
 -- data Dummy = Dummy [Action]
 
@@ -70,12 +71,12 @@ import Scene (runTitleScene)
 --     return $ cnt `mod` 10 == 0
 
 data UITest = UITest
-  { _tGui    :: UI.GUI
-  , _tCursor :: UI.Cursor
+  { _tGui     :: UI.GUI
+  , _tCursor  :: UI.Cursor
   , _tUpdated :: Bool
   -- , _tUserVal :: UserVal
-  , _tEvents :: [(UI.GuiAction, UI.GuiEvent)]
-  , _tCnt    :: Int
+  , _tEvents  :: [(UI.GuiAction, UI.GuiEvent)]
+  , _tCnt     :: Int
   }
 
 makeLenses ''UITest
@@ -109,35 +110,35 @@ runUITestScene =
       colorScheme <- liftIO $ UI.readColorScheme "_data/gui-color-scheme.yaml"
       gui <- UI.newGui (UI.GuiEnv sdlAssets colorScheme) $ do
         -- * Label
-        let size0 = V2 (Rpn "$width") (C 40)
-            pos = V2 (C 0) (C 30)
-        label <- UI.mkSingle (Just "title") Nothing style pos size0 =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
+        let confL = UI.WidgetConfig (Just "title") Nothing style pos size0
+              where
+                size0 = V2 (Rpn "$width") (C 40)
+                pos = V2 (C 0) (C 30)
+        label <- UI.mkSingle confL =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
         -- * Buttons
-        let size = V2 (Rpn "0.4 $width *") (C 40)
-            pos1 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
-            pos2 = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height * 50 +")
-        button1 <- UI.mkSingle (Just nameMain) Nothing style pos1 size =<< UI.newButton "font-m" 16 "Next: Main Scene"
+        let confB = UI.WidgetConfig (Just nameMain) Nothing style pos size
+              where
+                pos = V2 (Rpn "0.3 $width *") (Rpn "0.2 $height *")
+                size = V2 (Rpn "0.4 $width *") (C 40)
+        button1 <- UI.mkSingle confB =<< UI.newButton "font-m" 16 "Next: Main Scene"
         -- * Image
-        let imgSize = V2 (C 48) (C 48)
-            imgPos = V2 (C 10) (Rpn "$height 58 -")
-        img <- UI.mkSingle (Just "image") Nothing style imgPos imgSize =<< UI.newImageView "sample-image"
+        let confImg = UI.WidgetConfig (Just "image") Nothing style pos size
+              where
+                pos = V2 (C 10) (Rpn "$height 58 -")
+                size = V2 (C 48) (C 48)
+        img <- UI.mkSingle confImg =<< UI.newImageView "sample-image"
         -- * UserWidget
         -- userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --
-        let size' = V2 (Rpn "$width") (Rpn "$height 2 /")
-        lbl' <- UI.mkSingle (Just "label") Nothing style (V2 (C 0) (C 0)) size' =<< UI.newLabel "font-m" 16 "---"
-        btn' <- UI.mkSingle (Just "button") Nothing style (V2 (C 0) (Rpn "$height 2 /")) size' =<< UI.newButton "font-m" 16 "Button in Container"
-        ctn1 <- UI.mkContainer Nothing UI.Unordered Nothing style (V2 (Rpn "$width 2 /") (Rpn "$height 2 /")) (V2 (C 200) (C 100))
-        let ctn1' = UI.appendChild ctn1 (mconcat [lbl', btn'])
+        let confBs = def {UI.wconfSize = V2 (Rpn "$width") (Rpn "$min-height 10 +")}
+        btns <- mconcat <$> mapM (UI.mkSingle confBs <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
+        let confCntn = UI.WidgetConfig (Just "menu") Nothing style (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
+        cnt2 <- (`UI.appendChild` btns) <$> UI.mkContainer confCntn UI.VerticalStack
         --
-        btns <- mconcat <$> mapM (UI.mkSingle Nothing Nothing style (V2 (C 0) (C 0)) (V2 (Rpn "$width") (C 30)) <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
-        cnt2 <- UI.mkContainer (Just "menu") UI.VerticalStack Nothing style (V2 (Rpn "$width 140 -") (C 0)) (V2 (C 100) (C 300))
-        let ctn2' = UI.appendChild cnt2 btns
+        clickableArea <- UI.mkSingle (fillConf {UI.wconfName = Just "clickable"}) =<< UI.newTransparent
+        fill <- UI.mkSingle (fillConf {UI.wconfName = Just "fill"}) =<< UI.newFill
         --
-        clickableArea <- UI.mkSingle (Just "clickable") Nothing style (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newTransparent
-        fill <- UI.mkSingle (Just "fill") Nothing style (V2 (C 0) (C 0)) (V2 (Rpn "$width") (Rpn "$height")) =<< UI.newFill
-        --
-        UI.prependRoot $ mconcat [clickableArea, label, button1, img, ctn1', fill, ctn2']
+        UI.prependRoot $ mconcat [clickableArea, label, button1, img, fill, cnt2]
         -- * From file
         UI.appendRoot =<< UI.parseWidgetTree guiYaml
 
@@ -151,6 +152,9 @@ runUITestScene =
       cursor <- UI.newCursor
       return (UITest gui' cursor False [] 0, sdlAssets)
       -- return $ UITest gui' cursor userVal [] 0
+      where
+        fillConf :: UI.WidgetConfig
+        fillConf = def {UI.wconfSize = V2 (Rpn "$width") (Rpn "$height")}
 
     update :: Update (GameT IO) UITest
     update title0 = do

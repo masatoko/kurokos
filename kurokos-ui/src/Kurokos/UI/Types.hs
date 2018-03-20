@@ -3,17 +3,18 @@
 module Kurokos.UI.Types where
 
 import           Control.Lens
-import           Data.Int         (Int64)
-import           Data.Maybe       (fromMaybe)
-import           Data.Word        (Word8)
-import           Foreign.C.Types  (CInt)
+import           Data.Default.Class
+import           Data.Int           (Int64)
+import           Data.Maybe         (fromMaybe)
+import           Data.Word          (Word8)
+import           Foreign.C.Types    (CInt)
 import           Linear.V2
 import           Linear.V4
 
 import qualified SDL
 
-import qualified Kurokos.Graphics as G
-import qualified Kurokos.RPN      as RPN
+import qualified Kurokos.Graphics   as G
+import qualified Kurokos.RPN        as RPN
 
 import           Kurokos.UI.Color
 
@@ -139,6 +140,21 @@ data WContext = WContext
   } deriving Show
 
 makeLenses ''WContext
+
+data WidgetConfig = WidgetConfig
+  { wconfName     :: Maybe WTName
+  , wconfColor    :: Maybe ContextColor
+  , wconfStyle    :: Style
+  , wconfPosition :: V2 UExp
+  , wconfSize     :: V2 UExp
+  } deriving Show
+
+instance Default WidgetConfig where
+  def = WidgetConfig Nothing Nothing style pos size
+    where
+      style = Style TACenter (LRTB 0 0 0 0)
+      pos = V2 (C 0) (C 0)
+      size = V2 (Rpn "$min-width") (Rpn "$min-height")
 
 optimumColor :: WContext -> WidgetColor
 optimumColor WContext{..}
