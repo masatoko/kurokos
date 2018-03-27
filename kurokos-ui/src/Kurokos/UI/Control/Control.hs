@@ -7,6 +7,7 @@ module Kurokos.UI.Control.Control
   --
   , clickByCursor
   , topmostAt
+  , topmostAtWith
   ) where
 
 import           Control.Lens
@@ -67,8 +68,9 @@ handleGui GuiHandler{..} esSDL cursor gui =
 clickByCursor :: Cursor -> GUI -> Maybe E.GuiEvent
 clickByCursor Cursor{..} gui = me
   where
-    me = conv =<< wtTopmostAt _cursorPos (gui^.unGui._2.gstWTree)
+    me = conv =<< wtTopmostAt _cursorPos isClickable (gui^.unGui._2.gstWTree)
       where
+        isClickable = view (_1.ctxAttrib.clickable)
         conv (WContext{..}, w)
           | _ctxAttrib^.clickable = Just $ E.GuiEvent et w _ctxIdent _ctxName
           | otherwise             = Nothing
@@ -76,22 +78,26 @@ clickByCursor Cursor{..} gui = me
             et = E.Clicked _cursorPos
 
 topmostAt :: Point V2 CInt -> GUI -> Maybe (WContext, Widget)
-topmostAt p gui = wtTopmostAt p (gui^.unGui._2.gstWTree)
+topmostAt p gui = wtTopmostAt p (const True) (gui^.unGui._2.gstWTree)
+
+-- | Same as `topmostAt` but with filtering function.
+topmostAtWith :: Point V2 CInt -> (CtxWidget -> Bool) -> GUI -> Maybe (WContext, Widget)
+topmostAtWith p isTarget gui = wtTopmostAt p isTarget (gui^.unGui._2.gstWTree)
 
 -- Internal
 
-wtTopmostAt :: Point V2 CInt -> GuiWidgetTree -> Maybe (WContext, Widget)
-wtTopmostAt p = lastMay . wtFilterAt p
+wtTopmostAt :: Point V2 CInt -> (CtxWidget -> Bool) -> GuiWidgetTree -> Maybe (WContext, Widget)
+wtTopmostAt p isTarget = lastMay . wtFilterAt p isTarget
 
-wtFilterAt :: Point V2 CInt -> GuiWidgetTree -> [(WContext, Widget)]
-wtFilterAt aPos' = catMaybes . toList . fmap work
+wtFilterAt :: Point V2 CInt -> (CtxWidget -> Bool) -> GuiWidgetTree -> [CtxWidget]
+wtFilterAt aPos' isTarget = catMaybes . toList . fmap work
   where
     aPos = fromIntegral <$> aPos'
 
-    work :: (WContext, Widget) -> Maybe (WContext, Widget)
+    work :: CtxWidget -> Maybe (WContext, Widget)
     work cw
-      | vis && within = Just cw
-      | otherwise     = Nothing
+      | vis && within && isTarget cw = Just cw
+      | otherwise                    = Nothing
       where
         wst = cw^._1.ctxWidgetState
         pos = wst^.wstWorldPos
