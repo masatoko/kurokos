@@ -122,6 +122,7 @@ module Kurokos.UI
 import           Kurokos.UI.Color
 import           Kurokos.UI.Color.Scheme    (ColorScheme, parseColorScheme,
                                              readColorScheme)
+import           Kurokos.UI.Control
 import           Kurokos.UI.Control.Control
 import           Kurokos.UI.Control.Cursor
 import           Kurokos.UI.Control.Helper  (clickedOn)

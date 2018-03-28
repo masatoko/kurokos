@@ -158,7 +158,7 @@ runUITestScene =
           t1 & tGui %%~ UI.updateGui es (t1^.tCursor)
         updateEs esSDL t = t & tEvents .~ es
           where
-            es = UI.handleGui UI.defaultGuiHandler esSDL (t^.tCursor) (t^.tGui)
+            es = UI.handleGui esSDL (t^.tCursor) (t^.tGui)
         readyG t = do
           (updated,g) <- UI.readyRender $ t^.tGui
           return $ t & tGui .~ g

@@ -40,6 +40,8 @@ import qualified Kurokos.RPN              as RPN
 import qualified Kurokos.Graphics         as G
 import           Kurokos.UI.Color
 import           Kurokos.UI.Color.Scheme  (ColorScheme, lookupColorOfWidget)
+import           Kurokos.UI.Control       (GuiAction (..), GuiHandler (..),
+                                           defaultGuiHandler)
 import           Kurokos.UI.Event         (GuiEvent)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
@@ -58,9 +60,10 @@ data GuiEnv = GuiEnv
   }
 
 data GuiState = GuiState
-  { _gstIdCnt :: WidgetIdent
-  -- ^ Counter for WidgetTree ID
-  , _gstWTree :: GuiWidgetTree
+  { _gstIdCnt      :: WidgetIdent -- ^ Counter for WidgetTree ID
+  , _gstWTree      :: GuiWidgetTree
+  --
+  , _gstGuiHandler :: GuiHandler
   }
 
 makeLenses ''GuiState
@@ -92,7 +95,7 @@ newGui env initializer = do
   return (a, g2 & unGui._2.gstWTree %~ WT.balance)
   where
     g0 = GUI (env, gst0)
-    gst0 = GuiState 0 Null
+    gst0 = GuiState 0 Null defaultGuiHandler
 
 freeGui :: MonadIO m => GUI -> m ()
 freeGui g = liftIO $

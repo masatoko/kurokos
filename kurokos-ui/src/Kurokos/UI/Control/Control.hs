@@ -1,9 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.UI.Control.Control
-  ( GuiHandler (..)
-  , GuiAction (..)
-  , defaultGuiHandler
-  , handleGui
+  ( handleGui
   --
   , clickByCursor
   , topmostAt
@@ -19,6 +16,7 @@ import           Safe                      (lastMay)
 import qualified SDL
 import           SDL.Event
 
+import           Kurokos.UI.Control
 import           Kurokos.UI.Control.Cursor
 import           Kurokos.UI.Core
 import qualified Kurokos.UI.Event          as E
@@ -27,41 +25,14 @@ import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
 import qualified Kurokos.UI.WidgetTree     as WT
 
-data GuiAction
-  = GuiActLeft
-  | GuiActRight
-  deriving (Eq, Show, Read)
-
-data GuiHandler act = GuiHandler
-  { ghClick :: SDL.EventPayload -> Maybe act
-  }
-
-defaultGuiHandler :: GuiHandler GuiAction
-defaultGuiHandler = GuiHandler click
-  where
-    click (MouseButtonEvent MouseButtonEventData{..}) =
-      if mouseButtonEventMotion == Pressed
-        then
-          case mouseButtonEventButton of
-            ButtonLeft  -> Just GuiActLeft
-            ButtonRight -> Just GuiActRight
-        else Nothing
-    click (KeyboardEvent KeyboardEventData{..})
-      | pressed && keycode == SDL.KeycodeSpace  = Just GuiActLeft
-      | pressed && keycode == SDL.KeycodeLShift = Just GuiActRight
-      | otherwise                               = Nothing
-      where
-        keycode = SDL.keysymKeycode keyboardEventKeysym
-        pressed = keyboardEventKeyMotion == Pressed
-    click _ = Nothing
-
-handleGui :: GuiHandler act -> [SDL.EventPayload] -> Cursor -> GUI -> [(act, E.GuiEvent)]
-handleGui GuiHandler{..} esSDL cursor gui =
+handleGui :: [SDL.EventPayload] -> Cursor -> GUI -> [(GuiAction, E.GuiEvent)]
+handleGui esSDL cursor gui =
   case clickByCursor cursor gui of
     Just e  -> [(act, e) | act <- as]
     Nothing -> []
   where
     as = mapMaybe ghClick esSDL
+    GuiHandler{..} = gui^.unGui._2.gstGuiHandler
 
 -----
 

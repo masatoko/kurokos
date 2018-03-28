@@ -49,7 +49,7 @@ runTitleScene = do
       esSDL <- K.getEvents
       cursor <- UI.updateCursor esSDL $ tCursor t
       gui <- UI.updateGui esSDL cursor (tGui t)
-      let es = UI.handleGui UI.defaultGuiHandler esSDL cursor gui
+      let es = UI.handleGui esSDL cursor gui
       (_,gui') <- UI.readyRender gui
       return $ Title gui' cursor es
 
