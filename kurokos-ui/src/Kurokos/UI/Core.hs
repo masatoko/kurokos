@@ -137,7 +137,7 @@ freeCommonResource CmnRsc{..} = do
 
 mkSingle :: (RenderEnv m, MonadIO m)
   => WidgetConfig -> Widget -> GuiT m GuiWidgetTree
-mkSingle conf w = do
+mkSingle conf widget = do
   ident <- WTIdent <$> use gstIdCnt
   gstIdCnt += 1
   pos' <- case fromUExpV2 (V2 (wconfPosX conf) (wconfPosY conf)) of
@@ -146,10 +146,11 @@ mkSingle conf w = do
   size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  ctxCol <- maybe (getContextColorOfWidget w) return (wconfColor conf)
-  cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
-  let ctx = WContext ident (wconfName conf) Nothing (attribOf w) True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
-  return $ Fork Null (ctx, w) Nothing Null
+  ctxCol <- maybe (getContextColorOfWidget widget) return (wconfColor conf)
+  cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) widget
+  let attrib = fromMaybe (attribOf widget) $ wconfAttrib conf
+      ctx = WContext ident (wconfName conf) Nothing attrib True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
+  return $ Fork Null (ctx, widget) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
   => WidgetConfig -> ContainerType -> GuiT m GuiWidgetTree
@@ -162,11 +163,20 @@ mkContainer conf ct = do
   size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  let w = Fill
-  ctxCol <- maybe (getContextColorOfWidget w) return (wconfColor conf)
-  cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) w
-  let ctx = WContext ident (wconfName conf) (Just ct) (attribOf w) True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
-  return $ Fork Null (ctx,w) (Just Null) Null
+  ctxCol <- maybe (getContextColorOfWidget widget) return (wconfColor conf)
+  cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) widget
+  let attrib = fromMaybe attribCntn $ wconfAttrib conf
+      ctx = WContext ident (wconfName conf) (Just ct) attrib True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
+  return $ Fork Null (ctx, widget) (Just Null) Null
+  where
+    widget = Fill
+    attribCntn = WidgetAttrib
+      { _hoverable = False
+      , _clickable = False
+      , _draggable = False
+      , _droppable = False
+      , _visible   = True
+      }
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()
 appendRoot wt = modify $ over gstWTree (wt <>)

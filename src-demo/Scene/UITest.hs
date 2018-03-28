@@ -109,20 +109,20 @@ runUITestScene =
       colorScheme <- liftIO $ UI.readColorScheme "_data/gui-color-scheme.yaml"
       (_,gui) <- UI.newGui (UI.GuiEnv sdlAssets colorScheme) $ do
         -- * Label
-        let confL = UI.WidgetConfig (Just "title") Nothing style (C 0) (C 30) (Rpn "$width") (C 40)
+        let confL = UI.WidgetConfig (Just "title") Nothing style Nothing (C 0) (C 30) (Rpn "$width") (C 40)
         label <- UI.mkSingle confL =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
         -- * Buttons
-        let confB = UI.WidgetConfig (Just nameMain) Nothing style (Rpn "0.3 $width *") (Rpn "0.2 $height *") (Rpn "0.4 $width *") (C 40)
+        let confB = UI.WidgetConfig (Just nameMain) Nothing style Nothing (Rpn "0.3 $width *") (Rpn "0.2 $height *") (Rpn "0.4 $width *") (C 40)
         button1 <- UI.mkSingle confB =<< UI.newButton "font-m" 16 "Next: Main Scene"
         -- * Image
-        let confImg = UI.WidgetConfig (Just "image") Nothing style (C 10) (Rpn "$height 58 -") (C 48) (C 48)
+        let confImg = UI.WidgetConfig (Just "image") Nothing style Nothing (C 10) (Rpn "$height 58 -") (C 48) (C 48)
         img <- UI.mkSingle confImg =<< UI.newImageView "sample-image"
         -- * UserWidget
         -- userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --
         let confBs = fillConf {UI.wconfHeight = Rpn "$min-height 10 +"}
         btns <- mconcat <$> mapM (UI.mkSingle confBs <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
-        let confCntn = UI.WidgetConfig (Just "menu") Nothing style (Rpn "$width 140 -") (C 0) (C 100) (C 300)
+        let confCntn = UI.WidgetConfig (Just "menu") Nothing style Nothing (Rpn "$width 140 -") (C 0) (C 100) (C 300)
         cnt2 <- (`UI.appendChild` btns) <$> UI.mkContainer confCntn UI.VerticalStack
         --
         clickableArea <- UI.mkSingle (fillConf {UI.wconfName = Just "clickable"}) =<< UI.newTransparent

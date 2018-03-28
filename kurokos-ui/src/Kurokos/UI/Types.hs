@@ -60,6 +60,8 @@ wstSize wst = V2 w h
 data WidgetAttrib = WidgetAttrib
   { _hoverable :: Bool
   , _clickable :: Bool
+  , _draggable :: Bool
+  , _droppable :: Bool
   , _visible   :: Bool
   } deriving Show
 
@@ -69,7 +71,9 @@ defAttrib :: WidgetAttrib
 defAttrib = WidgetAttrib
   { _hoverable = True
   , _clickable = True
-  , _visible = True
+  , _draggable = False
+  , _droppable = False
+  , _visible   = True
   }
 
 -- Expression
@@ -145,6 +149,7 @@ data WidgetConfig = WidgetConfig
   { wconfName   :: Maybe WTName
   , wconfColor  :: Maybe ContextColor
   , wconfStyle  :: Style
+  , wconfAttrib :: Maybe WidgetAttrib
   , wconfPosX   :: UExp
   , wconfPosY   :: UExp
   , wconfWidth  :: UExp
@@ -152,7 +157,7 @@ data WidgetConfig = WidgetConfig
   } deriving Show
 
 instance Default WidgetConfig where
-  def = WidgetConfig Nothing Nothing style x y w h
+  def = WidgetConfig Nothing Nothing style Nothing x y w h
     where
       style = Style TACenter (LRTB 0 0 0 0)
       x = C 0

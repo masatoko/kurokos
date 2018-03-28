@@ -112,8 +112,8 @@ handleGui mouseButtons esSDL Cursor{..} gui =
     GuiHandler{..} = gui^.unGui._2.gstGuiHandler
 
     isClickable = view (_1.ctxAttrib.clickable)
-    isDraggable = isClickable -- TODO: Add field
-    isDroppable = isClickable -- TODO: Add field
+    isDraggable = view (_1.ctxAttrib.draggable)
+    isDroppable = view (_1.ctxAttrib.droppable)
 
     cwToInfo (WContext{..}, w) = E.WidgetInfo w _ctxIdent _ctxName
 
@@ -124,11 +124,6 @@ handleGui mouseButtons esSDL Cursor{..} gui =
         conv cw@(WContext{..}, w)
           | _ctxAttrib^.clickable = map (E.Clicked (cwToInfo cw) _cursorPos) actsClick
           | otherwise             = []
-
-    -- dragEvents :: [E.GuiEvent]
-    -- dragEvents =
-    --   where
-    --     work
 
     draggingEvents =
       let bgns = mapMaybe beginDrg esSDL
@@ -141,7 +136,7 @@ handleGui mouseButtons esSDL Cursor{..} gui =
 
         beginDrg (MouseButtonEvent MouseButtonEventData{..})
           | clickedByLeft =
-              case wtTopmostAt _cursorPos isClickable wt of
+              case wtTopmostAt _cursorPos isDraggable wt of
                 Nothing -> Nothing
                 Just cw -> Just $ Dragging (cwToInfo cw) btn 0
           | otherwise = Nothing
