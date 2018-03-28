@@ -6,6 +6,7 @@ import           Data.Maybe                (catMaybes, mapMaybe, maybeToList)
 import           Linear.V2
 import           Safe                      (lastMay)
 
+import           Kurokos.UI.Control
 import           Kurokos.UI.Control.Cursor
 import           Kurokos.UI.Core
 import qualified Kurokos.UI.Event          as E
@@ -14,11 +15,11 @@ import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
 import qualified Kurokos.UI.WidgetTree     as WT
 
-clickedOn :: Eq act => act -> WTName -> [(act, E.GuiEvent)] -> Maybe GuiPos
-clickedOn act name = firstJust isTarget
+clickedOn :: GuiAction -> WTName -> GUI -> Maybe GuiPos
+clickedOn act name g = firstJust convTarget (g^.unGui._2.gstEvents)
   where
-    isTarget (a,e)
-      | a == act && E.geWTName e == Just name =
-        case E.geType e of
-          E.Clicked pos -> Just pos
+    convTarget e@E.Clicked{}
+      | match     = Just $ E.gePosition e
       | otherwise = Nothing
+      where
+        match = E.geAction e == act && E.geWTName e == Just name

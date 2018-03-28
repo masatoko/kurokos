@@ -45,7 +45,6 @@ module Kurokos.UI
   , parseColorScheme
   -- * Type
   , GuiEvent (..)
-  , EventType (..)
   , UExp (..)
   -- * Style
   , Style (..)
@@ -99,8 +98,6 @@ module Kurokos.UI
   , GuiHandler (..)
   , GuiAction (..)
   , defaultGuiHandler
-  , handleGui
-  , clickByCursor
   , topmostAt
   , topmostAtWith
   -- * Cursor

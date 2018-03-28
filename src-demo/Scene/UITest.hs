@@ -24,7 +24,7 @@ import           Data.Default.Class           (def)
 import qualified Kurokos                      as K
 import qualified Kurokos.Asset                as Asset
 import qualified Kurokos.Asset.Raw            as Asset
-import qualified Kurokos.Graphics             as G
+-- import qualified Kurokos.Graphics             as G
 import           Kurokos.UI                   (UExp (..), clickable, ctxAttrib,
                                                visible)
 import qualified Kurokos.UI                   as UI
@@ -75,7 +75,6 @@ data UITest = UITest
   , _tCursor  :: UI.Cursor
   , _tUpdated :: Bool
   -- , _tUserVal :: UserVal
-  , _tEvents  :: [(UI.GuiAction, UI.GuiEvent)]
   , _tCnt     :: Int
   }
 
@@ -141,7 +140,7 @@ runUITestScene =
       liftIO $ putStrLn $ UI.prettyWT $ UI.getWidgetTree gui'
 
       cursor <- UI.newCursor
-      return (UITest gui' cursor False [] 0, sdlAssets)
+      return (UITest gui' cursor False 0, sdlAssets)
       -- return $ UITest gui' cursor userVal [] 0
       where
         fillConf :: UI.WidgetConfig
@@ -151,14 +150,11 @@ runUITestScene =
     update title0 = do
       es <- K.getEvents
       -- liftIO $ MVar.modifyMVar_ (title0^.tUserVal.uvMVar) (return . (+1)) -- Update UserVal
-      readyG . work . updateEs es =<< updateT es title0
+      readyG . work =<< updateT es title0
       where
         updateT es t0 = do
           t1 <- t0 & tCursor %%~ UI.updateCursor es
           t1 & tGui %%~ UI.updateGui es (t1^.tCursor)
-        updateEs esSDL t = t & tEvents .~ es
-          where
-            es = UI.handleGui esSDL (t^.tCursor) (t^.tGui)
         readyG t = do
           (updated,g) <- UI.readyRender $ t^.tGui
           return $ t & tGui .~ g
@@ -166,11 +162,11 @@ runUITestScene =
 
         work t =
           flip execState t $ do
-            whenJust (UI.clickedOn UI.GuiActLeft "fill" es) $ \_ -> do
+            whenJust (UI.clickedOn UI.GuiActLeft "fill" gui) $ \_ -> do
               modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) False
               modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) False
 
-            whenJust (UI.clickedOn UI.GuiActRight "clickable" es) $ \pos -> do -- TODO: Right click
+            whenJust (UI.clickedOn UI.GuiActRight "clickable" gui) $ \pos -> do -- TODO: Right click
               modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) True
               modGui $ UI.setPositionInWorld "menu" pos
               modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) True
@@ -183,7 +179,7 @@ runUITestScene =
             --   let title = T.pack $ show cnt
             --   modGui $ UI.update "label" (over _2 (UI.setTitle title))
           where
-            es = t^.tEvents
+            gui = t^.tGui
             modGui = modify' . over tGui
 
     render :: Render (GameT IO) UITest
@@ -208,7 +204,7 @@ runUITestScene =
       when (isClicked nameMain) runTitleScene
       K.continue t
       where
-        isClicked name = isJust $ UI.clickedOn UI.GuiActLeft name $ t^.tEvents
+        isClicked name = isJust $ UI.clickedOn UI.GuiActLeft name (t^.tGui)
 
 clearBy :: MonadIO m => V4 Float -> m ()
 clearBy (V4 r g b a) = liftIO $ do

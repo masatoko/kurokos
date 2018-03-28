@@ -62,8 +62,11 @@ data GuiEnv = GuiEnv
 data GuiState = GuiState
   { _gstIdCnt      :: WidgetIdent -- ^ Counter for WidgetTree ID
   , _gstWTree      :: GuiWidgetTree
-  --
+  -- * Control
   , _gstGuiHandler :: GuiHandler
+  , _gstEvents     :: [GuiEvent]
+  -- * State
+  -- , _gstDragging   :: Maybe WidgetIdent -- ^ A widget on the start point of dragging
   }
 
 makeLenses ''GuiState
@@ -95,7 +98,7 @@ newGui env initializer = do
   return (a, g2 & unGui._2.gstWTree %~ WT.balance)
   where
     g0 = GUI (env, gst0)
-    gst0 = GuiState 0 Null defaultGuiHandler
+    gst0 = GuiState 0 Null defaultGuiHandler []
 
 freeGui :: MonadIO m => GUI -> m ()
 freeGui g = liftIO $

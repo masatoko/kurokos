@@ -1,10 +1,8 @@
-{-# LANGUAGE RecordWildCards #-}
 module Kurokos.UI.Control.Control
-  ( handleGui
-  --
-  , clickByCursor
-  , topmostAt
+  ( topmostAt
   , topmostAtWith
+  -- * Internal
+  , wtTopmostAt
   ) where
 
 import           Control.Lens
@@ -24,29 +22,6 @@ import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
 import qualified Kurokos.UI.WidgetTree     as WT
-
-handleGui :: [SDL.EventPayload] -> Cursor -> GUI -> [(GuiAction, E.GuiEvent)]
-handleGui esSDL cursor gui =
-  case clickByCursor cursor gui of
-    Just e  -> [(act, e) | act <- as]
-    Nothing -> []
-  where
-    as = mapMaybe ghClick esSDL
-    GuiHandler{..} = gui^.unGui._2.gstGuiHandler
-
------
-
-clickByCursor :: Cursor -> GUI -> Maybe E.GuiEvent
-clickByCursor Cursor{..} gui = me
-  where
-    me = conv =<< wtTopmostAt _cursorPos isClickable (gui^.unGui._2.gstWTree)
-      where
-        isClickable = view (_1.ctxAttrib.clickable)
-        conv (WContext{..}, w)
-          | _ctxAttrib^.clickable = Just $ E.GuiEvent et w _ctxIdent _ctxName
-          | otherwise             = Nothing
-          where
-            et = E.Clicked _cursorPos
 
 topmostAt :: Point V2 CInt -> GUI -> Maybe (WContext, Widget)
 topmostAt p gui = wtTopmostAt p (const True) (gui^.unGui._2.gstWTree)

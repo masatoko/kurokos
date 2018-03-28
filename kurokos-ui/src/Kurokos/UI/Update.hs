@@ -3,28 +3,34 @@ module Kurokos.UI.Update
   ( updateGui
   ) where
 
+import           Data.List.Extra           (firstJust)
 import           Control.Lens
-import           Control.Monad          (foldM)
+import           Control.Monad              (foldM)
 import           Control.Monad.State
-import           Data.Int               (Int32)
-import           Data.Maybe             (catMaybes, mapMaybe, maybeToList)
+import           Data.Int                   (Int32)
+import           Data.Maybe                 (catMaybes, mapMaybe, maybeToList)
 import           Linear.V2
-import           Safe                   (lastMay)
+import           Safe                       (headMay, lastMay)
 
+import           Kurokos.UI.Control
+import           Kurokos.UI.Control.Control (wtTopmostAt)
 import           Kurokos.UI.Core
 import           Kurokos.UI.Event
+import qualified Kurokos.UI.Event           as E
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
-import qualified Kurokos.UI.WidgetTree as WT
-import qualified Kurokos.UI.Widget.Update as WU
+import qualified Kurokos.UI.Widget.Update   as WU
+import qualified Kurokos.UI.WidgetTree      as WT
 
 import qualified SDL
 import           SDL.Event
 
 -- | Update Gui data by SDL Events. Call this at the top of Update
 updateGui :: (RenderEnv m, MonadIO m) => [SDL.EventPayload] -> Cursor -> GUI -> m GUI
-updateGui es cursor g0 = foldM (procEvent cursor) g0 es
+updateGui es cursor g0 = do
+  g1 <- foldM (procEvent cursor) g0 es
+  return $ handleGui es cursor g1
 
 procEvent :: (RenderEnv m, MonadIO m)
   => Cursor -> GUI -> SDL.EventPayload -> m GUI
@@ -86,6 +92,25 @@ procEvent cursor gui = work
             size = wstSize $ ctx^.ctxWidgetState
 
     work _ = return gui
+
+handleGui :: [SDL.EventPayload] -> Cursor -> GUI -> GUI
+handleGui esSDL cursor gui =
+  let es = case firstJust ghClick esSDL of
+            Nothing  -> []
+            Just act -> maybeToList $ clickEvent act cursor
+  in gui&unGui._2.gstEvents .~ es
+  where
+    GuiHandler{..} = gui^.unGui._2.gstGuiHandler
+
+    clickEvent :: GuiAction -> Cursor -> Maybe E.GuiEvent
+    clickEvent act Cursor{..} = me
+      where
+        me = conv =<< wtTopmostAt _cursorPos isClickable (gui^.unGui._2.gstWTree)
+          where
+            isClickable = view (_1.ctxAttrib.clickable)
+            conv (WContext{..}, w)
+              | _ctxAttrib^.clickable = Just $ E.Clicked w _ctxIdent _ctxName _cursorPos act
+              | otherwise             = Nothing
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =

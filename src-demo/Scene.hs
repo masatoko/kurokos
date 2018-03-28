@@ -30,7 +30,6 @@ import           Scene.Game                (runGameScene)
 data Title = Title
   { tGui    :: UI.GUI
   , tCursor :: UI.Cursor
-  , tEvents :: [(UI.GuiAction, UI.GuiEvent)]
   }
 
 runTitleScene :: K.KurokosT (GameT IO) ()
@@ -40,7 +39,7 @@ runTitleScene = do
   (_,gui) <- UI.newGui (UI.GuiEnv assets colorScheme) $
                UI.appendRoot =<< UI.parseWidgetTree =<< liftIO (BS.readFile "_data/gui-title.yaml")
   cursor <- UI.newCursor
-  K.runScene scene $ Title gui cursor []
+  K.runScene scene $ Title gui cursor
   where
     scene :: K.Scene Title (GameT IO) ()
     scene = K.Scene update render transit
@@ -49,9 +48,8 @@ runTitleScene = do
       esSDL <- K.getEvents
       cursor <- UI.updateCursor esSDL $ tCursor t
       gui <- UI.updateGui esSDL cursor (tGui t)
-      let es = UI.handleGui esSDL cursor gui
       (_,gui') <- UI.readyRender gui
-      return $ Title gui' cursor es
+      return $ Title gui' cursor
 
     render t = do
       liftIO $ do
@@ -61,8 +59,8 @@ runTitleScene = do
         UI.render $ tGui t
 
     transit t = do
-      whenJust (UI.clickedOn UI.GuiActLeft "start" es) $
+      whenJust (UI.clickedOn UI.GuiActLeft "start" gui) $
         const runGameScene
       K.continue t
       where
-        es = tEvents t
+        gui = tGui t
