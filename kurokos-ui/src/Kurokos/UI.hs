@@ -28,9 +28,11 @@ module Kurokos.UI
   , WidgetState
   , wstHover
   -- * WidgetAttrib
-  , WidgetAttrib
+  , WidgetAttrib (..)
   , hoverable
   , clickable
+  , draggable
+  , droppable
   , visible
   -- * Color
   , Color
