@@ -7,6 +7,7 @@ module Kurokos.UI
   , newGui
   , freeGui
   , getWidgetTree
+  , getGuiEvents
   -- * GuiT Monad
   , GuiT
   -- * Def

@@ -43,7 +43,7 @@ packages:
 # (e.g., acme-missiles-0.3)
 extra-deps:
   - GLUtil-0.9.3
-  - sdl2-2.3.0
+  - sdl2-2.4.0.1
   - freetype2-0.1.2
 
 # Override default flag values for local packages and extra-deps

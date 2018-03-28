@@ -76,6 +76,9 @@ makeLenses ''GUI
 getWidgetTree :: GUI -> GuiWidgetTree
 getWidgetTree = view gstWTree . snd . _unGui
 
+getGuiEvents :: GUI -> [GuiEvent]
+getGuiEvents = view (unGui._2.gstEvents)
+
 newtype GuiT m a = GuiT {
     runGT :: ReaderT GuiEnv (StateT GuiState m) a
   } deriving (Functor, Applicative, Monad, MonadIO, MonadReader GuiEnv, MonadState GuiState)

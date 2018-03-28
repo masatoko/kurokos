@@ -19,4 +19,14 @@ data GuiEvent
     , gePosition   :: GuiPos
     , geAction     :: GuiAction
     }
+  | Dragging
+    { geWidgetInfo :: WidgetInfo
+    , geButton     :: SDL.MouseButton
+    , geCount      :: Integer
+    }
+  | DragAndDrop
+    { geDrag :: WidgetInfo
+    , geDrop :: Maybe WidgetInfo
+    , geButton :: SDL.MouseButton
+    }
   deriving Show

@@ -26,11 +26,21 @@ import qualified Kurokos.UI.WidgetTree      as WT
 import qualified SDL
 import           SDL.Event
 
+import Foreign.Ptr
+import qualified SDL.Raw.Event as Raw
+
 -- | Update Gui data by SDL Events. Call this at the top of Update
 updateGui :: (RenderEnv m, MonadIO m) => [SDL.EventPayload] -> Cursor -> GUI -> m GUI
 updateGui es cursor g0 = do
   g1 <- foldM (procEvent cursor) g0 es
-  return $ handleGui es cursor g1
+  -- liftIO $ do
+  --   putStrLn "==="
+  --   print =<< Raw.getMouseState nullPtr nullPtr
+  mouseButtons <- SDL.getMouseButtons
+  -- liftIO $
+  --   print $ map (mouseButtons . SDL.ButtonExtra) [0..10]
+  --   print $ mouseButtons SDL.ButtonRight
+  return $ handleGui mouseButtons es cursor g1
 
 procEvent :: (RenderEnv m, MonadIO m)
   => Cursor -> GUI -> SDL.EventPayload -> m GUI
@@ -93,26 +103,64 @@ procEvent cursor gui = work
 
     work _ = return gui
 
-handleGui :: [SDL.EventPayload] -> Cursor -> GUI -> GUI
-handleGui esSDL cursor gui =
-  let es = case firstJust ghClick esSDL of
-            Nothing  -> []
-            Just act -> maybeToList $ clickEvent act cursor
-  in gui&unGui._2.gstEvents .~ es
+handleGui :: (SDL.MouseButton -> Bool) -> [SDL.EventPayload] -> Cursor -> GUI -> GUI
+handleGui mouseButtons esSDL Cursor{..} gui =
+  gui&unGui._2.gstEvents .~ (clickEvents ++ draggingEvents)
   where
+    actsClick = mapMaybe ghClick esSDL
+
     GuiHandler{..} = gui^.unGui._2.gstGuiHandler
 
-    clickEvent :: GuiAction -> Cursor -> Maybe E.GuiEvent
-    clickEvent act Cursor{..} = me
+    isClickable = view (_1.ctxAttrib.clickable)
+    isDraggable = isClickable -- TODO: Add field
+    isDroppable = isClickable -- TODO: Add field
+
+    cwToInfo (WContext{..}, w) = E.WidgetInfo w _ctxIdent _ctxName
+
+    clickEvents :: [E.GuiEvent]
+    clickEvents =
+      maybe [] conv $ wtTopmostAt _cursorPos isClickable (gui^.unGui._2.gstWTree)
       where
-        me = conv =<< wtTopmostAt _cursorPos isClickable (gui^.unGui._2.gstWTree)
+        conv cw@(WContext{..}, w)
+          | _ctxAttrib^.clickable = map (E.Clicked (cwToInfo cw) _cursorPos) actsClick
+          | otherwise             = []
+
+    -- dragEvents :: [E.GuiEvent]
+    -- dragEvents =
+    --   where
+    --     work
+
+    draggingEvents =
+      let bgns = mapMaybe beginDrg esSDL
+          cnts = mapMaybe fromDrg esPrev
+      in bgns ++ cnts
+      where
+        esPrev = gui^.unGui._2.gstEvents
+        btn = ButtonExtra 0 -- FIX: SDL.getMouseButtons ButtonLeft doesn't work
+        wt = gui^.unGui._2.gstWTree
+
+        beginDrg (MouseButtonEvent MouseButtonEventData{..})
+          | clickedByLeft =
+              case wtTopmostAt _cursorPos isClickable wt of
+                Nothing -> Nothing
+                Just cw -> Just $ Dragging (cwToInfo cw) btn 0
+          | otherwise = Nothing
           where
-            isClickable = view (_1.ctxAttrib.clickable)
-            conv (WContext{..}, w)
-              | _ctxAttrib^.clickable = Just $ E.Clicked info _cursorPos act
-              | otherwise             = Nothing
-              where
-                info = E.WidgetInfo w _ctxIdent _ctxName
+            clickedByLeft = mouseButtonEventButton == ButtonLeft
+                              && mouseButtonEventMotion == Pressed
+        beginDrg _ = Nothing
+
+        fromDrg e@Dragging{}
+          | held      = Just $ e {geCount = geCount e + 1}
+          | not held  =
+              let mInfo = case wtTopmostAt _cursorPos isDroppable wt of
+                    Nothing -> Nothing
+                    Just cw -> Just $ cwToInfo cw
+              in Just $ DragAndDrop (geWidgetInfo e) mInfo (geButton e)
+          | otherwise = Nothing
+          where
+            held = mouseButtons $ geButton e
+        fromDrg _ = Nothing
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =

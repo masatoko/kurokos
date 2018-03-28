@@ -24,3 +24,4 @@ clickedOn act name g = firstJust convTarget (g^.unGui._2.gstEvents)
       where
         mName = E.wifName $ E.geWidgetInfo e
         match = E.geAction e == act && mName == Just name
+    convTarget _ = Nothing

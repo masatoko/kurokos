@@ -57,7 +57,7 @@ executables:
         then:
           dependencies:
             - kurokos-gfx
-            - sdl2 >= 2.2.0
+            - sdl2 >= 2.4.0
             - linear
             - filepath
             - extra

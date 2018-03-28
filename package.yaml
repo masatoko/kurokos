@@ -20,7 +20,7 @@ flags:
 dependencies:
   - base >= 4.7 && < 5
   - OpenGL
-  - sdl2 >= 2.2.0
+  - sdl2 >= 2.4.0
   - kurokos-gfx
   - kurokos-ui
   - kurokos-rpn

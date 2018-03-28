@@ -156,6 +156,9 @@ runUITestScene =
           t1 <- t0 & tCursor %%~ UI.updateCursor es
           t1 & tGui %%~ UI.updateGui es (t1^.tCursor)
         readyG t = do
+          liftIO $ do
+            let es = UI.getGuiEvents $ t^.tGui
+            unless (null es) $ print es
           (updated,g) <- UI.readyRender $ t^.tGui
           return $ t & tGui .~ g
                      & tUpdated .~ updated

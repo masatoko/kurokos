@@ -26,6 +26,7 @@ defaultGuiHandler = GuiHandler click
           case mouseButtonEventButton of
             ButtonLeft  -> Just GuiActLeft
             ButtonRight -> Just GuiActRight
+            _           -> Nothing
         else Nothing
     click (KeyboardEvent KeyboardEventData{..})
       | pressed && keycode == SDL.KeycodeSpace  = Just GuiActLeft

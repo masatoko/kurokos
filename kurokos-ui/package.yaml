@@ -21,7 +21,7 @@ description:         Please see the README on Github at <https://github.com/masa
 
 dependencies:
 - base >= 4.7 && < 5
-- sdl2 >= 2.2.0
+- sdl2 >= 2.4.0
 - kurokos-gfx
 - kurokos-asset
 - kurokos-asset-raw

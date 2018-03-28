@@ -47,7 +47,7 @@ packages:
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 extra-deps:
-  - sdl2-2.3.0
+  - sdl2-2.4.0.1
   - Glob-0.9.1
   - GLUtil-0.9.3
   - freetype2-0.1.2
