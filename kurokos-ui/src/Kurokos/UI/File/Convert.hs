@@ -5,6 +5,8 @@ module Kurokos.UI.File.Convert
   , parseWidgetTree
   ) where
 
+import Debug.Trace (trace)
+
 import qualified Control.Exception       as E
 import           Control.Lens
 import qualified Data.ByteString         as BS
@@ -14,7 +16,7 @@ import           Safe                    (readMay)
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
 import           Kurokos.UI.File.Yaml    (Title (..), YValue (..), YWidget (..),
-                                          decodeWidgets)
+                                          YWidgetAttrib (..), decodeWidgets)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
@@ -58,10 +60,14 @@ convert s@Single{..} = do
                   Nothing      -> liftIO $ E.throwIO $ userError $ "missing asset: " ++ show s
                   Just assetid -> return assetid
 
-    setContext ctx =
-      ctx & ctxAttrib . visible %~ flip fromMaybe wVisible
-          & ctxAttrib . clickable %~ flip fromMaybe wClickable
-          & ctxAttrib . hoverable %~ flip fromMaybe wHoverable
+    setContext ctx = case wAttrib of
+      Nothing -> ctx
+      Just ywa@YWidgetAttrib{..} -> trace (show ywa) $
+        ctx&ctxAttrib . hoverable %~ flip fromMaybe ywaHoverable
+           &ctxAttrib . clickable %~ flip fromMaybe ywaClickable
+           &ctxAttrib . draggable %~ flip fromMaybe ywaDraggable
+           &ctxAttrib . droppable %~ flip fromMaybe ywaDroppable
+           &ctxAttrib . visible   %~ flip fromMaybe ywaVisible
 
     value = maybe (error msg) make wValue
       where
@@ -80,7 +86,11 @@ convert Container{..} = do
   return $ appendChild cnt' (mconcat ws)
   where
     conf = WidgetConfig wName wColor wStyle Nothing wX wY wWidth wHeight
-    setContext ctx =
-      ctx & ctxAttrib . visible %~ flip fromMaybe wVisible
-          & ctxAttrib . clickable %~ flip fromMaybe wClickable
-          & ctxAttrib . hoverable %~ flip fromMaybe wHoverable
+    setContext ctx = case wAttrib of
+      Nothing -> ctx
+      Just ywa@YWidgetAttrib{..} -> trace (show ywa) $
+        ctx&ctxAttrib . hoverable %~ flip fromMaybe ywaHoverable
+           &ctxAttrib . clickable %~ flip fromMaybe ywaClickable
+           &ctxAttrib . draggable %~ flip fromMaybe ywaDraggable
+           &ctxAttrib . droppable %~ flip fromMaybe ywaDroppable
+           &ctxAttrib . visible   %~ flip fromMaybe ywaVisible

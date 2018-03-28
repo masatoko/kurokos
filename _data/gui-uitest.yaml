@@ -20,6 +20,9 @@
             text: "00000"
             asset: font-r
             size: 20
+          attrib:
+            draggable: true
+            droppable: true
           color: &col
             default:
               back: 0 0 0 0

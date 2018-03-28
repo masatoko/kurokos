@@ -57,18 +57,22 @@
     -
       type: label
       title:
-        text: "Label1"
+        text: "Draggable"
         asset: font-r
         size: 14
+      attrib:
+        draggable: true
       style:
         text-align: left
       h: 20
     -
       type: label
       title:
-        text: "Label2"
+        text: "Droppable"
         asset: font-r
         size: 14
+      attrib:
+        droppable: true
       style:
         text-align: right
       h: 20

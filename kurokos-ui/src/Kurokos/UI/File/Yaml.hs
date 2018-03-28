@@ -53,11 +53,7 @@ data YWidget
     , wY         :: UExp
     , wWidth     :: UExp
     , wHeight    :: UExp
-    -- * Attribute
-    , wVisible   :: Maybe Bool
-    , wClickable :: Maybe Bool
-    , wHoverable :: Maybe Bool
-    --
+    , wAttrib    :: Maybe YWidgetAttrib
     , wValue     :: Maybe YValue
     --
     , wAsset     :: Maybe Asset.Ident
@@ -74,11 +70,7 @@ data YWidget
     , wHeight        :: UExp
     , wContainerType :: ContainerType
     , wChildren      :: [YWidget]
-    -- * Attribute
-    , wVisible       :: Maybe Bool
-    , wClickable     :: Maybe Bool
-    , wHoverable     :: Maybe Bool
-    --
+    , wAttrib        :: Maybe YWidgetAttrib
     , wStyle         :: Style
     }
   deriving (Eq, Show)
@@ -95,10 +87,7 @@ instance FromJSON YWidget where
         <*> getUExp "y" (C 0) v
         <*> getUExp "w" (Rpn "$min-width") v
         <*> getUExp "h" (Rpn "$min-height") v
-        -- Attribute
-        <*> v .:? "visible"
-        <*> v .:? "clickable"
-        <*> v .:? "hoverable"
+        <*> v .:? "attrib"
         -- Value
         <*> v .:? "value"
         --
@@ -117,10 +106,7 @@ makeContainer v = Container
   <*> getUExp "h" (Rpn "$min-height") v
   <*> (parseContainerType <$> (v .:? "order"))
   <*> v .: "children"
-  -- Attribute
-  <*> v .:? "visible"
-  <*> v .:? "clickable"
-  <*> v .:? "hoverable"
+  <*> v .:? "attrib"
   --
   <*> (fromMaybe defStyle <$> (v .:? "style"))
 
@@ -140,6 +126,22 @@ parseContainerType (Just ct) = work ct
     work "vertical"   = VerticalStack
     work _            = Unordered -- fail $ "unkown container type: " ++ ct
 
+data YWidgetAttrib = YWidgetAttrib
+  { ywaHoverable :: Maybe Bool
+  , ywaClickable :: Maybe Bool
+  , ywaDraggable :: Maybe Bool
+  , ywaDroppable :: Maybe Bool
+  , ywaVisible   :: Maybe Bool
+  } deriving (Eq, Show, Read)
+
+instance FromJSON YWidgetAttrib where
+  parseJSON (Y.Object v) = YWidgetAttrib
+    <$> v .:? "hoverable"
+    <*> v .:? "clickable"
+    <*> v .:? "draggable"
+    <*> v .:? "droppable"
+    <*> v .:? "visible"
+  parseJSON _ = fail "Expected Object for YWidgetAttrib"
 
 data Title
   = Title Text FontSize Asset.Ident
