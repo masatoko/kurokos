@@ -46,6 +46,7 @@ library:
   exposed-modules:
     - Kurokos.UI
     - Kurokos.UI.Event
+    - Kurokos.UI.WidgetTree
 
 tests:
   kurokos-ui-test:

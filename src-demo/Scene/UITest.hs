@@ -29,7 +29,7 @@ import           Kurokos.UI                   (UExp (..), clickable, ctxAttrib,
                                                visible)
 import qualified Kurokos.UI                   as UI
 
-import           Action                       (Action (..), eventsToActions)
+-- import           Action                       (Action (..), eventsToActions)
 import           Game
 import           Import
 
@@ -75,7 +75,7 @@ data UITest = UITest
   , _tCursor  :: UI.Cursor
   , _tUpdated :: Bool
   -- , _tUserVal :: UserVal
-  , _tCnt     :: Int
+  -- , _tCnt     :: Int
   }
 
 makeLenses ''UITest
@@ -139,9 +139,15 @@ runUITestScene =
 
       liftIO $ putStrLn $ UI.prettyWT $ UI.getWidgetTree gui'
 
+      liftIO $ do
+        let wt = UI.getWidgetTree gui'
+            matchName (ctx,_) = ctx^.UI.ctxName == Just "number-labels"
+        whenJust (UI.focusBy matchName $ UI.toZipper wt) $ \z1 -> do
+          putStrLn $ UI.prettyWT $ fst z1
+          whenJust (UI.goChild z1) $ putStrLn . UI.prettyWT . fst
+
       cursor <- UI.newCursor
-      return (UITest gui' cursor False 0, sdlAssets)
-      -- return $ UITest gui' cursor userVal [] 0
+      return (UITest gui' cursor False, sdlAssets)
       where
         fillConf :: UI.WidgetConfig
         fillConf = def {UI.wconfWidth = Rpn "$width", UI.wconfHeight = Rpn "$height"}

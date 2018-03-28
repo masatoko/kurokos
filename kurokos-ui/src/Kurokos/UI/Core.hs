@@ -76,6 +76,12 @@ makeLenses ''GUI
 getWidgetTree :: GUI -> GuiWidgetTree
 getWidgetTree = view gstWTree . snd . _unGui
 
+setWidgetTree :: GuiWidgetTree -> GUI -> GUI
+setWidgetTree wt g = g&unGui._2.gstWTree .~ wt
+
+modifyWidgetTree :: (GuiWidgetTree -> GuiWidgetTree) -> GUI -> GUI
+modifyWidgetTree = over (unGui._2.gstWTree)
+
 getGuiEvents :: GUI -> [GuiEvent]
 getGuiEvents = view (unGui._2.gstEvents)
 

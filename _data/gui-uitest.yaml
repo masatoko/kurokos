@@ -10,6 +10,7 @@
   children:
     -
       type: container
+      name: "number-labels"
       order: horizontal
       color: *cntn-col
       children:

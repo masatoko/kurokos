@@ -1,6 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Kurokos.UI.WidgetTree where
 
+import Data.Maybe (catMaybes)
+import Data.List.Extra (firstJust)
 import           Control.Lens
 import           Data.Foldable (toList)
 import           Data.Monoid   ((<>))
@@ -121,3 +123,54 @@ instance Traversable WidgetTree where
     Fork <$> traverse f u <*> f a <*> pure Nothing <*> traverse f o
   traverse f (Fork u a (Just c) o) =
     Fork <$> traverse f u <*> f a <*> (Just <$> traverse f c) <*> traverse f o
+
+-- * Zipper
+
+data Crumb a
+  = Under a (Maybe (WidgetTree a)) (WidgetTree a)
+  | Children (WidgetTree a) a (WidgetTree a)
+  | Over (WidgetTree a) (Maybe (WidgetTree a)) a
+  deriving (Eq, Show, Read)
+
+type Crumbs a = [Crumb a]
+
+type Zipper a = (WidgetTree a, Crumbs a)
+
+goUnder :: Zipper a -> Maybe (Zipper a)
+goUnder (Null, _)           = Nothing
+goUnder (Fork u a mc o, bs) = Just (u, Under a mc o : bs)
+
+goChild :: Zipper a -> Maybe (Zipper a)
+goChild (Null, _)           = Nothing
+goChild (Fork u a mc o, bs) =
+  case mc of
+    Nothing -> Nothing
+    Just c  -> Just (c, Children u a o : bs)
+
+goOver :: Zipper a -> Maybe (Zipper a)
+goOver (Null, _)           = Nothing
+goOver (Fork u a mc o, bs) = Just (o, Over u mc a : bs)
+
+goUp :: Zipper a -> Zipper a
+goUp (tr, [])               = (tr, [])
+goUp (u, Under a mc o:bs)   = (Fork u a mc o, bs)
+goUp (c, Children u a o:bs) = (Fork u a (Just c) o, bs)
+goUp (o, Over u mc a:bs)    = (Fork u a mc o, bs)
+
+topMost :: Zipper a -> Zipper a
+topMost z@(_, []) = z
+topMost z         = topMost $ goUp z
+
+toZipper :: WidgetTree a -> Zipper a
+toZipper tr = (tr, [])
+
+fromZipper :: Zipper a -> WidgetTree a
+fromZipper = fst . topMost
+
+focusBy :: (a -> Bool) -> Zipper a -> Maybe (Zipper a)
+focusBy match = go . topMost
+  where
+    go (Null, _) = Nothing
+    go z@(Fork _ a _ _, _)
+      | match a   = Just z
+      | otherwise = firstJust id [go =<< goUnder z, go =<< goChild z, go =<< goOver z]

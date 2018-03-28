@@ -7,6 +7,8 @@ module Kurokos.UI
   , newGui
   , freeGui
   , getWidgetTree
+  , setWidgetTree
+  , modifyWidgetTree
   , getGuiEvents
   -- * GuiT Monad
   , GuiT
@@ -90,6 +92,16 @@ module Kurokos.UI
   , appendChild
   , prependChild
   , wtFromList
+  -- * Zipper of WidgetTree
+  , Zipper
+  , goUnder
+  , goChild
+  , goOver
+  , goUp
+  , topMost
+  , toZipper
+  , fromZipper
+  , focusBy
   -- * WidgetTree (WContext, Widget)
   , WTIdent
   , WTName
