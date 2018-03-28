@@ -7,12 +7,16 @@ import           Kurokos.UI.Widget
 
 import qualified SDL
 
+data WidgetInfo = WidgetInfo
+  { wifWidget :: Widget
+  , wifIdent  :: WTIdent
+  , wifName   :: Maybe WTName
+  } deriving Show
+
 data GuiEvent
   = Clicked
-    { geWidget   :: Widget
-    , geWTIdent  :: WTIdent
-    , geWTName   :: Maybe WTName
-    --
-    , gePosition :: GuiPos
-    , geAction   :: GuiAction
-    } deriving Show
+    { geWidgetInfo :: WidgetInfo
+    , gePosition   :: GuiPos
+    , geAction     :: GuiAction
+    }
+  deriving Show

@@ -65,8 +65,6 @@ data GuiState = GuiState
   -- * Control
   , _gstGuiHandler :: GuiHandler
   , _gstEvents     :: [GuiEvent]
-  -- * State
-  -- , _gstDragging   :: Maybe WidgetIdent -- ^ A widget on the start point of dragging
   }
 
 makeLenses ''GuiState

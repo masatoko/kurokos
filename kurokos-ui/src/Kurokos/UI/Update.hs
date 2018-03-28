@@ -109,8 +109,10 @@ handleGui esSDL cursor gui =
           where
             isClickable = view (_1.ctxAttrib.clickable)
             conv (WContext{..}, w)
-              | _ctxAttrib^.clickable = Just $ E.Clicked w _ctxIdent _ctxName _cursorPos act
+              | _ctxAttrib^.clickable = Just $ E.Clicked info _cursorPos act
               | otherwise             = Nothing
+              where
+                info = E.WidgetInfo w _ctxIdent _ctxName
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =

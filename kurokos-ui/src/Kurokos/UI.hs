@@ -45,6 +45,7 @@ module Kurokos.UI
   , parseColorScheme
   -- * Type
   , GuiEvent (..)
+  , WidgetInfo (..)
   , UExp (..)
   -- * Style
   , Style (..)
