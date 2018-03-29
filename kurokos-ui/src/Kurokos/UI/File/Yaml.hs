@@ -105,7 +105,7 @@ makeContainer v = Container
   <*> getUExp "w" (Rpn "$min-width") v
   <*> getUExp "h" (Rpn "$min-height") v
   <*> (parseContainerType <$> (v .:? "order"))
-  <*> v .: "children"
+  <*> (fromMaybe [] <$> v .:? "children")
   <*> v .:? "attrib"
   --
   <*> (fromMaybe defStyle <$> (v .:? "style"))

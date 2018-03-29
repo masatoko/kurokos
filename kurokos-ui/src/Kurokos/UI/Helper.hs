@@ -2,6 +2,7 @@ module Kurokos.UI.Helper where
 
 import           Debug.Trace           (traceM)
 
+import qualified Control.Exception as E
 import           Control.Lens
 import           Control.Monad.State
 import           Data.Foldable         (find)
@@ -17,7 +18,7 @@ import           Kurokos.UI.Event
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget     (Widget)
-import           Kurokos.UI.WidgetTree (prettyWith)
+import           Kurokos.UI.WidgetTree
 
 prettyWT :: GuiWidgetTree -> String
 prettyWT = prettyWith showWidget
@@ -28,6 +29,12 @@ prettyWT = prettyWith showWidget
           [ "#", show (unWidgetIdent $ ctx^.ctxIdent), " "
           , "'" , fromMaybe "-" (ctx^.ctxName), "' "
           , maybe "" show (ctx^.ctxContainerType)]
+
+isNameOf :: WTName -> CtxWidget -> Bool
+isNameOf name (ctx,_) = ctx^.ctxName == Just name
+
+isIdentOf :: WTIdent -> CtxWidget -> Bool
+isIdentOf ident (ctx,_) = ctx^.ctxIdent == ident
 
 -- update by name with function
 update :: WTName -> (CtxWidget -> CtxWidget) -> GUI -> GUI
@@ -48,6 +55,31 @@ findByName :: WTName -> GUI -> Maybe CtxWidget
 findByName name g = find isTarget $ g^.unGui._2.gstWTree
   where
     isTarget (ctx,_) = ctx^.ctxName == Just name
+
+-- | Put a WidgetTree to container
+--
+-- @
+-- makeChild :: MonadIO m => GuiT m PathMap
+-- makeChild = do
+--   wt <- makeGuiWidgetTree
+--   UI.modifyRoot $ UI.putChildToContainer ("cntn-name" `UI.isNameOf`) wt
+-- @
+putChildToContainer :: MonadIO m => (CtxWidget -> Bool) -- ^ Parent container matching function
+         -> GuiWidgetTree -- ^ New children
+         -> GuiWidgetTree -- ^ Original GuiWidgetTree
+         -> m GuiWidgetTree -- ^ (New GuiWidgetTree, Old children)
+putChildToContainer isParent newCs orgTr =
+  case focusBy isParent (toZipper orgTr) of
+    Nothing          -> liftIO $ E.throwIO $ userError "Missing GuiWidgetTree @putChildToContainer"
+    Just (tr,crumbs) ->
+      case tr of
+        Null            -> liftIO $ E.throwIO $ userError "Target tree is Null @putChildToContainer"
+        (Fork u a mc o) ->
+          case mc of
+            Nothing -> liftIO $ E.throwIO $ userError "Target tree is not Container @putChildToContainer"
+            Just c  -> do
+              freeGuiWidgetTree c
+              return $ fromZipper (Fork u a (Just newCs) o, crumbs)
 
 -- | Set position of a widget directly
 --

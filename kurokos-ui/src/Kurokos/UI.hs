@@ -87,6 +87,7 @@ module Kurokos.UI
   , mkContainer
   , appendRoot
   , prependRoot
+  , modifyRoot
   , append
   , prepend
   , appendChild
@@ -126,9 +127,12 @@ module Kurokos.UI
   , clickedOn
   -- * Helper
   , prettyWT
+  , isNameOf
+  , isIdentOf
   , update
   , findByIdent
   , findByName
+  , putChildToContainer
   , setPositionInWorld
   ) where
 

@@ -108,11 +108,12 @@ newGui env initializer = do
     gst0 = GuiState 0 Null defaultGuiHandler []
 
 freeGui :: MonadIO m => GUI -> m ()
-freeGui g = liftIO $
-  mapM_ work $ g^.unGui._2.gstWTree
+freeGui g = freeGuiWidgetTree $ g^.unGui._2.gstWTree
+
+freeGuiWidgetTree :: MonadIO m => GuiWidgetTree -> m ()
+freeGuiWidgetTree = liftIO . mapM_ work
   where
-    work (ctx,_) =
-      freeCommonResource $ ctx^.ctxCmnRsc
+    work (ctx,_) = freeCommonResource $ ctx^.ctxCmnRsc
 
 -- modifyGui :: (Monad m, Functor m) => (GUI -> GUI) -> GuiT m ()
 -- modifyGui f = do
@@ -189,6 +190,12 @@ appendRoot wt = modify $ over gstWTree (wt <>)
 
 prependRoot :: Monad m => GuiWidgetTree -> GuiT m ()
 prependRoot wt = modify $ over gstWTree (<> wt)
+
+modifyRoot :: MonadIO m => (GuiWidgetTree -> m GuiWidgetTree) -> GuiT m ()
+modifyRoot f = do
+  wt <- use gstWTree
+  wt' <- lift $ f wt
+  gstWTree .= wt'
 
 -- Rendering GUI
 
