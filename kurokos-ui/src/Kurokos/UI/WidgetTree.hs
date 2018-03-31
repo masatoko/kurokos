@@ -19,6 +19,9 @@ data WidgetTree a
 
 makeLenses ''WidgetTree
 
+mkNull :: WidgetTree a
+mkNull = Null
+
 showTree :: Show a => WidgetTree a -> String
 showTree = unlines . work 0
   where

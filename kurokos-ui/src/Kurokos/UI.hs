@@ -77,6 +77,7 @@ module Kurokos.UI
   , getDouble
   -- * WidgetTree
   , WidgetTree
+  , mkNull
   , ContainerType (..)
   , pretty
   , prettyWith
