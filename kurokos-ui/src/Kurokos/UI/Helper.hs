@@ -67,7 +67,7 @@ findByName name g = find isTarget $ g^.unGui._2.gstWTree
 putChildToContainer :: MonadIO m => (CtxWidget -> Bool) -- ^ Parent container matching function
          -> GuiWidgetTree -- ^ New children
          -> GuiWidgetTree -- ^ Original GuiWidgetTree
-         -> m GuiWidgetTree -- ^ (New GuiWidgetTree, Old children)
+         -> m GuiWidgetTree -- ^ New GuiWidgetTree
 putChildToContainer isParent newCs orgTr =
   case focusBy isParent (toZipper orgTr) of
     Nothing          -> liftIO $ E.throwIO $ userError "Missing GuiWidgetTree @putChildToContainer"
