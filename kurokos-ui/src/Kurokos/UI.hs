@@ -4,6 +4,7 @@ module Kurokos.UI
     GUI
   , GuiEnv (..)
   , GuiState
+  , runGuiT
   , newGui
   , freeGui
   , getWidgetTree

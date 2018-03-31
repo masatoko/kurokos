@@ -54,8 +54,8 @@ iniWidgetState = WidgetState (pure 0) (pure 0) Nothing Nothing True False
 wstSize :: WidgetState -> V2 CInt
 wstSize wst = V2 w h
   where
-    w = fromMaybe (error "Missing width") $ wst^.wstWidth
-    h = fromMaybe (error "Missing height") $ wst^.wstHeight
+    w = fromMaybe (error "Missing width. Call readyRender before rendering.") $ wst^.wstWidth
+    h = fromMaybe (error "Missing height. Call readyRender before rendering.") $ wst^.wstHeight
 
 data WidgetAttrib = WidgetAttrib
   { _hoverable :: Bool
