@@ -427,7 +427,11 @@ updateLayout (V2 winW winH) wt0
               mgn = ctx^.ctxStyle.styleMargin
           whenJust mMinW' $ writeW idx . (+ marginW)
           whenJust mMinH' $ writeH idx . (+ marginH)
-        Just c  -> do -- Container
+        Just Null -> do -- Container has no children
+          -- Set dummy minimum size when children is empty.
+          writeW idx 1
+          writeH idx 1
+        Just c -> do -- Container
           let vmap4children = workH . workW $ defVmap
                 where
                   workW = maybe id (M.insert kKeyWidth) mw
