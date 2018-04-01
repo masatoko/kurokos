@@ -1,6 +1,7 @@
 module Kurokos.UI.Widget.Module where
 
 import           Data.Text          (Text)
+import qualified Data.Text.Zipper as TZ
 
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
@@ -33,3 +34,12 @@ getFloat _ = Nothing
 getDouble :: Widget -> Maybe Double
 getDouble (Slider _ _ _ _ (ValueD v _ _)) = Just v
 getDouble _ = Nothing
+
+
+-- * Control
+
+widgetLeft :: Widget -> Widget
+widgetLeft (TextField font size z mRsc) = TextField font size (TZ.moveLeft z) mRsc
+
+widgetRight :: Widget -> Widget
+widgetRight (TextField font size z mRsc) = TextField font size (TZ.moveRight z) mRsc

@@ -120,6 +120,9 @@ module Kurokos.UI
   , defaultGuiHandler
   , topmostAt
   , topmostAtWith
+  , modifyFocused
+  , controlLeft
+  , controlRight
   -- * Cursor
   , Cursor
   , cursorPos

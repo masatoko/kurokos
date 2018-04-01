@@ -13,7 +13,7 @@ import           Linear.V2
 import           Safe                       (headMay, lastMay)
 
 import           Kurokos.UI.Control
-import           Kurokos.UI.Control.Control (wtTopmostAt, topmostAtWith)
+import          qualified Kurokos.UI.Control.Control as C
 import           Kurokos.UI.Core
 import           Kurokos.UI.Event
 import qualified Kurokos.UI.Event           as E
@@ -59,6 +59,17 @@ procEvent cursor gui0 = work
       return $ if windowMaximizedEventWindow == win
                 then setAllNeedsLayout . setAllNeedsRender $ gui0
                 else gui0
+    work (KeyboardEvent KeyboardEventData{..}) =
+      return . flip execState gui0 $
+        when pressed $ modify modCursor
+      where
+        pressed = keyboardEventKeyMotion == Pressed
+        scancode = SDL.keysymScancode keyboardEventKeysym
+        modCursor gui =
+          case scancode of
+            SDL.ScancodeLeft  -> C.modifyFocused C.controlLeft gui
+            SDL.ScancodeRight -> C.modifyFocused C.controlRight gui
+            _                 -> gui
     work (MouseButtonEvent MouseButtonEventData{..}) =
       return . flip execState gui0 $
         modify modWhenClicked -- over (unGui._2.gstWTree) (fmap modWhenClicked)
@@ -67,7 +78,7 @@ procEvent cursor gui0 = work
                           && mouseButtonEventMotion == Pressed
         modWhenClicked gui =
           if clickedByLeft
-            then case topmostAtWith curPos isClickable gui of
+            then case C.topmostAtWith curPos isClickable gui of
                   Nothing -> gui
                   Just (ctx,w) ->
                     let path = ctx^.ctxPath
@@ -128,7 +139,7 @@ handleGui mouseButtons esSDL Cursor{..} gui =
 
     clickEvents :: [E.GuiEvent]
     clickEvents =
-      maybe [] conv $ wtTopmostAt _cursorPos isClickable (gui^.unGui._2.gstWTree)
+      maybe [] conv $ C.wtTopmostAt _cursorPos isClickable (gui^.unGui._2.gstWTree)
       where
         conv cw@(WContext{..}, w)
           | _ctxAttrib^.clickable = map (E.Clicked (cwToInfo cw) _cursorPos) actsClick
@@ -145,7 +156,7 @@ handleGui mouseButtons esSDL Cursor{..} gui =
 
         beginDrg (MouseButtonEvent MouseButtonEventData{..})
           | clickedByLeft =
-              case wtTopmostAt _cursorPos isDraggable wt of
+              case C.wtTopmostAt _cursorPos isDraggable wt of
                 Nothing -> Nothing
                 Just cw -> Just $ Dragging (cwToInfo cw) btn 0
           | otherwise = Nothing
@@ -157,7 +168,7 @@ handleGui mouseButtons esSDL Cursor{..} gui =
         fromDrg e@Dragging{}
           | held      = Just $ e {geCount = geCount e + 1}
           | not held  =
-              let mInfo = case wtTopmostAt _cursorPos isDroppable wt of
+              let mInfo = case C.wtTopmostAt _cursorPos isDroppable wt of
                     Nothing -> Nothing
                     Just cw -> Just $ cwToInfo cw
               in Just $ DragAndDrop (geWidgetInfo e) mInfo (geButton e)

@@ -1,6 +1,9 @@
 module Kurokos.UI.Control.Control
   ( topmostAt
   , topmostAtWith
+  , modifyFocused
+  , controlLeft
+  , controlRight
   -- * Internal
   , wtTopmostAt
   ) where
@@ -21,6 +24,7 @@ import qualified Kurokos.UI.Event          as E
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
+import           Kurokos.UI.Widget.Module  as WM
 import qualified Kurokos.UI.WidgetTree     as WT
 
 topmostAt :: Point V2 CInt -> GUI -> Maybe (WContext, Widget)
@@ -29,6 +33,25 @@ topmostAt p gui = wtTopmostAt p (const True) (gui^.unGui._2.gstWTree)
 -- | Same as `topmostAt` but with filtering function.
 topmostAtWith :: Point V2 CInt -> (CtxWidget -> Bool) -> GUI -> Maybe (WContext, Widget)
 topmostAtWith p isTarget gui = wtTopmostAt p isTarget (gui^.unGui._2.gstWTree)
+
+-- * Control
+
+-- | Modify a focused widget
+-- @
+-- gui' = modifyFocused controlLeft gui
+-- @
+modifyFocused :: (CtxWidget -> CtxWidget) -> GUI -> GUI
+modifyFocused f gui =
+  gui & unGui._2.gstWTree %~ WT.wtModifyAt path (need . f)
+  where
+    path = gui^.unGui._2.gstFocus
+    need = set (_1.ctxNeedsRender) True
+
+controlLeft :: CtxWidget -> CtxWidget
+controlLeft = over _2 WM.widgetLeft
+
+controlRight :: CtxWidget -> CtxWidget
+controlRight = over _2 WM.widgetRight
 
 -- Internal
 
