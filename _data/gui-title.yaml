@@ -17,7 +17,7 @@
     asset: font-m
     size: 20
   x-rpn: $width 2 / 100 -
-  y: 200
+  y: 130
   w: 200
   h: 50
 -
@@ -28,7 +28,7 @@
     asset: font-m
     size: 16
   x-rpn: $width 2 / 100 -
-  y: 300
+  y: 200
   w: 200
   h: 30
 -
@@ -44,7 +44,7 @@
     asset: font-m
     size: 16
   x-rpn: $width 2 / 100 -
-  y: 350
+  y: 250
   w: 200
   h: 30
 -
@@ -54,7 +54,7 @@
     asset: font-m
     size: 14
   x-rpn: "$width 2 / 100 -"
-  y: 400
+  y: 300
   w: 200
   h: 30
 -
@@ -67,7 +67,7 @@
     elems: ["Elem1", "Elem2"]
     keys: ["key1", "key2"]
   x-rpn: "$width 2 / 100 -"
-  y: 400
+  y: 350
   w: 200
   h: 30
 
