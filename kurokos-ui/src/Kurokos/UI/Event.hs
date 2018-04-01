@@ -31,6 +31,12 @@ data GuiEvent
     , geDrop   :: Maybe WidgetInfo
     , geButton :: SDL.MouseButton
     }
+  | Focused
+    { geWidgetInfo :: WidgetInfo
+    }
+  | Unfocused
+    { geWidgetInfo :: WidgetInfo
+    }
   | TextFixed
     { geWidgetInfo :: WidgetInfo
     , geText       :: T.Text

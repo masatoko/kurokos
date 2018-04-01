@@ -61,8 +61,9 @@ procEvent cursor gui0 = work
       whenJust (WT.wtAt (g^.unGui._2.gstFocus) (g^.unGui._2.gstWTree)) $ \cw ->
         case cw^._2 of
           (TextField _ _ z _) -> do
-            let ev = E.TextFixed (cwToInfo cw) (TZ.currentLine z)
-            unGui._2.gstEvents %= (ev:)
+            let textFixed = E.TextFixed (cwToInfo cw) (TZ.currentLine z)
+                unfocused = E.Unfocused (cwToInfo cw)
+            unGui._2.gstEvents %= ([textFixed, unfocused] ++)
           _ -> return ()
       modify $ \g -> g&unGui._2.gstFocus .~ []
     --
@@ -102,13 +103,16 @@ procEvent cursor gui0 = work
               gui <- get
               case C.topmostAtWith curPos isClickable gui of
                 Nothing -> return ()
-                Just (ctx,w) -> do
+                Just cw@(ctx,w) -> do
                   case w of
                     TextField{} -> SDL.startTextInput $ SDL.Raw.Types.Rect 0 0 1000 1000
                     _           -> resetFocus -- Call this before set gstFocus
                   let path = ctx^.ctxPath
                   unGui._2.gstWTree %= WT.wtModifyAt path conv
+                  -- * Focus
                   unGui._2.gstFocus .= path -- Call `resetFocus` before this
+                  let ev = E.Focused (cwToInfo cw)
+                  unGui._2.gstEvents %= (ev:)
           | otherwise = return ()
           where
             conv (ctx,w) =
