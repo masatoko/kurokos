@@ -62,6 +62,8 @@ data GuiEnv = GuiEnv
 data GuiState = GuiState
   { _gstIdCnt      :: WidgetIdent -- ^ Counter for WidgetTree ID
   , _gstWTree      :: GuiWidgetTree
+  -- * Focus
+  , _gstFocus      :: WT.WidgetTreePath
   -- * Control
   , _gstGuiHandler :: GuiHandler
   , _gstEvents     :: [GuiEvent]
@@ -105,7 +107,7 @@ newGui env initializer = do
   return (a, g2 & unGui._2.gstWTree %~ WT.balance)
   where
     g0 = GUI (env, gst0)
-    gst0 = GuiState 0 Null defaultGuiHandler []
+    gst0 = GuiState 0 Null [] defaultGuiHandler []
 
 freeGui :: MonadIO m => GUI -> m ()
 freeGui g = freeGuiWidgetTree $ g^.unGui._2.gstWTree
@@ -156,7 +158,7 @@ mkSingle conf widget = do
   ctxCol <- maybe (getContextColorOfWidget widget) return (wconfColor conf)
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) widget
   let attrib = fromMaybe (attribOf widget) $ wconfAttrib conf
-      ctx = WContext ident (wconfName conf) Nothing attrib True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
+      ctx = WContext ident (wconfName conf) [] Nothing attrib True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
   return $ Fork Null (ctx, widget) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
@@ -173,7 +175,7 @@ mkContainer conf ct = do
   ctxCol <- maybe (getContextColorOfWidget widget) return (wconfColor conf)
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) widget
   let attrib = fromMaybe attribCntn $ wconfAttrib conf
-      ctx = WContext ident (wconfName conf) (Just ct) attrib True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
+      ctx = WContext ident (wconfName conf) [] (Just ct) attrib True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
   return $ Fork Null (ctx, widget) (Just Null) Null
   where
     widget = Fill
@@ -311,7 +313,7 @@ readyRender :: (RenderEnv m, MonadIO m) => GUI -> m (Bool, GUI)
 readyRender g = do
   winSize <- getWindowSize
   let wt0 = g^.unGui._2.gstWTree
-      wt1 = updateLayout winSize . updateVisibility $ wt0
+      wt1 = updatePath . updateLayout winSize . updateVisibility $ wt0
   (wt2, updated) <- runStateT (mapM ready wt1) False
   let g' = g&unGui._2.gstWTree .~ wt2
   return (updated, g')
@@ -593,7 +595,6 @@ updateLayout (V2 winW winH) wt0
           VerticalStack   -> V2 x (y + h)
           HorizontalStack -> V2 (x + w) y
 
-
 widgetMinimumSize :: (WContext, Widget) -> V2 (Maybe CInt)
 widgetMinimumSize (ctx,w) = texSize
   where
@@ -602,6 +603,13 @@ widgetMinimumSize (ctx,w) = texSize
       Just tex -> let V2 w h = (fromIntegral <$> G.texSize tex)
                   in V2 (Just w) (Just h)
 
+updatePath :: GuiWidgetTree -> GuiWidgetTree
+updatePath = fmap work . WT.wtPath
+  where
+    work ((ctx, w), path) =
+      let ctx' = ctx&ctxPath .~ path
+      in (ctx', w)
+
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
 render g =
   withRenderer $ \r -> liftIO $
@@ -609,9 +617,10 @@ render g =
   where
     go r (ctx, widget)
       | ctx^.ctxNeedsRender            = E.throwIO $ userError "Call GUI.readyRender before GUI.render!"
-      | ctx^.ctxWidgetState.wstVisible = renderWidget r pos size wcol style cmnrsc widget
+      | ctx^.ctxWidgetState.wstVisible = renderWidget r focus pos size wcol style cmnrsc widget
       | otherwise                      = return ()
         where
+          focus = (g^.unGui._2.gstFocus) == ctx^.ctxPath
           pos = p + V2 (left margin) (top margin)
             where
               P p = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos

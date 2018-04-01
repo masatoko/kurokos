@@ -17,6 +17,7 @@ import qualified Kurokos.Graphics   as G
 import qualified Kurokos.RPN        as RPN
 
 import           Kurokos.UI.Color
+import           Kurokos.UI.WidgetTree         (WidgetTreePath)
 
 type WidgetIdent = Int64
 -- | Identity of WidgetTree. It's unique in a GUI.
@@ -132,6 +133,7 @@ makeLenses ''Style
 data WContext = WContext
   { _ctxIdent         :: WTIdent
   , _ctxName          :: Maybe WTName
+  , _ctxPath          :: WidgetTreePath
   , _ctxContainerType :: Maybe ContainerType
   , _ctxAttrib        :: WidgetAttrib
   , _ctxNeedsRender   :: Bool

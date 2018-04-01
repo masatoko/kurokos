@@ -127,6 +127,35 @@ instance Traversable WidgetTree where
   traverse f (Fork u a (Just c) o) =
     Fork <$> traverse f u <*> f a <*> (Just <$> traverse f c) <*> traverse f o
 
+-- * Path
+
+data SimpleCrumb
+  = SUnder
+  | SChild
+  | SOver
+  deriving (Show, Eq, Read)
+
+type WidgetTreePath = [SimpleCrumb]
+
+wtPath :: WidgetTree a -> WidgetTree (a, WidgetTreePath)
+wtPath = go []
+  where
+    go bs Null            = Null
+    go bs (Fork u a mc o) = Fork u' (a, reverse bs) mc' o'
+      where
+        u'  = go (SUnder:bs) u
+        mc' = go (SChild:bs) <$> mc
+        o'  = go (SOver:bs) o
+
+wtModifyAt :: WidgetTreePath -> (a -> a) -> WidgetTree a -> WidgetTree a
+wtModifyAt bs0 f = go bs0
+  where
+    go _ Null = Null
+    go [] (Fork u a mc o) = Fork u (f a) mc o
+    go (SUnder:bs) (Fork u a mc o) = Fork (go bs u) a mc o
+    go (SChild:bs) (Fork u a mc o) = Fork u a (go bs <$> mc) o
+    go (SOver:bs)  (Fork u a mc o) = Fork u a mc (go bs o)
+
 -- * Zipper
 
 data Crumb a
