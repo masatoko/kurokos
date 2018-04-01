@@ -5,7 +5,7 @@ module Kurokos.UI.File.Convert
   , parseWidgetTree
   ) where
 
-import Debug.Trace (trace)
+import           Debug.Trace             (trace)
 
 import qualified Control.Exception       as E
 import           Control.Lens
@@ -15,8 +15,9 @@ import           Safe                    (readMay)
 
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
-import           Kurokos.UI.File.Yaml    (Title (..), YValue (..), YWidget (..),
-                                          YWidgetAttrib (..), decodeWidgets)
+import           Kurokos.UI.File.Yaml    (Title (..), YPicker (..), YValue (..),
+                                          YWidget (..), YWidgetAttrib (..),
+                                          decodeWidgets)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
@@ -55,6 +56,10 @@ convert s@Single{..} = do
       | wType == N.wnameSlider    = newSlider titleAssetIdent titleSize titleText value
       | wType == N.wnameImageView = newImageView =<< getAssetId
       | wType == N.wnameTextField = newTextField titleAssetIdent titleSize titleText
+      | wType == N.wnamePicker    =
+          case wPicker of
+            Nothing                   -> liftIO $ E.throwIO $ userError $ "Missing 'picker' key"
+            Just (YPicker elems keys) -> newPicker titleAssetIdent titleSize (zip keys elems)
       | otherwise                 = liftIO $ E.throwIO $ userError $ "unkown widget type: " ++ wType
 
     getAssetId = case wAsset of

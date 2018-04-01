@@ -59,7 +59,7 @@ newTextField ident size iniText = do
   where
     z = TZ.textZipper [iniText] Nothing
 
-newPicker :: MonadIO m => Asset.Ident -> G.FontSize -> [Text] -> GuiT m Widget
+newPicker :: MonadIO m => Asset.Ident -> G.FontSize -> [(String, Text)] -> GuiT m Widget
 newPicker ident size ts = do
   font <- getFont ident
   return $ Picker ts font size 0 []

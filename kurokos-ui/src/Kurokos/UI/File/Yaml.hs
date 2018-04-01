@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Kurokos.UI.File.Yaml where
 
+import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import           Data.List             (isPrefixOf)
 import           Data.List.Extra       (firstJust)
@@ -44,6 +45,16 @@ instance FromJSON YValue where
     <*> v .: "min"
     <*> v .: "max"
 
+data YPicker = YPicker
+  { yElems :: [T.Text]
+  , yKeys  :: [String]
+  } deriving (Eq, Show)
+
+instance FromJSON YPicker where
+  parseJSON (Y.Object v) = YPicker
+    <$> v .: "elems"
+    <*> v .: "keys"
+
 data YWidget
   = Single
     { wType      :: String
@@ -55,6 +66,7 @@ data YWidget
     , wHeight    :: UExp
     , wAttrib    :: Maybe YWidgetAttrib
     , wValue     :: Maybe YValue
+    , wPicker    :: Maybe YPicker
     --
     , wAsset     :: Maybe Asset.Ident
     --
@@ -88,8 +100,8 @@ instance FromJSON YWidget where
         <*> getUExp "w" (Rpn "$min-width") v
         <*> getUExp "h" (Rpn "$min-height") v
         <*> v .:? "attrib"
-        -- Value
-        <*> v .:? "value"
+        <*> v .:? "value" -- Value
+        <*> v .:? "picker"
         --
         <*> v .:? "asset"
         <*> v .:? "title"

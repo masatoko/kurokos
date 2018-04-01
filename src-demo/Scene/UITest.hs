@@ -122,7 +122,7 @@ runUITestScene =
         texfld <- UI.mkSingle confTxtFld =<< UI.newTextField "font-m" 16 "initial text"
         -- * Picker
         let confPkr = UI.WidgetConfig Nothing Nothing style Nothing (C 100) (C 250) (C 200) (C 20)
-        picker <- UI.mkSingle confPkr =<< UI.newPicker "font-m" 16 ["Elem1", "Elem2", "Elem3"]
+        picker <- UI.mkSingle confPkr =<< UI.newPicker "font-m" 16 [("1", "Elem1"), ("2", "Elem2"), ("3", "Elem3")]
         -- * UserWidget
         -- userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --

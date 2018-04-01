@@ -67,7 +67,7 @@ data Widget where
   Switch      :: Text -> Font.Font -> G.FontSize -> Bool -> Widget
   Slider      :: Text -> Font.Font -> G.FontSize -> Maybe SliderResource -> Value -> Widget
   TextField   :: Font.Font -> G.FontSize -> TZ.TextZipper T.Text -> Maybe TextFieldResource -> Widget
-  Picker      :: [Text] -> Font.Font -> G.FontSize -> Int -> [G.Texture] -> Widget
+  Picker      :: [(String, Text)] -> Font.Font -> G.FontSize -> Int -> [G.Texture] -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where

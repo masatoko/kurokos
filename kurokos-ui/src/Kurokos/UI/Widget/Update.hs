@@ -64,7 +64,7 @@ onReadyLayout (V2 w h) wc (Picker ts font size idx textures0) = do
   -- * Release
   unless (null textures0) $ liftIO $ mapM_ G.deleteTexture textures0
   -- * Make
-  textures <- mapM (genTextTexture font size (_wcTitle wc)) ts
+  textures <- mapM (genTextTexture font size (_wcTitle wc) . snd) ts
   return $ Picker ts font size idx textures
 onReadyLayout _ _ w = return w
 

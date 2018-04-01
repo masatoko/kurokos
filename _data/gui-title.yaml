@@ -57,6 +57,19 @@
   y: 400
   w: 200
   h: 30
+-
+  type: picker
+  title:
+    text: picker
+    asset: font-m
+    size: 14
+  picker:
+    elems: ["Elem1", "Elem2"]
+    keys: ["key1", "key2"]
+  x-rpn: "$width 2 / 100 -"
+  y: 400
+  w: 200
+  h: 30
 
 -
   type: container
