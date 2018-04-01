@@ -8,6 +8,7 @@ import qualified Data.ByteString       as BS
 import qualified Data.Map              as M
 import           Data.Text
 import qualified Data.Text             as T
+import qualified Data.Text.Zipper      as TZ
 import           Linear.V3
 import           System.IO             (IOMode (..), hClose, openFile)
 
@@ -50,6 +51,13 @@ newSlider :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> Value -> GuiT m W
 newSlider ident size title value = do
   font <- getFont ident
   return $ Slider title font size Nothing value
+
+newTextField :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> GuiT m Widget
+newTextField ident size iniText = do
+  font <- getFont ident
+  return $ TextField font size z Nothing
+  where
+    z = TZ.textZipper [iniText] Nothing
 
 -- Internal
 

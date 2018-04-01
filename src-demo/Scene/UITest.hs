@@ -117,6 +117,9 @@ runUITestScene =
         -- * Image
         let confImg = UI.WidgetConfig (Just "image") Nothing style Nothing (C 10) (Rpn "$height 58 -") (C 48) (C 48)
         img <- UI.mkSingle confImg =<< UI.newImageView "sample-image"
+        -- * TextField
+        let confTxtFld = UI.WidgetConfig Nothing Nothing style Nothing (C 100) (C 200) (C 200) (C 20)
+        texfld <- UI.mkSingle confTxtFld =<< UI.newTextField "font-m" 16 "initial text"
         -- * UserWidget
         -- userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --
@@ -128,7 +131,7 @@ runUITestScene =
         clickableArea <- UI.mkSingle (fillConf {UI.wconfName = Just "clickable"}) =<< UI.newTransparent
         fill <- UI.mkSingle (fillConf {UI.wconfName = Just "fill"}) =<< UI.newFill
         --
-        UI.prependRoot $ mconcat [clickableArea, label, button1, img, fill, cnt2]
+        UI.prependRoot $ mconcat [clickableArea, label, button1, img, texfld, fill, cnt2]
         -- * From file
         UI.appendRoot =<< UI.parseWidgetTree guiYaml
 

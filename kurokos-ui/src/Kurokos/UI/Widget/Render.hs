@@ -10,7 +10,7 @@ import           Linear.V3
 import           SDL                   (($=))
 import qualified SDL
 
-import           Kurokos.Graphics      (ctColor, ctAdvanceX)
+import           Kurokos.Graphics      (ctAdvanceX, ctColor)
 import qualified Kurokos.Graphics      as G
 import qualified Kurokos.Graphics.Font as Font
 import           Kurokos.UI.Color
@@ -23,7 +23,7 @@ import           Kurokos.UI.Widget
 renderWidget :: G.Renderer -> V2 Int -> V2 Int -> WidgetColor -> Style -> CommonResource -> Widget -> IO ()
 renderWidget _r _pos _parentSize _ _ _ Transparent = return ()
 
-renderWidget r pos _parentSize wc style cmnrsc Fill = do
+renderWidget r pos _parentSize wc style cmnrsc Fill =
   renderBackAndBorder r pos wc cmnrsc
 
 renderWidget r pos parentSize wc@WidgetColor{..} style cmnrsc Label{} = do
@@ -70,6 +70,30 @@ renderWidget r pos parentSize wc@WidgetColor{..} style cmnrsc (Slider _ _ _ mKno
       where
         dx = round $ fromIntegral (parentSize^._x - 30) * rateFromValue value
 
+renderWidget r pos parentSize wc style cmnrsc (TextField _ fontSize _ mRsc) = do
+  renderBackAndBorder r pos wc cmnrsc
+  whenJust mRsc $ \tfr -> do
+    -- * Left text
+    posCur <- case txtFldRscLeft tfr of
+      Nothing  -> return pos'
+      Just tex -> do
+        let size = G.texSize tex
+            rctx = G.RContext pos' size Nothing Nothing
+        G.renderTexture r tex Nothing rctx
+        return $ pos' & _x +~ (size^._x)
+    -- * Cursor
+    G.setPrimColor r $ _wcTint wc
+    G.drawPrim r (posCur&_x +~ 2) $ txtFldRscCursor tfr
+    let posR = posCur & _x +~ 6
+    -- * Right text
+    whenJust (txtFldRscRight tfr) $ \tex -> do
+      let size = G.texSize tex
+          rctx = G.RContext posR size Nothing Nothing
+      G.renderTexture r tex Nothing rctx
+  where
+    pos' = pos & _y +~ dy -- Vertical centerizing
+    dy = ((parentSize^._y) - fontSize) `div` 2
+
 renderWidget r pos parentSize wcol style CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
 
@@ -92,19 +116,20 @@ renderTex_ r pos parentSize style tex =
 
 genTitle :: G.Renderer -> WidgetColor ->  Widget -> IO (Maybe G.Texture)
 genTitle r wc (Label title font size) =
-  Just <$> genTitle_ r font size (wc^.wcTitle) title
+  Just <$> genTextTexture r font size (wc^.wcTitle) title
 genTitle r wc (Button title font size) =
-  Just <$> genTitle_ r font size (wc^.wcTitle) title
+  Just <$> genTextTexture r font size (wc^.wcTitle) title
 genTitle r wc (Switch title font size _) =
-  Just <$> genTitle_ r font size (wc^.wcTitle) title
+  Just <$> genTextTexture r font size (wc^.wcTitle) title
 genTitle r wc (Slider title font size _ _) =
-  Just <$> genTitle_ r font size (wc^.wcTitle) title
+  Just <$> genTextTexture r font size (wc^.wcTitle) title
+genTitle _ _ TextField{} = return Nothing
 genTitle _ _ Transparent{} = return Nothing
 genTitle _ _ Fill{} = return Nothing
 genTitle _ _ ImageView{} = return Nothing
 
-genTitle_ :: G.Renderer -> Font.Font -> G.FontSize -> G.Color -> T.Text -> IO G.Texture
-genTitle_ rndr font size color title = do
+genTextTexture :: G.Renderer -> Font.Font -> G.FontSize -> G.Color -> T.Text -> IO G.Texture
+genTextTexture rndr font size color title = do
   text <- G.createTextTexture font size color title
   tex <- G.genTextImage rndr text
   G.deleteTextTexture text

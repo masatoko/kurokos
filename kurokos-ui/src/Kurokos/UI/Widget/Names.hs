@@ -14,6 +14,7 @@ widgetNameOf ImageView{}   = wnameImageView
 widgetNameOf Button{}      = wnameButton
 widgetNameOf Switch{}      = wnameSwitch
 widgetNameOf Slider{}      = wnameSlider
+widgetNameOf TextField{}   = wnameTextField
 widgetNameOf UserWidget{}  = wnameUserWidget
 
 -- Inernal
@@ -38,6 +39,9 @@ wnameSwitch = "switch"
 
 wnameSlider :: WidgetName
 wnameSlider = "slider"
+
+wnameTextField :: WidgetName
+wnameTextField = "text-field"
 
 wnameUserWidget :: WidgetName
 wnameUserWidget = "user"

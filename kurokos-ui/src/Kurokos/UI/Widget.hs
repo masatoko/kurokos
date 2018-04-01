@@ -4,6 +4,7 @@ module Kurokos.UI.Widget where
 import           Control.Lens
 import           Data.Text             (Text)
 import qualified Data.Text             as T
+import qualified Data.Text.Zipper      as TZ
 import           Text.Printf           (printf)
 
 import qualified SDL
@@ -55,6 +56,8 @@ updateValueByRate rate (ValueD _ vmin vmax) = ValueD v vmin vmax
 
 data SliderResource = SliderResource { sliderRscKnob :: G.Prim, sliderRscText :: G.Texture } deriving Show
 
+data TextFieldResource = TextFieldResource { txtFldRscCursor :: G.Prim, txtFldRscLeft :: Maybe G.Texture, txtFldRscRight :: Maybe G.Texture } deriving Show
+
 data Widget where
   Transparent :: Widget
   Fill        :: Widget
@@ -63,6 +66,7 @@ data Widget where
   Button      :: Text -> Font.Font -> G.FontSize -> Widget
   Switch      :: Text -> Font.Font -> G.FontSize -> Bool -> Widget
   Slider      :: Text -> Font.Font -> G.FontSize -> Maybe SliderResource -> Value -> Widget
+  TextField   :: Font.Font -> G.FontSize -> TZ.TextZipper T.Text -> Maybe TextFieldResource -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where
@@ -73,6 +77,7 @@ instance Show Widget where
   show Button{}     = "<BTN>"
   show Switch{}     = "<SWT>"
   show Slider{}     = "<SLD>"
+  show TextField{}  = "<TXF>"
   show UserWidget{} = "<USR>"
 
 attribOf :: Widget -> WidgetAttrib
@@ -107,6 +112,11 @@ attribOf Switch{} =
     & clickable .~ True
 
 attribOf Slider{} =
+  defAttrib
+    & hoverable .~ True
+    & clickable .~ True
+
+attribOf TextField{} =
   defAttrib
     & hoverable .~ True
     & clickable .~ True
