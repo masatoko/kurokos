@@ -20,10 +20,12 @@ import qualified Kurokos.UI.Event           as E
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
+import           Kurokos.UI.Widget.Module   as WM
 import qualified Kurokos.UI.Widget.Update   as WU
 import qualified Kurokos.UI.WidgetTree      as WT
 
 import qualified SDL
+import qualified SDL.Raw.Types
 import           SDL.Event
 
 import           Foreign.Ptr
@@ -59,6 +61,8 @@ procEvent cursor gui0 = work
       return $ if windowMaximizedEventWindow == win
                 then setAllNeedsLayout . setAllNeedsRender $ gui0
                 else gui0
+    work (TextInputEvent TextInputEventData{..}) =
+      return $ C.modifyFocused (over _2 (WM.widgetInputText textInputEventText)) gui0
     work (KeyboardEvent KeyboardEventData{..}) =
       return . flip execState gui0 $
         when pressed $ modify modCursor
@@ -67,24 +71,29 @@ procEvent cursor gui0 = work
         scancode = SDL.keysymScancode keyboardEventKeysym
         modCursor gui =
           case scancode of
-            SDL.ScancodeLeft  -> C.modifyFocused C.controlLeft gui
-            SDL.ScancodeRight -> C.modifyFocused C.controlRight gui
-            _                 -> gui
+            SDL.ScancodeLeft      -> C.modifyFocused (C.modifyWidget WM.widgetLeft) gui
+            SDL.ScancodeRight     -> C.modifyFocused (C.modifyWidget WM.widgetRight) gui
+            SDL.ScancodeDelete    -> C.modifyFocused (C.modifyWidget WM.widgetDeleteChar) gui
+            SDL.ScancodeBackspace -> C.modifyFocused (C.modifyWidget WM.widgetBackspace) gui
+            _                     -> gui
     work (MouseButtonEvent MouseButtonEventData{..}) =
-      return . flip execState gui0 $
-        modify modWhenClicked -- over (unGui._2.gstWTree) (fmap modWhenClicked)
+      modWhenClicked gui0
       where
         clickedByLeft = mouseButtonEventButton == ButtonLeft
                           && mouseButtonEventMotion == Pressed
-        modWhenClicked gui =
-          if clickedByLeft
-            then case C.topmostAtWith curPos isClickable gui of
-                  Nothing -> gui
-                  Just (ctx,w) ->
-                    let path = ctx^.ctxPath
-                    in gui & unGui._2.gstWTree %~ WT.wtModifyAt path conv
-                           & unGui._2.gstFocus .~ path
-            else gui
+        modWhenClicked gui
+          | clickedByLeft =
+              case C.topmostAtWith curPos isClickable gui of
+                Nothing -> return gui
+                Just (ctx,w) -> do
+                  let path = ctx^.ctxPath
+                      gui' = gui & unGui._2.gstWTree %~ WT.wtModifyAt path conv
+                                 & unGui._2.gstFocus .~ path
+                  case w of
+                    TextField{} -> SDL.startTextInput $ SDL.Raw.Types.Rect 100 100 100 100
+                    _           -> SDL.stopTextInput
+                  return gui'
+          | otherwise = return gui
           where
             conv (ctx,w) =
               (ctx', WU.modifyOnClicked curPos pos size w)

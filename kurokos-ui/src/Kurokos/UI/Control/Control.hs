@@ -2,8 +2,7 @@ module Kurokos.UI.Control.Control
   ( topmostAt
   , topmostAtWith
   , modifyFocused
-  , controlLeft
-  , controlRight
+  , modifyWidget
   -- * Internal
   , wtTopmostAt
   ) where
@@ -11,6 +10,7 @@ module Kurokos.UI.Control.Control
 import           Control.Lens
 import           Data.Foldable             (toList)
 import           Data.Maybe                (catMaybes, mapMaybe, maybeToList)
+import qualified Data.Text                 as T
 import           Linear.V2
 import           Safe                      (lastMay)
 
@@ -38,7 +38,7 @@ topmostAtWith p isTarget gui = wtTopmostAt p isTarget (gui^.unGui._2.gstWTree)
 
 -- | Modify a focused widget
 -- @
--- gui' = modifyFocused controlLeft gui
+-- gui' = modifyFocused (modifyWidget widgetLeft) gui
 -- @
 modifyFocused :: (CtxWidget -> CtxWidget) -> GUI -> GUI
 modifyFocused f gui =
@@ -47,11 +47,8 @@ modifyFocused f gui =
     path = gui^.unGui._2.gstFocus
     need = set (_1.ctxNeedsRender) True
 
-controlLeft :: CtxWidget -> CtxWidget
-controlLeft = over _2 WM.widgetLeft
-
-controlRight :: CtxWidget -> CtxWidget
-controlRight = over _2 WM.widgetRight
+modifyWidget :: (Widget -> Widget) -> CtxWidget -> CtxWidget
+modifyWidget = over _2
 
 -- Internal
 

@@ -121,8 +121,7 @@ module Kurokos.UI
   , topmostAt
   , topmostAtWith
   , modifyFocused
-  , controlLeft
-  , controlRight
+  , modifyWidget
   -- * Cursor
   , Cursor
   , cursorPos
