@@ -51,6 +51,7 @@ extra-deps:
   - Glob-0.9.1
   - GLUtil-0.9.3
   - freetype2-0.1.2
+  - ListZipper-1.2.0.2
 
 # Override default flag values for local packages and extra-deps
 flags: {}

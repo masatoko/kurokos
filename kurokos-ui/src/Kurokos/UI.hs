@@ -70,6 +70,7 @@ module Kurokos.UI
   , newSwitch
   , newSlider
   , newTextField
+  , newPicker
   -- * Widget.Module
   -- ** Getting
   , getBool

@@ -2,6 +2,7 @@
 module Kurokos.UI.Widget where
 
 import           Control.Lens
+import qualified Data.List.Zipper      as LZ
 import           Data.Text             (Text)
 import qualified Data.Text             as T
 import qualified Data.Text.Zipper      as TZ
@@ -67,6 +68,7 @@ data Widget where
   Switch      :: Text -> Font.Font -> G.FontSize -> Bool -> Widget
   Slider      :: Text -> Font.Font -> G.FontSize -> Maybe SliderResource -> Value -> Widget
   TextField   :: Font.Font -> G.FontSize -> TZ.TextZipper T.Text -> Maybe TextFieldResource -> Widget
+  Picker      :: [Text] -> Font.Font -> G.FontSize -> Maybe (LZ.Zipper (Text, G.Texture)) -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where
@@ -78,6 +80,7 @@ instance Show Widget where
   show Switch{}     = "<SWT>"
   show Slider{}     = "<SLD>"
   show TextField{}  = "<TXF>"
+  show Picker{}     = "<PKR>"
   show UserWidget{} = "<USR>"
 
 attribOf :: Widget -> WidgetAttrib
@@ -121,7 +124,26 @@ attribOf TextField{} =
     & hoverable .~ True
     & clickable .~ True
 
+attribOf Picker{} =
+  defAttrib
+    & hoverable .~ True
+    & clickable .~ True
+
 attribOf UserWidget{} =
   defAttrib
     & hoverable .~ False
     & clickable .~ False
+
+
+additionalClickableSize :: WContext -> Widget -> Maybe (V2 CInt)
+additionalClickableSize ctx = work
+  where
+    V2 w h = wstSize $ ctx^.ctxWidgetState
+    focus = ctx^.ctxWidgetState.wstFocus
+
+    work (Picker ts font size mz)
+      | focus     = Just $ V2 w (h * n)
+      | otherwise = Just $ V2 w h
+      where
+        n = fromIntegral $ length ts
+    work _ = Nothing

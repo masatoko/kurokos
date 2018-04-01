@@ -41,7 +41,7 @@ data WidgetState = WidgetState
   , _wstPos      :: GuiPos -- ^ Lobal position (Updated on readyRender)
   , _wstWidth    :: Maybe CInt
   , _wstHeight   :: Maybe CInt
-  -- , _wstSize     :: GuiSize -- ^ Texture size (Updated on readyRender)
+  , _wstFocus    :: Bool
   --
   , _wstVisible  :: Bool
   , _wstHover    :: Bool
@@ -50,7 +50,7 @@ data WidgetState = WidgetState
 makeLenses ''WidgetState
 
 iniWidgetState :: WidgetState
-iniWidgetState = WidgetState (pure 0) (pure 0) Nothing Nothing True False
+iniWidgetState = WidgetState (pure 0) (pure 0) Nothing Nothing False True False
 
 wstSize :: WidgetState -> V2 CInt
 wstSize wst = V2 w h

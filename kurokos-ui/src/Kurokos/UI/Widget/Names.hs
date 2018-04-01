@@ -15,6 +15,7 @@ widgetNameOf Button{}      = wnameButton
 widgetNameOf Switch{}      = wnameSwitch
 widgetNameOf Slider{}      = wnameSlider
 widgetNameOf TextField{}   = wnameTextField
+widgetNameOf Picker{}      = wnamePicker
 widgetNameOf UserWidget{}  = wnameUserWidget
 
 -- Inernal
@@ -42,6 +43,9 @@ wnameSlider = "slider"
 
 wnameTextField :: WidgetName
 wnameTextField = "text-field"
+
+wnamePicker :: WidgetName
+wnamePicker = "picker"
 
 wnameUserWidget :: WidgetName
 wnameUserWidget = "user"

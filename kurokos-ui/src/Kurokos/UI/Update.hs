@@ -68,6 +68,7 @@ procEvent cursor gui0 = work
             unGui._2.gstEvents %= ([textFixed, unfocused] ++)
           _ -> return ()
       modify $ \g -> g&unGui._2.gstFocus .~ []
+      modify $ \g -> g&unGui._2.gstWTree %~ fmap (set (_1.ctxWidgetState.wstFocus) False)
     --
     work (WindowResizedEvent WindowResizedEventData{..}) = do
       win <- getWindow
@@ -117,12 +118,13 @@ procEvent cursor gui0 = work
                   unGui._2.gstEvents %= (ev:)
           | otherwise = return ()
           where
-            conv (ctx,w) =
+            conv cw@(ctx,w) =
               (ctx', WU.modifyOnClicked curPos pos size w)
               where
                 ctx' = ctx & ctxNeedsRender .~ True
+                           & ctxWidgetState.wstFocus .~ True
                 pos = ctx^.ctxWidgetState.wstWorldPos
-                size = wstSize $ ctx^.ctxWidgetState
+                size = clickableSize cw
     work (MouseMotionEvent MouseMotionEventData{..}) =
       return . flip execState gui0 $ do
         modify $ over (unGui._2.gstWTree) (fmap modWhenHover)
@@ -142,7 +144,7 @@ procEvent cursor gui0 = work
             pos = ctx^.ctxWidgetState.wstWorldPos
             isHoverable = ctx^.ctxAttrib.hoverable
             wst = ctx^.ctxWidgetState
-            size = wstSize wst
+            size = clickableSize a
         modWhenHoverWithLHold a@(ctx,w)
           | ButtonLeft `elem` mouseMotionEventState && isWithinRect curPos pos size =
             let ctx' = ctx & ctxNeedsRender .~ True
@@ -150,7 +152,7 @@ procEvent cursor gui0 = work
           | otherwise = a
           where
             pos = ctx^.ctxWidgetState.wstWorldPos
-            size = wstSize $ ctx^.ctxWidgetState
+            size = clickableSize a
 
     work _ = return gui0
 

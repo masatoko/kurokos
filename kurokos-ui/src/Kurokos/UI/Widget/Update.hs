@@ -9,6 +9,7 @@ import qualified Data.Map              as M
 import           Data.Text
 import qualified Data.Text             as T
 import qualified Data.Text.Zipper      as TZ
+import qualified Data.List.Zipper      as LZ
 import           Linear.V3
 import           System.IO             (IOMode (..), hClose, openFile)
 
@@ -56,7 +57,16 @@ onReadyLayout (V2 w h) wc (TextField font size z mRsc) = do
             else Just <$> genTextTexture font size (_wcTitle wc) textR
   let rsc = TextFieldResource cursor mTexL mTexR
   return $ TextField font size z (Just rsc)
-
+onReadyLayout (V2 w h) wc (Picker ts font size mz) = do
+  -- * Release
+  liftIO $ whenJust mz $ \z ->
+    mapM_ (G.deleteTexture . snd) $ LZ.toList z
+  -- * Make
+  as <- forM ts $ \text -> do
+    tex <- genTextTexture font size (_wcTitle wc) text
+    return (text, tex)
+  let z = LZ.fromList as
+  return $ Picker ts font size (Just z)
 onReadyLayout _ _ w = return w
 
 genTextTexture :: (RenderEnv m, MonadIO m) => Font.Font -> G.FontSize -> G.Color -> Text -> m G.Texture

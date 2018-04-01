@@ -9,6 +9,7 @@ import qualified Data.Map              as M
 import           Data.Text
 import qualified Data.Text             as T
 import qualified Data.Text.Zipper      as TZ
+import qualified Data.List.Zipper      as LZ
 import           Linear.V3
 import           System.IO             (IOMode (..), hClose, openFile)
 
@@ -58,6 +59,11 @@ newTextField ident size iniText = do
   return $ TextField font size z Nothing
   where
     z = TZ.textZipper [iniText] Nothing
+
+newPicker :: MonadIO m => Asset.Ident -> G.FontSize -> [Text] -> GuiT m Widget
+newPicker ident size ts = do
+  font <- getFont ident
+  return $ Picker ts font size Nothing
 
 -- Internal
 

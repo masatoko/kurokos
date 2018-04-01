@@ -144,6 +144,12 @@ freeCommonResource CmnRsc{..} = do
   G.freePrim cmnrscRectBorder
   whenJust cmnrscTextTex G.deleteTexture
 
+clickableSize :: CtxWidget -> V2 CInt
+clickableSize (ctx,w) =
+  fromMaybe size $ additionalClickableSize ctx w
+  where
+    size = wstSize $ ctx^.ctxWidgetState
+
 mkSingle :: (RenderEnv m, MonadIO m)
   => WidgetConfig -> Widget -> GuiT m GuiWidgetTree
 mkSingle conf widget = do

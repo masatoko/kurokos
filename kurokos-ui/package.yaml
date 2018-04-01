@@ -41,6 +41,7 @@ dependencies:
 - safe
 - extra
 - text-zipper
+- ListZipper
 
 library:
   source-dirs: src
