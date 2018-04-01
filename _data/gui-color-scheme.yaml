@@ -5,9 +5,8 @@ _default:
     title: 54 20 171 255
     tint: 220 220 220 255
   hover:
-    back: 240 240 240 255
+    back: 230 230 230 255
     border: 220 220 220 255
-    # title: 24 0 140 255
     title: 240 0 0 255
     tint: 220 220 220 255
   click:

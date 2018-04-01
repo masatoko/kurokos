@@ -22,26 +22,26 @@ import           Kurokos.UI.Types
 import           Kurokos.UI.Util
 import           Kurokos.UI.Widget
 
-renderWidget :: G.Renderer -> Bool -> V2 Int -> V2 Int -> WidgetColor -> Style -> CommonResource -> Widget -> IO ()
-renderWidget _r _focus _pos _parentSize _ _ _ Transparent = return ()
+renderWidget :: G.Renderer -> Bool -> V2 Int -> V2 Int -> WContext -> WidgetColor -> Style -> CommonResource -> Widget -> IO ()
+renderWidget _r _focus _pos _parentSize _ctx _ _ _ Transparent = return ()
 
-renderWidget r _focus pos _parentSize wc style cmnrsc Fill =
+renderWidget r _focus pos _parentSize _ctx wc style cmnrsc Fill =
   renderBackAndBorder r pos wc cmnrsc
 
-renderWidget r _focus pos parentSize wc@WidgetColor{..} style cmnrsc Label{} = do
+renderWidget r _focus pos parentSize _ctx wc@WidgetColor{..} style cmnrsc Label{} = do
   renderBackAndBorder r pos wc cmnrsc
   whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
 
-renderWidget r _focus pos parentSize WidgetColor{..} style CmnRsc{..} (ImageView image) = do
+renderWidget r _focus pos parentSize _ctx WidgetColor{..} style CmnRsc{..} (ImageView image) = do
   let size = fromIntegral <$> parentSize
       rctx = G.RContext pos size Nothing Nothing
   G.renderTexture r image Nothing rctx
 
-renderWidget r _focus pos parentSize wc@WidgetColor{..} style cmnrsc Button{} = do
+renderWidget r _focus pos parentSize _ctx wc@WidgetColor{..} style cmnrsc Button{} = do
   renderBackAndBorder r pos wc cmnrsc
   whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
 
-renderWidget r _focus pos parentSize wc style cmnrsc (Switch _ _ _ selected) = do
+renderWidget r _focus pos parentSize _ctx wc style cmnrsc (Switch _ _ _ selected) = do
   renderBackAndBorder r pos wc' cmnrsc
   whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
   where
@@ -49,7 +49,7 @@ renderWidget r _focus pos parentSize wc style cmnrsc (Switch _ _ _ selected) = d
       | selected  = wc&wcBack .~ (wc^.wcTint)
       | otherwise = wc
 
-renderWidget r _focus pos parentSize wc@WidgetColor{..} style cmnrsc (Slider _ _ _ mKnob value) = do
+renderWidget r _focus pos parentSize _ctx wc@WidgetColor{..} style cmnrsc (Slider _ _ _ mKnob value) = do
   renderBackAndBorder r pos wc cmnrsc
   whenJust mKnob $ \(SliderResource knobPrim valText) -> do
     renderKnob r knobPos wc knobPrim
@@ -72,7 +72,7 @@ renderWidget r _focus pos parentSize wc@WidgetColor{..} style cmnrsc (Slider _ _
       where
         dx = round $ fromIntegral (parentSize^._x - 30) * rateFromValue value
 
-renderWidget r focus pos parentSize wc style cmnrsc (TextField _ fontSize _ mRsc) = do
+renderWidget r focus pos parentSize _ctx wc style cmnrsc (TextField _ fontSize _ mRsc) = do
   renderBackAndBorder r pos wc cmnrsc
   whenJust mRsc $ \tfr -> do
     -- * Left text
@@ -99,25 +99,30 @@ renderWidget r focus pos parentSize wc style cmnrsc (TextField _ fontSize _ mRsc
     pos' = pos & _y +~ dy -- Vertical centerizing
     dy = ((parentSize^._y) - fontSize) `div` 2
 
-renderWidget r focus pos (V2 width height) wc@WidgetColor{..} style cmnrsc (Picker _ _ _ idx ts)
+renderWidget r focus pos (V2 width height) ctx _wc style cmnrsc (Picker _ _ _ idx ts)
   | focus =
       forM_ (zip [0..] ts) $ \(i, tex) -> do
         let size = G.texSize tex
             pos' = pos & _y +~ (i * height)
             rctx = G.RContext pos' size Nothing Nothing
+        let wc = if i == idx then wcH else wcN
         renderBackAndBorder r pos' wc cmnrsc
         G.renderTexture r tex Nothing rctx
   | otherwise =
       case ts `atMay` idx of
         Nothing -> return ()
         Just tex -> do
-          renderBackAndBorder r pos wc cmnrsc
+          renderBackAndBorder r pos _wc cmnrsc
           let size = G.texSize tex
               rctx = G.RContext pos size Nothing Nothing
           G.renderTexture r tex Nothing rctx
         _ -> return ()
+  where
+    ctxCol = ctx^.ctxContextColor
+    wcN = ctxcolNormal ctxCol
+    wcH = ctxcolHover ctxCol
 
-renderWidget r _focus pos parentSize wcol style CmnRsc{..} (UserWidget a) =
+renderWidget r _focus pos parentSize _ctx wcol style CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
 
 renderTex_ :: G.Renderer -> V2 Int -> V2 Int -> Style -> G.Texture -> IO ()

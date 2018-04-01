@@ -632,7 +632,7 @@ render g =
   where
     go r (ctx, widget)
       | ctx^.ctxNeedsRender            = E.throwIO $ userError "Call GUI.readyRender before GUI.render!"
-      | ctx^.ctxWidgetState.wstVisible = renderWidget r focus pos size wcol style cmnrsc widget
+      | ctx^.ctxWidgetState.wstVisible = renderWidget r focus pos size ctx wcol style cmnrsc widget
       | otherwise                      = return ()
         where
           focus = (g^.unGui._2.gstFocus) == ctx^.ctxPath

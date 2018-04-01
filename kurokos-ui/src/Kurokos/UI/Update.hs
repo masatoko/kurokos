@@ -119,7 +119,7 @@ procEvent cursor gui0 = work
           | otherwise = return ()
           where
             conv cw@(ctx,w) =
-              (ctx', WU.modifyOnClicked curPos pos size w)
+              (ctx', WU.modifyOnClicked ctx curPos pos size w)
               where
                 ctx' = ctx & ctxNeedsRender .~ True
                            & ctxWidgetState.wstFocus .~ True

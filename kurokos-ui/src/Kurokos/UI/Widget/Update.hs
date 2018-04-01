@@ -23,6 +23,7 @@ import qualified Kurokos.Asset.Raw     as Asset
 import qualified Kurokos.Graphics      as G
 import qualified Kurokos.Graphics.Font as Font
 import           Kurokos.UI.Color      (WidgetColor (..))
+import           Kurokos.UI.Types
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
 
@@ -74,23 +75,26 @@ genTextTexture font size color text = do
   liftIO $ G.deleteTextTexture text'
   return textTex
 
-modifyOnClicked :: Point V2 CInt -- ^ Cursor position
+modifyOnClicked :: WContext
+                -> Point V2 CInt -- ^ Cursor position
                 -> Point V2 CInt -- ^ Widget world position
                 -> V2 CInt -- ^ Widget size
                 -> Widget
                 -> Widget
-modifyOnClicked _ _ _ (Switch title font size bool) = Switch title font size (not bool)
-modifyOnClicked (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title font size mPrim value) =
+modifyOnClicked _ _ _ _ (Switch title font size bool) = Switch title font size (not bool)
+modifyOnClicked _ (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title font size mPrim value) =
   -- Calculate value by click position
   Slider title font size mPrim value'
   where
     rate = fromIntegral (curX - wx) / fromIntegral w
     value' = updateValueByRate rate value
-modifyOnClicked (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Picker ts font size _ textures) =
-  Picker ts font size idx textures
+modifyOnClicked ctx (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) w0@(Picker ts font size _ textures)
+  | focus     = w0
+  | otherwise = Picker ts font size idx textures
   where
     idx = fromIntegral $ (curY - wy) `div` h
-modifyOnClicked _ _ _ w = w
+    focus = ctx^.ctxWidgetState.wstFocus
+modifyOnClicked _ _ _ _ w = w
 
 modifyWhenHoverWithLHold :: Point V2 CInt -- ^ Cursor position
                           -> Point V2 CInt -- ^ Widget world position
