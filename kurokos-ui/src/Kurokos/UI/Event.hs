@@ -1,5 +1,7 @@
 module Kurokos.UI.Event where
 
+import qualified Data.Text          as T
+
 import           Kurokos.UI.Control (GuiAction)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
@@ -25,8 +27,12 @@ data GuiEvent
     , geCount      :: Integer
     }
   | DragAndDrop
-    { geDrag :: WidgetInfo
-    , geDrop :: Maybe WidgetInfo
+    { geDrag   :: WidgetInfo
+    , geDrop   :: Maybe WidgetInfo
     , geButton :: SDL.MouseButton
+    }
+  | TextFixed
+    { geWidgetInfo :: WidgetInfo
+    , geText       :: T.Text
     }
   deriving Show

@@ -5,15 +5,17 @@ module Kurokos.UI.Update
 
 import           Control.Lens
 import           Control.Monad              (foldM)
+import           Control.Monad.Extra        (whenJust)
 import           Control.Monad.State
 import           Data.Int                   (Int32)
 import           Data.List.Extra            (firstJust)
 import           Data.Maybe                 (catMaybes, mapMaybe, maybeToList)
+import qualified Data.Text.Zipper           as TZ
 import           Linear.V2
 import           Safe                       (headMay, lastMay)
 
 import           Kurokos.UI.Control
-import          qualified Kurokos.UI.Control.Control as C
+import qualified Kurokos.UI.Control.Control as C
 import           Kurokos.UI.Core
 import           Kurokos.UI.Event
 import qualified Kurokos.UI.Event           as E
@@ -25,8 +27,8 @@ import qualified Kurokos.UI.Widget.Update   as WU
 import qualified Kurokos.UI.WidgetTree      as WT
 
 import qualified SDL
-import qualified SDL.Raw.Types
 import           SDL.Event
+import qualified SDL.Raw.Types
 
 import           Foreign.Ptr
 import qualified SDL.Raw.Event              as Raw
@@ -34,7 +36,8 @@ import qualified SDL.Raw.Event              as Raw
 -- | Update Gui data by SDL Events. Call this at the top of Update
 updateGui :: (RenderEnv m, MonadIO m) => [SDL.EventPayload] -> Cursor -> GUI -> m GUI
 updateGui es cursor g0 = do
-  g1 <- foldM (procEvent cursor) g0 es
+  let g1 = g0&unGui._2.gstEvents .~ [] -- Clear all events
+  g2 <- foldM (procEvent cursor) g1 es
   -- liftIO $ do
   --   putStrLn "==="
   --   print =<< Raw.getMouseState nullPtr nullPtr
@@ -42,7 +45,7 @@ updateGui es cursor g0 = do
   -- liftIO $
   --   print $ map (mouseButtons . SDL.ButtonExtra) [0..10]
   --   print $ mouseButtons SDL.ButtonRight
-  return $ handleGui mouseButtons es cursor g1
+  return $ handleGui mouseButtons es cursor g2
 
 procEvent :: (RenderEnv m, MonadIO m)
   => Cursor -> GUI -> SDL.EventPayload -> m GUI
@@ -50,6 +53,18 @@ procEvent cursor gui0 = work
   where
     curPos = cursor^.cursorPos
     isClickable = view (_1.ctxAttrib.clickable)
+    --
+    -- resetFocus :: StateT GUI m ()
+    resetFocus = do
+      SDL.stopTextInput
+      g <- get
+      whenJust (WT.wtAt (g^.unGui._2.gstFocus) (g^.unGui._2.gstWTree)) $ \cw ->
+        case cw^._2 of
+          (TextField _ _ z _) -> do
+            let ev = E.TextFixed (cwToInfo cw) (TZ.currentLine z)
+            unGui._2.gstEvents %= (ev:)
+          _ -> return ()
+      modify $ \g -> g&unGui._2.gstFocus .~ []
     --
     work (WindowResizedEvent WindowResizedEventData{..}) = do
       win <- getWindow
@@ -64,36 +79,37 @@ procEvent cursor gui0 = work
     work (TextInputEvent TextInputEventData{..}) =
       return $ C.modifyFocused (over _2 (WM.widgetInputText textInputEventText)) gui0
     work (KeyboardEvent KeyboardEventData{..}) =
-      return . flip execState gui0 $
-        when pressed $ modify modCursor
+      flip execStateT gui0 $
+        when pressed modCursor
       where
         pressed = keyboardEventKeyMotion == Pressed
         scancode = SDL.keysymScancode keyboardEventKeysym
-        modCursor gui =
+        modCursor =
           case scancode of
-            SDL.ScancodeLeft      -> C.modifyFocused (C.modifyWidget WM.widgetLeft) gui
-            SDL.ScancodeRight     -> C.modifyFocused (C.modifyWidget WM.widgetRight) gui
-            SDL.ScancodeDelete    -> C.modifyFocused (C.modifyWidget WM.widgetDeleteChar) gui
-            SDL.ScancodeBackspace -> C.modifyFocused (C.modifyWidget WM.widgetBackspace) gui
-            _                     -> gui
+            SDL.ScancodeLeft      -> modify $ C.modifyFocused (C.modifyWidget WM.widgetLeft)
+            SDL.ScancodeRight     -> modify $ C.modifyFocused (C.modifyWidget WM.widgetRight)
+            SDL.ScancodeDelete    -> modify $ C.modifyFocused (C.modifyWidget WM.widgetDeleteChar)
+            SDL.ScancodeBackspace -> modify $ C.modifyFocused (C.modifyWidget WM.widgetBackspace)
+            SDL.ScancodeReturn    -> resetFocus
+            _                     -> return ()
     work (MouseButtonEvent MouseButtonEventData{..}) =
-      modWhenClicked gui0
+      execStateT modWhenClicked gui0
       where
         clickedByLeft = mouseButtonEventButton == ButtonLeft
                           && mouseButtonEventMotion == Pressed
-        modWhenClicked gui
-          | clickedByLeft =
+        modWhenClicked
+          | clickedByLeft = do
+              gui <- get
               case C.topmostAtWith curPos isClickable gui of
-                Nothing -> return gui
+                Nothing -> return ()
                 Just (ctx,w) -> do
-                  let path = ctx^.ctxPath
-                      gui' = gui & unGui._2.gstWTree %~ WT.wtModifyAt path conv
-                                 & unGui._2.gstFocus .~ path
                   case w of
                     TextField{} -> SDL.startTextInput $ SDL.Raw.Types.Rect 0 0 1000 1000
-                    _           -> SDL.stopTextInput
-                  return gui'
-          | otherwise = return gui
+                    _           -> resetFocus -- Call this before set gstFocus
+                  let path = ctx^.ctxPath
+                  unGui._2.gstWTree %= WT.wtModifyAt path conv
+                  unGui._2.gstFocus .= path -- Call `resetFocus` before this
+          | otherwise = return ()
           where
             conv (ctx,w) =
               (ctx', WU.modifyOnClicked curPos pos size w)
@@ -134,7 +150,7 @@ procEvent cursor gui0 = work
 
 handleGui :: (SDL.MouseButton -> Bool) -> [SDL.EventPayload] -> Cursor -> GUI -> GUI
 handleGui mouseButtons esSDL Cursor{..} gui =
-  gui&unGui._2.gstEvents .~ (clickEvents ++ draggingEvents)
+  gui&unGui._2.gstEvents %~ ((clickEvents ++ draggingEvents) ++)
   where
     actsClick = mapMaybe ghClick esSDL
 
@@ -143,8 +159,6 @@ handleGui mouseButtons esSDL Cursor{..} gui =
     isClickable = view (_1.ctxAttrib.clickable)
     isDraggable = view (_1.ctxAttrib.draggable)
     isDroppable = view (_1.ctxAttrib.droppable)
-
-    cwToInfo (WContext{..}, w) = E.WidgetInfo w _ctxIdent _ctxName
 
     clickEvents :: [E.GuiEvent]
     clickEvents =
@@ -185,6 +199,9 @@ handleGui mouseButtons esSDL Cursor{..} gui =
           where
             held = mouseButtons $ geButton e
         fromDrg _ = Nothing
+
+cwToInfo :: CtxWidget -> E.WidgetInfo
+cwToInfo (WContext{..}, w) = E.WidgetInfo w _ctxIdent _ctxName
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =

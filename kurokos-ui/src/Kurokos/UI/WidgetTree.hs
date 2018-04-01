@@ -1,11 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Kurokos.UI.WidgetTree where
 
-import Data.Maybe (catMaybes)
-import Data.List.Extra (firstJust)
 import           Control.Lens
-import           Data.Foldable (toList)
-import           Data.Monoid   ((<>))
+import           Data.Foldable   (toList)
+import           Data.List.Extra (firstJust)
+import           Data.Maybe      (catMaybes)
+import           Data.Monoid     ((<>))
 
 data WidgetTree a
   = Null
@@ -150,11 +150,20 @@ wtPath = go []
 wtModifyAt :: WidgetTreePath -> (a -> a) -> WidgetTree a -> WidgetTree a
 wtModifyAt bs0 f = go bs0
   where
-    go _ Null = Null
-    go [] (Fork u a mc o) = Fork u (f a) mc o
+    go _ Null                      = Null
+    go [] (Fork u a mc o)          = Fork u (f a) mc o
     go (SUnder:bs) (Fork u a mc o) = Fork (go bs u) a mc o
     go (SChild:bs) (Fork u a mc o) = Fork u a (go bs <$> mc) o
     go (SOver:bs)  (Fork u a mc o) = Fork u a mc (go bs o)
+
+wtAt :: WidgetTreePath -> WidgetTree a -> Maybe a
+wtAt = go
+  where
+    go [] Null                     = Nothing
+    go [] (Fork _ a _ _)           = Just a
+    go (SUnder:bs) (Fork u _ _ _)  = go bs u
+    go (SChild:bs) (Fork _ _ mc _) = go bs =<< mc
+    go (SOver:bs) (Fork _ _ _ o)   = go bs o
 
 -- * Zipper
 
