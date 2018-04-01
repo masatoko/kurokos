@@ -3,6 +3,7 @@ module Kurokos.UI.Widget.Module where
 import           Data.Text         (Text)
 import qualified Data.Text         as T
 import qualified Data.Text.Zipper  as TZ
+import           Safe              (readMay)
 
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
@@ -24,18 +25,24 @@ getBool _                   = Nothing
 -- | Get current value of Int Slider
 getInt :: Widget -> Maybe Int
 getInt (Slider _ _ _ _ (ValueI v _ _)) = Just v
+getInt (TextField _ _ z _)             = readMay . T.unpack . TZ.currentLine $ z
 getInt _                               = Nothing
 
 -- | Get current value of Float Slider
 getFloat :: Widget -> Maybe Float
 getFloat (Slider _ _ _ _ (ValueF v _ _)) = Just v
+getFloat (TextField _ _ z _)             = readMay . T.unpack . TZ.currentLine $ z
 getFloat _                               = Nothing
 
 -- | Get current value of Double Slider
 getDouble :: Widget -> Maybe Double
 getDouble (Slider _ _ _ _ (ValueD v _ _)) = Just v
+getDouble (TextField _ _ z _)             = readMay . T.unpack . TZ.currentLine $ z
 getDouble _                               = Nothing
 
+getText :: Widget -> Maybe T.Text
+getText (TextField _ _ z _) = Just $ TZ.currentLine z
+getText _                   = Nothing
 
 -- * Control
 

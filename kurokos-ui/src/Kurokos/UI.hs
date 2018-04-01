@@ -76,6 +76,7 @@ module Kurokos.UI
   , getInt
   , getFloat
   , getDouble
+  , getText
   -- * WidgetTree
   , WidgetTree
   , mkNull
