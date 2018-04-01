@@ -90,7 +90,7 @@ procEvent cursor gui0 = work
                       gui' = gui & unGui._2.gstWTree %~ WT.wtModifyAt path conv
                                  & unGui._2.gstFocus .~ path
                   case w of
-                    TextField{} -> SDL.startTextInput $ SDL.Raw.Types.Rect 100 100 100 100
+                    TextField{} -> SDL.startTextInput $ SDL.Raw.Types.Rect 0 0 1000 1000
                     _           -> SDL.stopTextInput
                   return gui'
           | otherwise = return gui
