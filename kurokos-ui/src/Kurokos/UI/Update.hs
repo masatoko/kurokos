@@ -45,7 +45,9 @@ updateGui es cursor g0 = do
   -- liftIO $
   --   print $ map (mouseButtons . SDL.ButtonExtra) [0..10]
   --   print $ mouseButtons SDL.ButtonRight
-  return $ handleGui mouseButtons es cursor g2
+  return $ handleGui mouseButtons es cursor prevEvents g2
+  where
+    prevEvents = g0^.unGui._2.gstEvents
 
 procEvent :: (RenderEnv m, MonadIO m)
   => Cursor -> GUI -> SDL.EventPayload -> m GUI
@@ -152,8 +154,8 @@ procEvent cursor gui0 = work
 
     work _ = return gui0
 
-handleGui :: (SDL.MouseButton -> Bool) -> [SDL.EventPayload] -> Cursor -> GUI -> GUI
-handleGui mouseButtons esSDL Cursor{..} gui =
+handleGui :: (SDL.MouseButton -> Bool) -> [SDL.EventPayload] -> Cursor -> [E.GuiEvent] -> GUI -> GUI
+handleGui mouseButtons esSDL Cursor{..} prevEvents gui =
   gui&unGui._2.gstEvents %~ ((clickEvents ++ draggingEvents) ++)
   where
     actsClick = mapMaybe ghClick esSDL
@@ -174,10 +176,9 @@ handleGui mouseButtons esSDL Cursor{..} gui =
 
     draggingEvents =
       let bgns = mapMaybe beginDrg esSDL
-          cnts = mapMaybe fromDrg esPrev
+          cnts = mapMaybe fromDrg prevEvents
       in bgns ++ cnts
       where
-        esPrev = gui^.unGui._2.gstEvents
         btn = ButtonExtra 0 -- FIX: SDL.getMouseButtons ButtonLeft doesn't work
         wt = gui^.unGui._2.gstWTree
 
