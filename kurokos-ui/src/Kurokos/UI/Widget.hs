@@ -2,7 +2,6 @@
 module Kurokos.UI.Widget where
 
 import           Control.Lens
-import qualified Data.List.Zipper      as LZ
 import           Data.Text             (Text)
 import qualified Data.Text             as T
 import qualified Data.Text.Zipper      as TZ
@@ -68,7 +67,7 @@ data Widget where
   Switch      :: Text -> Font.Font -> G.FontSize -> Bool -> Widget
   Slider      :: Text -> Font.Font -> G.FontSize -> Maybe SliderResource -> Value -> Widget
   TextField   :: Font.Font -> G.FontSize -> TZ.TextZipper T.Text -> Maybe TextFieldResource -> Widget
-  Picker      :: [Text] -> Font.Font -> G.FontSize -> Maybe (LZ.Zipper (Text, G.Texture)) -> Widget
+  Picker      :: [Text] -> Font.Font -> G.FontSize -> Int -> [G.Texture] -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where
@@ -141,7 +140,7 @@ additionalClickableSize ctx = work
     V2 w h = wstSize $ ctx^.ctxWidgetState
     focus = ctx^.ctxWidgetState.wstFocus
 
-    work (Picker ts font size mz)
+    work (Picker ts font size _ _)
       | focus     = Just $ V2 w (h * n)
       | otherwise = Just $ V2 w h
       where

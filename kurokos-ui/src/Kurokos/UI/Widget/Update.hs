@@ -1,15 +1,17 @@
 module Kurokos.UI.Widget.Update where
 
+import           Debug.Trace           (trace)
+
 import qualified Control.Exception     as E
 import           Control.Lens
+import           Control.Monad         (unless)
 import           Control.Monad.Extra   (whenJust)
 import           Control.Monad.State
 import qualified Data.ByteString       as BS
+import           Data.List             (foldl')
 import qualified Data.Map              as M
-import           Data.Text
 import qualified Data.Text             as T
 import qualified Data.Text.Zipper      as TZ
-import qualified Data.List.Zipper      as LZ
 import           Linear.V3
 import           System.IO             (IOMode (..), hClose, openFile)
 
@@ -20,9 +22,9 @@ import qualified Kurokos.Asset.Raw     as Asset
 
 import qualified Kurokos.Graphics      as G
 import qualified Kurokos.Graphics.Font as Font
+import           Kurokos.UI.Color      (WidgetColor (..))
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
-import           Kurokos.UI.Color (WidgetColor (..))
 
 -- | Called when this widget needs re-layout.
 --
@@ -57,19 +59,15 @@ onReadyLayout (V2 w h) wc (TextField font size z mRsc) = do
             else Just <$> genTextTexture font size (_wcTitle wc) textR
   let rsc = TextFieldResource cursor mTexL mTexR
   return $ TextField font size z (Just rsc)
-onReadyLayout (V2 w h) wc (Picker ts font size mz) = do
+onReadyLayout (V2 w h) wc (Picker ts font size idx textures0) = do
   -- * Release
-  liftIO $ whenJust mz $ \z ->
-    mapM_ (G.deleteTexture . snd) $ LZ.toList z
+  unless (null textures0) $ liftIO $ mapM_ G.deleteTexture textures0
   -- * Make
-  as <- forM ts $ \text -> do
-    tex <- genTextTexture font size (_wcTitle wc) text
-    return (text, tex)
-  let z = LZ.fromList as
-  return $ Picker ts font size (Just z)
+  textures <- mapM (genTextTexture font size (_wcTitle wc)) ts
+  return $ Picker ts font size idx textures
 onReadyLayout _ _ w = return w
 
-genTextTexture :: (RenderEnv m, MonadIO m) => Font.Font -> G.FontSize -> G.Color -> Text -> m G.Texture
+genTextTexture :: (RenderEnv m, MonadIO m) => Font.Font -> G.FontSize -> G.Color -> T.Text -> m G.Texture
 genTextTexture font size color text = do
   text' <- liftIO $ G.createTextTexture font size color text
   textTex <- withRenderer $ \r -> G.genTextImage r text'
@@ -88,6 +86,10 @@ modifyOnClicked (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title font si
   where
     rate = fromIntegral (curX - wx) / fromIntegral w
     value' = updateValueByRate rate value
+modifyOnClicked (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Picker ts font size _ textures) =
+  Picker ts font size idx textures
+  where
+    idx = fromIntegral $ (curY - wy) `div` h
 modifyOnClicked _ _ _ w = w
 
 modifyWhenHoverWithLHold :: Point V2 CInt -- ^ Cursor position

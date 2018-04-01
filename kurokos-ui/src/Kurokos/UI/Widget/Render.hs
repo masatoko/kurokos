@@ -1,13 +1,13 @@
 {-# LANGUAGE RecordWildCards #-}
 module Kurokos.UI.Widget.Render where
 
-import Control.Monad (forM_)
 import qualified Control.Exception     as E
 import           Control.Lens
+import           Control.Monad         (forM_)
 import           Control.Monad.Extra   (whenJust)
-import qualified Data.List.Zipper      as LZ
 import qualified Data.Text             as T
 import           Linear.V3
+import           Safe                  (atMay)
 
 import           SDL                   (($=))
 import qualified SDL
@@ -99,25 +99,23 @@ renderWidget r focus pos parentSize wc style cmnrsc (TextField _ fontSize _ mRsc
     pos' = pos & _y +~ dy -- Vertical centerizing
     dy = ((parentSize^._y) - fontSize) `div` 2
 
-renderWidget r focus pos (V2 width height) wc@WidgetColor{..} style cmnrsc (Picker _ _ _ mz) =
-  whenJust mz $ \z ->
-    if focus
-      then do
-        let LZ.Zip as bs = z
-        forM_ (zip [0..] (as ++ bs)) $ \(i, (_,tex)) -> do
+renderWidget r focus pos (V2 width height) wc@WidgetColor{..} style cmnrsc (Picker _ _ _ idx ts)
+  | focus =
+      forM_ (zip [0..] ts) $ \(i, tex) -> do
+        let size = G.texSize tex
+            pos' = pos & _y +~ (i * height)
+            rctx = G.RContext pos' size Nothing Nothing
+        renderBackAndBorder r pos' wc cmnrsc
+        G.renderTexture r tex Nothing rctx
+  | otherwise =
+      case ts `atMay` idx of
+        Nothing -> return ()
+        Just tex -> do
+          renderBackAndBorder r pos wc cmnrsc
           let size = G.texSize tex
-              pos' = pos & _y +~ (i * height)
-              rctx = G.RContext pos' size Nothing Nothing
-          renderBackAndBorder r pos' wc cmnrsc
+              rctx = G.RContext pos size Nothing Nothing
           G.renderTexture r tex Nothing rctx
-      else
-        case LZ.safeCursor z of
-          Just (_,tex) -> do
-            renderBackAndBorder r pos wc cmnrsc
-            let size = G.texSize tex
-                rctx = G.RContext pos size Nothing Nothing
-            G.renderTexture r tex Nothing rctx
-          _ -> return ()
+        _ -> return ()
 
 renderWidget r _focus pos parentSize wcol style CmnRsc{..} (UserWidget a) =
   renderW r pos parentSize wcol a
