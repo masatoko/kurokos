@@ -3,7 +3,7 @@ module Kurokos.UI.Widget.Module where
 import           Data.Text         (Text)
 import qualified Data.Text         as T
 import qualified Data.Text.Zipper  as TZ
-import           Safe              (readMay)
+import           Safe              (atMay, readMay)
 
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
@@ -43,6 +43,11 @@ getDouble _                               = Nothing
 getText :: Widget -> Maybe T.Text
 getText (TextField _ _ z _) = Just $ TZ.currentLine z
 getText _                   = Nothing
+
+-- | Get key of Picker widget
+getKey :: Widget -> Maybe String
+getKey (Picker ts _ _ idx _) = fst <$> ts `atMay` idx
+getKey _                     = Nothing
 
 -- * Control
 
