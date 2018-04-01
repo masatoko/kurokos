@@ -368,7 +368,7 @@ updateLayout (V2 winW winH) wt0
                       let notLayoutedList' = getNotLayouted wt'
                           notChanged = notLayoutedList' == notLayoutedList
                       if | all isLayouted wt' -> return wt'
-                         | notChanged         -> error $ "Cannot resolve layout: " ++ show notLayoutedList
+                         | notChanged         -> error $ "Cannot resolve layout: " ++ show notLayoutedList ++ "\n" ++ WT.prettyWith (show . snd) wt'
                          | otherwise          -> calcTillLayouted (i+1) notLayoutedList' wt'
                 wt1 <- calcTillLayouted 0 (getNotLayouted wt0) wt0
                 calcLocalPos vmap wt1
