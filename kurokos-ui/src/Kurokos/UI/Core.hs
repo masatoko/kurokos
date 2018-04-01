@@ -323,7 +323,7 @@ readyRender g = do
                                (_,UserWidget c) -> liftIO $ needsRender c
                                _                -> return False
       let updatedA = ctx^.ctxNeedsRender || needsRenderByItself
-      modify (updatedA &&)
+      modify (updatedA ||)
       if updatedA
         then do
           liftIO . freeCommonResource $ ctx^.ctxCmnRsc
@@ -596,12 +596,21 @@ updateLayout (V2 winW winH) wt0
           HorizontalStack -> V2 (x + w) y
 
 widgetMinimumSize :: (WContext, Widget) -> V2 (Maybe CInt)
-widgetMinimumSize (ctx,w) = texSize
+widgetMinimumSize (ctx,widget) =
+  let h = firstJust id [heightFromCtx, heightFromWidget widget]
+  in V2 widthFromCtx h
   where
-    texSize = case cmnrscTextTex (ctx^.ctxCmnRsc) of
-      Nothing  -> pure Nothing
-      Just tex -> let V2 w h = (fromIntegral <$> G.texSize tex)
-                  in V2 (Just w) (Just h)
+    widthFromCtx = do
+      tex <- cmnrscTextTex $ ctx^.ctxCmnRsc
+      let V2 w _ = G.texSize tex
+      return $ fromIntegral w
+    heightFromCtx = do
+      tex <- cmnrscTextTex $ ctx^.ctxCmnRsc
+      let V2 _ h = G.texSize tex
+      return $ fromIntegral h
+
+    heightFromWidget (TextField _ sz _ _) = Just $ fromIntegral sz
+    heightFromWidget _                    = Nothing
 
 updatePath :: GuiWidgetTree -> GuiWidgetTree
 updatePath = fmap work . WT.wtPath
