@@ -47,6 +47,16 @@
   y: 350
   w: 200
   h: 30
+-
+  type: text-field
+  title:
+    text: initial text
+    asset: font-m
+    size: 14
+  x-rpn: "$width 2 / 100 -"
+  y: 400
+  w: 200
+  h: 30
 
 -
   type: container

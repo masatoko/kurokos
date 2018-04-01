@@ -54,6 +54,7 @@ convert s@Single{..} = do
       | wType == N.wnameSwitch    = newSwitch titleAssetIdent titleSize titleText
       | wType == N.wnameSlider    = newSlider titleAssetIdent titleSize titleText value
       | wType == N.wnameImageView = newImageView =<< getAssetId
+      | wType == N.wnameTextField = newTextField titleAssetIdent titleSize titleText
       | otherwise                 = liftIO $ E.throwIO $ userError $ "unkown widget type: " ++ wType
 
     getAssetId = case wAsset of
