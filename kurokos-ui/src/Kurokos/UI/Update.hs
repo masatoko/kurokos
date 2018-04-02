@@ -80,18 +80,17 @@ procEvent cursor gui0 = work
     work (WindowResizedEvent WindowResizedEventData{..}) = do
       win <- getWindow
       return $ if windowResizedEventWindow == win
-                then setAllNeedsResize . setAllNeedsRender $ gui0
+                then setAllNeedsRender gui0
                 else gui0
     work (WindowMaximizedEvent WindowMaximizedEventData{..}) = do
       win <- getWindow
       return $ if windowMaximizedEventWindow == win
-                then setAllNeedsResize . setAllNeedsRender $ gui0
+                then setAllNeedsRender gui0
                 else gui0
     work (TextInputEvent TextInputEventData{..}) =
       return $ C.modifyFocused work gui0
       where
-        work cw = cw & _2 %~ WM.widgetInputText textInputEventText
-                     & _1.ctxNeedsResize .~ True
+        work cw = setNeedsResize $ cw & _2 %~ WM.widgetInputText textInputEventText
     work (KeyboardEvent KeyboardEventData{..}) =
       flip execStateT gui0 $
         when pressed modCursor
@@ -102,8 +101,8 @@ procEvent cursor gui0 = work
           case scancode of
             SDL.ScancodeLeft      -> modify $ C.modifyFocused (C.modifyWidget WM.widgetLeft)
             SDL.ScancodeRight     -> modify $ C.modifyFocused (C.modifyWidget WM.widgetRight)
-            SDL.ScancodeDelete    -> modify $ C.modifyFocused (C.modifyWidget WM.widgetDeleteChar)
-            SDL.ScancodeBackspace -> modify $ C.modifyFocused (C.modifyWidget WM.widgetBackspace)
+            SDL.ScancodeDelete    -> modify $ C.modifyFocused (setNeedsResize . C.modifyWidget WM.widgetDeleteChar)
+            SDL.ScancodeBackspace -> modify $ C.modifyFocused (setNeedsResize . C.modifyWidget WM.widgetBackspace)
             SDL.ScancodeReturn    -> resetFocus >> SDL.stopTextInput
             _                     -> return ()
     work (MouseButtonEvent MouseButtonEventData{..}) =
