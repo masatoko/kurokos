@@ -46,14 +46,16 @@ instance FromJSON YValue where
     <*> v .: "max"
 
 data YPicker = YPicker
-  { yElems :: [T.Text]
-  , yKeys  :: [String]
+  { yElems  :: [T.Text]
+  , yKeys   :: [String]
+  , yDefKey :: Maybe String
   } deriving (Eq, Show)
 
 instance FromJSON YPicker where
   parseJSON (Y.Object v) = YPicker
     <$> v .: "elems"
     <*> v .: "keys"
+    <*> v .:? "def"
 
 data YWidget
   = Single

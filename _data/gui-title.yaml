@@ -66,6 +66,7 @@
   picker:
     elems: ["Elem1", "Elem2"]
     keys: ["key1", "key2"]
+    def: "key2"
   x-rpn: "$width 2 / 100 -"
   y: 350
   w: 200

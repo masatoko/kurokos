@@ -58,8 +58,8 @@ convert s@Single{..} = do
       | wType == N.wnameTextField = newTextField titleAssetIdent titleSize titleText
       | wType == N.wnamePicker    =
           case wPicker of
-            Nothing                   -> liftIO $ E.throwIO $ userError $ "Missing 'picker' key"
-            Just (YPicker elems keys) -> newPicker titleAssetIdent titleSize (zip keys elems)
+            Nothing                           -> liftIO $ E.throwIO $ userError "Missing 'picker' key"
+            Just (YPicker elems keys mDefKey) -> newPicker titleAssetIdent titleSize (zip keys elems) mDefKey
       | otherwise                 = liftIO $ E.throwIO $ userError $ "unkown widget type: " ++ wType
 
     getAssetId = case wAsset of

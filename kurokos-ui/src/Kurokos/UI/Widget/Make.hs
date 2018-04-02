@@ -5,8 +5,9 @@ import           Control.Lens
 import           Control.Monad.Extra   (whenJust)
 import           Control.Monad.State
 import qualified Data.ByteString       as BS
+import           Data.List             (findIndex)
 import qualified Data.Map              as M
-import           Data.Text
+import           Data.Maybe            (fromMaybe)
 import qualified Data.Text             as T
 import qualified Data.Text.Zipper      as TZ
 import           Linear.V3
@@ -29,7 +30,7 @@ newTransparent = return Transparent
 newFill :: Monad m => GuiT m Widget
 newFill = return Fill
 
-newLabel :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> GuiT m Widget
+newLabel :: MonadIO m => Asset.Ident -> G.FontSize -> T.Text -> GuiT m Widget
 newLabel ident size title = do
   font <- getFont ident
   return $ Label title font size
@@ -37,32 +38,35 @@ newLabel ident size title = do
 newImageView :: MonadIO m => Asset.Ident -> GuiT m Widget
 newImageView ident = ImageView <$> getTexture ident
 
-newButton :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> GuiT m Widget
+newButton :: MonadIO m => Asset.Ident -> G.FontSize -> T.Text -> GuiT m Widget
 newButton ident size title = do
   font <- getFont ident
   return $ Button title font size
 
-newSwitch :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> GuiT m Widget
+newSwitch :: MonadIO m => Asset.Ident -> G.FontSize -> T.Text -> GuiT m Widget
 newSwitch ident size title = do
   font <- getFont ident
   return $ Switch title font size True
 
-newSlider :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> Value -> GuiT m Widget
+newSlider :: MonadIO m => Asset.Ident -> G.FontSize -> T.Text -> Value -> GuiT m Widget
 newSlider ident size title value = do
   font <- getFont ident
   return $ Slider title font size Nothing value
 
-newTextField :: MonadIO m => Asset.Ident -> G.FontSize -> Text -> GuiT m Widget
+newTextField :: MonadIO m => Asset.Ident -> G.FontSize -> T.Text -> GuiT m Widget
 newTextField ident size iniText = do
   font <- getFont ident
   return $ TextField font size z Nothing
   where
     z = TZ.textZipper [iniText] Nothing
 
-newPicker :: MonadIO m => Asset.Ident -> G.FontSize -> [(String, Text)] -> GuiT m Widget
-newPicker ident size ts = do
+newPicker :: MonadIO m => Asset.Ident -> G.FontSize -> [(String, T.Text)] -> Maybe String -> GuiT m Widget
+newPicker ident size ts mDefKey = do
   font <- getFont ident
-  return $ Picker ts font size 0 []
+  let idx = case mDefKey of
+              Just defkey -> fromMaybe 0 $ findIndex ((== defkey) . fst) ts
+              Nothing     -> 0
+  return $ Picker ts font size idx []
 
 -- Internal
 
