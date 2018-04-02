@@ -12,7 +12,7 @@ import           Data.List.Extra            (firstJust)
 import           Data.Maybe                 (catMaybes, mapMaybe, maybeToList)
 import qualified Data.Text.Zipper           as TZ
 import           Linear.V2
-import           Safe                       (headMay, lastMay)
+import           Safe                       (atMay, headMay, lastMay)
 
 import           Kurokos.UI.Control
 import qualified Kurokos.UI.Control.Control as C
@@ -55,18 +55,24 @@ procEvent cursor gui0 = work
   where
     curPos = cursor^.cursorPos
     isClickable = view (_1.ctxAttrib.clickable)
-    --
+
     -- resetFocus :: StateT GUI m ()
     resetFocus = do
-      SDL.stopTextInput
+      -- SDL.stopTextInput
       g <- get
-      whenJust (WT.wtAt (g^.unGui._2.gstFocus) (g^.unGui._2.gstWTree)) $ \cw ->
+      -- * Make GuiEvents for previous focused CtxWidget
+      whenJust (WT.wtAt (g^.unGui._2.gstFocus) (g^.unGui._2.gstWTree)) $ \cw -> do
+        let wif = cwToInfo cw
+        unGui._2.gstEvents %= (E.Unfocused wif:)
         case cw^._2 of
           (TextField _ _ z _) -> do
             let textFixed = E.TextFixed (cwToInfo cw) (TZ.currentLine z)
-                unfocused = E.Unfocused (cwToInfo cw)
-            unGui._2.gstEvents %= ([textFixed, unfocused] ++)
+            unGui._2.gstEvents %= (textFixed:)
+          (Picker ts _ _ idx _) ->
+            whenJust (ts `atMay` idx) $ \(key, text) ->
+              unGui._2.gstEvents %= (PickerPicked wif key text :)
           _ -> return ()
+      -- * Reset flags about focus
       modify $ \g -> g&unGui._2.gstFocus .~ []
       modify $ \g -> g&unGui._2.gstWTree %~ fmap (set (_1.ctxWidgetState.wstFocus) False)
     --
@@ -94,7 +100,7 @@ procEvent cursor gui0 = work
             SDL.ScancodeRight     -> modify $ C.modifyFocused (C.modifyWidget WM.widgetRight)
             SDL.ScancodeDelete    -> modify $ C.modifyFocused (C.modifyWidget WM.widgetDeleteChar)
             SDL.ScancodeBackspace -> modify $ C.modifyFocused (C.modifyWidget WM.widgetBackspace)
-            SDL.ScancodeReturn    -> resetFocus
+            SDL.ScancodeReturn    -> resetFocus >> SDL.stopTextInput
             _                     -> return ()
     work (MouseButtonEvent MouseButtonEventData{..}) =
       execStateT modWhenClicked gui0
@@ -107,22 +113,26 @@ procEvent cursor gui0 = work
               case C.topmostAtWith curPos isClickable gui of
                 Nothing -> return ()
                 Just cw@(ctx,w) -> do
+                  -- * Modify widget
+                  let focusPath = ctx^.ctxPath
+                  unGui._2.gstWTree %= WT.wtModifyAt focusPath conv
+                  -- * Reset focus if need
+                  unless (ctx^.ctxWidgetState.wstFocus) $ do -- When focus is changed
+                    resetFocus
+                    unGui._2.gstEvents %= (E.Focused (cwToInfo cw):)
+                  -- * text input
                   case w of
                     TextField{} -> SDL.startTextInput $ SDL.Raw.Types.Rect 0 0 1000 1000
-                    _           -> resetFocus -- Call this before set gstFocus
-                  let path = ctx^.ctxPath
-                  unGui._2.gstWTree %= WT.wtModifyAt path conv
-                  -- * Focus
-                  unGui._2.gstFocus .= path -- Call `resetFocus` before this
-                  let ev = E.Focused (cwToInfo cw)
-                  unGui._2.gstEvents %= (ev:)
+                    _           -> SDL.stopTextInput
+                  -- * Focus flags
+                  unGui._2.gstWTree %= WT.wtModifyAt focusPath (set (_1.ctxWidgetState.wstFocus) True)
+                  unGui._2.gstFocus .= focusPath -- Call `resetFocus` before this
           | otherwise = return ()
           where
             conv cw@(ctx,w) =
               (ctx', WU.modifyOnClicked ctx curPos pos size w)
               where
                 ctx' = ctx & ctxNeedsRender .~ True
-                           & ctxWidgetState.wstFocus .~ True
                 pos = ctx^.ctxWidgetState.wstWorldPos
                 size = clickableSize cw
     work (MouseMotionEvent MouseMotionEventData{..}) =

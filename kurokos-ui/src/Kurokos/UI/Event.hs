@@ -41,4 +41,9 @@ data GuiEvent
     { geWidgetInfo :: WidgetInfo
     , geText       :: T.Text
     }
+  | PickerPicked
+    { geWidgetInfo :: WidgetInfo
+    , geKey        :: String
+    , geText       :: T.Text
+    }
   deriving Show

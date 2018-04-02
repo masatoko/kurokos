@@ -88,10 +88,11 @@ modifyOnClicked _ (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title font 
   where
     rate = fromIntegral (curX - wx) / fromIntegral w
     value' = updateValueByRate rate value
-modifyOnClicked ctx (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) w0@(Picker ts font size _ textures)
-  | focus     = w0
-  | otherwise = Picker ts font size idx textures
+modifyOnClicked ctx (P (V2 curX curY)) (P (V2 wx wy)) _ w0@(Picker ts font size _ textures)
+  | focus     = Picker ts font size idx textures
+  | otherwise = w0
   where
+    V2 w h = wstSize $ ctx^.ctxWidgetState
     idx = fromIntegral $ (curY - wy) `div` h
     focus = ctx^.ctxWidgetState.wstFocus
 modifyOnClicked _ _ _ _ w = w

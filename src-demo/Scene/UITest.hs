@@ -170,7 +170,10 @@ runUITestScene =
         readyG t = do
           liftIO $ do
             let es = UI.getGuiEvents $ t^.tGui
-            unless (null es) $ print es
+            unless (null es) $ do
+              putStrLn "--- GuiEvents ---"
+              mapM_ (putStrLn . ("* " ++) . show) es
+              putStrLn "-----------------"
           (updated,g) <- UI.readyRender $ t^.tGui
           return $ t & tGui .~ g
                      & tUpdated .~ updated
