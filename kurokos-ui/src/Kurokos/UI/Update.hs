@@ -80,12 +80,12 @@ procEvent cursor gui0 = work
     work (WindowResizedEvent WindowResizedEventData{..}) = do
       win <- getWindow
       return $ if windowResizedEventWindow == win
-                then setAllNeedsLayout . setAllNeedsRender $ gui0
+                then setAllNeedsResize . setAllNeedsRender $ gui0
                 else gui0
     work (WindowMaximizedEvent WindowMaximizedEventData{..}) = do
       win <- getWindow
       return $ if windowMaximizedEventWindow == win
-                then setAllNeedsLayout . setAllNeedsRender $ gui0
+                then setAllNeedsResize . setAllNeedsRender $ gui0
                 else gui0
     work (TextInputEvent TextInputEventData{..}) =
       return $ C.modifyFocused work gui0

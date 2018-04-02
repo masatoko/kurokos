@@ -103,8 +103,10 @@ newGui :: (RenderEnv m, MonadIO m)
   => GuiEnv -> GuiT m a -> m (a, GUI)
 newGui env initializer = do
   (a,g1) <- runGuiT g0 initializer
-  g2 <- snd <$> readyRender (setAllNeedsRender g1)
-  return (a, g2 & unGui._2.gstWTree %~ WT.balance)
+  let g2 = g1 & unGui._2.gstWTree %~ WT.balance
+  g3 <- snd <$> readyRender (setAllNeedsRender g2) -- Create textures
+  g4 <- snd <$> readyRender (setAllNeedsRender g3) -- Resize considering new textures
+  return (a, g4)
   where
     g0 = GUI (env, gst0)
     gst0 = GuiState 0 Null [] defaultGuiHandler []
@@ -207,20 +209,18 @@ modifyRoot f = do
 
 -- Rendering GUI
 
-setAllNeedsLayout :: GUI -> GUI
-setAllNeedsLayout =
-  over (unGui._2.gstWTree) (fmap setNeedsLayout)
+setAllNeedsResize :: GUI -> GUI
+setAllNeedsResize =
+  over (unGui._2.gstWTree) (fmap setNeedsResize)
 
-setNeedsLayout :: CtxWidget -> CtxWidget
-setNeedsLayout cw =
-  cw&_1.ctxWidgetState.wstWidth .~ Nothing
-    &_1.ctxWidgetState.wstHeight .~ Nothing
+setNeedsResize :: CtxWidget -> CtxWidget
+setNeedsResize = set (_1.ctxNeedsResize) True
 
 setAllNeedsRender :: GUI -> GUI
 setAllNeedsRender =
   over (unGui._2.gstWTree) (fmap work)
   where
-    work cw = setNeedsLayout $ cw&_1.ctxNeedsRender .~ True
+    work cw = setNeedsResize $ cw&_1.ctxNeedsRender .~ True
 
 -- readyRender :: (RenderEnv m, MonadIO m) => GUI -> m (Bool, GUI)
 -- readyRender g = do
