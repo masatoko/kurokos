@@ -137,6 +137,7 @@ data WContext = WContext
   , _ctxContainerType :: Maybe ContainerType
   , _ctxAttrib        :: WidgetAttrib
   , _ctxNeedsRender   :: Bool
+  , _ctxNeedsResize   :: Bool
   , _ctxWidgetState   :: WidgetState
   , _ctxCmnRsc        :: CommonResource
   , _ctxContextColor  :: ContextColor

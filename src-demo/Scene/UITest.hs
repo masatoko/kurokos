@@ -118,7 +118,7 @@ runUITestScene =
         let confImg = UI.WidgetConfig (Just "image") Nothing style Nothing (C 10) (Rpn "$height 58 -") (C 48) (C 48)
         img <- UI.mkSingle confImg =<< UI.newImageView "sample-image"
         -- * TextField
-        let confTxtFld = UI.WidgetConfig Nothing Nothing style Nothing (C 100) (C 200) (C 200) (C 20)
+        let confTxtFld = UI.WidgetConfig Nothing Nothing style Nothing (C 100) (C 200) (Rpn "$min-width") (C 20)
         texfld <- UI.mkSingle confTxtFld =<< UI.newTextField "font-m" 16 "initial text"
         -- * Picker
         let confPkr = UI.WidgetConfig Nothing Nothing style Nothing (C 100) (C 250) (C 200) (C 20)

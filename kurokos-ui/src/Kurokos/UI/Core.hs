@@ -164,7 +164,7 @@ mkSingle conf widget = do
   ctxCol <- maybe (getContextColorOfWidget widget) return (wconfColor conf)
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) widget
   let attrib = fromMaybe (attribOf widget) $ wconfAttrib conf
-      ctx = WContext ident (wconfName conf) [] Nothing attrib True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
+      ctx = WContext ident (wconfName conf) [] Nothing attrib True True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
   return $ Fork Null (ctx, widget) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
@@ -181,7 +181,7 @@ mkContainer conf ct = do
   ctxCol <- maybe (getContextColorOfWidget widget) return (wconfColor conf)
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) widget
   let attrib = fromMaybe attribCntn $ wconfAttrib conf
-      ctx = WContext ident (wconfName conf) [] (Just ct) attrib True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
+      ctx = WContext ident (wconfName conf) [] (Just ct) attrib True True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
   return $ Fork Null (ctx, widget) (Just Null) Null
   where
     widget = Fill
@@ -360,9 +360,19 @@ data SizeDependency
   | SDChild
   deriving (Eq, Show)
 
--- Update position (local and world) and size
 updateLayout :: V2 CInt -> GuiWidgetTree -> GuiWidgetTree
-updateLayout (V2 winW winH) wt0
+updateLayout size wt0 =
+  updateLayout_ size $ fmap (over _1 clearSize) wt0
+  where
+    clearSize ctx
+      | ctx^.ctxNeedsResize = ctx & ctxNeedsResize .~ False
+                                  & ctxWidgetState.wstWidth .~ Nothing
+                                  & ctxWidgetState.wstHeight .~ Nothing
+      | otherwise = ctx
+
+-- Update position (local and world) and size
+updateLayout_ :: V2 CInt -> GuiWidgetTree -> GuiWidgetTree
+updateLayout_ (V2 winW winH) wt0
   | all isLayouted wt0 = wt0
   | otherwise          =
     let vmap = M.insert kKeyWidth winW . M.insert kKeyHeight winH $ defVmap
@@ -603,8 +613,9 @@ updateLayout (V2 winW winH) wt0
 
 widgetMinimumSize :: (WContext, Widget) -> V2 (Maybe CInt)
 widgetMinimumSize (ctx,widget) =
-  let h = firstJust id [heightFromCtx, heightFromWidget widget]
-  in V2 widthFromCtx h
+  let w = firstJust id [widthFromCtx, widthFromWidget widget]
+      h = firstJust id [heightFromCtx, heightFromWidget widget]
+  in V2 w h
   where
     widthFromCtx = do
       tex <- cmnrscTextTex $ ctx^.ctxCmnRsc
@@ -614,6 +625,15 @@ widgetMinimumSize (ctx,widget) =
       tex <- cmnrscTextTex $ ctx^.ctxCmnRsc
       let V2 _ h = G.texSize tex
       return $ fromIntegral h
+
+    widthFromWidget (TextField _ _ _ mRsc) =
+      case mRsc of
+        Nothing -> Just 10
+        Just r  ->
+          let widthL = maybe 0 (view _x . G.texSize) $ txtFldRscLeft r
+              widthR = maybe 0 (view _x . G.texSize) $ txtFldRscRight r
+          in Just . fromIntegral $ widthL + widthR + 10
+    widthFromWidget _ = Nothing
 
     heightFromWidget (TextField _ sz _ _) = Just $ fromIntegral sz
     heightFromWidget _                    = Nothing

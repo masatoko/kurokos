@@ -1,4 +1,5 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RecordWildCards  #-}
 module Kurokos.UI.Update
   ( updateGui
   ) where
@@ -87,7 +88,10 @@ procEvent cursor gui0 = work
                 then setAllNeedsLayout . setAllNeedsRender $ gui0
                 else gui0
     work (TextInputEvent TextInputEventData{..}) =
-      return $ C.modifyFocused (over _2 (WM.widgetInputText textInputEventText)) gui0
+      return $ C.modifyFocused work gui0
+      where
+        work cw = cw & _2 %~ WM.widgetInputText textInputEventText
+                     & _1.ctxNeedsResize .~ True
     work (KeyboardEvent KeyboardEventData{..}) =
       flip execStateT gui0 $
         when pressed modCursor
