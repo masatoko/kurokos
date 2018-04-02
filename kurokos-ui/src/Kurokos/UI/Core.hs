@@ -650,5 +650,9 @@ render g =
           style = ctx^.ctxStyle
           cmnrsc = ctx^.ctxCmnRsc
 
+          topWhenFocused :: Widget -> Bool
+          topWhenFocused Picker{} = True
+          topWhenFocused _        = False
+
 eitherToMaybe :: Either a b -> Maybe b
 eitherToMaybe = either (const Nothing) Just

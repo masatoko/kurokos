@@ -82,10 +82,6 @@ instance Show Widget where
   show Picker{}     = "<PKR>"
   show UserWidget{} = "<USR>"
 
-topWhenFocused :: Widget -> Bool
-topWhenFocused Picker{} = True
-topWhenFocused _        = False
-
 attribOf :: Widget -> WidgetAttrib
 attribOf Transparent =
   defAttrib
