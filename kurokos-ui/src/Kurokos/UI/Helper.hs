@@ -89,7 +89,7 @@ setPositionInWorld name g' = over (unGui._2.gstWTree) (fmap work)
   where
     work :: CtxWidget -> CtxWidget
     work a@(ctx, w)
-      | ctx^.ctxName == Just name = (ctx', w)
+      | ctx^.ctxName == Just name = setNeedsResize (ctx', w)
       | otherwise                 = a
       where
         parent = g - l
