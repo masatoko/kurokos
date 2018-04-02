@@ -633,9 +633,14 @@ widgetMinimumSize (ctx,widget) =
           let widthL = maybe 0 (view _x . G.texSize) $ txtFldRscLeft r
               widthR = maybe 0 (view _x . G.texSize) $ txtFldRscRight r
           in Just . fromIntegral $ widthL + widthR + 10
+    widthFromWidget (Picker _ _ _ _ ts) =
+      Just $ case ts of
+              [] -> 1
+              _  -> fromIntegral . maximum $ map (view _x . G.texSize) ts
     widthFromWidget _ = Nothing
 
     heightFromWidget (TextField _ sz _ _) = Just $ fromIntegral sz
+    heightFromWidget (Picker _ _ sz _ _)  = Just $ fromIntegral sz
     heightFromWidget _                    = Nothing
 
 updatePath :: GuiWidgetTree -> GuiWidgetTree
