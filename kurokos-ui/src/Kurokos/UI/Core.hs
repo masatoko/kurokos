@@ -627,12 +627,17 @@ updatePath = fmap work . WT.wtPath
 
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
 render g =
-  withRenderer $ \r -> liftIO $
-    mapM_ (go r) $ view (unGui._2.gstWTree) g
+  withRenderer $ \r -> liftIO $ do
+    mapM_ (go True r) $ view (unGui._2.gstWTree) g
+    mapM_ (go False r) $ view (unGui._2.gstWTree) g
   where
-    go r (ctx, widget)
+    go pFirst r (ctx, widget)
       | ctx^.ctxNeedsRender            = E.throwIO $ userError "Call GUI.readyRender before GUI.render!"
-      | ctx^.ctxWidgetState.wstVisible = renderWidget r focus pos size ctx wcol style cmnrsc widget
+      | ctx^.ctxWidgetState.wstVisible = do
+          let go = renderWidget r focus pos size ctx wcol style cmnrsc widget
+          if focus && topWhenFocused widget
+            then unless pFirst go
+            else when pFirst go
       | otherwise                      = return ()
         where
           focus = (g^.unGui._2.gstFocus) == ctx^.ctxPath
