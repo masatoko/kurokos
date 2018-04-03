@@ -449,8 +449,8 @@ updateLayout_ (V2 winW winH) wt0
               mMinW' = firstJust id [mMinW, mw] -- TODO: Reconsider
               mMinH' = firstJust id [mMinH, mh]
               mgn = ctx^.ctxStyle.styleMargin
-          whenJust mMinW' $ writeW idx . (+ marginW)
-          whenJust mMinH' $ writeH idx . (+ marginH)
+          whenJust mMinW' $ writeW idx
+          whenJust mMinH' $ writeH idx
         Just Null -> do -- Container has no children
           -- Set dummy minimum size when children is empty.
           writeW idx 1
@@ -466,14 +466,14 @@ updateLayout_ (V2 winW winH) wt0
               hs' = if SDChild `elem` lefts hs then [] else rights hs
           let V2 mMinW mMinH = calcMinimumSize ws' hs'
           -- traceM $ unwords ["!", show i, show (ctx^.ctxIdent), show (ctx^.ctxName), show mMinH, show vmap4children]
-          whenJust mMinW $ writeW idx . (+ marginW)
-          whenJust mMinH $ writeH idx . (+ marginH)
+          whenJust mMinW $ writeW idx
+          whenJust mMinH $ writeH idx
 
       -- * Calculate sizes for the parent
       (wsU, hsU) <- calcMinSize i vmap u
       (wsO, hsO) <- calcMinSize i vmap o
-      let ew = maybe (Left sdw) Right mw
-          eh = maybe (Left sdh) Right mh
+      let ew = maybe (Left sdw) (Right . (+ marginW)) mw
+          eh = maybe (Left sdh) (Right . (+ marginH)) mh
       return (ew:wsU ++ wsO, eh:hsU ++ hsO) -- Returns all sizes to the parent.
       where
         idx = ctx^.ctxIdent
