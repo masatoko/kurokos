@@ -105,8 +105,7 @@ newGui env initializer = do
   (a,g1) <- runGuiT g0 initializer
   let g2 = g1 & unGui._2.gstWTree %~ WT.balance
   g3 <- snd <$> readyRender (setAllNeedsRender g2) -- Create textures
-  g4 <- snd <$> readyRender (setAllNeedsRender g3) -- Resize considering new textures
-  return (a, g4)
+  return (a, g3)
   where
     g0 = GUI (env, gst0)
     gst0 = GuiState 0 Null [] defaultGuiHandler []
@@ -317,14 +316,20 @@ setAllNeedsRender =
 -- | Ready for rendering. Call this at the end of Update
 readyRender :: (RenderEnv m, MonadIO m) => GUI -> m (Bool, GUI)
 readyRender g = do
-  winSize <- getWindowSize
-  let wt0 = g^.unGui._2.gstWTree
-      wt1 = updatePath . updateLayout winSize . updateVisibility $ wt0
-  (wt2, updated) <- runStateT (mapM ready wt1) False
-  let g' = g&unGui._2.gstWTree .~ wt2
-  return (updated, g')
+  let g0 = g & unGui._2.gstWTree %~ updatePath . updateVisibility
+  (updated1, g1) <- work True g0 -- * Make Textures.
+  (updated2, g2) <- work False g1 -- * Resize with texture size.
+  return (updated1 || updated2, g2)
   where
-    ready a@(ctx,widget) = do
+    work isFirstPath g = do
+      winSize <- getWindowSize
+      let wt0 = g^.unGui._2.gstWTree
+          wt1 = updateLayout winSize wt0
+      (wt2, updated) <- runStateT (mapM (ready isFirstPath) wt1) False
+      let g' = g&unGui._2.gstWTree .~ wt2
+      return (updated, g')
+
+    ready isFirstPath a@(ctx,widget) = do
       needsRenderByItself <- case a of
                                (_,UserWidget c) -> liftIO $ needsRender c
                                _                -> return False
@@ -335,7 +340,8 @@ readyRender g = do
           liftIO . freeCommonResource $ ctx^.ctxCmnRsc
           widget' <- lift $ onReadyLayout size (optimumColor ctx) widget
           cmnrsc' <- lift $ newCommonResource size (optimumColor ctx) widget'
-          let ctx' = ctx & ctxNeedsRender .~ False
+          let ctx' = ctx & ctxNeedsRender .~ isFirstPath -- Should re-render on second path. Because min-width and min-height will change with Texture size.
+                         & ctxNeedsResize .~ isFirstPath -- Same as above
                          & ctxCmnRsc .~ cmnrsc'
           return (ctx', widget')
         else return a
