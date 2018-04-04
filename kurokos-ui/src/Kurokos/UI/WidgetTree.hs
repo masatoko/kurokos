@@ -159,7 +159,7 @@ wtModifyAt bs0 f = go bs0
 wtAt :: WidgetTreePath -> WidgetTree a -> Maybe a
 wtAt = go
   where
-    go [] Null                     = Nothing
+    go _  Null                     = Nothing
     go [] (Fork _ a _ _)           = Just a
     go (SUnder:bs) (Fork u _ _ _)  = go bs u
     go (SChild:bs) (Fork _ _ mc _) = go bs =<< mc
