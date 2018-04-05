@@ -75,28 +75,29 @@
 -
   type: container
   order: vertical
+  x: 30
+  y: 130
   w: 100
   h: 100
   children:
-    -
+    - &test
       type: label
       title:
-        text: "Draggable"
+        text: "test"
         asset: font-r
         size: 14
       attrib:
         draggable: true
+        droppable: true
       style:
         text-align: left
       h: 20
-    -
-      type: label
-      title:
-        text: "Droppable"
-        asset: font-r
-        size: 14
-      attrib:
-        droppable: true
-      style:
-        text-align: right
-      h: 20
+    - *test
+    - *test
+    - *test
+    - *test
+    - *test
+    - *test
+    - *test
+    - *test
+    - *test

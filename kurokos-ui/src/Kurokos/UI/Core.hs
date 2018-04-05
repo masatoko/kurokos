@@ -259,7 +259,7 @@ setAllNeedsRender =
 --       widget' <- onReadyLayout size' (optimumColor ctx) widget
 --       cmnrsc' <- newCommonResource size' (optimumColor ctx) widget'
 --       let ctx' = ctx & ctxNeedsRender .~ False
---                      & ctxWidgetState . wstPos .~ pos
+--                      & ctxWidgetState . wstLocalPos .~ pos
 --                      & ctxWidgetState . wstSize .~ size
 --                      & ctxCmnRsc .~ cmnrsc'
 --       return (ctx', widget')
@@ -298,7 +298,7 @@ setAllNeedsRender =
 --           -- CtxWidget
 --           pos <- get
 --           let pos' = case ct0 of
---                       Unordered -> p0 + (wst^.wstPos)
+--                       Unordered -> p0 + (wst^.wstLocalPos)
 --                       _         -> pos
 --               a' = if shouldLayout
 --                       then a & _1 . ctxWidgetState . wstWorldPos .~ pos'
@@ -393,7 +393,8 @@ updateLayout_ (V2 winW winH) wt0
                          | notChanged         -> error $ "Cannot resolve layout: " ++ show notLayoutedList ++ "\n" ++ WT.prettyWith (show . snd) wt'
                          | otherwise          -> calcTillLayouted (i+1) notLayoutedList' wt'
                 wt1 <- calcTillLayouted 0 (getNotLayouted wt0) wt0
-                calcLocalPos vmap wt1
+                wt2 <- setMinSize wt1
+                calcLocalPos vmap wt2
     in snd $ calcWPos Unordered (pure 0) wt'
   where
     defVmap = M.fromList [(kKeyWinWidth, fromIntegral winW), (kKeyWinHeight, fromIntegral winH)]
@@ -546,6 +547,17 @@ updateLayout_ (V2 winW winH) wt0
         V2 expW expH = ctx^.ctxUSize
         V2 expX expY = ctx^.ctxUPos
 
+    -- | Set wstMinSize
+    setMinSize = mapM work
+      where
+        work (ctx,w) = do
+          mMinSize <- getMinSize idx -- Get minimum size
+          let minSize = fromMaybe (pure Nothing) mMinSize
+              ctx' = ctx&ctxWidgetState.wstMinSize .~ minSize
+          return (ctx',w)
+          where
+            idx = ctx^.ctxIdent
+
     -- * Step.3
     calcLocalPos _     Null            = return Null
     calcLocalPos vmap0 (Fork u a@(ctx,_) mc o) = do
@@ -559,7 +571,7 @@ updateLayout_ (V2 winW winH) wt0
           y = case evalExp vmap expY of
                 Left _  -> error $ "Can't eval pos.y: " ++ show expY ++ " " ++ show vmap
                 Right y -> y
-          a' = a&_1.ctxWidgetState.wstPos .~ P (V2 x y)
+          a' = a&_1.ctxWidgetState.wstLocalPos .~ P (V2 x y)
       mc' <- case mc of
               Nothing -> return Nothing
               Just c -> do
@@ -588,7 +600,7 @@ updateLayout_ (V2 winW winH) wt0
                   HorizontalStack -> P (pos1 + marginLT) & _y +~ dy
                   VerticalStack   -> P (pos1 + marginLT) & _x +~ dx
             where
-              localPos@(P (V2 dx dy)) = ctx^.ctxWidgetState.wstPos
+              localPos@(P (V2 dx dy)) = ctx^.ctxWidgetState.wstLocalPos
           a' = a&_1.ctxWidgetState.wstWorldPos .~ wpos
           pos2 = pos1 `advance` size'
             where
@@ -601,7 +613,8 @@ updateLayout_ (V2 winW winH) wt0
                 Nothing    -> error "Missing ContainerType"
                 Just ctype -> do
                   let P wpos' = wpos
-                  Just <$> calcWPos ctype wpos' c
+                      wpos'' = wpos' + (ctx^.ctxWidgetState.wstShift) -- Shift for children
+                  Just <$> calcWPos ctype wpos'' c
           (pos3, o') = calcWPos parCT pos2 o
       in (pos3, Fork u' a' mc' o')
       -- in trace (unwords [show (ctx^.ctxIdent), show (wstSize (ctx^.ctxWidgetState)), " : ", show pos0, show pos1, show pos2, show pos3]) $ (pos3, Fork u' a' mc' o')

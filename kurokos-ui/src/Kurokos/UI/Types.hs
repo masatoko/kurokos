@@ -38,9 +38,11 @@ data ContainerType
 
 data WidgetState = WidgetState
   { _wstWorldPos :: GuiPos -- ^ Change with setGlobalPos. Must not change directly.
-  , _wstPos      :: GuiPos -- ^ Lobal position (Updated on readyRender)
+  , _wstLocalPos :: GuiPos -- ^ Lobal position (Updated on readyRender)
   , _wstWidth    :: Maybe CInt
   , _wstHeight   :: Maybe CInt
+  , _wstMinSize  :: V2 (Maybe CInt) -- ^ Minimun size to use container
+  , _wstShift    :: V2 CInt -- ^ Shift position of children in this container
   , _wstFocus    :: Bool
   --
   , _wstVisible  :: Bool
@@ -50,7 +52,7 @@ data WidgetState = WidgetState
 makeLenses ''WidgetState
 
 iniWidgetState :: WidgetState
-iniWidgetState = WidgetState (pure 0) (pure 0) Nothing Nothing False True False
+iniWidgetState = WidgetState (pure 0) (pure 0) Nothing Nothing (pure Nothing) (pure 0) False True False
 
 wstSize :: WidgetState -> V2 CInt
 wstSize wst = V2 w h

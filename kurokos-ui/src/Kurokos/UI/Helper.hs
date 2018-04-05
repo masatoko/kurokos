@@ -95,6 +95,6 @@ setPositionInWorld name g' = over (unGui._2.gstWTree) (fmap work)
         parent = g - l
           where
             g = ctx^.ctxWidgetState . wstWorldPos
-            l = ctx^.ctxWidgetState . wstPos
+            l = ctx^.ctxWidgetState . wstLocalPos
         P (V2 x y) = g' - parent
         ctx' = ctx & ctxUPos .~ V2 (EConst x) (EConst y)

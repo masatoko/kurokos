@@ -4,15 +4,19 @@ module Kurokos.UI.Update
   ( updateGui
   ) where
 
+import Debug.Trace (traceM)
+
 import           Control.Lens
 import           Control.Monad              (foldM)
 import           Control.Monad.Extra        (whenJust)
 import           Control.Monad.State
 import           Data.Int                   (Int32)
 import           Data.List.Extra            (firstJust)
-import           Data.Maybe                 (catMaybes, mapMaybe, maybeToList)
+import           Data.Maybe                 (catMaybes, isJust, mapMaybe,
+                                             maybeToList)
 import qualified Data.Text.Zipper           as TZ
 import           Linear.V2
+import           Linear.Vector              ((^*))
 import           Safe                       (atMay, headMay, lastMay)
 
 import           Kurokos.UI.Control
@@ -87,6 +91,26 @@ procEvent cursor gui0 = work
       return $ if windowMaximizedEventWindow == win
                 then setAllNeedsRender gui0
                 else gui0
+    work (MouseWheelEvent MouseWheelEventData{..}) =
+      execStateT work gui0
+      where
+        V2 dx dy = fromIntegral <$> mouseWheelEventPos ^* 10
+        isContainer cw = isJust $ cw^._1.ctxContainerType
+        work = do
+          gui <- get
+          case C.topmostAtWith curPos isContainer gui of
+            Nothing -> return ()
+            Just cw@(ctx,w) -> do
+              let V2 width height = wstSize $ cw^._1.ctxWidgetState
+                  V2 mMinWidth mMinHeight = cw^._1.ctxWidgetState.wstMinSize
+                  maxW = max 0 $ maybe 0 (+ (-width)) mMinWidth
+                  maxH = max 0 $ maybe 0 (+ (-height)) mMinHeight
+                  workX x = max (-maxW) . min 0 $ x + dx
+                  workY y = max (-maxH) . min 0 $ y + dy
+                  scroll cw = setNeedsResize $ cw&_1.ctxWidgetState.wstShift._x %~ workX
+                                                 &_1.ctxWidgetState.wstShift._y %~ workY
+              unGui._2.gstWTree %= WT.wtModifyAt (ctx^.ctxPath) scroll
+
     work (TextInputEvent TextInputEventData{..}) =
       return $ C.modifyFocused work gui0
       where
