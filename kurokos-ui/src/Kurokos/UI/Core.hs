@@ -672,24 +672,45 @@ updatePath = fmap work . WT.wtPath
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
 render g =
   withRenderer $ \r -> liftIO $ do
-    mapM_ (go True r) $ view (unGui._2.gstWTree) g
-    mapM_ (go False r) $ view (unGui._2.gstWTree) g
+    go r True $ view (unGui._2.gstWTree) g
+    go r False $ view (unGui._2.gstWTree) g
   where
-    go pFirst r (ctx, widget)
+    go _ _ Null = return ()
+    go r pFirst (Fork u a mc o) = do
+      go r pFirst u
+      work r pFirst a
+      whenJust mc $ \c -> --do
+        go r pFirst c
+        -- let (pos, size) = posSizeOf $ fst a
+        -- G.withRenderableArea r pos size $ do
+        --   print (pos, size)
+        --   go r pFirst c
+      go r pFirst o
+
+    posSizeOf ctx = (pos, size)
+      where
+        pos = p + V2 (left margin) (top margin)
+          where
+            P p = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
+            margin = ctx^.ctxStyle.styleMargin
+        size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
+
+    work r pFirst (ctx, widget)
       | ctx^.ctxNeedsRender            = E.throwIO $ userError "Call GUI.readyRender before GUI.render!"
       | ctx^.ctxWidgetState.wstVisible = do
-          let go = renderWidget r focus pos size ctx wcol style cmnrsc widget
+          let render' = renderWidget r focus pos size ctx wcol style cmnrsc widget
           if focus && topWhenFocused widget
-            then unless pFirst go
-            else when pFirst go
+            then unless pFirst render'
+            else when pFirst render'
       | otherwise                      = return ()
         where
           focus = (g^.unGui._2.gstFocus) == ctx^.ctxPath
-          pos = p + V2 (left margin) (top margin)
-            where
-              P p = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
-              margin = style^.styleMargin
-          size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
+          (pos, size) = posSizeOf ctx
+          -- pos = p + V2 (left margin) (top margin)
+          --   where
+          --     P p = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
+          --     margin = style^.styleMargin
+          -- size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
           wcol = optimumColor ctx
           style = ctx^.ctxStyle
           cmnrsc = ctx^.ctxCmnRsc

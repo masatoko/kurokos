@@ -26,6 +26,8 @@ dependencies:
 - kurokos-asset
 - kurokos-asset-raw
 - kurokos-rpn
+- OpenGL
+- GLUtil
 - bytestring
 - text
 - containers
