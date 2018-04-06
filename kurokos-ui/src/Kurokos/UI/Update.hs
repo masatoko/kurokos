@@ -60,6 +60,10 @@ procEvent cursor gui0 = work
   where
     curPos = cursor^.cursorPos
     isClickable = view (_1.ctxAttrib.clickable)
+    isScrollableContainer cw = isScrollable && isContainer
+      where
+        isScrollable = cw^._1.ctxAttrib.scrollable
+        isContainer = isJust $ cw^._1.ctxContainerType
 
     -- resetFocus :: StateT GUI m ()
     resetFocus = do
@@ -91,29 +95,6 @@ procEvent cursor gui0 = work
       return $ if windowMaximizedEventWindow == win
                 then setAllNeedsRender gui0
                 else gui0
-    work (MouseWheelEvent MouseWheelEventData{..}) =
-      execStateT work gui0
-      where
-        V2 dx dy = fromIntegral <$> mouseWheelEventPos ^* 10
-        isTarget cw = isScrollable && isContainer
-          where
-            isScrollable = cw^._1.ctxAttrib.scrollable
-            isContainer = isJust $ cw^._1.ctxContainerType
-        work = do
-          gui <- get
-          case C.topmostAtWith curPos isTarget gui of
-            Nothing -> return ()
-            Just cw@(ctx,w) -> do
-              let V2 width height = wstSize $ cw^._1.ctxWidgetState
-                  V2 mMinWidth mMinHeight = cw^._1.ctxWidgetState.wstMinSize
-                  maxW = max 0 $ maybe 0 (+ (-width)) mMinWidth
-                  maxH = max 0 $ maybe 0 (+ (-height)) mMinHeight
-                  workX x = max (-maxW) . min 0 $ x + dx
-                  workY y = max (-maxH) . min 0 $ y + dy
-                  scroll cw = setNeedsResize $ cw&_1.ctxWidgetState.wstShift._x %~ workX
-                                                 &_1.ctxWidgetState.wstShift._y %~ workY
-              unGui._2.gstWTree %= WT.wtModifyAt (ctx^.ctxPath) scroll
-
     work (TextInputEvent TextInputEventData{..}) =
       return $ C.modifyFocused work gui0
       where
@@ -193,6 +174,14 @@ procEvent cursor gui0 = work
           where
             pos = ctx^.ctxWidgetState.wstWorldPos
             size = clickableSize a
+    work (MouseWheelEvent MouseWheelEventData{..}) =
+      execStateT work gui0
+      where
+        delta = fromIntegral <$> mouseWheelEventPos ^* 10
+        work = do
+          gui <- get
+          whenJust (C.topmostAtWith curPos isScrollableContainer gui) $ \(ctx,_) ->
+            unGui._2.gstWTree %= WT.wtModifyAt (ctx^.ctxPath) (scrollContainer delta)
 
     work _ = return gui0
 
@@ -257,3 +246,15 @@ isWithinRect p p1 size =
     px = p^._x
     py = p^._y
     p2 = p1 + P size
+
+scrollContainer :: V2 CInt -> CtxWidget -> CtxWidget
+scrollContainer (V2 dx dy) cw = setNeedsResize $
+  cw&_1.ctxWidgetState.wstShift._x %~ workX
+    &_1.ctxWidgetState.wstShift._y %~ workY
+  where
+    V2 width height = wstSize $ cw^._1.ctxWidgetState
+    V2 mMinWidth mMinHeight = cw^._1.ctxWidgetState.wstMinSize
+    maxW = max 0 $ maybe 0 (+ (-width)) mMinWidth
+    maxH = max 0 $ maybe 0 (+ (-height)) mMinHeight
+    workX x = max (-maxW) . min 0 $ x + dx
+    workY y = max (-maxH) . min 0 $ y + dy
