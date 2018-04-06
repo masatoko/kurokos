@@ -47,6 +47,9 @@ module Kurokos.Graphics
   -- ** Util
   , withAlphaBlend
   -- ** Rendering (Temporal)
+  , clearRenderArea
+  , setRenderArea
+  , withRenderArea
   , renderTextureShader
   , renderTextTexture
   ) where

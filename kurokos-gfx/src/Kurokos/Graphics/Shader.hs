@@ -50,6 +50,10 @@ setUniformMat3 :: UniformVar TagMat3 -> M33 GL.GLfloat -> IO ()
 setUniformMat3 (UniformVar TagMat3 loc) val =
   GLU.asUniform val loc
 
+setUniformVec2 :: UniformVar TagVec2 -> V2 GL.GLfloat -> IO ()
+setUniformVec2 (UniformVar TagVec2 loc) val =
+  GLU.asUniform val loc
+
 setUniformVec3 :: UniformVar TagVec3 -> V3 GL.GLfloat -> IO ()
 setUniformVec3 (UniformVar TagVec3 loc) val =
   GLU.asUniform val loc

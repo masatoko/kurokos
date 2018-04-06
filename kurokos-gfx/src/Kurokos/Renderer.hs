@@ -5,6 +5,9 @@ module Kurokos.Renderer
   , newRenderer
   , freeRenderer
   , withProjView
+  , clearRenderArea
+  , setRenderArea
+  , withRenderArea
   --
   , renderTexture
   , renderText
@@ -54,13 +57,16 @@ getFreeType = rndrFreeType
 newRenderer :: V2 CInt -> IO Renderer
 newRenderer winSize = do
   bsc <- Basic.newBasicShader
-  setProjection bsc proj
   prm <- Prim.newPrimitiveShader
-  setProjection prm proj
   txt <- Text.newTextShader
-  setProjection txt proj
   freetype <- initFreeType
-  return $ Renderer bsc prm txt freetype proj view
+  let rndr = Renderer bsc prm txt freetype proj view
+  -- * Initialize
+  setProjection bsc proj
+  setProjection prm proj
+  setProjection txt proj
+  clearRenderArea rndr
+  return rndr
   where
     proj = mkOrtho winSize True
     view = Cam.viewMatFromCam Cam.camForVertFlip
@@ -84,6 +90,37 @@ withProjView proj view rndr renderSome = do
   setProjection (rndrTextShader rndr) orgProj
   where
     orgProj = rndrBasisProj rndr
+
+clearRenderArea :: Renderer -> IO ()
+clearRenderArea rndr =
+  Basic.setRenderArea (rndrBasicShader rndr) 0 0 1 1
+
+-- | Discard pixels out of this area (pos and size)
+setRenderArea :: Renderer
+              -> V2 Int -- ^ Window size
+              -> V2 Int -- ^ Position (V2 left top)
+              -> V2 Int -- ^ Size
+              -> IO ()
+setRenderArea rndr winSize pos size =
+  Basic.setRenderArea (rndrBasicShader rndr) x0 y0 x1 y1
+  where
+    V2 winW winH = fromIntegral <$> winSize
+    V2 x y = fromIntegral <$> pos
+    V2 w h = fromIntegral <$> size
+    fx ax = ax / winW -- * 2 - 1
+    fy ay = ay / winH -- * 2 - 1
+    x0 = fx x           -- left
+    y0 = 1 - fy (y + h) -- bottom
+    x1 = fx $ x + w     -- right
+    y1 = 1 - fy y       -- top
+
+-- | Do action after calling `setRenderArea` and clearRenderArea
+withRenderArea :: Renderer -> V2 Int -> V2 Int  -> V2 Int -> IO a -> IO a
+withRenderArea rndr winSize pos size action = do
+  setRenderArea rndr winSize pos size
+  a <- action
+  clearRenderArea rndr
+  return a
 
 -- | Render Texture with BufferObject of texture coord
 -- You can make texture coord buffer object by `newTexCoordVbo`.

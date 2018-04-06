@@ -49,7 +49,7 @@ main = do
       rect <- managed $ bracket (G.newRectangle rndr (V2 40 20)) G.freePrim
       fillRect <- managed $ bracket (G.newFillRectangle rndr (V2 40 20)) G.freePrim
       --
-      liftIO $ loop window rndr tile tex1 tex2 texttex helloTex poly rect fillRect
+      liftIO $ loop window (fromIntegral <$> winSize) rndr tile tex1 tex2 texttex helloTex poly rect fillRect
   where
     winConf =
       SDL.defaultWindow
@@ -65,7 +65,7 @@ main = do
         { SDL.glProfile = SDL.Core SDL.Debug 4 0
         }
 
-    loop win rndr tile tex1 tex2 texttex helloTex poly rect fillRect = go (0 :: Integer)
+    loop win winSize rndr tile tex1 tex2 texttex helloTex poly rect fillRect = go (0 :: Integer)
       where
         go i = do
           let i' = fromIntegral i
@@ -74,12 +74,18 @@ main = do
           GL.clearColor $= GL.Color4 0.2 0.2 0.2 1
           GL.clear [GL.ColorBuffer]
           --
-          let ctxTile = G.RContext (pure 10) (pure 128) Nothing Nothing
+          let ctxTile = G.RContext (pure 128) (pure 256) Nothing Nothing
           G.renderTexture rndr tile (Just (P (V2 16 0), pure 16)) ctxTile
-          --
+          -- * Scaling
           let ctx = G.RContext (pure 0) (pure i') Nothing Nothing
               tex = if i `mod` 60 < 30 then tex1 else tex2
           G.renderTexture rndr tex Nothing ctx
+          -- * Test withRenderArea
+          let renderSample = G.renderTexture rndr tex1 Nothing rctx
+                where
+                  rctx = G.RContext (V2 0 0) (pure 128) Nothing Nothing
+          G.withRenderArea rndr winSize (V2 0 0) (pure 64) renderSample
+          G.withRenderArea rndr winSize (V2 64 64) (pure 64) renderSample
           --
           G.renderText rndr (V2 100 0) texttex
           G.renderText rndr (V2 100 480) texttex
