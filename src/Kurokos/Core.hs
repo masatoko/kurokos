@@ -229,6 +229,8 @@ withKurokos KurokosConfig{..} winConf go =
 -- | Scene function type for updating `g`.
 type Update m a = a -> KurokosT m a
 -- | Scene function type for rendering `g`.
+--
+-- Returns a flag to swap buffers (SDL.glSwapWindow).
 type Render m a = a -> KurokosT m Bool
 -- | Scene function type for choosing scenes for next frame.
 type Transit m a b = a -> KurokosT m (Transition a b)
