@@ -1,11 +1,12 @@
 module Kurokos.UI.Event where
 
-import qualified Data.Text          as T
+import qualified Data.Text             as T
 
-import           Kurokos.UI.Control (GuiAction)
+import           Kurokos.UI.Control    (GuiAction)
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
+import           Kurokos.UI.WidgetTree (WidgetTreePath)
 
 import qualified SDL
 
@@ -13,6 +14,7 @@ data WidgetInfo = WidgetInfo
   { wifWidget :: Widget
   , wifIdent  :: WTIdent
   , wifName   :: Maybe WTName
+  , wifPath   :: WidgetTreePath
   } deriving Show
 
 data GuiEvent
@@ -30,6 +32,13 @@ data GuiEvent
     { geDrag   :: WidgetInfo
     , geDrop   :: Maybe WidgetInfo
     , geButton :: SDL.MouseButton
+    }
+  | ScrollingByDrag
+    { geWidgetInfo :: WidgetInfo
+    , geButton     :: SDL.MouseButton
+    , gePosition   :: GuiPos
+    , geMove       :: V2 CInt
+    , geCount      :: Integer
     }
   | Focused
     { geWidgetInfo :: WidgetInfo

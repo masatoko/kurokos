@@ -11,6 +11,7 @@ import           Control.Monad              (foldM)
 import           Control.Monad.Extra        (whenJust)
 import           Control.Monad.State
 import           Data.Int                   (Int32)
+import Data.List (foldl')
 import           Data.List.Extra            (firstJust)
 import           Data.Maybe                 (catMaybes, isJust, mapMaybe,
                                              maybeToList)
@@ -50,7 +51,7 @@ updateGui es cursor g0 = do
   -- liftIO $
   --   print $ map (mouseButtons . SDL.ButtonExtra) [0..10]
   --   print $ mouseButtons SDL.ButtonRight
-  return $ handleGui mouseButtons es cursor prevEvents g2
+  return $ updateByGuiEvents $ handleGui mouseButtons es cursor prevEvents g2
   where
     prevEvents = g0^.unGui._2.gstEvents
 
@@ -60,10 +61,6 @@ procEvent cursor gui0 = work
   where
     curPos = cursor^.cursorPos
     isClickable = view (_1.ctxAttrib.clickable)
-    isScrollableContainer cw = isScrollable && isContainer
-      where
-        isScrollable = cw^._1.ctxAttrib.scrollable
-        isContainer = isJust $ cw^._1.ctxContainerType
 
     -- resetFocus :: StateT GUI m ()
     resetFocus = do
@@ -186,10 +183,11 @@ procEvent cursor gui0 = work
     work _ = return gui0
 
 handleGui :: (SDL.MouseButton -> Bool) -> [SDL.EventPayload] -> Cursor -> [E.GuiEvent] -> GUI -> GUI
-handleGui mouseButtons esSDL Cursor{..} prevEvents gui =
+handleGui mouseButtons esSDL cursor prevEvents gui =
   gui&unGui._2.gstEvents %~ ((clickEvents ++ draggingEvents) ++)
   where
     actsClick = mapMaybe ghClick esSDL
+    curPos = cursor^.cursorPos
 
     GuiHandler{..} = gui^.unGui._2.gstGuiHandler
 
@@ -199,25 +197,24 @@ handleGui mouseButtons esSDL Cursor{..} prevEvents gui =
 
     clickEvents :: [E.GuiEvent]
     clickEvents =
-      maybe [] conv $ C.wtTopmostAt _cursorPos isClickable (gui^.unGui._2.gstWTree)
+      maybe [] conv $ C.wtTopmostAt curPos isClickable (gui^.unGui._2.gstWTree)
       where
         conv cw@(WContext{..}, w)
-          | _ctxAttrib^.clickable = map (E.Clicked (cwToInfo cw) _cursorPos) actsClick
+          | _ctxAttrib^.clickable = map (E.Clicked (cwToInfo cw) curPos) actsClick
           | otherwise             = []
 
     draggingEvents =
-      let bgns = mapMaybe beginDrg esSDL
-          cnts = mapMaybe fromDrg prevEvents
-      in bgns ++ cnts
+      let drg = mapMaybe beginDrg esSDL ++ mapMaybe fromDrg prevEvents
+          scr = mapMaybe beginScroll esSDL ++ mapMaybe fromScrl prevEvents
+      in drg ++ scr
       where
         btn = ButtonExtra 0 -- FIX: SDL.getMouseButtons ButtonLeft doesn't work
         wt = gui^.unGui._2.gstWTree
 
         beginDrg (MouseButtonEvent MouseButtonEventData{..})
-          | clickedByLeft =
-              case C.wtTopmostAt _cursorPos isDraggable wt of
-                Nothing -> Nothing
-                Just cw -> Just $ Dragging (cwToInfo cw) btn 0
+          | clickedByLeft = do
+              cw <- C.wtTopmostAt curPos isDraggable wt
+              return $ Dragging (cwToInfo cw) btn 0
           | otherwise = Nothing
           where
             clickedByLeft = mouseButtonEventButton == ButtonLeft
@@ -227,7 +224,7 @@ handleGui mouseButtons esSDL Cursor{..} prevEvents gui =
         fromDrg e@Dragging{}
           | held      = Just $ e {geCount = geCount e + 1}
           | not held  =
-              let mInfo = case C.wtTopmostAt _cursorPos isDroppable wt of
+              let mInfo = case C.wtTopmostAt curPos isDroppable wt of
                     Nothing -> Nothing
                     Just cw -> Just $ cwToInfo cw
               in Just $ DragAndDrop (geWidgetInfo e) mInfo (geButton e)
@@ -236,8 +233,42 @@ handleGui mouseButtons esSDL Cursor{..} prevEvents gui =
             held = mouseButtons $ geButton e
         fromDrg _ = Nothing
 
+        beginScroll (MouseButtonEvent MouseButtonEventData{..})
+          | clickedByLeft = do
+              cw <- C.wtTopmostAt curPos (const True) wt
+              if isScrollableContainer cw
+                then Just $ ScrollingByDrag (cwToInfo cw) btn curPos (pure 0) 0
+                else Nothing
+          | otherwise     = Nothing
+          where
+            clickedByLeft = mouseButtonEventButton == ButtonLeft
+                              && mouseButtonEventMotion == Pressed
+        beginScroll _ = Nothing
+        fromScrl e@ScrollingByDrag{}
+          | held      =
+            let P move = curPos - gePosition e
+            in Just $ e {gePosition = curPos, geMove = move, geCount = geCount e + 1}
+          | not held  = Nothing -- TODO: Make ScrollFixed event
+          | otherwise = Nothing
+          where
+            held = mouseButtons $ geButton e
+        fromScrl _ = Nothing
+
+updateByGuiEvents :: GUI -> GUI
+updateByGuiEvents gui0 =
+  foldl' update gui0 es
+  where
+    es = gui0^.unGui._2.gstEvents
+
+    update gui = go
+      where
+        go ScrollingByDrag{..} =
+          gui & unGui._2.gstWTree %~ WT.wtModifyAt path (scrollContainer (fromIntegral <$> geMove))
+          where
+            path = wifPath geWidgetInfo
+
 cwToInfo :: CtxWidget -> E.WidgetInfo
-cwToInfo (WContext{..}, w) = E.WidgetInfo w _ctxIdent _ctxName
+cwToInfo (WContext{..}, w) = E.WidgetInfo w _ctxIdent _ctxName _ctxPath
 
 isWithinRect :: Point V2 CInt -> Point V2 CInt -> V2 CInt -> Bool
 isWithinRect p p1 size =
@@ -246,6 +277,12 @@ isWithinRect p p1 size =
     px = p^._x
     py = p^._y
     p2 = p1 + P size
+
+isScrollableContainer :: CtxWidget -> Bool
+isScrollableContainer cw = isScrollable && isContainer
+  where
+    isScrollable = cw^._1.ctxAttrib.scrollable
+    isContainer = isJust $ cw^._1.ctxContainerType
 
 scrollContainer :: V2 CInt -> CtxWidget -> CtxWidget
 scrollContainer (V2 dx dy) cw = setNeedsResize $
