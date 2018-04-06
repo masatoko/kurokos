@@ -174,7 +174,7 @@ procEvent cursor gui0 = work
     work (MouseWheelEvent MouseWheelEventData{..}) =
       execStateT go gui0
       where
-        delta = fromIntegral <$> mouseWheelEventPos ^* 10
+        delta = fromIntegral <$> mouseWheelEventPos ^* 30
         go = do
           gui <- get
           whenJust (C.topmostAtWith curPos isScrollableContainer gui) $ \(ctx,_) -> do

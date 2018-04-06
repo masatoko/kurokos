@@ -5,6 +5,7 @@ import qualified Control.Exception     as E
 import           Control.Lens
 import           Control.Monad         (forM_)
 import           Control.Monad.Extra   (whenJust)
+import           Data.List.Extra       (firstJust)
 import qualified Data.Text             as T
 import           Linear.V3
 import           Safe                  (atMay)
@@ -75,6 +76,10 @@ renderWidget r _focus pos parentSize _ctx wc@WidgetColor{..} style cmnrsc (Slide
 renderWidget r focus pos parentSize _ctx wc style cmnrsc (TextField _ fontSize _ mRsc) = do
   renderBackAndBorder r pos wc cmnrsc
   whenJust mRsc $ \tfr -> do
+    let height = fromMaybe fontSize $ firstJust id
+                    [ view _y . G.texSize <$> txtFldRscLeft tfr
+                    , view _y . G.texSize <$> txtFldRscRight tfr]
+        pos' = pos & _y +~ (((parentSize^._y) - height) `div` 2) -- Centering vertically
     -- * Left text
     posCur <- case txtFldRscLeft tfr of
       Nothing  -> return pos'
@@ -95,9 +100,6 @@ renderWidget r focus pos parentSize _ctx wc style cmnrsc (TextField _ fontSize _
       let size = G.texSize tex
           rctx = G.RContext posR size Nothing Nothing
       G.renderTexture r tex Nothing rctx
-  where
-    pos' = pos & _y +~ dy -- Vertical centerizing
-    dy = ((parentSize^._y) - fontSize) `div` 2
 
 renderWidget r focus pos (V2 width height) ctx _wc style cmnrsc (Picker _ _ _ idx ts)
   | focus =
@@ -110,7 +112,6 @@ renderWidget r focus pos (V2 width height) ctx _wc style cmnrsc (Picker _ _ _ id
         G.renderTexture r tex Nothing rctx
   | otherwise =
       case ts `atMay` idx of
-        Nothing -> return ()
         Just tex -> do
           renderBackAndBorder r pos _wc cmnrsc
           let size = G.texSize tex
