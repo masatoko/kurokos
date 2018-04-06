@@ -172,13 +172,14 @@ procEvent cursor gui0 = work
             pos = ctx^.ctxWidgetState.wstWorldPos
             size = clickableSize a
     work (MouseWheelEvent MouseWheelEventData{..}) =
-      execStateT work gui0
+      execStateT go gui0
       where
         delta = fromIntegral <$> mouseWheelEventPos ^* 10
-        work = do
+        go = do
           gui <- get
-          whenJust (C.topmostAtWith curPos isScrollableContainer gui) $ \(ctx,_) ->
+          whenJust (C.topmostAtWith curPos isScrollableContainer gui) $ \(ctx,_) -> do
             unGui._2.gstWTree %= WT.wtModifyAt (ctx^.ctxPath) (scrollContainer delta)
+            unGui._2.gstUpdated .= True
 
     work _ = return gui0
 
@@ -263,6 +264,7 @@ updateByGuiEvents gui0 =
       where
         go ScrollingByDrag{..} =
           gui & unGui._2.gstWTree %~ WT.wtModifyAt path (scrollContainer (fromIntegral <$> geMove))
+              & unGui._2.gstUpdated .~ True
           where
             path = wifPath geWidgetInfo
         go _ = gui

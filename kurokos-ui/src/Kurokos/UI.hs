@@ -11,6 +11,7 @@ module Kurokos.UI
   , setWidgetTree
   , modifyWidgetTree
   , getGuiEvents
+  , guiUpdated
   -- * GuiT Monad
   , GuiT
   -- * Def

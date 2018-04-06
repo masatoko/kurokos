@@ -88,6 +88,9 @@ modifyWidgetTree = over (unGui._2.gstWTree)
 getGuiEvents :: GUI -> [GuiEvent]
 getGuiEvents = view (unGui._2.gstEvents)
 
+guiUpdated :: GUI -> Bool
+guiUpdated = view (unGui._2.gstUpdated)
+
 newtype GuiT m a = GuiT {
     runGT :: ReaderT GuiEnv (StateT GuiState m) a
   } deriving (Functor, Applicative, Monad, MonadIO, MonadReader GuiEnv, MonadState GuiState)
