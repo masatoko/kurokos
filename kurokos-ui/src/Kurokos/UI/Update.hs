@@ -4,7 +4,7 @@ module Kurokos.UI.Update
   ( updateGui
   ) where
 
-import Debug.Trace (traceM)
+import Debug.Trace (traceM, trace)
 
 import           Control.Lens
 import           Control.Monad              (foldM)
@@ -288,12 +288,18 @@ isScrollableContainer cw = isScrollable && isContainer
 
 scrollContainer :: V2 CInt -> CtxWidget -> CtxWidget
 scrollContainer (V2 dx dy) cw = setNeedsResize $
-  cw&_1.ctxWidgetState.wstShift._x %~ workX
-    &_1.ctxWidgetState.wstShift._y %~ workY
+  cw&_1.ctxWidgetState.wstShift._x %~ modX
+    &_1.ctxWidgetState.wstShift._y %~ modY
   where
     V2 width height = wstSize $ cw^._1.ctxWidgetState
     V2 mMinWidth mMinHeight = cw^._1.ctxWidgetState.wstMinSize
-    maxW = max 0 $ maybe 0 (+ (-width)) mMinWidth
-    maxH = max 0 $ maybe 0 (+ (-height)) mMinHeight
-    workX x = max (-maxW) . min 0 $ x + dx
-    workY y = max (-maxH) . min 0 $ y + dy
+    modX x = fromMaybe x mx
+      where
+        mx = do
+          maxW <- max 0 . (+ (-width)) <$> mMinWidth
+          return $ max (-maxW) . min 0 $ x + dx
+    modY y = fromMaybe y my
+      where
+        my = do
+          maxH <- max 0 . (+ (-height)) <$> mMinHeight
+          return $ max (-maxH) . min 0 $ y + dy
