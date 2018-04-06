@@ -144,33 +144,44 @@ procEvent cursor gui0 = work
                 pos = ctx^.ctxWidgetState.wstWorldPos
                 size = clickableSize cw
     work (MouseMotionEvent MouseMotionEventData{..}) =
-      return . flip execState gui0 $ do
-        modify $ over (unGui._2.gstWTree) (fmap modWhenHover)
-        modify $ over (unGui._2.gstWTree) (fmap modWhenHoverWithLHold)
+      return $ modWhenHover gui0
       where
-        modWhenHover a@(ctx,w)
-          | isHoverable && not (wst^.wstHover) && isWithinRect curPos pos size =
-            let ctx' = ctx & ctxWidgetState . wstHover .~ True
-                           & ctxNeedsRender .~ True
-            in (ctx',w)
-          | isHoverable && wst^.wstHover && not (isWithinRect curPos pos size) =
-            let ctx' = ctx & ctxWidgetState . wstHover .~ False
-                           & ctxNeedsRender .~ True
-            in (ctx',w)
-          | otherwise = a
+        modWhenHover gui0 =
+          let wt0 = gui0^.unGui._2.gstWTree
+              mPath = case C.topmostAtWith curPos isHoverable gui0 of
+                        Just (ctx,_) -> Just $ ctx^.ctxPath
+                        Nothing      -> Nothing
+              (wt', updated) = runState (mapM (modState mPath) wt0) False
+          in gui0&unGui._2.gstWTree .~ wt'
+                 &unGui._2.gstUpdated ||~ updated
           where
-            pos = ctx^.ctxWidgetState.wstWorldPos
-            isHoverable = ctx^.ctxAttrib.hoverable
-            wst = ctx^.ctxWidgetState
-            size = clickableSize a
-        modWhenHoverWithLHold a@(ctx,w)
-          | ButtonLeft `elem` mouseMotionEventState && isWithinRect curPos pos size =
-            let ctx' = ctx & ctxNeedsRender .~ True
-            in (ctx', WU.modifyWhenHoverWithLHold curPos pos size w)
-          | otherwise = a
-          where
-            pos = ctx^.ctxWidgetState.wstWorldPos
-            size = clickableSize a
+            isHoverable cw = cw^._1.ctxAttrib.hoverable
+            heldLeft = ButtonLeft `elem` mouseMotionEventState
+            modState mPath cw = do
+              modify (|| updated)
+              let cw' = cw & _1.ctxWidgetState.wstHover .~ hover
+                           & _1.ctxNeedsRender .~ updated -- If state is changed
+              return $ if hover
+                        then modIfLHeld cw'
+                        else cw'
+              where
+                ctx = cw^._1
+                updated = preHover /= hover
+                  where
+                    preHover = ctx^.ctxWidgetState.wstHover
+                hover = case mPath of
+                          Just path -> path == (ctx^.ctxPath)
+                          Nothing   -> False
+
+                modIfLHeld cw@(ctx, w)
+                  | heldLeft  =
+                      case WU.modifyWhenHoverWithLHold curPos pos size w of
+                        Nothing -> cw
+                        Just w' -> (ctx&ctxNeedsRender .~ True, w')
+                  | otherwise = cw
+                  where
+                    pos = cw^._1.ctxWidgetState.wstWorldPos
+                    size = clickableSize cw
     work (MouseWheelEvent MouseWheelEventData{..}) =
       execStateT go gui0
       where
