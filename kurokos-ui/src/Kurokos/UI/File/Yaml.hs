@@ -1,7 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Kurokos.UI.File.Yaml where
 
-import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as BS
 import           Data.List             (isPrefixOf)
 import           Data.List.Extra       (firstJust)
@@ -10,6 +9,7 @@ import qualified Data.Map              as M
 import           Data.Maybe            (fromMaybe, mapMaybe)
 import           Data.Monoid           ((<>))
 import           Data.Text             (Text)
+import qualified Data.Text             as T
 import           Safe                  (readMay)
 
 import           Data.Yaml             (FromJSON (..), (.:), (.:?))
@@ -59,21 +59,21 @@ instance FromJSON YPicker where
 
 data YWidget
   = Single
-    { wType      :: String
-    , wName      :: Maybe String
-    , wColor     :: Maybe ContextColor
-    , wX         :: UExp
-    , wY         :: UExp
-    , wWidth     :: UExp
-    , wHeight    :: UExp
-    , wAttrib    :: Maybe YWidgetAttrib
-    , wValue     :: Maybe YValue
-    , wPicker    :: Maybe YPicker
+    { wType   :: String
+    , wName   :: Maybe String
+    , wColor  :: Maybe ContextColor
+    , wX      :: UExp
+    , wY      :: UExp
+    , wWidth  :: UExp
+    , wHeight :: UExp
+    , wAttrib :: Maybe YWidgetAttrib
+    , wValue  :: Maybe YValue
+    , wPicker :: Maybe YPicker
     --
-    , wAsset     :: Maybe Asset.Ident
+    , wAsset  :: Maybe Asset.Ident
     --
-    , wTitle     :: Maybe Title
-    , wStyle     :: Style
+    , wTitle  :: Maybe Title
+    , wStyle  :: Style
     }
   | Container
     { wName          :: Maybe String
@@ -141,11 +141,12 @@ parseContainerType (Just ct) = work ct
     work _            = Unordered -- fail $ "unkown container type: " ++ ct
 
 data YWidgetAttrib = YWidgetAttrib
-  { ywaHoverable :: Maybe Bool
-  , ywaClickable :: Maybe Bool
-  , ywaDraggable :: Maybe Bool
-  , ywaDroppable :: Maybe Bool
-  , ywaVisible   :: Maybe Bool
+  { ywaHoverable  :: Maybe Bool
+  , ywaClickable  :: Maybe Bool
+  , ywaDraggable  :: Maybe Bool
+  , ywaDroppable  :: Maybe Bool
+  , ywaVisible    :: Maybe Bool
+  , ywaScrollable :: Maybe Bool
   } deriving (Eq, Show, Read)
 
 instance FromJSON YWidgetAttrib where
@@ -155,6 +156,7 @@ instance FromJSON YWidgetAttrib where
     <*> v .:? "draggable"
     <*> v .:? "droppable"
     <*> v .:? "visible"
+    <*> v .:? "scrollable"
   parseJSON _ = fail "Expected Object for YWidgetAttrib"
 
 data Title

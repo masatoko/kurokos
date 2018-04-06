@@ -69,11 +69,12 @@ convert s@Single{..} = do
     setContext ctx = case wAttrib of
       Nothing -> ctx
       Just ywa@YWidgetAttrib{..} -> trace (show ywa) $
-        ctx&ctxAttrib . hoverable %~ flip fromMaybe ywaHoverable
-           &ctxAttrib . clickable %~ flip fromMaybe ywaClickable
-           &ctxAttrib . draggable %~ flip fromMaybe ywaDraggable
-           &ctxAttrib . droppable %~ flip fromMaybe ywaDroppable
-           &ctxAttrib . visible   %~ flip fromMaybe ywaVisible
+        ctx&ctxAttrib . hoverable  %~ flip fromMaybe ywaHoverable
+           &ctxAttrib . clickable  %~ flip fromMaybe ywaClickable
+           &ctxAttrib . draggable  %~ flip fromMaybe ywaDraggable
+           &ctxAttrib . droppable  %~ flip fromMaybe ywaDroppable
+           &ctxAttrib . visible    %~ flip fromMaybe ywaVisible
+           &ctxAttrib . scrollable %~ flip fromMaybe ywaScrollable
 
     value = maybe (error msg) make wValue
       where
