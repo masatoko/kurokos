@@ -53,7 +53,7 @@ runTitleScene = do
       unless (null es) $ liftIO $ do
         putStrLn "====="
         forM_ es $ \e -> putStrLn $ "- " ++ show e
-      (_,gui') <- UI.readyRender gui
+      gui' <- UI.readyRender gui
       return $ Title gui' cursor
 
     render t = do
@@ -61,7 +61,7 @@ runTitleScene = do
         GL.clearColor $= GL.Color4 255 255 255 255
         GL.clear [GL.ColorBuffer]
       G.withAlphaBlend $
-        UI.render $ tGui t
+        UI.renderWhenUpdated $ tGui t
 
     transit t = do
       whenJust (UI.clickedOn UI.GuiActLeft "start" gui) $

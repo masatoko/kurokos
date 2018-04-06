@@ -117,6 +117,7 @@ module Kurokos.UI
   , readyRender
   -- * Rendering GUI
   , render
+  , renderWhenUpdated
   -- * Control
   , GuiHandler (..)
   , GuiAction (..)

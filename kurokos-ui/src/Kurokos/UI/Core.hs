@@ -62,6 +62,7 @@ data GuiEnv = GuiEnv
 data GuiState = GuiState
   { _gstIdCnt      :: WidgetIdent -- ^ Counter for WidgetTree ID
   , _gstWTree      :: GuiWidgetTree
+  , _gstUpdated    :: Bool -- ^ Updated (should re-render)
   -- * Focus
   , _gstFocus      :: WT.WidgetTreePath
   -- * Control
@@ -104,11 +105,11 @@ newGui :: (RenderEnv m, MonadIO m)
 newGui env initializer = do
   (a,g1) <- runGuiT g0 initializer
   let g2 = g1 & unGui._2.gstWTree %~ WT.balance
-  g3 <- snd <$> readyRender (setAllNeedsRender g2) -- Create textures
+  g3 <- readyRender (setAllNeedsRender g2) -- Create textures
   return (a, g3)
   where
     g0 = GUI (env, gst0)
-    gst0 = GuiState 0 Null [] defaultGuiHandler []
+    gst0 = GuiState 0 Null False [] defaultGuiHandler []
 
 freeGui :: MonadIO m => GUI -> m ()
 freeGui g = freeGuiWidgetTree $ g^.unGui._2.gstWTree
@@ -315,20 +316,19 @@ setAllNeedsRender =
 --           return $ Fork u' a' mc' o'
 
 -- | Ready for rendering. Call this at the end of Update
-readyRender :: (RenderEnv m, MonadIO m) => GUI -> m (Bool, GUI)
+readyRender :: (RenderEnv m, MonadIO m) => GUI -> m GUI
 readyRender g = do
   let g0 = g & unGui._2.gstWTree %~ updatePath . updateVisibility
-  (updated1, g1) <- work True g0 -- * Make Textures.
-  (updated2, g2) <- work False g1 -- * Resize with texture size.
-  return (updated1 || updated2, g2)
+  g1 <- work True g0 -- * Make Textures.
+  work False g1 -- * Resize with texture size.
   where
     work isFirstPath g = do
       winSize <- getWindowSize
       let wt0 = g^.unGui._2.gstWTree
           wt1 = updateLayout winSize wt0
       (wt2, updated) <- runStateT (mapM (ready isFirstPath) wt1) False
-      let g' = g&unGui._2.gstWTree .~ wt2
-      return (updated, g')
+      return $ g&unGui._2.gstWTree .~ wt2
+                &unGui._2.gstUpdated ||~ updated
 
     ready isFirstPath a@(ctx,widget) = do
       needsRenderByItself <- case a of
@@ -669,6 +669,9 @@ updatePath = fmap work . WT.wtPath
     work ((ctx, w), path) =
       let ctx' = ctx&ctxPath .~ path
       in (ctx', w)
+
+renderWhenUpdated :: (RenderEnv m, MonadIO m) => GUI -> m ()
+renderWhenUpdated g = when (g^.unGui._2.gstUpdated) $ render g
 
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
 render g = do

@@ -73,7 +73,6 @@ import           Scene                        (runTitleScene)
 data UITest = UITest
   { _tGui     :: UI.GUI
   , _tCursor  :: UI.Cursor
-  , _tUpdated :: Bool
   -- , _tUserVal :: UserVal
   -- , _tCnt     :: Int
   }
@@ -153,7 +152,7 @@ runUITestScene =
           whenJust (UI.goChild z1) $ putStrLn . UI.prettyWT . fst
 
       cursor <- UI.newCursor
-      return (UITest gui' cursor False, sdlAssets)
+      return (UITest gui' cursor, sdlAssets)
       where
         fillConf :: UI.WidgetConfig
         fillConf = def {UI.wconfWidth = Rpn "$width", UI.wconfHeight = Rpn "$height"}
@@ -174,9 +173,8 @@ runUITestScene =
               putStrLn "--- GuiEvents ---"
               mapM_ (putStrLn . ("* " ++) . show) es
               putStrLn "-----------------"
-          (updated,g) <- UI.readyRender $ t^.tGui
+          g <- UI.readyRender $ t^.tGui
           return $ t & tGui .~ g
-                     & tUpdated .~ updated
 
         work t =
           flip execState t $ do
@@ -202,7 +200,6 @@ runUITestScene =
 
     render :: Render (GameT IO) UITest
     render t = do
-      -- when (t^.tUpdated) $ do
         clearBy $ V4 0.97 0.97 0.97 1
         --
         -- K.printTest (V2 10 200) color "- Joysticks"
@@ -210,7 +207,7 @@ runUITestScene =
         -- let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
         -- V.imapM_ (\i js -> K.printTest (V2 10 (220 + i * 20)) color (showjs js)) vjs
         --
-        UI.render $ t^.tGui
+        UI.renderWhenUpdated $ t^.tGui
         -- K.withRenderer $ \r -> do
         --   let P pos = t^.tCursor.cursorPos
         --   Prim.smoothCircle r pos 5 (V4 0 0 0 255) -- Cursor
