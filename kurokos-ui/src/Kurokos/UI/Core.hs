@@ -670,22 +670,22 @@ updatePath = fmap work . WT.wtPath
       in (ctx', w)
 
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
-render g =
+render g = do
+  winSize <- fmap fromIntegral <$> getWindowSize
   withRenderer $ \r -> liftIO $ do
-    go r True $ view (unGui._2.gstWTree) g
-    go r False $ view (unGui._2.gstWTree) g
+    render_ r winSize True $ view (unGui._2.gstWTree) g
+    render_ r winSize False $ view (unGui._2.gstWTree) g
   where
-    go _ _ Null = return ()
-    go r pFirst (Fork u a mc o) = do
-      go r pFirst u
-      work r pFirst a
-      whenJust mc $ \c -> --do
-        go r pFirst c
-        -- let (pos, size) = posSizeOf $ fst a
-        -- G.withRenderableArea r pos size $ do
-        --   print (pos, size)
-        --   go r pFirst c
-      go r pFirst o
+    render_ r winSize pFirst = go
+      where
+        go Null = return ()
+        go (Fork u a mc o) = do
+          go u
+          work r pFirst a
+          whenJust mc $ \c -> do
+            let (pos, size) = posSizeOf $ fst a
+            G.withRenderArea r winSize pos size $ go c
+          go o
 
     posSizeOf ctx = (pos, size)
       where
