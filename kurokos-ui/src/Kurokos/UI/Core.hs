@@ -670,9 +670,11 @@ updatePath = fmap work . WT.wtPath
       let ctx' = ctx&ctxPath .~ path
       in (ctx', w)
 
+-- | Render GUI if GUI is updated
 renderWhenUpdated :: (RenderEnv m, MonadIO m) => GUI -> m ()
 renderWhenUpdated g = when (g^.unGui._2.gstUpdated) $ render g
 
+-- | Render GUI
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
 render g = do
   winSize <- fmap fromIntegral <$> getWindowSize
