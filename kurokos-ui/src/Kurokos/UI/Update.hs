@@ -259,13 +259,13 @@ updateByGuiEvents gui0 =
   foldl' update gui0 es
   where
     es = gui0^.unGui._2.gstEvents
-
     update gui = go
       where
         go ScrollingByDrag{..} =
           gui & unGui._2.gstWTree %~ WT.wtModifyAt path (scrollContainer (fromIntegral <$> geMove))
           where
             path = wifPath geWidgetInfo
+        go _ = gui
 
 cwToInfo :: CtxWidget -> E.WidgetInfo
 cwToInfo (WContext{..}, w) = E.WidgetInfo w _ctxIdent _ctxName _ctxPath
