@@ -229,7 +229,7 @@ withKurokos KurokosConfig{..} winConf go =
 -- | Scene function type for updating `g`.
 type Update m a = a -> KurokosT m a
 -- | Scene function type for rendering `g`.
-type Render m a = a -> KurokosT m ()
+type Render m a = a -> KurokosT m Bool
 -- | Scene function type for choosing scenes for next frame.
 type Transit m a b = a -> KurokosT m (Transition a b)
 
@@ -268,11 +268,12 @@ runScene Scene{..} =
                             , kstSceneState = sst0 } -- For getFrame
       a1 <- sceneUpdate a0
       -- Rendering
-      sceneRender a1
+      shouldSwapBuffer <- sceneRender a1
       -- updateFPS
       printSystemState
       printMessages
-      SDL.glSwapWindow =<< asks envWindow
+      when shouldSwapBuffer $
+        SDL.glSwapWindow =<< asks envWindow
       -- Transition
       trans <- sceneTransit a1
       -- Advance State

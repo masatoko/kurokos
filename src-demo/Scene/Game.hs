@@ -62,6 +62,7 @@ runGameScene = do
         kst <- SDL.getKeyboardState
         let rect = if kst SDL.ScancodeSpace then rect2 else rect1
         G.renderTexture r bird rect rctx
+      return True
       where
         bgColor = GL.Color4 r g b a
           where

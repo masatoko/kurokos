@@ -160,7 +160,6 @@ runUITestScene =
     update :: Update (GameT IO) UITest
     update title0 = do
       es <- K.getEvents
-      -- liftIO $ MVar.modifyMVar_ (title0^.tUserVal.uvMVar) (return . (+1)) -- Update UserVal
       readyG . work =<< updateT es title0
       where
         updateT es t0 = do
@@ -200,20 +199,23 @@ runUITestScene =
 
     render :: Render (GameT IO) UITest
     render t = do
+      when (UI.guiUpdated gui) $ do
         clearBy $ V4 0.97 0.97 0.97 1
         --
         -- K.printTest (V2 10 200) color "- Joysticks"
         -- vjs <- K.getJoysticks
         -- let showjs js = "#" <> T.pack (show (K.jsId js)) <> ": " <> K.jsDeviceName js
         -- V.imapM_ (\i js -> K.printTest (V2 10 (220 + i * 20)) color (showjs js)) vjs
-        --
-        UI.renderWhenUpdated $ t^.tGui
+        UI.render $ t^.tGui
         -- K.withRenderer $ \r -> do
         --   let P pos = t^.tCursor.cursorPos
         --   Prim.smoothCircle r pos 5 (V4 0 0 0 255) -- Cursor
-        return ()
+        -- return ()
         -- where
         --   color = V3 50 50 50
+      return $ UI.guiUpdated gui
+      where
+        gui = t^.tGui
 
     transit t = do
       when (isClicked nameMain) runTitleScene

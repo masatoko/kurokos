@@ -57,11 +57,15 @@ runTitleScene = do
       return $ Title gui' cursor
 
     render t = do
-      liftIO $ do
-        GL.clearColor $= GL.Color4 255 255 255 255
-        GL.clear [GL.ColorBuffer]
-      G.withAlphaBlend $
-        UI.renderWhenUpdated $ tGui t
+      when (UI.guiUpdated gui) $ do
+        liftIO $ do
+          GL.clearColor $= GL.Color4 255 255 255 255
+          GL.clear [GL.ColorBuffer]
+        G.withAlphaBlend $
+          UI.render gui
+      return $ UI.guiUpdated gui
+      where
+        gui = tGui t
 
     transit t = do
       whenJust (UI.clickedOn UI.GuiActLeft "start" gui) $
