@@ -192,6 +192,7 @@ mkContainer conf ct = do
       , _draggable = False
       , _droppable = False
       , _visible   = True
+      , _scrollable = True
       }
 
 appendRoot :: Monad m => GuiWidgetTree -> GuiT m ()

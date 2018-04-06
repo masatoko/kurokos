@@ -4,20 +4,20 @@ module Kurokos.UI.Types where
 
 import           Control.Lens
 import           Data.Default.Class
-import           Data.Int           (Int64)
-import           Data.Maybe         (fromMaybe)
-import           Data.Word          (Word8)
-import           Foreign.C.Types    (CInt)
+import           Data.Int              (Int64)
+import           Data.Maybe            (fromMaybe)
+import           Data.Word             (Word8)
+import           Foreign.C.Types       (CInt)
 import           Linear.V2
 import           Linear.V4
 
 import qualified SDL
 
-import qualified Kurokos.Graphics   as G
-import qualified Kurokos.RPN        as RPN
+import qualified Kurokos.Graphics      as G
+import qualified Kurokos.RPN           as RPN
 
 import           Kurokos.UI.Color
-import           Kurokos.UI.WidgetTree         (WidgetTreePath)
+import           Kurokos.UI.WidgetTree (WidgetTreePath)
 
 type WidgetIdent = Int64
 -- | Identity of WidgetTree. It's unique in a GUI.
@@ -61,11 +61,12 @@ wstSize wst = V2 w h
     h = fromMaybe (error "Missing height. Call readyRender before rendering.") $ wst^.wstHeight
 
 data WidgetAttrib = WidgetAttrib
-  { _hoverable :: Bool
-  , _clickable :: Bool
-  , _draggable :: Bool
-  , _droppable :: Bool
-  , _visible   :: Bool
+  { _hoverable  :: Bool
+  , _clickable  :: Bool
+  , _draggable  :: Bool
+  , _droppable  :: Bool
+  , _visible    :: Bool
+  , _scrollable :: Bool
   } deriving Show
 
 makeLenses ''WidgetAttrib
@@ -77,6 +78,7 @@ defAttrib = WidgetAttrib
   , _draggable = False
   , _droppable = False
   , _visible   = True
+  , _scrollable = False
   }
 
 -- Expression

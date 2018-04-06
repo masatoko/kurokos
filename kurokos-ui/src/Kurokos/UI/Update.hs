@@ -95,10 +95,13 @@ procEvent cursor gui0 = work
       execStateT work gui0
       where
         V2 dx dy = fromIntegral <$> mouseWheelEventPos ^* 10
-        isContainer cw = isJust $ cw^._1.ctxContainerType
+        isTarget cw = isScrollable && isContainer
+          where
+            isScrollable = cw^._1.ctxAttrib.scrollable
+            isContainer = isJust $ cw^._1.ctxContainerType
         work = do
           gui <- get
-          case C.topmostAtWith curPos isContainer gui of
+          case C.topmostAtWith curPos isTarget gui of
             Nothing -> return ()
             Just cw@(ctx,w) -> do
               let V2 width height = wstSize $ cw^._1.ctxWidgetState

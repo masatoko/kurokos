@@ -133,7 +133,6 @@ attribOf UserWidget{} =
     & hoverable .~ False
     & clickable .~ False
 
-
 additionalClickableSize :: WContext -> Widget -> Maybe (V2 CInt)
 additionalClickableSize ctx = work
   where
