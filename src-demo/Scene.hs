@@ -2,11 +2,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Scene (runTitleScene) where
 
+import           Control.Monad             (forM_, unless)
 import           Control.Monad.Extra       (whenJust)
 import qualified Data.ByteString           as BS
--- import           Control.Lens
 import           Control.Monad.IO.Class    (liftIO)
 import           Control.Monad.Reader
+-- import           Control.Lens
 -- import           Control.Monad.State
 -- import           Control.Monad.Trans.Class (lift)
 
@@ -48,6 +49,10 @@ runTitleScene = do
       esSDL <- K.getEvents
       cursor <- UI.updateCursor esSDL $ tCursor t
       gui <- UI.updateGui esSDL cursor (tGui t)
+      let es = UI.getGuiEvents gui
+      unless (null es) $ liftIO $ do
+        putStrLn "====="
+        forM_ es $ \e -> putStrLn $ "- " ++ show e
       (_,gui') <- UI.readyRender gui
       return $ Title gui' cursor
 

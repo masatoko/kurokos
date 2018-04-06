@@ -80,24 +80,8 @@
   w: 100
   h: 100
   children:
-    - &test
-      type: label
-      title:
-        text: "test"
-        asset: font-r
-        size: 14
-      attrib:
-        draggable: true
-        droppable: true
-      style:
-        text-align: left
-      h: 20
-    - *test
-    - *test
-    - *test
-    - *test
-    - *test
-    - *test
-    - *test
-    - *test
-    - *test
+    - {name: "test1", type: label, title: {text: "test1", asset: font-r, size: 14}, attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
+    - {name: "test2", type: label, title: {text: "test2", asset: font-r, size: 14}, attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
+    - {name: "test3", type: label, title: {text: "test3", asset: font-r, size: 14}, attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
+    - {name: "test4", type: label, title: {text: "test4", asset: font-r, size: 14}, attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
+    - {name: "test5", type: label, title: {text: "test5", asset: font-r, size: 14}, attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}

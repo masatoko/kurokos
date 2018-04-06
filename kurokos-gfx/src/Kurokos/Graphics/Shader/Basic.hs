@@ -43,7 +43,6 @@ instance TextureShader BasicShader where
 newBasicShader :: IO BasicShader
 newBasicShader = do
   sp <- GLU.simpleShaderProgramBS vert frag
-  print $ GLU.uniforms sp
   let attrCoord = AttribVar TagVec2 $ GLU.getAttrib sp "VertexCoord"
       attrTexCoord = AttribVar TagVec2 $ GLU.getAttrib sp "TexCoord"
   (tbo,vao) <- makeVAO $ do
