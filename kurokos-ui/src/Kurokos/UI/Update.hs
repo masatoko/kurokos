@@ -42,7 +42,10 @@ import qualified SDL.Raw.Event              as Raw
 -- | Update Gui data by SDL Events. Call this at the top of Update
 updateGui :: (RenderEnv m, MonadIO m) => [SDL.EventPayload] -> Cursor -> GUI -> m GUI
 updateGui es cursor g0 = do
+  -- * Reset state
   let g1 = g0&unGui._2.gstEvents .~ [] -- Clear all events
+             &unGui._2.gstUpdated .~ False
+  --
   g2 <- foldM (procEvent cursor) g1 es
   -- liftIO $ do
   --   putStrLn "==="
