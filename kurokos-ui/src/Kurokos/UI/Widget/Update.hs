@@ -22,7 +22,6 @@ import qualified Kurokos.Asset.Raw     as Asset
 
 import qualified Kurokos.Graphics      as G
 import qualified Kurokos.Graphics.Font as Font
-import           Kurokos.UI.Color      (WidgetColor (..))
 import           Kurokos.UI.Types
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
@@ -31,18 +30,18 @@ import           Kurokos.UI.Widget
 --
 -- Called from Core.readyRender
 -- Ready something except for CommonResource
-onReadyLayout :: (RenderEnv m, MonadIO m) => V2 Int -> WidgetColor -> Widget -> m Widget
-onReadyLayout (V2 w h) wc (Slider title font size mPreKnob value) = do
+onReadyLayout :: (RenderEnv m, MonadIO m) => V2 Int -> Style -> Widget -> m Widget
+onReadyLayout (V2 w h) style (Slider title font size mPreKnob value) = do
   -- * Release
   liftIO $ whenJust mPreKnob $ \rsc -> do
     G.freePrim $ sliderRscKnob rsc
     G.deleteTexture $ sliderRscText rsc
   -- * Make
   knob <- withRenderer $ \r -> G.newFillRectangle r (V2 30 (fromIntegral h))
-  textTex <- genTextTexture font size (_wcTitle wc) (T.pack $ showValue value)
+  textTex <- genTextTexture font size (_styleTextColor style) (T.pack $ showValue value)
   let rsc = SliderResource knob textTex
   return $ Slider title font size (Just rsc) value
-onReadyLayout (V2 w h) wc (TextField font size z mRsc) = do
+onReadyLayout (V2 w h) style (TextField font size z mRsc) = do
   -- * Release
   liftIO $ whenJust mRsc $ \rsc -> do
     whenJust (txtFldRscLeft rsc) G.deleteTexture
@@ -54,17 +53,17 @@ onReadyLayout (V2 w h) wc (TextField font size z mRsc) = do
         where (_,row) = TZ.cursorPosition z
   mTexL <- if T.null textL
             then return Nothing
-            else Just <$> genTextTexture font size (_wcTitle wc) textL
+            else Just <$> genTextTexture font size (_styleTextColor style) textL
   mTexR <- if T.null textR
             then return Nothing
-            else Just <$> genTextTexture font size (_wcTitle wc) textR
+            else Just <$> genTextTexture font size (_styleTextColor style) textR
   let rsc = TextFieldResource cursor mTexL mTexR
   return $ TextField font size z (Just rsc)
-onReadyLayout (V2 w h) wc (Picker ts font size idx textures0) = do
+onReadyLayout (V2 w h) style (Picker ts font size idx textures0) = do
   -- * Release
   unless (null textures0) $ liftIO $ mapM_ G.deleteTexture textures0
   -- * Make
-  textures <- mapM (genTextTexture font size (_wcTitle wc) . snd) ts
+  textures <- mapM (genTextTexture font size (_styleTextColor style) . snd) ts
   return $ Picker ts font size idx textures
 onReadyLayout _ _ w = return w
 

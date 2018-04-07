@@ -39,7 +39,7 @@ import qualified Kurokos.RPN              as RPN
 
 import qualified Kurokos.Graphics         as G
 import           Kurokos.UI.Color
-import           Kurokos.UI.Color.Scheme  (ColorScheme, lookupColorOfWidget)
+import           Kurokos.UI.Scheme        (StyleMap, makeContextStyle)
 import           Kurokos.UI.Control       (GuiAction (..), GuiHandler (..),
                                            defaultGuiHandler)
 import           Kurokos.UI.Event         (GuiEvent)
@@ -56,7 +56,7 @@ type GuiWidgetTree = WidgetTree CtxWidget
 
 data GuiEnv = GuiEnv
   { geAssetManager :: Asset.AssetManager
-  , geColorScheme  :: ColorScheme
+  , geStyleMap  :: StyleMap
   }
 
 data GuiState = GuiState
@@ -127,19 +127,24 @@ freeGuiWidgetTree = liftIO . mapM_ work
 --   GUI (_,stt) <- f . GUI <$> ((,) <$> ask <*> get)
 --   put stt
 
-getContextColorOfWidget :: (MonadReader GuiEnv m, MonadIO m) => Widget -> m ContextColor
-getContextColorOfWidget w = do
-  schemeMap <- asks geColorScheme
-  liftIO $ case lookupColorOfWidget w schemeMap of
-    Left err -> E.throwIO $ userError err
-    Right a  -> return a
+getContextStyleOfWidget :: MonadReader GuiEnv m => Widget -> m ContextStyle
+getContextStyleOfWidget w = do
+  styleMap <- asks geStyleMap
+  return $ makeContextStyle w styleMap
 
-newCommonResource :: (RenderEnv m, MonadIO m) => V2 Int -> WidgetColor -> Widget -> m CommonResource
-newCommonResource size wcol w =
+-- getContextColorOfWidget :: (MonadReader GuiEnv m, MonadIO m) => Widget -> m ContextColor
+-- getContextColorOfWidget w = do
+--   styleMap <- asks geStyleMap
+--   liftIO $ case lookupColorOfWidget w styleMap of
+--     Left err -> E.throwIO $ userError err
+--     Right a  -> return a
+
+newCommonResource :: (RenderEnv m, MonadIO m) => V2 Int -> Style -> Widget -> m CommonResource
+newCommonResource size style w =
   withRenderer $ \r ->
     CmnRsc <$> G.newFillRectangle r size'
            <*> G.newRectangle r size'
-           <*> genTitle r wcol w
+           <*> genTitle r style w
   where
     size' = fromIntegral <$> size
 
@@ -166,10 +171,10 @@ mkSingle conf widget = do
   size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  ctxCol <- maybe (getContextColorOfWidget widget) return (wconfColor conf)
-  cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) widget
+  ctxst <- maybe (getContextStyleOfWidget widget) return (wconfStyle conf)
+  cmnRsc <- lift $ newCommonResource (pure 1) (ctxstNormal ctxst) widget
   let attrib = fromMaybe (attribOf widget) $ wconfAttrib conf
-      ctx = WContext ident (wconfName conf) [] Nothing attrib True True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
+      ctx = WContext ident (wconfName conf) [] Nothing attrib True True iniWidgetState cmnRsc ctxst pos' size'
   return $ Fork Null (ctx, widget) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
@@ -183,10 +188,10 @@ mkContainer conf ct = do
   size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  ctxCol <- maybe (getContextColorOfWidget widget) return (wconfColor conf)
-  cmnRsc <- lift $ newCommonResource (pure 1) (ctxcolNormal ctxCol) widget
+  ctxst <- maybe (getContextStyleOfWidget widget) return (wconfStyle conf)
+  cmnRsc <- lift $ newCommonResource (pure 1) (ctxstNormal ctxst) widget
   let attrib = fromMaybe attribCntn $ wconfAttrib conf
-      ctx = WContext ident (wconfName conf) [] (Just ct) attrib True True iniWidgetState cmnRsc ctxCol (wconfStyle conf) pos' size'
+      ctx = WContext ident (wconfName conf) [] (Just ct) attrib True True iniWidgetState cmnRsc ctxst pos' size'
   return $ Fork Null (ctx, widget) (Just Null) Null
   where
     widget = Fill
@@ -342,8 +347,8 @@ readyRender g = do
       if updatedA
         then do
           liftIO . freeCommonResource $ ctx^.ctxCmnRsc
-          widget' <- lift $ onReadyLayout size (optimumColor ctx) widget
-          cmnrsc' <- lift $ newCommonResource size (optimumColor ctx) widget'
+          widget' <- lift $ onReadyLayout size (optimumStyle ctx) widget
+          cmnrsc' <- lift $ newCommonResource size (optimumStyle ctx) widget'
           let ctx' = ctx & ctxNeedsRender .~ isFirstPath -- Should re-render on second path. Because min-width and min-height will change with Texture size.
                          & ctxNeedsResize .~ isFirstPath -- Same as above
                          & ctxCmnRsc .~ cmnrsc'
@@ -453,7 +458,9 @@ updateLayout_ (V2 winW winH) wt0
           let (V2 mMinW mMinH) = widgetMinimumSize a
               mMinW' = firstJust id [mMinW, mw] -- TODO: Reconsider
               mMinH' = firstJust id [mMinH, mh]
-              mgn = ctx^.ctxStyle.styleMargin
+              mgn = style^.styleMargin
+                where
+                  style = optimumStyle ctx
           whenJust mMinW' $ writeW idx
           whenJust mMinH' $ writeH idx
         Just Null -> do -- Container has no children
@@ -483,7 +490,9 @@ updateLayout_ (V2 winW winH) wt0
       where
         idx = ctx^.ctxIdent
 
-        margin = ctx^.ctxStyle.styleMargin
+        margin = style^.styleMargin
+          where
+            style = optimumStyle ctx
         marginW = fromIntegral $ left margin + right margin
         marginH = fromIntegral $ top margin + bottom margin
 
@@ -623,7 +632,9 @@ updateLayout_ (V2 winW winH) wt0
       in (pos3, Fork u' a' mc' o')
       -- in trace (unwords [show (ctx^.ctxIdent), show (wstSize (ctx^.ctxWidgetState)), " : ", show pos0, show pos1, show pos2, show pos3]) $ (pos3, Fork u' a' mc' o')
       where
-        margin = ctx^.ctxStyle.styleMargin
+        margin = style^.styleMargin
+          where
+            style = optimumStyle ctx
         marginLT = fromIntegral <$> V2 (left margin) (top margin)
         marginW = fromIntegral $ left margin + right margin
         marginH = fromIntegral $ top margin + bottom margin
@@ -701,13 +712,15 @@ render g = do
         pos = p + V2 (left margin) (top margin)
           where
             P p = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
-            margin = ctx^.ctxStyle.styleMargin
+            margin = style^.styleMargin
+              where
+                style = optimumStyle ctx
         size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
 
     work r pFirst (ctx, widget)
       | ctx^.ctxNeedsRender            = E.throwIO $ userError "Call GUI.readyRender before GUI.render!"
       | ctx^.ctxWidgetState.wstVisible = do
-          let render' = renderWidget r focus pos size ctx wcol style cmnrsc widget
+          let render' = renderWidget r focus pos size ctx style cmnrsc widget
           if focus && topWhenFocused widget
             then unless pFirst render'
             else when pFirst render'
@@ -720,8 +733,8 @@ render g = do
           --     P p = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
           --     margin = style^.styleMargin
           -- size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
-          wcol = optimumColor ctx
-          style = ctx^.ctxStyle
+          style = optimumStyle ctx
+          -- contextStyle = ctx^.ctxStyle
           cmnrsc = ctx^.ctxCmnRsc
 
           topWhenFocused :: Widget -> Bool

@@ -23,37 +23,37 @@ import           Kurokos.UI.Types
 import           Kurokos.UI.Util
 import           Kurokos.UI.Widget
 
-renderWidget :: G.Renderer -> Bool -> V2 Int -> V2 Int -> WContext -> WidgetColor -> Style -> CommonResource -> Widget -> IO ()
-renderWidget _r _focus _pos _parentSize _ctx _ _ _ Transparent = return ()
+renderWidget :: G.Renderer -> Bool -> V2 Int -> V2 Int -> WContext -> Style -> CommonResource -> Widget -> IO ()
+renderWidget _r _focus _pos _parentSize _ctx _ _ Transparent = return ()
 
-renderWidget r _focus pos _parentSize _ctx wc style cmnrsc Fill =
-  renderBackAndBorder r pos wc cmnrsc
+renderWidget r _focus pos _parentSize _ctx style cmnrsc Fill =
+  renderBackAndBorder r pos style cmnrsc
 
-renderWidget r _focus pos parentSize _ctx wc@WidgetColor{..} style cmnrsc Label{} = do
-  renderBackAndBorder r pos wc cmnrsc
+renderWidget r _focus pos parentSize _ctx style cmnrsc Label{} = do
+  renderBackAndBorder r pos style cmnrsc
   whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
 
-renderWidget r _focus pos parentSize _ctx WidgetColor{..} style CmnRsc{..} (ImageView image) = do
+renderWidget r _focus pos parentSize _ctx style CmnRsc{..} (ImageView image) = do
   let size = fromIntegral <$> parentSize
       rctx = G.RContext pos size Nothing Nothing
   G.renderTexture r image Nothing rctx
 
-renderWidget r _focus pos parentSize _ctx wc@WidgetColor{..} style cmnrsc Button{} = do
-  renderBackAndBorder r pos wc cmnrsc
+renderWidget r _focus pos parentSize _ctx style cmnrsc Button{} = do
+  renderBackAndBorder r pos style cmnrsc
   whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
 
-renderWidget r _focus pos parentSize _ctx wc style cmnrsc (Switch _ _ _ selected) = do
-  renderBackAndBorder r pos wc' cmnrsc
+renderWidget r _focus pos parentSize _ctx style cmnrsc (Switch _ _ _ selected) = do
+  renderBackAndBorder r pos style' cmnrsc
   whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
   where
-    wc'
-      | selected  = wc&wcBack .~ (wc^.wcTint)
-      | otherwise = wc
+    style'
+      | selected  = style&styleBgColor .~ (style^.styleTintColor)
+      | otherwise = style
 
-renderWidget r _focus pos parentSize _ctx wc@WidgetColor{..} style cmnrsc (Slider _ _ _ mKnob value) = do
-  renderBackAndBorder r pos wc cmnrsc
+renderWidget r _focus pos parentSize _ctx style cmnrsc (Slider _ _ _ mKnob value) = do
+  renderBackAndBorder r pos style cmnrsc
   whenJust mKnob $ \(SliderResource knobPrim valText) -> do
-    renderKnob r knobPos wc knobPrim
+    renderKnob r knobPos style knobPrim
     renderValue valText
     whenJust (cmnrscTextTex cmnrsc) renderTitle
   where
@@ -73,8 +73,8 @@ renderWidget r _focus pos parentSize _ctx wc@WidgetColor{..} style cmnrsc (Slide
       where
         dx = round $ fromIntegral (parentSize^._x - 30) * rateFromValue value
 
-renderWidget r focus pos parentSize _ctx wc style cmnrsc (TextField _ fontSize _ mRsc) = do
-  renderBackAndBorder r pos wc cmnrsc
+renderWidget r focus pos parentSize _ctx style cmnrsc (TextField _ fontSize _ mRsc) = do
+  renderBackAndBorder r pos style cmnrsc
   whenJust mRsc $ \tfr -> do
     let height = fromMaybe fontSize $ firstJust id
                     [ view _y . G.texSize <$> txtFldRscLeft tfr
@@ -91,7 +91,7 @@ renderWidget r focus pos parentSize _ctx wc style cmnrsc (TextField _ fontSize _
     -- * Cursor
     posR <- if focus
               then do
-                G.setPrimColor r $ _wcTint wc
+                G.setPrimColor r $ style^.styleTintColor
                 G.drawPrim r (posCur&_x +~ 2) $ txtFldRscCursor tfr
                 return $ posCur & _x +~ 6
               else return posCur
@@ -101,30 +101,28 @@ renderWidget r focus pos parentSize _ctx wc style cmnrsc (TextField _ fontSize _
           rctx = G.RContext posR size Nothing Nothing
       G.renderTexture r tex Nothing rctx
 
-renderWidget r focus pos (V2 width height) ctx _wc style cmnrsc (Picker _ _ _ idx ts)
+renderWidget r focus pos (V2 width height) ctx style cmnrsc (Picker _ _ _ idx ts)
   | focus =
       forM_ (zip [0..] ts) $ \(i, tex) -> do
         let size = G.texSize tex
             pos' = pos & _y +~ (i * height)
             rctx = G.RContext pos' size Nothing Nothing
-        let wc = if i == idx then wcH else wcN
-        renderBackAndBorder r pos' wc cmnrsc
+        let style' = if i == idx then ctxstHover ctxst else ctxstNormal ctxst
+        renderBackAndBorder r pos' style' cmnrsc
         G.renderTexture r tex Nothing rctx
   | otherwise =
       case ts `atMay` idx of
         Just tex -> do
-          renderBackAndBorder r pos _wc cmnrsc
+          renderBackAndBorder r pos style cmnrsc
           let size = G.texSize tex
               rctx = G.RContext pos size Nothing Nothing
           G.renderTexture r tex Nothing rctx
         _ -> return ()
   where
-    ctxCol = ctx^.ctxContextColor
-    wcN = ctxcolNormal ctxCol
-    wcH = ctxcolHover ctxCol
+    ctxst = ctx^.ctxContextStyle
 
-renderWidget r _focus pos parentSize _ctx wcol style CmnRsc{..} (UserWidget a) =
-  renderW r pos parentSize wcol a
+renderWidget r _focus pos parentSize _ctx style CmnRsc{..} (UserWidget a) =
+  renderW r pos parentSize style a
 
 renderTex_ :: G.Renderer -> V2 Int -> V2 Int -> Style -> G.Texture -> IO ()
 renderTex_ r pos parentSize style tex =
@@ -143,15 +141,15 @@ renderTex_ r pos parentSize style tex =
         mkPos TACenter = pos & _x +~ dx & _y +~ dy
           where dx = (dsize^._x) `div` 2
 
-genTitle :: G.Renderer -> WidgetColor ->  Widget -> IO (Maybe G.Texture)
-genTitle r wc (Label title font size) =
-  Just <$> genTextTexture r font size (wc^.wcTitle) title
-genTitle r wc (Button title font size) =
-  Just <$> genTextTexture r font size (wc^.wcTitle) title
-genTitle r wc (Switch title font size _) =
-  Just <$> genTextTexture r font size (wc^.wcTitle) title
-genTitle r wc (Slider title font size _ _) =
-  Just <$> genTextTexture r font size (wc^.wcTitle) title
+genTitle :: G.Renderer -> Style ->  Widget -> IO (Maybe G.Texture)
+genTitle r style (Label title font size) =
+  Just <$> genTextTexture r font size (style^.styleTextColor) title
+genTitle r style (Button title font size) =
+  Just <$> genTextTexture r font size (style^.styleTextColor) title
+genTitle r style (Switch title font size _) =
+  Just <$> genTextTexture r font size (style^.styleTextColor) title
+genTitle r style (Slider title font size _ _) =
+  Just <$> genTextTexture r font size (style^.styleTextColor) title
 genTitle _ _ TextField{} = return Nothing
 genTitle _ _ Picker{} = return Nothing
 genTitle _ _ Transparent{} = return Nothing
@@ -166,18 +164,18 @@ genTextTexture rndr font size color title = do
   return tex
 
 -- Internal
-renderBackAndBorder :: MonadIO m => G.Renderer -> V2 Int -> WidgetColor -> CommonResource -> m ()
-renderBackAndBorder r pos wc@WidgetColor{..} CmnRsc{..} = liftIO $ do
-  G.setPrimColor r _wcBack
+renderBackAndBorder :: MonadIO m => G.Renderer -> V2 Int -> Style -> CommonResource -> m ()
+renderBackAndBorder r pos Style{..} CmnRsc{..} = liftIO $ do
+  G.setPrimColor r _styleBgColor
   G.drawPrim r pos' cmnrscRectFill
-  G.setPrimColor r _wcBorder
+  G.setPrimColor r _styleBorderColor
   G.drawPrim r pos' cmnrscRectBorder
   where
     pos' = fromIntegral <$> pos
 
-renderKnob :: MonadIO m => G.Renderer -> V2 Int -> WidgetColor -> G.Prim -> m ()
-renderKnob r pos WidgetColor{..} rect = liftIO $ do
-  G.setPrimColor r _wcTint
+renderKnob :: MonadIO m => G.Renderer -> V2 Int -> Style -> G.Prim -> m ()
+renderKnob r pos Style{..} rect = liftIO $ do
+  G.setPrimColor r _styleTintColor
   G.drawPrim r pos' rect
   where
     pos' = fromIntegral <$> pos

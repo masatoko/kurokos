@@ -38,18 +38,13 @@ module Kurokos.UI
   , draggable
   , droppable
   , visible
-  -- * Color
+  -- * Style
   , Color
-  , WidgetColor (..)
-  , wcBack
-  , wcBorder
-  , wcTitle
-  , wcTint
-  , ContextColor (..)
-  -- * ColorScheme
-  , ColorScheme
-  , readColorScheme
-  , parseColorScheme
+  , ContextStyle
+  -- * Style scheme
+  , StyleMap
+  , readStyleMap
+  , parseStyleMap
   -- * Type
   , GuiEvent (..)
   , WidgetInfo (..)
@@ -147,8 +142,7 @@ module Kurokos.UI
   ) where
 
 import           Kurokos.UI.Color
-import           Kurokos.UI.Color.Scheme    (ColorScheme, parseColorScheme,
-                                             readColorScheme)
+import           Kurokos.UI.Scheme
 import           Kurokos.UI.Control
 import           Kurokos.UI.Control.Control
 import           Kurokos.UI.Control.Cursor

@@ -12,8 +12,8 @@ makeGui = do
   r <- K.getRenderer
   (_,sdlAssets) <- allocate (Asset.newSDLAssetManager r ast)
                             Asset.freeSDLAssetManager
-  colorScheme <- liftIO $ UI.readColorScheme "color-scheme.yaml"
-  gui <- alloc (UI.newGui (UI.GuiEnv sdlAssets colorScheme) initGui) UI.freeGui
+  styleMap <- liftIO $ UI.readStyleMap "style-scheme.yaml"
+  gui <- alloc (UI.newGui (UI.GuiEnv sdlAssets styleMap) initGui) UI.freeGui
   return gui
   where
     initGui = do

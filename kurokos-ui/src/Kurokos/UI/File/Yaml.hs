@@ -18,10 +18,10 @@ import qualified Data.Yaml             as Y
 import qualified Kurokos.Asset.Raw     as Asset
 import           Kurokos.Graphics      (FontSize)
 import qualified Kurokos.RPN           as RPN
-import           Kurokos.UI.Color      (ContextColor)
 import           Kurokos.UI.Core
 import           Kurokos.UI.Import
 import           Kurokos.UI.Types
+import           Kurokos.UI.Scheme
 
 decodeWidgets :: BS.ByteString -> Either Y.ParseException YWidgets
 decodeWidgets = Y.decodeEither'
@@ -61,7 +61,6 @@ data YWidget
   = Single
     { wType   :: String
     , wName   :: Maybe String
-    , wColor  :: Maybe ContextColor
     , wX      :: UExp
     , wY      :: UExp
     , wWidth  :: UExp
@@ -73,11 +72,10 @@ data YWidget
     , wAsset  :: Maybe Asset.Ident
     --
     , wTitle  :: Maybe Title
-    , wStyle  :: Style
+    -- , wStyle  :: StyleConf
     }
   | Container
     { wName          :: Maybe String
-    , wColor         :: Maybe ContextColor
     , wX             :: UExp
     , wY             :: UExp
     , wWidth         :: UExp
@@ -85,7 +83,7 @@ data YWidget
     , wContainerType :: ContainerType
     , wChildren      :: [YWidget]
     , wAttrib        :: Maybe YWidgetAttrib
-    , wStyle         :: Style
+    -- , wStyle         :: StyleConf
     }
   deriving (Eq, Show)
 
@@ -96,7 +94,6 @@ instance FromJSON YWidget where
       "container" -> makeContainer v
       _           -> Single wtype
         <$> v .:? "name"
-        <*> v .:? "color"
         <*> getUExp "x" (C 0) v
         <*> getUExp "y" (C 0) v
         <*> getUExp "w" (Rpn "$min-width") v
@@ -107,13 +104,12 @@ instance FromJSON YWidget where
         --
         <*> v .:? "asset"
         <*> v .:? "title"
-        <*> (fromMaybe defStyle <$> (v .:? "style"))
+        -- <*> (fromMaybe defStyle <$> (v .:? "style"))
   parseJSON _ = fail "Expected Object for Config value"
 
 makeContainer :: Y.Object -> Y.Parser YWidget
 makeContainer v = Container
   <$> v .:? "name"
-  <*> v .:? "color"
   <*> getUExp "x" (C 0) v
   <*> getUExp "y" (C 0) v
   <*> getUExp "w" (Rpn "$min-width") v
@@ -121,8 +117,7 @@ makeContainer v = Container
   <*> (parseContainerType <$> (v .:? "order"))
   <*> (fromMaybe [] <$> v .:? "children")
   <*> v .:? "attrib"
-  --
-  <*> (fromMaybe defStyle <$> (v .:? "style"))
+  -- <*> (fromMaybe defStyle <$> (v .:? "style"))
 
 getUExp :: Text -> UExp -> Y.Object -> Y.Parser UExp
 getUExp label def v = do
@@ -170,26 +165,26 @@ instance FromJSON Title where
     <*> v .: "asset"
   parseJSON _ = fail "Expected Object for Title"
 
-instance FromJSON Style where
-  parseJSON (Y.Object v) = Style
-    <$> (maybe TACenter parseTextAlign <$> v .:? "text-align")
-    <*> (maybe defMargin parseMargin <$> v .:? "margin")
+-- instance FromJSON Style where
+--   parseJSON (Y.Object v) = Style
+--     <$> (maybe TACenter parseTextAlign <$> v .:? "text-align")
+--     <*> (maybe defMargin parseMargin <$> v .:? "margin")
 
-parseTextAlign :: String -> TextAlign
-parseTextAlign "left"   = TALeft
-parseTextAlign "right"  = TARight
-parseTextAlign "center" = TACenter
+-- parseTextAlign :: String -> TextAlign
+-- parseTextAlign "left"   = TALeft
+-- parseTextAlign "right"  = TARight
+-- parseTextAlign "center" = TACenter
 
-parseMargin :: String -> LRTB Int
-parseMargin str =
-  case mapMaybe readMay $ splitOn " " str of
-    (l:r:t:b:_) -> LRTB l r t b
-    _           -> error $ "parse error for margin: " ++ str
+-- parseMargin :: String -> LRTB Int
+-- parseMargin str =
+--   case mapMaybe readMay $ splitOn " " str of
+--     (l:r:t:b:_) -> LRTB l r t b
+--     _           -> error $ "parse error for margin: " ++ str
 
-defStyle :: Style
-defStyle = Style textAlign defMargin
-  where
-    textAlign = TACenter
+-- defStyle :: Style
+-- defStyle = Style textAlign defMargin
+--   where
+--     textAlign = TACenter
 
-defMargin :: LRTB Int
-defMargin = LRTB 4 4 4 4
+-- defMargin :: LRTB Int
+-- defMargin = LRTB 4 4 4 4

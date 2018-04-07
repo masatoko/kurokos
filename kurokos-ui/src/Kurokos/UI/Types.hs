@@ -7,6 +7,7 @@ import           Data.Default.Class
 import           Data.Int              (Int64)
 import           Data.Maybe            (fromMaybe)
 import           Data.Word             (Word8)
+import qualified Data.Yaml             as Y
 import           Foreign.C.Types       (CInt)
 import           Linear.V2
 import           Linear.V4
@@ -16,7 +17,6 @@ import qualified SDL
 import qualified Kurokos.Graphics      as G
 import qualified Kurokos.RPN           as RPN
 
-import           Kurokos.UI.Color
 import           Kurokos.UI.WidgetTree (WidgetTreePath)
 
 type WidgetIdent = Int64
@@ -29,6 +29,8 @@ type WTName = String
 -- Size
 type GuiPos = SDL.Point V2 CInt
 type GuiSize = V2 CInt
+
+type Color = V4 Word8
 
 data ContainerType
   = Unordered
@@ -128,11 +130,22 @@ data LRTB a = LRTB
   } deriving (Eq, Show)
 
 data Style = Style
-  { _styleTextAlign :: TextAlign
-  , _styleMargin    :: LRTB Int
+  { _styleTextColor   :: Color
+  , _styleTextAlign   :: TextAlign
+  , _styleFontIdent   :: String
+  , _styleMargin      :: LRTB Int
+  , _styleTintColor   :: Color
+  , _styleBgColor     :: Color
+  , _styleBorderColor :: Color
   } deriving (Eq, Show)
 
 makeLenses ''Style
+
+data ContextStyle = ContextStyle
+  { ctxstNormal :: Style
+  , ctxstHover  :: Style
+  -- , ctxstClick  :: Style
+  } deriving (Eq, Show)
 
 data WContext = WContext
   { _ctxIdent         :: WTIdent
@@ -144,8 +157,7 @@ data WContext = WContext
   , _ctxNeedsResize   :: Bool
   , _ctxWidgetState   :: WidgetState
   , _ctxCmnRsc        :: CommonResource
-  , _ctxContextColor  :: ContextColor
-  , _ctxStyle         :: Style
+  , _ctxContextStyle  :: ContextStyle
   , _ctxUPos          :: V2 Exp
   , _ctxUSize         :: V2 Exp
   } deriving Show
@@ -154,8 +166,7 @@ makeLenses ''WContext
 
 data WidgetConfig = WidgetConfig
   { wconfName   :: Maybe WTName
-  , wconfColor  :: Maybe ContextColor
-  , wconfStyle  :: Style
+  , wconfStyle  :: Maybe ContextStyle
   , wconfAttrib :: Maybe WidgetAttrib
   , wconfPosX   :: UExp
   , wconfPosY   :: UExp
@@ -164,22 +175,16 @@ data WidgetConfig = WidgetConfig
   } deriving Show
 
 instance Default WidgetConfig where
-  def = WidgetConfig Nothing Nothing style Nothing x y w h
-    where
-      style = Style TACenter (LRTB 0 0 0 0)
-      x = C 0
-      y = C 0
-      w = Rpn "$min-width"
-      h = Rpn "$min-height"
+  def = WidgetConfig Nothing Nothing Nothing (C 0) (C 0) (Rpn "$min-width") (Rpn "$min-height")
 
-optimumColor :: WContext -> WidgetColor
-optimumColor WContext{..}
-  | _wstHover = ctxcolHover
-  -- | _wstClick = ctxcolClick -- TODO: Implement color when clicked.
-  | otherwise = ctxcolNormal
+optimumStyle :: WContext -> Style
+optimumStyle ctx
+  | wst^.wstHover = ctxstHover
+  -- | wst^.wstClick = ctxstClick
+  | otherwise     = ctxstNormal
   where
-    ContextColor{..} = _ctxContextColor
-    WidgetState{..} = _ctxWidgetState
+    ContextStyle{..} = ctx^.ctxContextStyle
+    wst = ctx^.ctxWidgetState
 
 data Cursor = Cursor
   { _cursorPos  :: GuiPos
