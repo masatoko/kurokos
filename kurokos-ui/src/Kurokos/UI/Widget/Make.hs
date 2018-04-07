@@ -24,43 +24,38 @@ import           Kurokos.UI.Core
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
 
-newTransparent :: Monad m => GuiT m Widget
-newTransparent = return Transparent
+mkTransparent :: Widget
+mkTransparent = Transparent
 
-newFill :: Monad m => GuiT m Widget
-newFill = return Fill
+mkFill :: Widget
+mkFill = Fill
 
-newLabel :: MonadIO m => T.Text -> GuiT m Widget
-newLabel title =
-  return $ Label title
+mkLabel :: T.Text -> Widget
+mkLabel = Label
 
 newImageView :: MonadIO m => Asset.Ident -> GuiT m Widget
 newImageView ident = ImageView <$> getTexture ident
 
-newButton :: MonadIO m => Asset.Ident -> GuiT m Widget
-newButton title =
-  return $ Button title
+mkButton :: T.Text -> Widget
+mkButton = Button
 
-newSwitch :: MonadIO m => T.Text -> GuiT m Widget
-newSwitch title =
-  return $ Switch title True
+mkSwitch :: T.Text -> Widget
+mkSwitch title = Switch title True
 
-newSlider :: MonadIO m => T.Text -> Value -> GuiT m Widget
-newSlider title value =
-  return $ Slider title Nothing value
+mkSlider :: T.Text -> Value -> Widget
+mkSlider title = Slider title Nothing
 
-newTextField :: MonadIO m => T.Text -> GuiT m Widget
-newTextField iniText =
-  return $ TextField z Nothing
+mkTextField :: T.Text -> Widget
+mkTextField iniText = TextField z Nothing
   where
     z = TZ.textZipper [iniText] Nothing
 
-newPicker :: MonadIO m => [(String, T.Text)] -> Maybe String -> GuiT m Widget
-newPicker ts mDefKey = do
-  let idx = case mDefKey of
-              Just defkey -> fromMaybe 0 $ findIndex ((== defkey) . fst) ts
-              Nothing     -> 0
-  return $ Picker ts idx []
+mkPicker :: [(String, T.Text)] -> Maybe String -> Widget
+mkPicker ts mDefKey = Picker ts idx []
+  where
+    idx = case mDefKey of
+            Just defkey -> fromMaybe 0 $ findIndex ((== defkey) . fst) ts
+            Nothing     -> 0
 
 -- Internal
 

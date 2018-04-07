@@ -49,17 +49,17 @@ convert s@Single{..} = do
     conf = WidgetConfig wName wClass Nothing Nothing wX wY wWidth wHeight
     text = fromMaybe " " wText
     generate
-      | wType == N.wnameFill      = newFill
-      | wType == N.wnameLabel     = newLabel text
-      | wType == N.wnameButton    = newButton text
-      | wType == N.wnameSwitch    = newSwitch text
-      | wType == N.wnameSlider    = newSlider text value
+      | wType == N.wnameFill      = return mkFill
+      | wType == N.wnameLabel     = return $ mkLabel text
+      | wType == N.wnameButton    = return $ mkButton text
+      | wType == N.wnameSwitch    = return $ mkSwitch text
+      | wType == N.wnameSlider    = return $ mkSlider text value
       | wType == N.wnameImageView = newImageView =<< getAssetId
-      | wType == N.wnameTextField = newTextField text
+      | wType == N.wnameTextField = return $ mkTextField text
       | wType == N.wnamePicker    =
           case wPicker of
             Nothing                           -> liftIO $ E.throwIO $ userError "Missing 'picker' key"
-            Just (YPicker elems keys mDefKey) -> newPicker (zip keys elems) mDefKey
+            Just (YPicker elems keys mDefKey) -> return $ mkPicker (zip keys elems) mDefKey
       | otherwise                 = liftIO $ E.throwIO $ userError $ "unkown widget type: " ++ wType
 
     getAssetId = case wAsset of

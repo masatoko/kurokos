@@ -58,15 +58,15 @@ module Kurokos.UI
   -- * Widget
   , Widget (UserWidget)
   , Value (..)
-  , newTransparent
-  , newFill
-  , newLabel
+  , mkTransparent
+  , mkFill
+  , mkLabel
   , newImageView
-  , newButton
-  , newSwitch
-  , newSlider
-  , newTextField
-  , newPicker
+  , mkButton
+  , mkSwitch
+  , mkSlider
+  , mkTextField
+  , mkPicker
   -- * Widget.Module
   -- ** Getting
   , getBool

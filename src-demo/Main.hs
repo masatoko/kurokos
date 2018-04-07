@@ -15,7 +15,7 @@ import qualified Kurokos.Asset.Raw as Asset
 
 import           Game
 import           Import
-import           Scene             (runTitleScene)
+-- import           Scene             (runTitleScene)
 import           Scene.UITest      (runUITestScene)
 
 main :: IO ()
