@@ -10,20 +10,20 @@ module Kurokos.UI.Scheme
 import qualified Control.Exception       as E
 import           Control.Lens
 import           Data.ByteString         as BS
+import           Data.Char               (toLower)
 import qualified Data.HashMap.Lazy       as HM
 import           Data.List.Extra         (firstJust)
 import           Data.List.Split         (chunksOf, splitOn)
 import qualified Data.Map                as M
-import           Data.Maybe              (catMaybes, mapMaybe)
+import           Data.Maybe              (catMaybes, fromMaybe, mapMaybe)
 import qualified Data.Text               as T
 import           Data.Word               (Word8)
 import           Data.Yaml               (FromJSON (..), (.:), (.:?))
 import qualified Data.Yaml               as Y
+import           Linear.V4
 import           Safe                    (atMay, readMay)
 
-import           SDL.Vect
-
-import           Kurokos.UI.Import
+import           Kurokos.UI.Import       (MonadIO, liftIO)
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget       (Widget)
 import           Kurokos.UI.Widget.Names (WidgetName, widgetNameOf)
@@ -61,20 +61,34 @@ instance FromJSON StyleConf where
   parseJSON _ = fail "Expected Object for StyleConf"
 
 readColor :: String -> Maybe Color
-readColor str = fromFour
+readColor str = firstJust id [fromFour, fromHex]
   where
     fromFour = V4 <$> at 0 <*> at 1 <*> at 2 <*> pure (fromMaybe 255 (at 3))
       where
         xs = splitOn " " str
         at i = readMay =<< xs `atMay` i
-    -- fromHex =
-    --   case str of
-    --     '#':str' ->
-    --       let xs = chunksOf 2 str'
-    --           bs = map toHex xs
-    --           at i = bs `atMay` i
-    --       in V4 <$> at 0 <*> at 1 <*> at 2 <*> pure (fromMaybe 255 (at 3))
-    --     _ -> Nothing
+    fromHex =
+      case str of
+        '#':str' ->
+          let xs = chunksOf 2 str'
+              bs = Prelude.map (fromIntegral . readHex) xs
+              at i = bs `atMay` i
+          in V4 <$> at 0 <*> at 1 <*> at 2 <*> pure (fromMaybe 255 (at 3))
+        _ -> Nothing
+
+readHex :: String -> Int
+readHex cs =
+  let ns = Prelude.map (work . toLower) $ Prelude.reverse cs
+      go i n = (16 ^ i) * n
+  in sum $ Prelude.zipWith go [0..] ns
+  where
+    work 'a' = 10
+    work 'b' = 11
+    work 'c' = 12
+    work 'd' = 13
+    work 'e' = 14
+    work 'f' = 15
+    work  n  = read [n]
 
 readTextAlign :: String -> Maybe TextAlign
 readTextAlign "left"   = Just TALeft

@@ -6,10 +6,11 @@ def:
   text-color: 54 20 171 255
   tint-color: 220 220 220 255
 def@hover:
-  background-color: 240 240 240 255
+  background-color: "#f0f0f0ff" # Hex color is available
   border-color: 220 220 220 255
 
 fill:
   background-color: 0 0 0 30
 label:
-  background-color: 255 255 255 30
+  background-color: 0 0 0 0
+  border-color: 0 0 0 0
