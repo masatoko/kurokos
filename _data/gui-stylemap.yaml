@@ -3,10 +3,10 @@ def:
   font: "font-m"
   font-size: 16
   background-color: 255 255 255 255
-  border-color: 220 220 220 255
+  border-color: 220 220 220 # You can skip 4th value (alpha). Default is 255.
   text-color: 54 20 171 255
   tint-color: 220 220 220 255
-def@hover:
+def@hover: # Style when hovering
   background-color: "#f0f0f0ff" # Hex color is available
   border-color: 220 220 220 255
 
@@ -22,3 +22,8 @@ label:
   text-color: 255 0 0 255
 $test3: # Style for name if a headding char is '$'
   text-color: 0 255 0 255
+label$test4:
+  text-color: 0 0 255 255
+label$test4@hover:
+  background-color: 0 0 0 255
+  text-color: 255 255 255 255
