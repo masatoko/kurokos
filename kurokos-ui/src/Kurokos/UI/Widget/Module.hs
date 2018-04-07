@@ -19,57 +19,57 @@ import           Kurokos.UI.Widget
 
 -- | Get current state of Switch
 getBool :: Widget -> Maybe Bool
-getBool (Switch _ _ _ bool) = Just bool
-getBool _                   = Nothing
+getBool (Switch _ bool) = Just bool
+getBool _               = Nothing
 
 -- | Get current value of Int Slider
 getInt :: Widget -> Maybe Int
-getInt (Slider _ _ _ _ (ValueI v _ _)) = Just v
-getInt (TextField _ _ z _)             = readMay . T.unpack . TZ.currentLine $ z
-getInt _                               = Nothing
+getInt (Slider _ _ (ValueI v _ _)) = Just v
+getInt (TextField z _)             = readMay . T.unpack . TZ.currentLine $ z
+getInt _                           = Nothing
 
 -- | Get current value of Float Slider
 getFloat :: Widget -> Maybe Float
-getFloat (Slider _ _ _ _ (ValueF v _ _)) = Just v
-getFloat (TextField _ _ z _)             = readMay . T.unpack . TZ.currentLine $ z
-getFloat _                               = Nothing
+getFloat (Slider _ _ (ValueF v _ _)) = Just v
+getFloat (TextField z _)             = readMay . T.unpack . TZ.currentLine $ z
+getFloat _                           = Nothing
 
 -- | Get current value of Double Slider
 getDouble :: Widget -> Maybe Double
-getDouble (Slider _ _ _ _ (ValueD v _ _)) = Just v
-getDouble (TextField _ _ z _)             = readMay . T.unpack . TZ.currentLine $ z
-getDouble _                               = Nothing
+getDouble (Slider _ _ (ValueD v _ _)) = Just v
+getDouble (TextField z _)             = readMay . T.unpack . TZ.currentLine $ z
+getDouble _                           = Nothing
 
 getText :: Widget -> Maybe T.Text
-getText (TextField _ _ z _) = Just $ TZ.currentLine z
-getText _                   = Nothing
+getText (TextField z _) = Just $ TZ.currentLine z
+getText _               = Nothing
 
 -- | Get key of Picker widget
 getKey :: Widget -> Maybe String
-getKey (Picker ts _ _ idx _) = fst <$> ts `atMay` idx
-getKey _                     = Nothing
+getKey (Picker ts idx _) = fst <$> ts `atMay` idx
+getKey _                 = Nothing
 
 -- * Control
 
 widgetLeft :: Widget -> Widget
-widgetLeft (TextField font size z mRsc) = TextField font size (TZ.moveLeft z) mRsc
+widgetLeft (TextField z mRsc) = TextField (TZ.moveLeft z) mRsc
 widgetLeft w = w
 
 widgetRight :: Widget -> Widget
-widgetRight (TextField font size z mRsc) = TextField font size (TZ.moveRight z) mRsc
+widgetRight (TextField z mRsc) = TextField (TZ.moveRight z) mRsc
 widgetRight w = w
 
 widgetInputText :: T.Text -> Widget -> Widget
-widgetInputText text (TextField font size z mRsc) =
-  TextField font size (TZ.insertMany text z) mRsc
+widgetInputText text (TextField z mRsc) =
+  TextField (TZ.insertMany text z) mRsc
 widgetInputText _ w = w
 
 widgetDeleteChar :: Widget -> Widget
-widgetDeleteChar (TextField font size z mRsc) =
-  TextField font size (TZ.deleteChar z) mRsc
+widgetDeleteChar (TextField z mRsc) =
+  TextField (TZ.deleteChar z) mRsc
 widgetDeleteChar w = w
 
 widgetBackspace :: Widget -> Widget
-widgetBackspace (TextField font size z mRsc) =
-  TextField font size (TZ.deletePrevChar z) mRsc
+widgetBackspace (TextField z mRsc) =
+  TextField (TZ.deletePrevChar z) mRsc
 widgetBackspace w = w

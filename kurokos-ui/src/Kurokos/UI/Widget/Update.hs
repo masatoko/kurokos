@@ -30,8 +30,9 @@ import           Kurokos.UI.Widget
 --
 -- Called from Core.readyRender
 -- Ready something except for CommonResource
-onReadyLayout :: (RenderEnv m, MonadIO m) => V2 Int -> Style -> Widget -> m Widget
-onReadyLayout (V2 w h) style (Slider title font size mPreKnob value) = do
+onReadyLayout :: (RenderEnv m, MonadIO m) => Asset.AssetManager -> V2 Int -> Style -> Widget -> m Widget
+onReadyLayout ast (V2 w h) style (Slider title mPreKnob value) = do
+  (font, size) <- getFontSize ast style
   -- * Release
   liftIO $ whenJust mPreKnob $ \rsc -> do
     G.freePrim $ sliderRscKnob rsc
@@ -40,8 +41,9 @@ onReadyLayout (V2 w h) style (Slider title font size mPreKnob value) = do
   knob <- withRenderer $ \r -> G.newFillRectangle r (V2 30 (fromIntegral h))
   textTex <- genTextTexture font size (_styleTextColor style) (T.pack $ showValue value)
   let rsc = SliderResource knob textTex
-  return $ Slider title font size (Just rsc) value
-onReadyLayout (V2 w h) style (TextField font size z mRsc) = do
+  return $ Slider title (Just rsc) value
+onReadyLayout ast (V2 w h) style (TextField z mRsc) = do
+  (font, size) <- getFontSize ast style
   -- * Release
   liftIO $ whenJust mRsc $ \rsc -> do
     whenJust (txtFldRscLeft rsc) G.deleteTexture
@@ -58,14 +60,15 @@ onReadyLayout (V2 w h) style (TextField font size z mRsc) = do
             then return Nothing
             else Just <$> genTextTexture font size (_styleTextColor style) textR
   let rsc = TextFieldResource cursor mTexL mTexR
-  return $ TextField font size z (Just rsc)
-onReadyLayout (V2 w h) style (Picker ts font size idx textures0) = do
+  return $ TextField z (Just rsc)
+onReadyLayout ast (V2 w h) style (Picker ts idx textures0) = do
+  (font, size) <- getFontSize ast style
   -- * Release
   unless (null textures0) $ liftIO $ mapM_ G.deleteTexture textures0
   -- * Make
   textures <- mapM (genTextTexture font size (_styleTextColor style) . snd) ts
-  return $ Picker ts font size idx textures
-onReadyLayout _ _ w = return w
+  return $ Picker ts idx textures
+onReadyLayout _ _ _ w = return w
 
 genTextTexture :: (RenderEnv m, MonadIO m) => Font.Font -> G.FontSize -> G.Color -> T.Text -> m G.Texture
 genTextTexture font size color text = do
@@ -80,15 +83,15 @@ modifyOnClicked :: WContext
                 -> V2 CInt -- ^ Widget size
                 -> Widget
                 -> Widget
-modifyOnClicked _ _ _ _ (Switch title font size bool) = Switch title font size (not bool)
-modifyOnClicked _ (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title font size mPrim value) =
+modifyOnClicked _ _ _ _ (Switch title bool) = Switch title (not bool)
+modifyOnClicked _ (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title mPrim value) =
   -- Calculate value by click position
-  Slider title font size mPrim value'
+  Slider title mPrim value'
   where
     rate = fromIntegral (curX - wx) / fromIntegral w
     value' = updateValueByRate rate value
-modifyOnClicked ctx (P (V2 curX curY)) (P (V2 wx wy)) _ w0@(Picker ts font size _ textures)
-  | focus     = Picker ts font size idx textures
+modifyOnClicked ctx (P (V2 curX curY)) (P (V2 wx wy)) _ w0@(Picker ts _ textures)
+  | focus     = Picker ts idx textures
   | otherwise = w0
   where
     V2 w h = wstSize $ ctx^.ctxWidgetState
@@ -101,10 +104,19 @@ modifyWhenHoverWithLHold :: Point V2 CInt -- ^ Cursor position
                           -> V2 CInt -- ^ Widget size
                           -> Widget
                           -> Maybe Widget
-modifyWhenHoverWithLHold (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title font size mPrim value) =
+modifyWhenHoverWithLHold (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title mPrim value) =
   -- Calculate value by click position
-  Just $ Slider title font size mPrim value'
+  Just $ Slider title mPrim value'
   where
     rate = fromIntegral (curX - wx) / fromIntegral w
     value' = updateValueByRate rate value
 modifyWhenHoverWithLHold _ _ _ w = Nothing
+
+getFontSize :: MonadIO m => Asset.AssetManager -> Style -> m (Font.Font, G.FontSize)
+getFontSize ast style =
+  case Asset.lookupFont ident ast of
+    Nothing   -> liftIO $ E.throwIO $ userError $ "Missing font: " ++ T.unpack ident
+    Just font -> return (font, size)
+  where
+    ident = style^.styleFontIdent
+    size = style^.styleFontSize

@@ -50,16 +50,16 @@ convert s@Single{..} = do
     Title titleText titleSize titleAssetIdent = fromMaybe (error "Missing title") wTitle
     generate
       | wType == N.wnameFill      = newFill
-      | wType == N.wnameLabel     = newLabel titleAssetIdent titleSize titleText
-      | wType == N.wnameButton    = newButton titleAssetIdent titleSize titleText
-      | wType == N.wnameSwitch    = newSwitch titleAssetIdent titleSize titleText
-      | wType == N.wnameSlider    = newSlider titleAssetIdent titleSize titleText value
+      | wType == N.wnameLabel     = newLabel titleText
+      | wType == N.wnameButton    = newButton titleText
+      | wType == N.wnameSwitch    = newSwitch titleText
+      | wType == N.wnameSlider    = newSlider titleText value
       | wType == N.wnameImageView = newImageView =<< getAssetId
-      | wType == N.wnameTextField = newTextField titleAssetIdent titleSize titleText
+      | wType == N.wnameTextField = newTextField titleText
       | wType == N.wnamePicker    =
           case wPicker of
             Nothing                           -> liftIO $ E.throwIO $ userError "Missing 'picker' key"
-            Just (YPicker elems keys mDefKey) -> newPicker titleAssetIdent titleSize (zip keys elems) mDefKey
+            Just (YPicker elems keys mDefKey) -> newPicker (zip keys elems) mDefKey
       | otherwise                 = liftIO $ E.throwIO $ userError $ "unkown widget type: " ++ wType
 
     getAssetId = case wAsset of

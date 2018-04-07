@@ -13,6 +13,7 @@ import           Safe                  (atMay)
 import           SDL                   (($=))
 import qualified SDL
 
+import qualified Kurokos.Asset         as Asset
 import           Kurokos.Graphics      (ctAdvanceX, ctColor)
 import qualified Kurokos.Graphics      as G
 import qualified Kurokos.Graphics.Font as Font
@@ -42,7 +43,7 @@ renderWidget r _focus pos parentSize _ctx style cmnrsc Button{} = do
   renderBackAndBorder r pos style cmnrsc
   whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
 
-renderWidget r _focus pos parentSize _ctx style cmnrsc (Switch _ _ _ selected) = do
+renderWidget r _focus pos parentSize _ctx style cmnrsc (Switch _ selected) = do
   renderBackAndBorder r pos style' cmnrsc
   whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
   where
@@ -50,7 +51,7 @@ renderWidget r _focus pos parentSize _ctx style cmnrsc (Switch _ _ _ selected) =
       | selected  = style&styleBgColor .~ (style^.styleTintColor)
       | otherwise = style
 
-renderWidget r _focus pos parentSize _ctx style cmnrsc (Slider _ _ _ mKnob value) = do
+renderWidget r _focus pos parentSize _ctx style cmnrsc (Slider _ mKnob value) = do
   renderBackAndBorder r pos style cmnrsc
   whenJust mKnob $ \(SliderResource knobPrim valText) -> do
     renderKnob r knobPos style knobPrim
@@ -73,7 +74,7 @@ renderWidget r _focus pos parentSize _ctx style cmnrsc (Slider _ _ _ mKnob value
       where
         dx = round $ fromIntegral (parentSize^._x - 30) * rateFromValue value
 
-renderWidget r focus pos parentSize _ctx style cmnrsc (TextField _ fontSize _ mRsc) = do
+renderWidget r focus pos parentSize _ctx style cmnrsc (TextField _ mRsc) = do
   renderBackAndBorder r pos style cmnrsc
   whenJust mRsc $ \tfr -> do
     let height = fromMaybe fontSize $ firstJust id
@@ -100,8 +101,10 @@ renderWidget r focus pos parentSize _ctx style cmnrsc (TextField _ fontSize _ mR
       let size = G.texSize tex
           rctx = G.RContext posR size Nothing Nothing
       G.renderTexture r tex Nothing rctx
+  where
+    fontSize = style^.styleFontSize
 
-renderWidget r focus pos (V2 width height) ctx style cmnrsc (Picker _ _ _ idx ts)
+renderWidget r focus pos (V2 width height) ctx style cmnrsc (Picker _ idx ts)
   | focus =
       forM_ (zip [0..] ts) $ \(i, tex) -> do
         let size = G.texSize tex
@@ -141,27 +144,30 @@ renderTex_ r pos parentSize style tex =
         mkPos TACenter = pos & _x +~ dx & _y +~ dy
           where dx = (dsize^._x) `div` 2
 
-genTitle :: G.Renderer -> Style ->  Widget -> IO (Maybe G.Texture)
-genTitle r style (Label title font size) =
-  Just <$> genTextTexture r font size (style^.styleTextColor) title
-genTitle r style (Button title font size) =
-  Just <$> genTextTexture r font size (style^.styleTextColor) title
-genTitle r style (Switch title font size _) =
-  Just <$> genTextTexture r font size (style^.styleTextColor) title
-genTitle r style (Slider title font size _ _) =
-  Just <$> genTextTexture r font size (style^.styleTextColor) title
-genTitle _ _ TextField{} = return Nothing
-genTitle _ _ Picker{} = return Nothing
-genTitle _ _ Transparent{} = return Nothing
-genTitle _ _ Fill{} = return Nothing
-genTitle _ _ ImageView{} = return Nothing
+genTitle :: Asset.AssetManager -> G.Renderer -> Style ->  Widget -> IO (Maybe G.Texture)
+genTitle ast r style (Label title) =
+  Just <$> genTextTexture ast r style title
+genTitle ast r style (Button title) =
+  Just <$> genTextTexture ast r style title
+genTitle ast r style (Switch title _) =
+  Just <$> genTextTexture ast r style title
+genTitle ast r style (Slider title _ _) =
+  Just <$> genTextTexture ast r style title
+genTitle _ _ _ TextField{} = return Nothing
+genTitle _ _ _ Picker{} = return Nothing
+genTitle _ _ _ Transparent{} = return Nothing
+genTitle _ _ _ Fill{} = return Nothing
+genTitle _ _ _ ImageView{} = return Nothing
 
-genTextTexture :: G.Renderer -> Font.Font -> G.FontSize -> G.Color -> T.Text -> IO G.Texture
-genTextTexture rndr font size color title = do
+genTextTexture :: Asset.AssetManager -> G.Renderer -> Style -> T.Text -> IO G.Texture
+genTextTexture ast rndr style title = do
+  (font, size) <- getFontSize ast style
   text <- G.createTextTexture font size color title
   tex <- G.genTextImage rndr text
   G.deleteTextTexture text
   return tex
+  where
+    color = style^.styleTextColor
 
 -- Internal
 renderBackAndBorder :: MonadIO m => G.Renderer -> V2 Int -> Style -> CommonResource -> m ()
@@ -179,3 +185,12 @@ renderKnob r pos Style{..} rect = liftIO $ do
   G.drawPrim r pos' rect
   where
     pos' = fromIntegral <$> pos
+
+getFontSize :: MonadIO m => Asset.AssetManager -> Style -> m (Font.Font, G.FontSize)
+getFontSize ast style =
+  case Asset.lookupFont ident ast of
+    Nothing   -> liftIO $ E.throwIO $ userError $ "Missing font: " ++ T.unpack ident
+    Just font -> return (font, size)
+  where
+    ident = style^.styleFontIdent
+    size = style^.styleFontSize

@@ -6,6 +6,7 @@ import           Control.Lens
 import           Data.Default.Class
 import           Data.Int              (Int64)
 import           Data.Maybe            (fromMaybe)
+import qualified Data.Text             as T
 import           Data.Word             (Word8)
 import qualified Data.Yaml             as Y
 import           Foreign.C.Types       (CInt)
@@ -134,7 +135,8 @@ data LRTB a = LRTB
 data Style = Style
   { _styleTextColor   :: Color
   , _styleTextAlign   :: TextAlign
-  , _styleFontIdent   :: String
+  , _styleFontIdent   :: T.Text
+  , _styleFontSize    :: Int
   , _styleMargin      :: LRTB Int
   , _styleTintColor   :: Color
   , _styleBgColor     :: Color

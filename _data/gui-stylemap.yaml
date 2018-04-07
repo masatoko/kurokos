@@ -1,6 +1,7 @@
 def:
   text-align: center
-  font: "_system-font"
+  font: "font-m"
+  font-size: 16
   background-color: 255 255 255 255
   border-color: 220 220 220 255
   text-color: 54 20 171 255

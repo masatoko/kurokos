@@ -61,13 +61,13 @@ data TextFieldResource = TextFieldResource { txtFldRscCursor :: G.Prim, txtFldRs
 data Widget where
   Transparent :: Widget
   Fill        :: Widget
-  Label       :: Text -> Font.Font -> G.FontSize -> Widget
+  Label       :: Text -> Widget
   ImageView   :: G.Texture -> Widget
-  Button      :: Text -> Font.Font -> G.FontSize -> Widget
-  Switch      :: Text -> Font.Font -> G.FontSize -> Bool -> Widget
-  Slider      :: Text -> Font.Font -> G.FontSize -> Maybe SliderResource -> Value -> Widget
-  TextField   :: Font.Font -> G.FontSize -> TZ.TextZipper T.Text -> Maybe TextFieldResource -> Widget
-  Picker      :: [(String, Text)] -> Font.Font -> G.FontSize -> Int -> [G.Texture] -> Widget
+  Button      :: Text -> Widget
+  Switch      :: Text -> Bool -> Widget
+  Slider      :: Text -> Maybe SliderResource -> Value -> Widget
+  TextField   :: TZ.TextZipper T.Text -> Maybe TextFieldResource -> Widget
+  Picker      :: [(String, Text)] -> Int -> [G.Texture] -> Widget
   UserWidget  :: Renderable a => a -> Widget
 
 instance Show Widget where
@@ -139,7 +139,7 @@ additionalClickableSize ctx = work
     V2 w h = wstSize $ ctx^.ctxWidgetState
     focus = ctx^.ctxWidgetState.wstFocus
 
-    work (Picker ts font size _ _)
+    work (Picker ts _ _)
       | focus     = Just $ V2 w (h * n)
       | otherwise = Just $ V2 w h
       where

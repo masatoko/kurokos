@@ -107,24 +107,24 @@ runUITestScene =
       (_,gui) <- UI.newGui (UI.GuiEnv sdlAssets stylemap) $ do
         -- * Label
         let confL = UI.WidgetConfig (Just "title") Nothing Nothing Nothing (C 0) (C 30) (Rpn "$width") (C 40)
-        label <- UI.mkSingle confL =<< UI.newLabel "font-m" 18 "Kurokos DEMO"
+        label <- UI.mkSingle confL =<< UI.newLabel "Kurokos DEMO"
         -- * Buttons
         let confB = UI.WidgetConfig (Just nameMain) Nothing Nothing Nothing (Rpn "0.3 $width *") (Rpn "0.2 $height *") (Rpn "0.4 $width *") (C 40)
-        button1 <- UI.mkSingle confB =<< UI.newButton "font-m" 16 "Next: Main Scene"
+        button1 <- UI.mkSingle confB =<< UI.newButton "Next: Main Scene"
         -- * Image
         let confImg = UI.WidgetConfig (Just "image") Nothing Nothing Nothing (C 10) (Rpn "$height 58 -") (C 48) (C 48)
         img <- UI.mkSingle confImg =<< UI.newImageView "sample-image"
         -- * TextField
         let confTxtFld = UI.WidgetConfig Nothing Nothing Nothing Nothing (C 100) (C 200) (Rpn "$min-width") (C 20)
-        texfld <- UI.mkSingle confTxtFld =<< UI.newTextField "font-m" 16 "initial text"
+        texfld <- UI.mkSingle confTxtFld =<< UI.newTextField "initial text"
         -- * Picker
         let confPkr = UI.WidgetConfig Nothing Nothing Nothing Nothing (C 100) (C 250) (Rpn "$min-width") (C 20)
-        picker <- UI.mkSingle confPkr =<< UI.newPicker "font-m" 16 [("1", "Elem1"), ("2", "Elem2"), ("3", "Elem3")] (Just "2")
+        picker <- UI.mkSingle confPkr =<< UI.newPicker [("1", "Elem1"), ("2", "Elem2"), ("3", "Elem3")] (Just "2")
         -- * UserWidget
         -- userWidget <- UI.mkSingle (Just "user_widget") Nothing (pure (C 0)) (pure (C 100)) $ UI.UserWidget userVal
         --
         let confBs = fillConf {UI.wconfHeight = Rpn "$min-height 10 +"}
-        btns <- mconcat <$> mapM (UI.mkSingle confBs <=< UI.newButton "font-m" 16 . T.pack . show) [1..(5::Int)]
+        btns <- mconcat <$> mapM (UI.mkSingle confBs <=< UI.newButton . T.pack . show) [1..(5::Int)]
         let confCntn = UI.WidgetConfig (Just "menu") Nothing Nothing Nothing (Rpn "$width 140 -") (C 0) (C 100) (C 300)
         cnt2 <- (`UI.appendChild` btns) <$> UI.mkContainer confCntn UI.VerticalStack
         --

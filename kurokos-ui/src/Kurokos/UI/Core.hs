@@ -56,7 +56,7 @@ type GuiWidgetTree = WidgetTree CtxWidget
 
 data GuiEnv = GuiEnv
   { geAssetManager :: Asset.AssetManager
-  , geStyleMap  :: StyleMap
+  , geStyleMap     :: StyleMap
   }
 
 data GuiState = GuiState
@@ -139,12 +139,12 @@ getContextStyleOfWidget w mName mCls = do
 --     Left err -> E.throwIO $ userError err
 --     Right a  -> return a
 
-newCommonResource :: (RenderEnv m, MonadIO m) => V2 Int -> Style -> Widget -> m CommonResource
-newCommonResource size style w =
+newCommonResource :: (RenderEnv m, MonadIO m) => Asset.AssetManager -> V2 Int -> Style -> Widget -> m CommonResource
+newCommonResource ast size style w =
   withRenderer $ \r ->
     CmnRsc <$> G.newFillRectangle r size'
            <*> G.newRectangle r size'
-           <*> genTitle r style w
+           <*> genTitle ast r style w
   where
     size' = fromIntegral <$> size
 
@@ -172,7 +172,8 @@ mkSingle conf widget = do
             Left err -> E.throw $ userError err
             Right v  -> return v
   ctxst <- maybe (getContextStyleOfWidget widget (wconfName conf) (wconfClass conf)) return (wconfStyle conf)
-  cmnRsc <- lift $ newCommonResource (pure 1) (ctxstNormal ctxst) widget
+  ast <- asks geAssetManager
+  cmnRsc <- lift $ newCommonResource ast (pure 1) (ctxstNormal ctxst) widget
   let attrib = fromMaybe (attribOf widget) $ wconfAttrib conf
       ctx = WContext ident (wconfName conf) (wconfClass conf) [] Nothing attrib True True iniWidgetState cmnRsc ctxst pos' size'
   return $ Fork Null (ctx, widget) Nothing Null
@@ -189,7 +190,8 @@ mkContainer conf ct = do
             Left err -> E.throw $ userError err
             Right v  -> return v
   ctxst <- maybe (getContextStyleOfWidget widget (wconfName conf) (wconfClass conf)) return (wconfStyle conf)
-  cmnRsc <- lift $ newCommonResource (pure 1) (ctxstNormal ctxst) widget
+  ast <- asks geAssetManager
+  cmnRsc <- lift $ newCommonResource ast (pure 1) (ctxstNormal ctxst) widget
   let attrib = fromMaybe attribCntn $ wconfAttrib conf
       ctx = WContext ident (wconfName conf) (wconfClass conf) [] (Just ct) attrib True True iniWidgetState cmnRsc ctxst pos' size'
   return $ Fork Null (ctx, widget) (Just Null) Null
@@ -330,6 +332,7 @@ readyRender g = do
   g1 <- work True g0 -- * Make Textures.
   work False g1 -- * Resize with texture size.
   where
+    assetManager = geAssetManager $ g^.unGui._1
     work isFirstPath g = do
       winSize <- getWindowSize
       let wt0 = g^.unGui._2.gstWTree
@@ -347,8 +350,8 @@ readyRender g = do
       if updatedA
         then do
           liftIO . freeCommonResource $ ctx^.ctxCmnRsc
-          widget' <- lift $ onReadyLayout size (optimumStyle ctx) widget
-          cmnrsc' <- lift $ newCommonResource size (optimumStyle ctx) widget'
+          widget' <- lift $ onReadyLayout assetManager size (optimumStyle ctx) widget
+          cmnrsc' <- lift $ newCommonResource assetManager size (optimumStyle ctx) widget'
           let ctx' = ctx & ctxNeedsRender .~ isFirstPath -- Should re-render on second path. Because min-width and min-height will change with Texture size.
                          & ctxNeedsResize .~ isFirstPath -- Same as above
                          & ctxCmnRsc .~ cmnrsc'
@@ -651,6 +654,9 @@ widgetMinimumSize (ctx,widget) =
       h = firstJust id [heightFromCtx, heightFromWidget widget]
   in V2 w h
   where
+    style = optimumStyle ctx
+    fontSize = style^.styleFontSize
+
     widthFromCtx = do
       tex <- cmnrscTextTex $ ctx^.ctxCmnRsc
       let V2 w _ = G.texSize tex
@@ -660,22 +666,22 @@ widgetMinimumSize (ctx,widget) =
       let V2 _ h = G.texSize tex
       return $ fromIntegral h
 
-    widthFromWidget (TextField _ _ _ mRsc) =
+    widthFromWidget (TextField _ mRsc) =
       case mRsc of
         Nothing -> Just 10
         Just r  ->
           let widthL = maybe 0 (view _x . G.texSize) $ txtFldRscLeft r
               widthR = maybe 0 (view _x . G.texSize) $ txtFldRscRight r
           in Just . fromIntegral $ widthL + widthR + 10
-    widthFromWidget (Picker _ _ _ _ ts) =
+    widthFromWidget (Picker _ _ ts) =
       Just $ case ts of
               [] -> 1
               _  -> fromIntegral . maximum $ map (view _x . G.texSize) ts
     widthFromWidget _ = Nothing
 
-    heightFromWidget (TextField _ sz _ _) = Just $ fromIntegral sz
-    heightFromWidget (Picker _ _ sz _ _)  = Just $ fromIntegral sz
-    heightFromWidget _                    = Nothing
+    heightFromWidget TextField{} = Just $ fromIntegral fontSize
+    heightFromWidget Picker{}    = Just $ fromIntegral fontSize
+    heightFromWidget _           = Nothing
 
 updatePath :: GuiWidgetTree -> GuiWidgetTree
 updatePath = fmap work . WT.wtPath

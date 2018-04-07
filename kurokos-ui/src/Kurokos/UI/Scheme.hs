@@ -33,7 +33,8 @@ type StyleMap = M.Map String StyleConf
 data StyleConf = StyleConf
   { scTextColor   :: Maybe Color
   , scTextAlign   :: Maybe TextAlign
-  , scFontIdent   :: Maybe String
+  , scFontIdent   :: Maybe T.Text
+  , scFontSize    :: Maybe Int
   , scMargin      :: Maybe (LRTB Int)
   , scTintColor   :: Maybe Color
   , scBgColor     :: Maybe Color
@@ -52,6 +53,7 @@ instance FromJSON StyleConf where
     <$> help readColor (v .:? "text-color")
     <*> help readTextAlign (v .:? "text-align")
     <*> v .:? "font"
+    <*> v .:? "font-size"
     <*> help readMargin (v .:? "margin")
     <*> help readColor (v .:? "tint-color")
     <*> help readColor (v .:? "background-color")
@@ -130,6 +132,7 @@ makeContextStyle widget mName mCls styleMap =
       { _styleTextColor   = work (V4 0 0 0 255) scTextColor
       , _styleTextAlign   = work TACenter scTextAlign
       , _styleFontIdent   = work "default-font" scFontIdent
+      , _styleFontSize    = work 16 scFontSize
       , _styleMargin      = work (LRTB 0 0 0 0) scMargin
       , _styleTintColor   = work (V4 230 230 230 255) scTintColor
       , _styleBgColor     = work (V4 255 255 255 255) scBgColor

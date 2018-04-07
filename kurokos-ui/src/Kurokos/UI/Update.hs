@@ -74,10 +74,10 @@ procEvent cursor gui0 = work
         let wif = cwToInfo cw
         unGui._2.gstEvents %= (E.Unfocused wif:)
         case cw^._2 of
-          (TextField _ _ z _) -> do
+          (TextField z _) -> do
             let textFixed = E.TextFixed (cwToInfo cw) (TZ.currentLine z)
             unGui._2.gstEvents %= (textFixed:)
-          (Picker ts _ _ idx _) ->
+          (Picker ts idx _) ->
             whenJust (ts `atMay` idx) $ \(key, text) ->
               unGui._2.gstEvents %= (PickerPicked wif key text :)
           _ -> return ()
