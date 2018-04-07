@@ -1,5 +1,6 @@
 -
   type: label
+  class: title
   text: Kurokos DEMO
   x-rpn: "$width 2 / 150 -"
   y-rpn: "$height 0.1 *"
@@ -62,8 +63,8 @@
   w: 100
   h: 100
   children:
-    - {name: "test1", type: label, text: "test1", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
-    - {name: "test2", type: label, text: "test2", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
-    - {name: "test3", type: label, text: "test3", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
-    - {name: "test4", type: label, text: "test4", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
-    - {name: "test5", type: label, text: "test5", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
+    - {name: "test1", class: "class-a", type: label, text: "test1", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
+    - {name: "test2", class: "class-a", type: label, text: "test2", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
+    - {name: "test3", class: "class-a", type: label, text: "test3", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
+    - {name: "test4", class: "class-a", type: label, text: "test4", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}
+    - {name: "test5", class: "class-a", type: label, text: "test5", attrib: { draggable: true, droppable: true}, style: {text-align: left}, h: 20}

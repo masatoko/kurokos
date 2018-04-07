@@ -113,8 +113,8 @@ makeContextStyle widget mName mCls styleMap =
     (mkStyle (styleConfsOf hoverKeys))
   where
     wname = widgetNameOf widget
-    mName' = ('#':) <$> mName
-    mCls' = ('.':) <$> mCls
+    mName' = ('$':) <$> mName
+    mCls'  = ('.':) <$> mCls
 
     styleConfsOf :: [String] -> [StyleConf]
     styleConfsOf = mapMaybe (`M.lookup` styleMap)

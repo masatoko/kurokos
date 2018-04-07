@@ -15,3 +15,10 @@ fill:
 label:
   background-color: 0 0 0 0
   border-color: 0 0 0 0
+
+.title: # Style for class if a headding char is '.'
+  font-size: 24
+.class-a:
+  text-color: 255 0 0 255
+$test3: # Style for name if a headding char is '$'
+  text-color: 0 255 0 255
