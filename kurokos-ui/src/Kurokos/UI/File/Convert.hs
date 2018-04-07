@@ -15,7 +15,7 @@ import           Safe                    (readMay)
 
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
-import           Kurokos.UI.File.Yaml    (Title (..), YPicker (..), YValue (..),
+import           Kurokos.UI.File.Yaml    (YPicker (..), YValue (..),
                                           YWidget (..), YWidgetAttrib (..),
                                           decodeWidgets)
 import           Kurokos.UI.Import
@@ -47,15 +47,15 @@ convert s@Single{..} = do
   return $ wt & wtElement._1 %~ setContext
   where
     conf = WidgetConfig wName wClass Nothing Nothing wX wY wWidth wHeight
-    Title titleText titleSize titleAssetIdent = fromMaybe (error "Missing title") wTitle
+    text = fromMaybe " " wText
     generate
       | wType == N.wnameFill      = newFill
-      | wType == N.wnameLabel     = newLabel titleText
-      | wType == N.wnameButton    = newButton titleText
-      | wType == N.wnameSwitch    = newSwitch titleText
-      | wType == N.wnameSlider    = newSlider titleText value
+      | wType == N.wnameLabel     = newLabel text
+      | wType == N.wnameButton    = newButton text
+      | wType == N.wnameSwitch    = newSwitch text
+      | wType == N.wnameSlider    = newSlider text value
       | wType == N.wnameImageView = newImageView =<< getAssetId
-      | wType == N.wnameTextField = newTextField titleText
+      | wType == N.wnameTextField = newTextField text
       | wType == N.wnamePicker    =
           case wPicker of
             Nothing                           -> liftIO $ E.throwIO $ userError "Missing 'picker' key"

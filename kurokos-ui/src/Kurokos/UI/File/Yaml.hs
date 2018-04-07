@@ -72,7 +72,7 @@ data YWidget
     --
     , wAsset  :: Maybe Asset.Ident
     --
-    , wTitle  :: Maybe Title
+    , wText   :: Maybe T.Text
     -- , wStyle  :: StyleConf
     }
   | Container
@@ -106,7 +106,7 @@ instance FromJSON YWidget where
         <*> v .:? "picker"
         --
         <*> v .:? "asset"
-        <*> v .:? "title"
+        <*> v .:? "text"
         -- <*> (fromMaybe defStyle <$> (v .:? "style"))
   parseJSON _ = fail "Expected Object for Config value"
 
@@ -157,17 +157,6 @@ instance FromJSON YWidgetAttrib where
     <*> v .:? "visible"
     <*> v .:? "scrollable"
   parseJSON _ = fail "Expected Object for YWidgetAttrib"
-
-data Title
-  = Title Text FontSize Asset.Ident
-  deriving (Eq, Show)
-
-instance FromJSON Title where
-  parseJSON (Y.Object v) = Title
-    <$> v .: "text"
-    <*> v .: "size"
-    <*> v .: "asset"
-  parseJSON _ = fail "Expected Object for Title"
 
 -- instance FromJSON Style where
 --   parseJSON (Y.Object v) = Style
