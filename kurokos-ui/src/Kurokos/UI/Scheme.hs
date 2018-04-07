@@ -90,19 +90,26 @@ readMargin str =
 
 -----
 
-makeContextStyle :: Widget -> StyleMap -> ContextStyle
-makeContextStyle widget styleMap =
+makeContextStyle :: Widget -> Maybe WTName -> Maybe WTClass -> StyleMap -> ContextStyle
+makeContextStyle widget mName mCls styleMap =
   ContextStyle
-    (mkStyle (styleConfsOf normalNames))
-    (mkStyle (styleConfsOf hoverNames))
+    (mkStyle (styleConfsOf normalKeys))
+    (mkStyle (styleConfsOf hoverKeys))
   where
     wname = widgetNameOf widget
+    mName' = ('#':) <$> mName
+    mCls' = ('.':) <$> mCls
 
     styleConfsOf :: [String] -> [StyleConf]
     styleConfsOf = mapMaybe (`M.lookup` styleMap)
 
-    normalNames = [wname, "def"]
-    hoverNames = [wname++"@hover", "def@hover", "def", wname]
+    normalKeys =
+      case (mName', mCls') of
+        (Just name', Just cls') -> [wname++name', wname++cls', name', cls', wname, "def"]
+        (Just name', Nothing)   -> [wname++name', name', wname, "def"]
+        (Nothing, Just cls')    -> [wname++cls', cls', wname, "def"]
+        _                       -> [wname, "def"]
+    hoverKeys  = Prelude.map (++"@hover") normalKeys ++ normalKeys
 
     mkStyle :: [StyleConf] -> Style
     mkStyle cs = Style

@@ -127,10 +127,10 @@ freeGuiWidgetTree = liftIO . mapM_ work
 --   GUI (_,stt) <- f . GUI <$> ((,) <$> ask <*> get)
 --   put stt
 
-getContextStyleOfWidget :: MonadReader GuiEnv m => Widget -> m ContextStyle
-getContextStyleOfWidget w = do
+getContextStyleOfWidget :: MonadReader GuiEnv m => Widget -> Maybe String -> Maybe String -> m ContextStyle
+getContextStyleOfWidget w mName mCls = do
   styleMap <- asks geStyleMap
-  return $ makeContextStyle w styleMap
+  return $ makeContextStyle w mName mCls styleMap
 
 -- getContextColorOfWidget :: (MonadReader GuiEnv m, MonadIO m) => Widget -> m ContextColor
 -- getContextColorOfWidget w = do
@@ -171,10 +171,10 @@ mkSingle conf widget = do
   size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  ctxst <- maybe (getContextStyleOfWidget widget) return (wconfStyle conf)
+  ctxst <- maybe (getContextStyleOfWidget widget (wconfName conf) (wconfClass conf)) return (wconfStyle conf)
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxstNormal ctxst) widget
   let attrib = fromMaybe (attribOf widget) $ wconfAttrib conf
-      ctx = WContext ident (wconfName conf) [] Nothing attrib True True iniWidgetState cmnRsc ctxst pos' size'
+      ctx = WContext ident (wconfName conf) (wconfClass conf) [] Nothing attrib True True iniWidgetState cmnRsc ctxst pos' size'
   return $ Fork Null (ctx, widget) Nothing Null
 
 mkContainer :: (RenderEnv m, MonadIO m)
@@ -188,10 +188,10 @@ mkContainer conf ct = do
   size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  ctxst <- maybe (getContextStyleOfWidget widget) return (wconfStyle conf)
+  ctxst <- maybe (getContextStyleOfWidget widget (wconfName conf) (wconfClass conf)) return (wconfStyle conf)
   cmnRsc <- lift $ newCommonResource (pure 1) (ctxstNormal ctxst) widget
   let attrib = fromMaybe attribCntn $ wconfAttrib conf
-      ctx = WContext ident (wconfName conf) [] (Just ct) attrib True True iniWidgetState cmnRsc ctxst pos' size'
+      ctx = WContext ident (wconfName conf) (wconfClass conf) [] (Just ct) attrib True True iniWidgetState cmnRsc ctxst pos' size'
   return $ Fork Null (ctx, widget) (Just Null) Null
   where
     widget = Fill

@@ -61,6 +61,7 @@ data YWidget
   = Single
     { wType   :: String
     , wName   :: Maybe String
+    , wClass  :: Maybe String
     , wX      :: UExp
     , wY      :: UExp
     , wWidth  :: UExp
@@ -76,6 +77,7 @@ data YWidget
     }
   | Container
     { wName          :: Maybe String
+    , wClass         :: Maybe String
     , wX             :: UExp
     , wY             :: UExp
     , wWidth         :: UExp
@@ -94,6 +96,7 @@ instance FromJSON YWidget where
       "container" -> makeContainer v
       _           -> Single wtype
         <$> v .:? "name"
+        <*> v .:? "class"
         <*> getUExp "x" (C 0) v
         <*> getUExp "y" (C 0) v
         <*> getUExp "w" (Rpn "$min-width") v
@@ -110,6 +113,7 @@ instance FromJSON YWidget where
 makeContainer :: Y.Object -> Y.Parser YWidget
 makeContainer v = Container
   <$> v .:? "name"
+  <*> v .:? "class"
   <*> getUExp "x" (C 0) v
   <*> getUExp "y" (C 0) v
   <*> getUExp "w" (Rpn "$min-width") v

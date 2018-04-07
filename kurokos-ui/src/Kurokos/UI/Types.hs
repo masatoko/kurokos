@@ -26,6 +26,8 @@ newtype WTIdent = WTIdent { unWidgetIdent :: WidgetIdent } deriving (Eq, Ord, Sh
 -- | Name of WidgetTree defined by a user. It's not always unique.
 type WTName = String
 
+type WTClass = String
+
 -- Size
 type GuiPos = SDL.Point V2 CInt
 type GuiSize = V2 CInt
@@ -150,6 +152,7 @@ data ContextStyle = ContextStyle
 data WContext = WContext
   { _ctxIdent         :: WTIdent
   , _ctxName          :: Maybe WTName
+  , _ctxClass         :: Maybe WTClass
   , _ctxPath          :: WidgetTreePath
   , _ctxContainerType :: Maybe ContainerType
   , _ctxAttrib        :: WidgetAttrib
@@ -166,6 +169,7 @@ makeLenses ''WContext
 
 data WidgetConfig = WidgetConfig
   { wconfName   :: Maybe WTName
+  , wconfClass  :: Maybe WTClass
   , wconfStyle  :: Maybe ContextStyle
   , wconfAttrib :: Maybe WidgetAttrib
   , wconfPosX   :: UExp
@@ -175,7 +179,7 @@ data WidgetConfig = WidgetConfig
   } deriving Show
 
 instance Default WidgetConfig where
-  def = WidgetConfig Nothing Nothing Nothing (C 0) (C 0) (Rpn "$min-width") (Rpn "$min-height")
+  def = WidgetConfig Nothing Nothing Nothing Nothing (C 0) (C 0) (Rpn "$min-width") (Rpn "$min-height")
 
 optimumStyle :: WContext -> Style
 optimumStyle ctx
