@@ -107,8 +107,13 @@ keyOfStyleState :: StyleState -> StyleKey
 keyOfStyleState SSNormal = ""
 keyOfStyleState SSHover  = "@hover"
 
-makeContextStyle :: Widget -> Maybe WTName -> Maybe WTClass -> StyleMap -> ContextStyle
-makeContextStyle widget mName mCls styleMap =
+makeContextStyle :: Widget
+                 -> Maybe WTName
+                 -> Maybe WTClass
+                 -> StyleMap -- Primary
+                 -> StyleMap -- Secondary
+                 -> ContextStyle
+makeContextStyle widget mName mCls styleMap1 styleMap2 =
   ContextStyle
     (mkStyle (styleConfsOf normalKeys))
     (mkStyle (styleConfsOf hoverKeys))
@@ -118,7 +123,9 @@ makeContextStyle widget mName mCls styleMap =
     mCls'  = ('.':) <$> mCls
 
     styleConfsOf :: [StyleKey] -> [StyleConf]
-    styleConfsOf = mapMaybe (`M.lookup` styleMap)
+    styleConfsOf = mapMaybe work
+      where
+        work key = firstJust (M.lookup key) [styleMap1, styleMap2]
 
     normalKeys =
       case (mName', mCls') of

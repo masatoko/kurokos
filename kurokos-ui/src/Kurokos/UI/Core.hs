@@ -131,15 +131,13 @@ getContextStyleOfWidget :: MonadReader GuiEnv m
                         => Widget
                         -> Maybe WTName
                         -> Maybe WTClass
-                        -> Maybe StyleMap -- ^ Additional StyleMap
+                        -> Maybe StyleMap -- ^ Prior StyleMap
                         -> m ContextStyle
-getContextStyleOfWidget w mName mCls mDefStyleMap = do
-  styleMap <- unionDefMap <$> asks geStyleMap
-  return $ makeContextStyle w mName mCls styleMap
+getContextStyleOfWidget w mName mCls mPriorStyleMap = do
+  styleMap <- asks geStyleMap
+  return $ makeContextStyle w mName mCls prior styleMap
   where
-    unionDefMap = case mDefStyleMap of
-                    Nothing -> id
-                    Just m  -> M.union m
+    prior = fromMaybe M.empty mPriorStyleMap
 
 -- getContextColorOfWidget :: (MonadReader GuiEnv m, MonadIO m) => Widget -> m ContextColor
 -- getContextColorOfWidget w = do
