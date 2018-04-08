@@ -20,8 +20,8 @@ import           Kurokos.Graphics      (FontSize)
 import qualified Kurokos.RPN           as RPN
 import           Kurokos.UI.Core
 import           Kurokos.UI.Import
-import           Kurokos.UI.Types
 import           Kurokos.UI.Scheme
+import           Kurokos.UI.Types
 
 decodeWidgets :: BS.ByteString -> Either Y.ParseException YWidgets
 decodeWidgets = Y.decodeEither'
@@ -59,21 +59,21 @@ instance FromJSON YPicker where
 
 data YWidget
   = Single
-    { wType   :: String
-    , wName   :: Maybe String
-    , wClass  :: Maybe String
-    , wX      :: UExp
-    , wY      :: UExp
-    , wWidth  :: UExp
-    , wHeight :: UExp
-    , wAttrib :: Maybe YWidgetAttrib
-    , wValue  :: Maybe YValue
-    , wPicker :: Maybe YPicker
+    { wType     :: String
+    , wName     :: Maybe String
+    , wClass    :: Maybe String
+    , wX        :: UExp
+    , wY        :: UExp
+    , wWidth    :: UExp
+    , wHeight   :: UExp
+    , wAttrib   :: Maybe YWidgetAttrib
+    , wValue    :: Maybe YValue
+    , wPicker   :: Maybe YPicker
     --
-    , wAsset  :: Maybe Asset.Ident
+    , wAsset    :: Maybe Asset.Ident
     --
-    , wText   :: Maybe T.Text
-    -- , wStyle  :: StyleConf
+    , wText     :: Maybe T.Text
+    , wStyleMap :: Maybe StyleMap
     }
   | Container
     { wName          :: Maybe String
@@ -85,7 +85,7 @@ data YWidget
     , wContainerType :: ContainerType
     , wChildren      :: [YWidget]
     , wAttrib        :: Maybe YWidgetAttrib
-    -- , wStyle         :: StyleConf
+    , wStyleMap      :: Maybe StyleMap
     }
   deriving (Eq, Show)
 
@@ -107,7 +107,7 @@ instance FromJSON YWidget where
         --
         <*> v .:? "asset"
         <*> v .:? "text"
-        -- <*> (fromMaybe defStyle <$> (v .:? "style"))
+        <*> v .:? "style"
   parseJSON _ = fail "Expected Object for Config value"
 
 makeContainer :: Y.Object -> Y.Parser YWidget
@@ -121,7 +121,7 @@ makeContainer v = Container
   <*> (parseContainerType <$> (v .:? "order"))
   <*> (fromMaybe [] <$> v .:? "children")
   <*> v .:? "attrib"
-  -- <*> (fromMaybe defStyle <$> (v .:? "style"))
+  <*> v .:? "style"
 
 getUExp :: Text -> UExp -> Y.Object -> Y.Parser UExp
 getUExp label def v = do

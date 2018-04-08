@@ -45,18 +45,15 @@ module Kurokos.UI
   , StyleMap
   , readStyleMap
   , parseStyleMap
+  , StyleConf (..)
+  , StyleKey
+  , StyleState (..)
+  , makeStyleKey
   -- * Type
   , GuiEvent (..)
   , WidgetInfo (..)
   , UExp (..)
   -- * Style
-  -- ** Settings for user
-  , StyleConf (..)
-  , StyleMap
-  , StyleKey
-  , StyleState (..)
-  , makeStyleKey
-  -- ** Main
   , Style (..)
   , styleTextAlign
   , styleMargin

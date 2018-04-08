@@ -123,9 +123,9 @@ makeContextStyle widget mName mCls styleMap1 styleMap2 =
     mCls'  = ('.':) <$> mCls
 
     styleConfsOf :: [StyleKey] -> [StyleConf]
-    styleConfsOf = mapMaybe work
+    styleConfsOf ks = work styleMap1 ++ work styleMap2
       where
-        work key = firstJust (M.lookup key) [styleMap1, styleMap2]
+        work smap = mapMaybe (`M.lookup` smap) ks
 
     normalKeys =
       case (mName', mCls') of

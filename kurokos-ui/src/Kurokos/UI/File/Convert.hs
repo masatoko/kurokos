@@ -46,7 +46,7 @@ convert s@Single{..} = do
   wt <- mkSingle conf =<< generate
   return $ wt & wtElement._1 %~ setContext
   where
-    conf = WidgetConfig wName wClass Nothing Nothing wX wY wWidth wHeight
+    conf = WidgetConfig wName wClass wStyleMap Nothing wX wY wWidth wHeight
     text = fromMaybe " " wText
     generate
       | wType == N.wnameFill      = return mkFill
@@ -92,7 +92,7 @@ convert Container{..} = do
   ws <- mapM convert wChildren
   return $ appendChild cnt' (mconcat ws)
   where
-    conf = WidgetConfig wName wClass Nothing Nothing wX wY wWidth wHeight
+    conf = WidgetConfig wName wClass wStyleMap Nothing wX wY wWidth wHeight
     setContext ctx = case wAttrib of
       Nothing -> ctx
       Just ywa@YWidgetAttrib{..} -> trace (show ywa) $
