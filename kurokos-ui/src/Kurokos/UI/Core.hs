@@ -701,6 +701,23 @@ updatePath = fmap work . WT.wtPath
 renderWhenUpdated :: (RenderEnv m, MonadIO m) => GUI -> m ()
 renderWhenUpdated g = when (g^.unGui._2.gstUpdated) $ render g
 
+type RenderArea = (V2 Int, V2 Int) -- ^ (position, size)
+
+intersectRA :: RenderArea -> RenderArea -> Maybe RenderArea
+intersectRA (V2 x0 y0, V2 w0 h0) (V2 x1 y1, V2 w1 h1) = do
+  (x,w) <- work x0 w0 x1 w1
+  (y,h) <- work y0 h0 y1 h1
+  return (V2 x y, V2 w h)
+  where
+    work a0 da b0 db
+      | m < n     = Just (m, n - m)
+      | otherwise = Nothing
+      where
+        a1 = a0 + da
+        b1 = b0 + db
+        m = max a0 b0
+        n = min a1 b1
+
 -- | Render GUI
 render :: (RenderEnv m, MonadIO m) => GUI -> m ()
 render g = do
@@ -709,29 +726,34 @@ render g = do
     render_ r winSize True $ view (unGui._2.gstWTree) g
     render_ r winSize False $ view (unGui._2.gstWTree) g
   where
-    render_ r winSize pFirst = go
+    render_ r winSize pFirst = go (pure 0, fromIntegral <$> winSize)
       where
-        go Null = return ()
-        go (Fork u a mc o) = do
-          go u
-          work r pFirst a
-          whenJust mc $ \c -> do
-            let (pos, size) = posSizeOf $ fst a
-            G.withRenderArea r winSize pos size $ go c
-          go o
+        go _    Null            = return ()
+        go area (Fork u a mc o) = do
+          go area u
+          work area winSize r pFirst a
+          whenJust mc $ \c ->
+            whenJust (area `intersectRA` posSizeOf (fst a)) $ \area' ->
+              go area' c
+          go area o
 
     posSizeOf ctx = (pos, size)
       where
         P pos = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
         size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
 
-    work r pFirst (ctx, widget)
+    work (areaPos, areaSize) winSize r pFirst (ctx, widget)
       | ctx^.ctxNeedsRender            = E.throwIO $ userError "Call GUI.readyRender before GUI.render!"
       | ctx^.ctxWidgetState.wstVisible = do
           let render' = renderWidget r focus pos size ctx style cmnrsc widget
           if focus && topWhenFocused widget
-            then unless pFirst render'
-            else when pFirst render'
+            then
+              unless pFirst $ do
+                G.clearRenderArea r
+                render'
+            else when pFirst $ do
+              G.setRenderArea r winSize areaPos areaSize
+              render'
       | otherwise                      = return ()
         where
           focus = (g^.unGui._2.gstFocus) == ctx^.ctxPath
