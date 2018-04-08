@@ -27,3 +27,7 @@ label$test4:
 label$test4@hover:
   background-color: 0 0 0 255
   text-color: 255 255 255 255
+
+.number:
+  border-color: "#ffffff"
+  margin: 10 10 10 10

@@ -112,6 +112,7 @@ module Kurokos.UI
   -- * WidgetTree (WContext, Widget)
   , WTIdent
   , WTName
+  , WTClass
   -- * Update GUI
   , updateGui
   , readyRender

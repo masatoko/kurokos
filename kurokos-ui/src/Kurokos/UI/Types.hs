@@ -43,7 +43,7 @@ data ContainerType
   deriving (Eq, Show)
 
 data WidgetState = WidgetState
-  { _wstWorldPos :: GuiPos -- ^ Change with setGlobalPos. Must not change directly.
+  { _wstWorldPos :: GuiPos -- ^ World position with left-top margin. Change this by setGlobalPos. Do not change directly.
   , _wstLocalPos :: GuiPos -- ^ Lobal position (Updated on readyRender)
   , _wstWidth    :: Maybe CInt
   , _wstHeight   :: Maybe CInt

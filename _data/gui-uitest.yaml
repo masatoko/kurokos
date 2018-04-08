@@ -1,14 +1,18 @@
 -
   type: container
   order: horizontal
+  x: 30
+  y: 30
   children:
     -
       type: container
+      class: number
       name: "number-labels"
       order: horizontal
       children:
         -
           type: label
+          class: number
           name: "00000"
           text: "00000"
           attrib:
@@ -16,17 +20,21 @@
             droppable: true
         -
           type: container
+          class: number
           order: horizontal
           children:
             -
               type: container
+              class: number
               order: horizontal
               children:
                 -
                   type: label
+                  class: number
                   name: "11111"
                   text: "11111"
     -
       type: label
+      class: number
       name: "22222"
       text: "22222"

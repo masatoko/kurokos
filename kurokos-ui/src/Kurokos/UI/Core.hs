@@ -722,12 +722,7 @@ render g = do
 
     posSizeOf ctx = (pos, size)
       where
-        pos = p + V2 (left margin) (top margin)
-          where
-            P p = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
-            margin = style^.styleMargin
-              where
-                style = optimumStyle ctx
+        P pos = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
         size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
 
     work r pFirst (ctx, widget)
@@ -741,13 +736,7 @@ render g = do
         where
           focus = (g^.unGui._2.gstFocus) == ctx^.ctxPath
           (pos, size) = posSizeOf ctx
-          -- pos = p + V2 (left margin) (top margin)
-          --   where
-          --     P p = fromIntegral <$> ctx^.ctxWidgetState.wstWorldPos
-          --     margin = style^.styleMargin
-          -- size = fromIntegral <$> wstSize (ctx^.ctxWidgetState)
           style = optimumStyle ctx
-          -- contextStyle = ctx^.ctxStyle
           cmnrsc = ctx^.ctxCmnRsc
 
           topWhenFocused :: Widget -> Bool
