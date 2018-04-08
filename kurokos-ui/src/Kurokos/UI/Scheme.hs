@@ -4,6 +4,7 @@ module Kurokos.UI.Scheme
     StyleMap
   , readStyleMap
   , parseStyleMap
+  , makeStyleKey
   , makeContextStyle
   ) where
 
@@ -27,19 +28,6 @@ import           Kurokos.UI.Import       (MonadIO, liftIO)
 import           Kurokos.UI.Types
 import           Kurokos.UI.Widget       (Widget)
 import           Kurokos.UI.Widget.Names (WidgetName, widgetNameOf)
-
-type StyleMap = M.Map String StyleConf
-
-data StyleConf = StyleConf
-  { scTextColor   :: Maybe Color
-  , scTextAlign   :: Maybe TextAlign
-  , scFontIdent   :: Maybe T.Text
-  , scFontSize    :: Maybe Int
-  , scMargin      :: Maybe (LRTB Int)
-  , scTintColor   :: Maybe Color
-  , scBgColor     :: Maybe Color
-  , scBorderColor :: Maybe Color
-  } deriving (Eq, Show)
 
 readStyleMap :: MonadIO m => FilePath -> m StyleMap
 readStyleMap path = liftIO $
@@ -106,6 +94,19 @@ readMargin str =
 
 -----
 
+makeStyleKey :: Maybe Widget -> Maybe WTName -> Maybe WTClass -> Maybe StyleState -> StyleKey
+makeStyleKey Nothing Nothing Nothing ms = "def" ++ maybe "" keyOfStyleState ms
+makeStyleKey mWidget mName mClass ms =
+  wname ++ name' ++ class' ++ maybe "" keyOfStyleState ms
+  where
+    wname = maybe "" widgetNameOf mWidget
+    name' = maybe "" ('$':) mName
+    class' = maybe "" ('.':) mClass
+
+keyOfStyleState :: StyleState -> StyleKey
+keyOfStyleState SSNormal = ""
+keyOfStyleState SSHover  = "@hover"
+
 makeContextStyle :: Widget -> Maybe WTName -> Maybe WTClass -> StyleMap -> ContextStyle
 makeContextStyle widget mName mCls styleMap =
   ContextStyle
@@ -116,12 +117,12 @@ makeContextStyle widget mName mCls styleMap =
     mName' = ('$':) <$> mName
     mCls'  = ('.':) <$> mCls
 
-    styleConfsOf :: [String] -> [StyleConf]
+    styleConfsOf :: [StyleKey] -> [StyleConf]
     styleConfsOf = mapMaybe (`M.lookup` styleMap)
 
     normalKeys =
       case (mName', mCls') of
-        (Just name', Just cls') -> [wname++name', wname++cls', name', cls', wname, "def"]
+        (Just name', Just cls') -> [wname++name'++cls', wname++name', wname++cls', name'++cls', name', cls', wname, "def"]
         (Just name', Nothing)   -> [wname++name', name', wname, "def"]
         (Nothing, Just cls')    -> [wname++cls', cls', wname, "def"]
         _                       -> [wname, "def"]

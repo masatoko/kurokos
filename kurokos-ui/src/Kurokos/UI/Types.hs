@@ -5,6 +5,7 @@ module Kurokos.UI.Types where
 import           Control.Lens
 import           Data.Default.Class
 import           Data.Int              (Int64)
+import qualified Data.Map              as M
 import           Data.Maybe            (fromMaybe)
 import qualified Data.Text             as T
 import           Data.Word             (Word8)
@@ -151,6 +152,25 @@ data ContextStyle = ContextStyle
   -- , ctxstClick  :: Style
   } deriving (Eq, Show)
 
+type StyleKey = String
+
+data StyleState = SSNormal | SSHover
+  deriving (Eq, Show)
+
+type StyleMap = M.Map StyleKey StyleConf
+
+-- | User settings of Style
+data StyleConf = StyleConf
+  { scTextColor   :: Maybe Color
+  , scTextAlign   :: Maybe TextAlign
+  , scFontIdent   :: Maybe T.Text
+  , scFontSize    :: Maybe Int
+  , scMargin      :: Maybe (LRTB Int)
+  , scTintColor   :: Maybe Color
+  , scBgColor     :: Maybe Color
+  , scBorderColor :: Maybe Color
+  } deriving (Eq, Show)
+
 data WContext = WContext
   { _ctxIdent         :: WTIdent
   , _ctxName          :: Maybe WTName
@@ -170,14 +190,14 @@ data WContext = WContext
 makeLenses ''WContext
 
 data WidgetConfig = WidgetConfig
-  { wconfName   :: Maybe WTName
-  , wconfClass  :: Maybe WTClass
-  , wconfStyle  :: Maybe ContextStyle
-  , wconfAttrib :: Maybe WidgetAttrib
-  , wconfPosX   :: UExp
-  , wconfPosY   :: UExp
-  , wconfWidth  :: UExp
-  , wconfHeight :: UExp
+  { wconfName     :: Maybe WTName
+  , wconfClass    :: Maybe WTClass
+  , wconfStyleMap :: Maybe StyleMap
+  , wconfAttrib   :: Maybe WidgetAttrib
+  , wconfPosX     :: UExp
+  , wconfPosY     :: UExp
+  , wconfWidth    :: UExp
+  , wconfHeight   :: UExp
   } deriving Show
 
 instance Default WidgetConfig where

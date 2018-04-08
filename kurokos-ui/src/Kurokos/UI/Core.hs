@@ -127,10 +127,19 @@ freeGuiWidgetTree = liftIO . mapM_ work
 --   GUI (_,stt) <- f . GUI <$> ((,) <$> ask <*> get)
 --   put stt
 
-getContextStyleOfWidget :: MonadReader GuiEnv m => Widget -> Maybe String -> Maybe String -> m ContextStyle
-getContextStyleOfWidget w mName mCls = do
-  styleMap <- asks geStyleMap
+getContextStyleOfWidget :: MonadReader GuiEnv m
+                        => Widget
+                        -> Maybe WTName
+                        -> Maybe WTClass
+                        -> Maybe StyleMap -- ^ Additional StyleMap
+                        -> m ContextStyle
+getContextStyleOfWidget w mName mCls mDefStyleMap = do
+  styleMap <- unionDefMap <$> asks geStyleMap
   return $ makeContextStyle w mName mCls styleMap
+  where
+    unionDefMap = case mDefStyleMap of
+                    Nothing -> id
+                    Just m  -> M.union m
 
 -- getContextColorOfWidget :: (MonadReader GuiEnv m, MonadIO m) => Widget -> m ContextColor
 -- getContextColorOfWidget w = do
@@ -171,7 +180,7 @@ mkSingle conf widget = do
   size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  ctxst <- maybe (getContextStyleOfWidget widget (wconfName conf) (wconfClass conf)) return (wconfStyle conf)
+  ctxst <- getContextStyleOfWidget widget (wconfName conf) (wconfClass conf) (wconfStyleMap conf)
   ast <- asks geAssetManager
   cmnRsc <- lift $ newCommonResource ast (pure 1) (ctxstNormal ctxst) widget
   let attrib = fromMaybe (attribOf widget) $ wconfAttrib conf
@@ -189,7 +198,7 @@ mkContainer conf ct = do
   size' <- case fromUExpV2 (V2 (wconfWidth conf) (wconfHeight conf)) of
             Left err -> E.throw $ userError err
             Right v  -> return v
-  ctxst <- maybe (getContextStyleOfWidget widget (wconfName conf) (wconfClass conf)) return (wconfStyle conf)
+  ctxst <- getContextStyleOfWidget widget (wconfName conf) (wconfClass conf) (wconfStyleMap conf)
   ast <- asks geAssetManager
   cmnRsc <- lift $ newCommonResource ast (pure 1) (ctxstNormal ctxst) widget
   let attrib = fromMaybe attribCntn $ wconfAttrib conf

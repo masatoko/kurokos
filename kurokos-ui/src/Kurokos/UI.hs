@@ -50,6 +50,13 @@ module Kurokos.UI
   , WidgetInfo (..)
   , UExp (..)
   -- * Style
+  -- ** Settings for user
+  , StyleConf (..)
+  , StyleMap
+  , StyleKey
+  , StyleState (..)
+  , makeStyleKey
+  -- ** Main
   , Style (..)
   , styleTextAlign
   , styleMargin
