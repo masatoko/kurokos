@@ -725,6 +725,7 @@ render g = do
   withRenderer $ \r -> liftIO $ do
     render_ r winSize True $ view (unGui._2.gstWTree) g
     render_ r winSize False $ view (unGui._2.gstWTree) g
+    G.clearRenderArea r
   where
     render_ r winSize pFirst = go (pure 0, fromIntegral <$> winSize)
       where
