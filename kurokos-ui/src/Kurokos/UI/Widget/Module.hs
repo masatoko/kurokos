@@ -41,7 +41,16 @@ getDouble (TextField z _)             = readMay . T.unpack . TZ.currentLine $ z
 getDouble _                           = Nothing
 
 getText :: Widget -> Maybe T.Text
-getText (TextField z _) = Just $ TZ.currentLine z
+getText (TextField z _) = Just $
+  case unsnoc line of
+    Nothing         -> line
+    Just (line', c) -> if c == ' ' then line' else line
+  where
+    line = TZ.currentLine z
+    unsnoc :: T.Text -> Maybe (T.Text, Char)
+    unsnoc ts
+      | T.null ts = Nothing
+      | otherwise = Just (T.init ts, T.last ts)
 getText _               = Nothing
 
 -- | Get key of Picker widget
