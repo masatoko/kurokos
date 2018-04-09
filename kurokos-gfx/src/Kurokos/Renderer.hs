@@ -92,8 +92,9 @@ withProjView proj view rndr renderSome = do
     orgProj = rndrBasisProj rndr
 
 clearRenderArea :: Renderer -> IO ()
-clearRenderArea rndr =
+clearRenderArea rndr = do
   Basic.setRenderArea (rndrBasicShader rndr) 0 0 1 1
+  Prim.setRenderArea (rndrPrimShader rndr) 0 0 1 1
 
 -- | Discard pixels out of this area (pos and size)
 setRenderArea :: Renderer
@@ -101,8 +102,9 @@ setRenderArea :: Renderer
               -> V2 Int -- ^ Position (V2 left top)
               -> V2 Int -- ^ Size
               -> IO ()
-setRenderArea rndr winSize pos size =
+setRenderArea rndr winSize pos size = do
   Basic.setRenderArea (rndrBasicShader rndr) x0 y0 x1 y1
+  Prim.setRenderArea (rndrPrimShader rndr) x0 y0 x1 y1
   where
     V2 winW winH = fromIntegral <$> winSize
     V2 x y = fromIntegral <$> pos

@@ -61,10 +61,10 @@
   x: 30
   y: 130
   w: 100
-  h: 100
+  h: 50
   children:
-    - {name: "test1", class: "class-a", type: label, text: "test1", attrib: { draggable: true, droppable: true}, h: 20}
-    - {name: "test2", class: "class-a", type: label, text: "test2", attrib: { draggable: true, droppable: true}, h: 20}
-    - {name: "test3", class: "class-a", type: label, text: "test3", attrib: { draggable: true, droppable: true}, h: 20}
-    - {name: "test4", class: "class-a", type: label, text: "test4", attrib: { draggable: true, droppable: true, hoverable: true}, h: 20}
-    - {name: "test5", class: "class-a", type: label, text: "test5", attrib: { draggable: true, droppable: true}, h: 20}
+    - {name: "test1", class: "class-a", type: label, text: "test1", attrib: { draggable: true, droppable: true}, h: 20, w-rpn: "$width"}
+    - {name: "test2", class: "class-a", type: label, text: "test2", attrib: { draggable: true, droppable: true}, h: 20, w-rpn: "$width"}
+    - {name: "test3", class: "class-a", type: label, text: "test3", attrib: { draggable: true, droppable: true}, h: 20, w-rpn: "$width"}
+    - {name: "test4", class: "class-a", type: label, text: "test4", attrib: { draggable: true, droppable: true, hoverable: true}, h: 20, w-rpn: "$width"}
+    - {name: "test5", class: "class-a", type: label, text: "test5", attrib: { draggable: true, droppable: true}, h: 20, w-rpn: "$width"}

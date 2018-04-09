@@ -19,6 +19,8 @@ label:
 .title: # Style for class if a headding char is '.'
   font-size: 24
 .class-a:
+  background-color: "#f0f0f0"
+  border-color: "#000000"
   text-color: 255 0 0 255
 $test3: # Style for name if a headding char is '$'
   text-color: 0 255 0 255
