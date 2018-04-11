@@ -34,10 +34,10 @@ renderWidget r _focus pos parentSize _ctx style cmnrsc Label{} = do
   renderBackAndBorder r pos style cmnrsc
   whenJust (cmnrscTextTex cmnrsc) $ renderTex_ r pos parentSize style
 
-renderWidget r _focus pos parentSize _ctx style CmnRsc{..} (ImageView image) = do
+renderWidget r _focus pos parentSize _ctx style CmnRsc{..} (ImageView image mArea) = do
   let size = fromIntegral <$> parentSize
       rctx = G.RContext pos size Nothing Nothing
-  G.renderTexture r image Nothing rctx
+  G.renderTexture r image mArea rctx
 
 renderWidget r _focus pos parentSize _ctx style cmnrsc Button{} = do
   renderBackAndBorder r pos style cmnrsc

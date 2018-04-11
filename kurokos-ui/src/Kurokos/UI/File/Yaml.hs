@@ -28,6 +28,20 @@ decodeWidgets = Y.decodeEither'
 
 type YWidgets = [YWidget]
 
+data Area_ = Area_
+  { areaX :: Int
+  , areaY :: Int
+  , areaW :: Int
+  , areaH :: Int
+  } deriving (Eq, Show)
+
+instance FromJSON Area_ where
+  parseJSON (Y.Object v) = Area_
+    <$> v .: "x"
+    <*> v .: "y"
+    <*> v .: "w"
+    <*> v .: "h"
+
 -- | Value for slider
 data YValue
   = YValue
@@ -66,6 +80,7 @@ data YWidget
     , wY        :: UExp
     , wWidth    :: UExp
     , wHeight   :: UExp
+    , wArea     :: Maybe Area_
     , wAttrib   :: Maybe YWidgetAttrib
     , wValue    :: Maybe YValue
     , wPicker   :: Maybe YPicker
@@ -101,6 +116,7 @@ instance FromJSON YWidget where
         <*> getUExp "y" (C 0) v
         <*> getUExp "w" (Rpn "$min-width") v
         <*> getUExp "h" (Rpn "$min-height") v
+        <*> v .:? "area"
         <*> v .:? "attrib"
         <*> v .:? "value" -- Value
         <*> v .:? "picker"

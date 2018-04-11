@@ -62,7 +62,7 @@ data Widget where
   Transparent :: Widget
   Fill        :: Widget
   Label       :: Text -> Widget
-  ImageView   :: G.Texture -> Widget
+  ImageView   :: G.Texture -> Maybe (Point V2 Int, V2 Int) -> Widget
   Button      :: Text -> Widget
   Switch      :: Text -> Bool -> Widget
   Slider      :: Text -> Maybe SliderResource -> Value -> Widget

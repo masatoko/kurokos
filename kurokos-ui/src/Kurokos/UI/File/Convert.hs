@@ -15,7 +15,7 @@ import           Safe                    (readMay)
 
 import           Kurokos.UI.Core
 import           Kurokos.UI.Def
-import           Kurokos.UI.File.Yaml    (YPicker (..), YValue (..),
+import           Kurokos.UI.File.Yaml    (Area_ (..), YPicker (..), YValue (..),
                                           YWidget (..), YWidgetAttrib (..),
                                           decodeWidgets)
 import           Kurokos.UI.Import
@@ -54,7 +54,7 @@ convert s@Single{..} = do
       | wType == N.wnameButton    = return $ mkButton text
       | wType == N.wnameSwitch    = return $ mkSwitch text
       | wType == N.wnameSlider    = return $ mkSlider text value
-      | wType == N.wnameImageView = newImageView =<< getAssetId
+      | wType == N.wnameImageView = getAssetId >>= \aid -> newImageView aid mArea
       | wType == N.wnameTextField = return $ mkTextField text
       | wType == N.wnamePicker    =
           case wPicker of
@@ -75,6 +75,10 @@ convert s@Single{..} = do
            &ctxAttrib . droppable  %~ flip fromMaybe ywaDroppable
            &ctxAttrib . visible    %~ flip fromMaybe ywaVisible
            &ctxAttrib . scrollable %~ flip fromMaybe ywaScrollable
+
+    mArea = case wArea of
+              Nothing              -> Nothing
+              Just (Area_ x y w h) -> Just (V2 x y, V2 w h)
 
     value = maybe (error msg) make wValue
       where

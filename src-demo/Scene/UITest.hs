@@ -113,7 +113,7 @@ runUITestScene =
         button1 <- UI.mkSingle confB $ UI.mkButton "Next: Main Scene"
         -- * Image
         let confImg = UI.WidgetConfig (Just "image") Nothing Nothing Nothing (C 10) (Rpn "$height 58 -") (C 48) (C 48)
-        img <- UI.mkSingle confImg =<< UI.newImageView "sample-image"
+        img <- UI.mkSingle confImg =<< UI.newImageView "sample-image" Nothing
         -- * TextField
         let confTxtFld = UI.WidgetConfig Nothing Nothing Nothing Nothing (C 100) (C 200) (Rpn "$min-width") (C 20)
         texfld <- UI.mkSingle confTxtFld $ UI.mkTextField "initial text"

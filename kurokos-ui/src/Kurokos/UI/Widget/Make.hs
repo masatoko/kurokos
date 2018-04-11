@@ -33,8 +33,10 @@ mkFill = Fill
 mkLabel :: T.Text -> Widget
 mkLabel = Label
 
-newImageView :: MonadIO m => Asset.Ident -> GuiT m Widget
-newImageView ident = ImageView <$> getTexture ident
+newImageView :: MonadIO m => Asset.Ident -> Maybe (V2 Int, V2 Int) -> GuiT m Widget
+newImageView ident mArea = ImageView <$> getTexture ident <*> pure (convArea <$> mArea)
+  where
+    convArea (pos, size) = (P pos, size)
 
 mkButton :: T.Text -> Widget
 mkButton = Button
