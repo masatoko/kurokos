@@ -17,6 +17,9 @@ data GuiHandler = GuiHandler
   { ghClick :: SDL.EventPayload -> Maybe GuiAction
   }
 
+instance Show GuiHandler where
+  show _ = "GuiHandler"
+
 defaultGuiHandler :: GuiHandler
 defaultGuiHandler = GuiHandler click
   where

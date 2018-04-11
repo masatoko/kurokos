@@ -33,7 +33,7 @@ data AssetManager = AssetManager
   { amByteMap :: M.Map Ident BS.ByteString
   , amFontMap :: M.Map Ident Font.Font
   , amTexMap  :: M.Map Ident G.Texture
-  }
+  } deriving Show
 
 newAssetManager :: MonadIO m => G.Renderer -> RawAssetManager -> m AssetManager
 newAssetManager rndr (RawAssetManager bmap) = liftIO $

@@ -57,7 +57,7 @@ type GuiWidgetTree = WidgetTree CtxWidget
 data GuiEnv = GuiEnv
   { geAssetManager :: Asset.AssetManager
   , geStyleMap     :: StyleMap
-  }
+  } deriving Show
 
 data GuiState = GuiState
   { _gstIdCnt      :: WidgetIdent -- ^ Counter for WidgetTree ID
@@ -68,11 +68,11 @@ data GuiState = GuiState
   -- * Control
   , _gstGuiHandler :: GuiHandler
   , _gstEvents     :: [GuiEvent]
-  }
+  } deriving Show
 
 makeLenses ''GuiState
 
-newtype GUI = GUI { _unGui :: (GuiEnv, GuiState) }
+newtype GUI = GUI { _unGui :: (GuiEnv, GuiState) } deriving Show
 
 makeLenses ''GUI
 
