@@ -137,8 +137,8 @@ runUITestScene =
 
       let gui' = flip execState gui $ do
                    -- Modify attribute
-                   modify' $ UI.update "clickable" (set (_1.ctxAttrib.clickable) True)
-                   modify' $ UI.update "fill" (set (_1.ctxAttrib.visible) False)
+                   modify' $ UI.update (UI.isNameOf "clickable") (set (_1.ctxAttrib.clickable) True)
+                   modify' $ UI.update (UI.isNameOf "fill") (set (_1.ctxAttrib.visible) False)
 
       liftIO $ putStrLn $ UI.prettyWT $ UI.getWidgetTree gui'
 
@@ -176,13 +176,13 @@ runUITestScene =
         work t =
           flip execState t $ do
             whenJust (UI.clickedOn UI.GuiActLeft "fill" gui) $ \_ -> do
-              modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) False
-              modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) False
+              modGui $ UI.update (UI.isNameOf "menu") $ set (_1.ctxAttrib.visible) False
+              modGui $ UI.update (UI.isNameOf "fill") $ set (_1.ctxAttrib.visible) False
 
             whenJust (UI.clickedOn UI.GuiActRight "clickable" gui) $ \pos -> do -- TODO: Right click
-              modGui $ UI.update "menu" $ set (_1.ctxAttrib.visible) True
+              modGui $ UI.update (UI.isNameOf "menu") $ set (_1.ctxAttrib.visible) True
               modGui $ UI.setPositionInWorld "menu" pos
-              modGui $ UI.update "fill" $ set (_1.ctxAttrib.visible) True
+              modGui $ UI.update (UI.isNameOf "fill") $ set (_1.ctxAttrib.visible) True
 
             -- -- ** Update title
             -- whenJust (UI.clickedOn UI.GuiActLeft "button" es) $ \_pos -> do

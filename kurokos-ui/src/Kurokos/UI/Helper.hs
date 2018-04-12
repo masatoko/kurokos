@@ -36,15 +36,17 @@ isNameOf name (ctx,_) = ctx^.ctxName == Just name
 isIdentOf :: WTIdent -> CtxWidget -> Bool
 isIdentOf ident (ctx,_) = ctx^.ctxIdent == ident
 
--- update by name with function
-update :: WTName -> (CtxWidget -> CtxWidget) -> GUI -> GUI
-update name f = over (unGui._2.gstWTree) (fmap work)
+-- | Update targets with function
+--
+-- @
+-- let gui' = UI.update (UI.isNameOf "target_name") (\cw -> cw&_1.ctxNeedsRender .~ True) gui
+-- @
+update :: (CtxWidget -> Bool) -> (CtxWidget -> CtxWidget) -> GUI -> GUI
+update isTarget f = over (unGui._2.gstWTree) (fmap work)
   where
-    work a@(ctx,_)
-      | ctx^.ctxName == Just name =
-          let (ctx', w') = f a
-          in (ctx' & ctxNeedsRender .~ True, w')
-      | otherwise = a
+    work a
+      | isTarget a = f a
+      | otherwise  = a
 
 findByIdent :: WTIdent -> GUI -> Maybe CtxWidget
 findByIdent ident g = find isTarget $ g^.unGui._2.gstWTree

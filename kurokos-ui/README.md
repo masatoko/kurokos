@@ -87,5 +87,5 @@ Or you can have Widget rerender by hand (Not using needsRender of Renderable).
 ```haskell
 import Control.Lens
 
-let gui' = UI.update "name" (set (_1.ctxNeedsRender) True) gui
+let gui' = UI.update (UI.isNameOf "target_name") (\cw -> cw&_1.ctxNeedsRender .~ True) gui
 ```
