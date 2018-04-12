@@ -138,6 +138,7 @@ module Kurokos.UI
   -- * Helper
   , prettyWT
   , isNameOf
+  , isClassOf
   , isIdentOf
   , update
   , findByIdent
