@@ -85,7 +85,21 @@ UI.newGui guiEnv $ do
 Or you can have Widget rerender by hand (Not using needsRender of Renderable).
 
 ```haskell
-import Control.Lens
+import           Control.Lens
+import qualified Kurokos.UI as UI
 
 let gui' = UI.update (UI.isNameOf "target_name") (\cw -> cw&_1.ctxNeedsRender .~ True) gui
+```
+
+## Example
+
+```haskell
+import           Control.Lens
+import qualified Kurokos.UI as UI
+
+-- Set position by name
+let gui' = UI.update (UI.isNameOf "target_name") (UI.setPositionInWorld (V2 x y)) gui
+
+-- Set visibility by class
+let gui' = UI.update (UI.isClassOf "target_class") (\cw -> cw&_1. UI.ctxAttrib . UI.visible .~ True) gui
 ```

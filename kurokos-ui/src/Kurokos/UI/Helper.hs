@@ -33,6 +33,9 @@ prettyWT = prettyWith showWidget
 isNameOf :: WTName -> CtxWidget -> Bool
 isNameOf name (ctx,_) = ctx^.ctxName == Just name
 
+isClassOf :: WTClass -> CtxWidget -> Bool
+isClassOf cls (ctx,_) = ctx^.ctxClass == Just cls
+
 isIdentOf :: WTIdent -> CtxWidget -> Bool
 isIdentOf ident (ctx,_) = ctx^.ctxIdent == ident
 
