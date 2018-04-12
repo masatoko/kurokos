@@ -181,7 +181,7 @@ runUITestScene =
 
             whenJust (UI.clickedOn UI.GuiActRight "clickable" gui) $ \pos -> do -- TODO: Right click
               modGui $ UI.update (UI.isNameOf "menu") $ set (_1.ctxAttrib.visible) True
-              modGui $ UI.setPositionInWorld "menu" pos
+              modGui $ UI.update (UI.isNameOf "menu") (UI.setPositionInWorld pos)
               modGui $ UI.update (UI.isNameOf "fill") $ set (_1.ctxAttrib.visible) True
 
             -- -- ** Update title

@@ -42,7 +42,8 @@ isIdentOf ident (ctx,_) = ctx^.ctxIdent == ident
 -- let gui' = UI.update (UI.isNameOf "target_name") (\cw -> cw&_1.ctxNeedsRender .~ True) gui
 -- @
 update :: (CtxWidget -> Bool) -> (CtxWidget -> CtxWidget) -> GUI -> GUI
-update isTarget f = over (unGui._2.gstWTree) (fmap work)
+update isTarget f gui = gui & unGui._2.gstWTree %~ fmap work
+                            & unGui._2.gstUpdated .~ True
   where
     work a
       | isTarget a = f a
@@ -86,17 +87,10 @@ putChildToContainer isParent newCs orgTr =
 -- | Set position of a widget directly
 --
 -- Use this when put a widget on the required position in world space.
-setPositionInWorld :: WTName -> GuiPos -> GUI -> GUI
-setPositionInWorld name g' = over (unGui._2.gstWTree) (fmap work)
+-- Use with `update` @let gui' = UI.update (UI.isNameOf "name") (UI.setPositionInWorld (V2 x y)) gui@
+setPositionInWorld :: GuiPos -> CtxWidget -> CtxWidget
+setPositionInWorld wpos (ctx, w) = setNeedsResize (ctx', w)
   where
-    work :: CtxWidget -> CtxWidget
-    work a@(ctx, w)
-      | ctx^.ctxName == Just name = setNeedsResize (ctx', w)
-      | otherwise                 = a
-      where
-        parent = g - l
-          where
-            g = ctx^.ctxWidgetState . wstWorldPos
-            l = ctx^.ctxWidgetState . wstLocalPos
-        P (V2 x y) = g' - parent
-        ctx' = ctx & ctxUPos .~ V2 (EConst x) (EConst y)
+    parent = (ctx^.ctxWidgetState.wstWorldPos) - (ctx^.ctxWidgetState.wstLocalPos)
+    P (V2 x y) = wpos - parent
+    ctx' = ctx & ctxUPos .~ V2 (EConst x) (EConst y)
