@@ -5,8 +5,6 @@ module Kurokos.UI.File.Convert
   , parseWidgetTree
   ) where
 
-import           Debug.Trace             (trace)
-
 import qualified Control.Exception       as E
 import           Control.Lens
 import qualified Data.ByteString         as BS
@@ -68,7 +66,7 @@ convert s@Single{..} = do
 
     setContext ctx = case wAttrib of
       Nothing -> ctx
-      Just ywa@YWidgetAttrib{..} -> trace (show ywa) $
+      Just ywa@YWidgetAttrib{..} ->
         ctx&ctxAttrib . hoverable  %~ flip fromMaybe ywaHoverable
            &ctxAttrib . clickable  %~ flip fromMaybe ywaClickable
            &ctxAttrib . draggable  %~ flip fromMaybe ywaDraggable
@@ -99,7 +97,7 @@ convert Container{..} = do
     conf = WidgetConfig wName wClass wStyleMap Nothing wX wY wWidth wHeight
     setContext ctx = case wAttrib of
       Nothing -> ctx
-      Just ywa@YWidgetAttrib{..} -> trace (show ywa) $
+      Just ywa@YWidgetAttrib{..} ->
         ctx&ctxAttrib . hoverable %~ flip fromMaybe ywaHoverable
            &ctxAttrib . clickable %~ flip fromMaybe ywaClickable
            &ctxAttrib . draggable %~ flip fromMaybe ywaDraggable
