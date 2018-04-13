@@ -1,21 +1,15 @@
 module Kurokos.UI.Widget.Module where
 
+import           Control.Lens
 import           Data.Text         (Text)
 import qualified Data.Text         as T
 import qualified Data.Text.Zipper  as TZ
 import           Safe              (atMay, readMay)
 
+import           Kurokos.UI.Core
 import           Kurokos.UI.Import
+import           Kurokos.UI.Types
 import           Kurokos.UI.Widget
-
--- TODO: Implement
--- setTitle :: Text -> Widget -> Widget
--- setTitle _     w@Transparent   = w
--- setTitle _     w@Fill          = w
--- setTitle title (Label _ font)  = Label title font
--- setTitle _     w@ImageView{}   = w
--- setTitle title (Button _ font) = Button title font
--- setTitle _     w@UserWidget{}  = w
 
 -- | Get current state of Switch
 getBool :: Widget -> Maybe Bool
@@ -53,6 +47,14 @@ getText (TextField z _) = Just $
       | otherwise = Just (T.init ts, T.last ts)
 getText _               = Nothing
 
+setText :: T.Text -> CtxWidget -> CtxWidget
+setText text (ctx, TextField _ r) = (ctx', TextField z r)
+  where
+    ctx' = ctx&ctxNeedsResize .~ True
+              &ctxNeedsRender .~ True
+    z = TZ.textZipper [text] Nothing
+setText _ cw = cw
+
 -- | Get key of Picker widget
 getKey :: Widget -> Maybe String
 getKey (Picker ts idx _) = fst <$> ts `atMay` idx
@@ -62,11 +64,11 @@ getKey _                 = Nothing
 
 widgetLeft :: Widget -> Widget
 widgetLeft (TextField z mRsc) = TextField (TZ.moveLeft z) mRsc
-widgetLeft w = w
+widgetLeft w                  = w
 
 widgetRight :: Widget -> Widget
 widgetRight (TextField z mRsc) = TextField (TZ.moveRight z) mRsc
-widgetRight w = w
+widgetRight w                  = w
 
 widgetInputText :: T.Text -> Widget -> Widget
 widgetInputText text (TextField z mRsc) =

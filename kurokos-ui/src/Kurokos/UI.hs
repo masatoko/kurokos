@@ -79,6 +79,8 @@ module Kurokos.UI
   , getDouble
   , getText
   , getKey
+  -- ** Setting
+  , setText
   -- * WidgetTree
   , WidgetTree
   , mkNull
