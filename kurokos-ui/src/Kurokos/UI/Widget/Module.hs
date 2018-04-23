@@ -48,6 +48,10 @@ getText (TextField z _) = Just $
 getText _               = Nothing
 
 setText :: T.Text -> CtxWidget -> CtxWidget
+setText text (ctx, Label _) = (ctx', Label text)
+  where
+    ctx' = ctx&ctxNeedsResize .~ True
+              &ctxNeedsRender .~ True
 setText text (ctx, TextField _ r) = (ctx', TextField z r)
   where
     ctx' = ctx&ctxNeedsResize .~ True
