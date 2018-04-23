@@ -2,6 +2,7 @@
 _data/font/
 *.ttf
 __temp/
+.vscode/
 
 kurokos.cabal
 

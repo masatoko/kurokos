@@ -46,6 +46,12 @@ data GuiEvent
   | Unfocused
     { geWidgetInfo :: WidgetInfo
     }
+  | Hovered
+    { geWidgetInfo :: WidgetInfo
+    }
+  | Unhovered
+    { geWidgetInfo :: WidgetInfo
+    }
   | TextFixed
     { geWidgetInfo :: WidgetInfo
     , geText       :: T.Text

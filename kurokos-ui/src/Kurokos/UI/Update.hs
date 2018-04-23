@@ -154,16 +154,22 @@ procEvent cursor gui0 = work
               mPath = case C.topmostAtWith curPos isHoverable gui0 of
                         Just (ctx,_) -> Just $ ctx^.ctxPath
                         Nothing      -> Nothing
-              (wt', updated) = runState (mapM (modState mPath) wt0) False
+              (wt', (updated, events)) = runState (mapM (modState mPath) wt0) (False, [])
           in gui0&unGui._2.gstWTree .~ wt'
                  &unGui._2.gstUpdated ||~ updated
+                 &unGui._2.gstEvents %~ (events++)
           where
             isHoverable cw = cw^._1.ctxAttrib.hoverable
             heldLeft = ButtonLeft `elem` mouseMotionEventState
             modState mPath cw = do
-              modify (|| updated)
+              _1 %= (|| updated)
               let cw' = cw & _1.ctxWidgetState.wstHover .~ hover
                            & _1.ctxNeedsRender .~ updated -- If state is changed
+              when updated $
+                let wif = cwToInfo cw
+                in if hover
+                    then _2 %= (Hovered wif:)
+                    else _2 %= (Unhovered wif:)
               return $ if hover
                         then modIfLHeld cw'
                         else cw'
