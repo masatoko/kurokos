@@ -21,6 +21,9 @@ type LocText = [TextChunk] -- ^ It will be converted to a Text
 
 type TextSet = M.Map TextKey LocText
 
+member :: TextKey -> TextSet -> Bool
+member = M.member
+
 getText :: TextKey -> VarMap T.Text -> TextSet -> Either String T.Text
 getText tkey varmap tset = T.concat <$> toListWith id tkey varmap tset
 

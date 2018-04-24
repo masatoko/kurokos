@@ -5,6 +5,7 @@ module Kurokos.Text
   , VarMap
   , TextSet
   , parseTextSet
+  , member
   , getText
   , toListWith
   , toListWithM
