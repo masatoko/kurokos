@@ -11,6 +11,7 @@ import           Control.Monad              (foldM)
 import           Control.Monad.Extra        (whenJust)
 import           Control.Monad.State
 import           Data.Int                   (Int32)
+import Data.Tuple (swap)
 import Data.List (foldl')
 import           Data.List.Extra            (firstJust)
 import           Data.Maybe                 (catMaybes, isJust, mapMaybe,
@@ -126,7 +127,14 @@ procEvent cursor gui0 = work
                 Just cw@(ctx,w) -> do
                   -- * Modify widget
                   let focusPath = ctx^.ctxPath
-                  unGui._2.gstWTree %= WT.wtModifyAt focusPath conv
+                  es <- unGui._2.gstWTree %%= \root ->
+                          case WT.wtFocusTo focusPath root of
+                            Nothing       -> ([], root)
+                            Just (wt, bs) -> swap $
+                              flip runState ([]::[E.GuiEvent]) $ do
+                                wt' <- WT.wtModifyTopM convWithAddEvents wt
+                                return $ WT.fromZipper (wt', bs)
+                  unGui._2.gstEvents %= (es++)
                   -- * Reset focus if need
                   unless (ctx^.ctxWidgetState.wstFocus) $ do -- When focus is changed
                     resetFocus
@@ -140,8 +148,10 @@ procEvent cursor gui0 = work
                   unGui._2.gstFocus .= focusPath -- Call `resetFocus` before this
           | otherwise = return ()
           where
-            conv cw@(ctx,w) =
-              (ctx', WU.modifyOnClicked ctx curPos pos size w)
+            convWithAddEvents cw@(ctx,w) = do
+              let (es, w') = WU.modifyOnClicked ctx curPos pos size w
+              modify (es++)
+              return (ctx', w')
               where
                 ctx' = ctx & ctxNeedsRender .~ True
                 pos = ctx^.ctxWidgetState.wstWorldPos

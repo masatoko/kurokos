@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module Kurokos.UI.Widget.Update where
 
 import           Debug.Trace           (trace)
@@ -25,6 +26,7 @@ import qualified Kurokos.Graphics.Font as Font
 import           Kurokos.UI.Types
 import           Kurokos.UI.Import
 import           Kurokos.UI.Widget
+import           Kurokos.UI.Event
 
 -- | Called when this widget needs re-layout.
 --
@@ -82,22 +84,25 @@ modifyOnClicked :: WContext
                 -> Point V2 CInt -- ^ Widget world position
                 -> V2 CInt -- ^ Widget size
                 -> Widget
-                -> Widget
-modifyOnClicked _ _ _ _ (Switch title bool) = Switch title (not bool)
+                -> ([GuiEvent], Widget)
+modifyOnClicked c _ _ _ w@(Switch title bool) = ([e], Switch title bool')
+  where
+    bool' = not bool
+    e = Switched (cwToInfo c w) bool'
 modifyOnClicked _ (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title mPrim value) =
   -- Calculate value by click position
-  Slider title mPrim value'
+  ([], Slider title mPrim value')
   where
     rate = fromIntegral (curX - wx) / fromIntegral w
     value' = updateValueByRate rate value
 modifyOnClicked ctx (P (V2 curX curY)) (P (V2 wx wy)) _ w0@(Picker ts _ textures)
-  | focus     = Picker ts idx textures
-  | otherwise = w0
+  | focus     = ([], Picker ts idx textures)
+  | otherwise = ([], w0)
   where
     V2 w h = wstSize $ ctx^.ctxWidgetState
     idx = fromIntegral $ (curY - wy) `div` h
     focus = ctx^.ctxWidgetState.wstFocus
-modifyOnClicked _ _ _ _ w = w
+modifyOnClicked _ _ _ _ w = ([], w)
 
 modifyWhenHoverWithLHold :: Point V2 CInt -- ^ Cursor position
                           -> Point V2 CInt -- ^ Widget world position
@@ -120,3 +125,6 @@ getFontSize ast style =
   where
     ident = style^.styleFontIdent
     size = style^.styleFontSize
+
+cwToInfo :: WContext -> Widget -> WidgetInfo
+cwToInfo WContext{..} w = WidgetInfo w _ctxIdent _ctxName _ctxPath

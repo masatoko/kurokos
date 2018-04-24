@@ -61,4 +61,8 @@ data GuiEvent
     , geKey        :: String
     , geText       :: T.Text
     }
+  | Switched
+    { geWidgetInfo :: WidgetInfo
+    , geBool       :: Bool
+    }
   deriving Show

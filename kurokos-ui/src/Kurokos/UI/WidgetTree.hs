@@ -60,6 +60,16 @@ prettyWith f = unlines . work 0
     work n (Fork u a (Just c) o) =
       work n u ++ [indent n ++ "@ | Container: " ++ f a] ++ work (n+1) c ++ work n o
 
+wtModifyTop :: (a -> a) -> WidgetTree a -> WidgetTree a
+wtModifyTop _ Null            = Null
+wtModifyTop f (Fork u a mc o) = Fork u (f a) mc o
+
+wtModifyTopM :: Monad m => (a -> m a) -> WidgetTree a -> m (WidgetTree a)
+wtModifyTopM _ Null            = return Null
+wtModifyTopM f (Fork u a mc o) = do
+  a' <- f a
+  return $ Fork u a' mc o
+
 size :: WidgetTree a -> Int
 size Null            = 0
 size (Fork u _ mc o) = size u + 1 + maybe 0 size mc + size o
@@ -164,6 +174,15 @@ wtAt = go
     go (SUnder:bs) (Fork u _ _ _)  = go bs u
     go (SChild:bs) (Fork _ _ mc _) = go bs =<< mc
     go (SOver:bs) (Fork _ _ _ o)   = go bs o
+
+wtFocusTo :: WidgetTreePath -> WidgetTree a -> Maybe (Zipper a)
+wtFocusTo bs0 = go bs0 . toZipper
+  where
+    go []          z                   = Just z
+    go _           (Null, _)           = Nothing
+    go (SUnder:bs) (Fork u a mc o, cs) = go bs (u, Under a mc o : cs)
+    go (SChild:bs) (Fork u a mc o, cs) = mc >>= \c -> go bs (c, Children u a o : cs)
+    go (SOver:bs)  (Fork u a mc o, cs) = go bs (o, Over u mc a : cs)
 
 -- * Zipper
 
