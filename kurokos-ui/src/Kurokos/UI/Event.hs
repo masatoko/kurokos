@@ -65,4 +65,8 @@ data GuiEvent
     { geWidgetInfo :: WidgetInfo
     , geBool       :: Bool
     }
+  | SliderChanged
+    { geWidgetInfo :: WidgetInfo
+    , geValue      :: Value
+    }
   deriving Show

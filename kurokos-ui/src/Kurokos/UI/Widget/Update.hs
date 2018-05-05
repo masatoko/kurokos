@@ -107,14 +107,16 @@ modifyOnClicked _ _ _ _ w = ([], w)
 modifyWhenHoverWithLHold :: Point V2 CInt -- ^ Cursor position
                           -> Point V2 CInt -- ^ Widget world position
                           -> V2 CInt -- ^ Widget size
-                          -> Widget
-                          -> Maybe Widget
-modifyWhenHoverWithLHold (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (Slider title mPrim value) =
+                          -> (WContext, Widget)
+                          -> Maybe ([GuiEvent], Widget)
+modifyWhenHoverWithLHold (P (V2 curX curY)) (P (V2 wx wy)) (V2 w h) (ctx, Slider title mPrim value) =
   -- Calculate value by click position
-  Just $ Slider title mPrim value'
+  Just ([event], w')
   where
     rate = fromIntegral (curX - wx) / fromIntegral w
     value' = updateValueByRate rate value
+    w' = Slider title mPrim value'
+    event = SliderChanged (cwToInfo ctx w') value'
 modifyWhenHoverWithLHold _ _ _ w = Nothing
 
 getFontSize :: MonadIO m => Asset.AssetManager -> Style -> m (Font.Font, G.FontSize)

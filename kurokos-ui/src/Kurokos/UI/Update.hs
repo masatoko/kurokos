@@ -175,14 +175,17 @@ procEvent cursor gui0 = work
               _1 %= (|| updated)
               let cw' = cw & _1.ctxWidgetState.wstHover .~ hover
                            & _1.ctxNeedsRender .~ updated -- If state is changed
-              when updated $
+              when updated $ do
                 let wif = cwToInfo cw
-                in if hover
-                    then _2 %= (Hovered wif:)
-                    else _2 %= (Unhovered wif:)
-              return $ if hover
-                        then modIfLHeld cw'
-                        else cw'
+                if hover
+                  then _2 %= (Hovered wif:)
+                  else _2 %= (Unhovered wif:)
+              if hover
+                then do
+                  let (es, cw'') = modIfLHeld cw'
+                  _2 %= (es++)
+                  return cw''
+                else return cw'
               where
                 ctx = cw^._1
                 updated = preHover /= hover
@@ -194,10 +197,12 @@ procEvent cursor gui0 = work
 
                 modIfLHeld cw@(ctx, w)
                   | heldLeft  =
-                      case WU.modifyWhenHoverWithLHold curPos pos size w of
-                        Nothing -> cw
-                        Just w' -> (ctx&ctxNeedsRender .~ True, w')
-                  | otherwise = cw
+                      case WU.modifyWhenHoverWithLHold curPos pos size cw of
+                        Nothing       -> ([], cw)
+                        Just (es, w') ->
+                          let ctx' = ctx&ctxNeedsRender .~ True
+                          in (es, (ctx', w'))
+                  | otherwise = ([], cw)
                   where
                     pos = cw^._1.ctxWidgetState.wstWorldPos
                     size = clickableSize cw
