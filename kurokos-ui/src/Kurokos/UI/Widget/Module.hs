@@ -59,6 +59,21 @@ setText text (ctx, TextField _ r) = (ctx', TextField z r)
     z = TZ.textZipper [text] Nothing
 setText _ cw = cw
 
+setValueI :: Integral a => a -> CtxWidget -> CtxWidget
+setValueI v cw@(ctx, Slider t rsc value) =
+  case mv of
+    Nothing     -> cw
+    Just value' -> (ctx', Slider t rsc value')
+  where
+    mv = case value of
+      ValueI _ amin amax -> Just $ ValueI (fromIntegral v) amin amax
+      ValueF _ amin amax -> Just $ ValueF (fromIntegral v) amin amax
+      ValueD _ amin amax -> Just $ ValueD (fromIntegral v) amin amax
+      _                  -> Nothing
+    ctx' = ctx&ctxNeedsResize .~ True
+              &ctxNeedsRender .~ True
+setValueI _ cw = cw
+
 -- | Get key of Picker widget
 getKey :: Widget -> Maybe String
 getKey (Picker ts idx _) = fst <$> ts `atMay` idx
